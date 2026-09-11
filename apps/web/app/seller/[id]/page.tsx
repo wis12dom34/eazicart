@@ -90,7 +90,10 @@ export default function SellerPage({
         {products.loading ? (
           <LoadingState />
         ) : products.error ? (
-          <ErrorState message={products.error} retry={products.reload} />
+          <ErrorState
+            message={products.error}
+            retry={() => void products.reload()}
+          />
         ) : (
           <ProductGrid products={products.data?.data ?? []} />
         )}
