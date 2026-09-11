@@ -11,8 +11,9 @@ const requestUrl = (input: RequestInfo | URL) => {
 };
 
 const requestBody = (init?: RequestInit) => {
-  if (typeof init?.body !== "string")
+  if (typeof init?.body !== "string") {
     throw new Error("Expected request body to be a JSON string");
+  }
   return init.body;
 };
 
@@ -37,6 +38,7 @@ describe("API client", () => {
       message: "Not available",
     });
   });
+
   it("supports query parameters and 204 responses", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -49,6 +51,7 @@ describe("API client", () => {
       "search=bag&page=2",
     );
   });
+
   it("fetches product details by encoded id", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -59,6 +62,7 @@ describe("API client", () => {
     await productsApi.get("a/b");
     expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain("/products/a%2Fb");
   });
+
   it("cart mutations submit identifiers and quantities, never prices", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -78,6 +82,7 @@ describe("API client", () => {
     });
     expect(fetchMock.mock.calls[2]?.[1]?.method).toBe("DELETE");
   });
+
   it("submits login credentials and omits authorization when signed out", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
