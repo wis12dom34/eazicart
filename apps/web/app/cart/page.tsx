@@ -2,20 +2,33 @@ import Link from "next/link";
 import { Header } from "../components/header";
 import { Icon } from "../components/icon";
 import { money, products } from "../data";
+
 export default function CartPage() {
-  const p = products[0];
+  const product = products[0];
+
+  if (!product) {
+    return (
+      <main className="app-shell">
+        <Header title="My cart" back="/" />
+        <section className="cart-list">
+          <p>Your cart is empty.</p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="app-shell">
       <Header title="My cart" back="/product/woven-tote" />
       <section className="cart-list">
         <article className="cart-item">
-          <div className="cart-thumb" style={{ background: p.color }}>
-            {p.image}
+          <div className="cart-thumb" style={{ background: product.color }}>
+            {product.image}
           </div>
           <div>
-            <small>{p.brand}</small>
-            <h2>{p.name}</h2>
-            <strong>{money(p.price)}</strong>
+            <small>{product.brand}</small>
+            <h2>{product.name}</h2>
+            <strong>{money(product.price)}</strong>
             <div className="quantity">
               <button aria-label="Decrease quantity">
                 <Icon name="minus" size={16} />
@@ -31,7 +44,7 @@ export default function CartPage() {
       <section className="summary">
         <div>
           <span>Subtotal</span>
-          <strong>{money(p.price)}</strong>
+          <strong>{money(product.price)}</strong>
         </div>
         <div>
           <span>Delivery</span>
@@ -39,7 +52,7 @@ export default function CartPage() {
         </div>
         <div className="total">
           <span>Total</span>
-          <strong>{money(p.price)}</strong>
+          <strong>{money(product.price)}</strong>
         </div>
       </section>
       <div className="bottom-cta">
