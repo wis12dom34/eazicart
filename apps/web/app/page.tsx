@@ -29,6 +29,7 @@ const categoryIcons: Record<string, string> = {
 
 type SellerGroup = {
   id: string;
+  userId: string;
   displayName: string;
   bio?: string | null;
   products: Product[];
@@ -59,6 +60,7 @@ export default function HomePage() {
       } else {
         grouped.set(product.seller.id, {
           id: product.seller.id,
+          userId: product.seller.userId,
           displayName: product.seller.displayName,
           bio: product.seller.bio,
           products: [product],
@@ -73,8 +75,8 @@ export default function HomePage() {
     [following.data],
   );
 
-  const isFollowing = (sellerId: string) =>
-    localFollowing[sellerId] ?? followedSellerIds.has(sellerId);
+  const isFollowing = (sellerUserId: string) =>
+    localFollowing[sellerUserId] ?? followedSellerIds.has(sellerUserId);
 
   const addToCart = async (product: Product) => {
     if (!auth.isAuthenticated) {
@@ -93,17 +95,20 @@ export default function HomePage() {
     }
   };
 
-  const toggleFollow = async (sellerId: string) => {
+  const toggleFollow = async (sellerUserId: string) => {
     if (!auth.isAuthenticated) {
       router.push(`/login?next=${encodeURIComponent("/")}`);
       return;
     }
-    const next = !isFollowing(sellerId);
-    setBusyFollow(sellerId);
+    const next = !isFollowing(sellerUserId);
+    setBusyFollow(sellerUserId);
     try {
-      if (next) await followsApi.follow(sellerId);
-      else await followsApi.unfollow(sellerId);
-      setLocalFollowing((current) => ({ ...current, [sellerId]: next }));
+      if (next) await followsApi.follow(sellerUserId);
+      else await followsApi.unfollow(sellerUserId);
+      setLocalFollowing((current) => ({
+        ...current,
+        [sellerUserId]: next,
+      }));
     } catch (error) {
       window.alert(
         error instanceof Error
@@ -195,17 +200,17 @@ export default function HomePage() {
                 </Link>
                 <button
                   className={
-                    isFollowing(seller.id)
+                    isFollowing(seller.userId)
                       ? "figma-home-follow following"
                       : "figma-home-follow"
                   }
                   type="button"
-                  disabled={busyFollow === seller.id}
-                  onClick={() => void toggleFollow(seller.id)}
+                  disabled={busyFollow === seller.userId}
+                  onClick={() => void toggleFollow(seller.userId)}
                 >
-                  {busyFollow === seller.id
+                  {busyFollow === seller.userId
                     ? "…"
-                    : isFollowing(seller.id)
+                    : isFollowing(seller.userId)
                       ? "Following"
                       : "Follow"}
                 </button>
