@@ -13,10 +13,15 @@ export default function Login() {
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
+    const email = f.get("email");
+    const password = f.get("password");
     setBusy(true);
     setError("");
     try {
-      await auth.login(String(f.get("email")), String(f.get("password")));
+      await auth.login(
+        typeof email === "string" ? email : "",
+        typeof password === "string" ? password : "",
+      );
       router.replace(params.get("next") || "/");
     } catch (x) {
       setError(x instanceof Error ? x.message : "Unable to sign in");
