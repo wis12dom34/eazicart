@@ -4,6 +4,18 @@ import { cartApi } from "./cart";
 import { productsApi } from "./products";
 import { authApi } from "./auth";
 
+const requestUrl = (input: RequestInfo | URL) => {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+};
+
+const requestBody = (init?: RequestInit) => {
+  if (typeof init?.body !== "string")
+    throw new Error("Expected request body to be a JSON string");
+  return init.body;
+};
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe("API client", () => {
@@ -33,7 +45,9 @@ describe("API client", () => {
     await expect(
       apiRequest("/products", { query: { search: "bag", page: 2 } }),
     ).resolves.toBeUndefined();
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("search=bag&page=2");
+    expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain(
+      "search=bag&page=2",
+    );
   });
   it("fetches product details by encoded id", async () => {
     const fetchMock = vi
@@ -43,7 +57,7 @@ describe("API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
     await productsApi.get("a/b");
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("/products/a%2Fb");
+    expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain("/products/a%2Fb");
   });
   it("cart mutations submit identifiers and quantities, never prices", async () => {
     const fetchMock = vi
@@ -55,11 +69,11 @@ describe("API client", () => {
     await cartApi.add("product-1", 2);
     await cartApi.update("item-1", 3);
     await cartApi.remove("item-1");
-    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+    expect(JSON.parse(requestBody(fetchMock.mock.calls[0]![1]))).toEqual({
       productId: "product-1",
       quantity: 2,
     });
-    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+    expect(JSON.parse(requestBody(fetchMock.mock.calls[1]![1]))).toEqual({
       quantity: 3,
     });
     expect(fetchMock.mock.calls[2]?.[1]?.method).toBe("DELETE");
@@ -72,7 +86,7 @@ describe("API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
     await authApi.login("shopper@example.com", "password123");
-    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+    expect(JSON.parse(requestBody(fetchMock.mock.calls[0]![1]))).toEqual({
       email: "shopper@example.com",
       password: "password123",
     });
