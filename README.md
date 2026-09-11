@@ -56,4 +56,3 @@ The initial monorepo foundation and a minimal web landing screen are in place.
 ## Security
 
 Production secrets, API keys, credentials, and environment-specific private values must never be committed to this repository.
-

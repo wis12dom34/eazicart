@@ -13,4 +13,3 @@ const app = buildApp(config, {
 });
 app.addHook("onClose", async () => database.$disconnect());
 await app.listen({ host: config.HOST, port: config.PORT });
-

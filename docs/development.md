@@ -30,18 +30,18 @@ It creates the root `.env`, `apps/api/.env`, `apps/web/.env` and
 `packages/database/.env` with private file permissions. Existing files are
 never overwritten. Keep values consistent when editing them later.
 
-| Variable | Used by | Purpose |
-| --- | --- | --- |
-| `POSTGRES_PASSWORD` | Root Docker Compose | Local PostgreSQL password |
-| `DATABASE_URL` | API and database package | PostgreSQL connection string |
-| `JWT_SECRET` | API | Random signing secret, at least 32 characters |
-| `WEB_ORIGIN` | API | Exact allowed web origin, normally `http://localhost:3000` |
-| `NEXT_PUBLIC_API_BASE_URL` | Web | Browser-visible API origin, normally `http://localhost:3001` |
-| `ALLOW_DEMO_SEED` | Database seed | Explicit development-only seed opt-in |
-| `HOST` / `PORT` | API | Defaults: `0.0.0.0` / `3001` |
-| `ACCESS_TOKEN_TTL` | API | Defaults to `15m` |
-| `REFRESH_TOKEN_TTL_DAYS` | API | Defaults to `30` |
-| `NODE_ENV` | Runtime | Development, test or production |
+| Variable                   | Used by                  | Purpose                                                      |
+| -------------------------- | ------------------------ | ------------------------------------------------------------ |
+| `POSTGRES_PASSWORD`        | Root Docker Compose      | Local PostgreSQL password                                    |
+| `DATABASE_URL`             | API and database package | PostgreSQL connection string                                 |
+| `JWT_SECRET`               | API                      | Random signing secret, at least 32 characters                |
+| `WEB_ORIGIN`               | API                      | Exact allowed web origin, normally `http://localhost:3000`   |
+| `NEXT_PUBLIC_API_BASE_URL` | Web                      | Browser-visible API origin, normally `http://localhost:3001` |
+| `ALLOW_DEMO_SEED`          | Database seed            | Explicit development-only seed opt-in                        |
+| `HOST` / `PORT`            | API                      | Defaults: `0.0.0.0` / `3001`                                 |
+| `ACCESS_TOKEN_TTL`         | API                      | Defaults to `15m`                                            |
+| `REFRESH_TOKEN_TTL_DAYS`   | API                      | Defaults to `30`                                             |
+| `NODE_ENV`                 | Runtime                  | Development, test or production                              |
 
 The API loads its local `.env` before parsing configuration. Prisma loads
 `packages/database/.env`; Next.js loads `apps/web/.env`. Existing environment

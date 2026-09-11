@@ -22,4 +22,3 @@ export const followsApi = {
       `/sellers/${encodeURIComponent(id)}/followers/count`,
     ),
 };
-

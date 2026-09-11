@@ -7,8 +7,12 @@ describe("post-login navigation", () => {
       "/product/demo?source=cart",
     );
   });
-  it.each([null, "https://example.com", "//example.com", "javascript:alert(1)"])(
-    "rejects external or executable destinations: %s",
-    (value) => expect(safeNextPath(value)).toBe("/"),
+  it.each([
+    null,
+    "https://example.com",
+    "//example.com",
+    "javascript:alert(1)",
+  ])("rejects external or executable destinations: %s", (value) =>
+    expect(safeNextPath(value)).toBe("/"),
   );
 });

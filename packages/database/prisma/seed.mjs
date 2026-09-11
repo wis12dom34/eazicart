@@ -37,9 +37,7 @@ try {
     }
     for (const [slug, displayName, bio] of sellers) {
       // Seller records have no shared demo login or reusable password.
-      const passwordHash = await argon2.hash(
-        randomBytes(48).toString("hex"),
-      );
+      const passwordHash = await argon2.hash(randomBytes(48).toString("hex"));
       await tx.user.upsert({
         where: { id: `demo-user-${slug}` },
         create: {

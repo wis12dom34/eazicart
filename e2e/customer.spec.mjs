@@ -30,11 +30,15 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(page).toHaveURL("http://localhost:3000/");
 
   await page.goto("/explore");
-  await expect(page.getByRole("link", { name: "Fashion", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Fashion", exact: true }),
+  ).toBeVisible();
   await page.getByRole("link", { name: "Fashion", exact: true }).click();
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
   await page.goto(`/product/${productId}`);
-  await expect(page.getByRole("heading", { name: "Woven everyday tote" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Woven everyday tote" }),
+  ).toBeVisible();
   await expect(page.locator(".detail-image img")).toBeVisible();
   await page.getByRole("button", { name: "Save product", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Saved");
@@ -43,9 +47,13 @@ test("customer journey persists in PostgreSQL without payment", async ({
 
   await page.goto(`/seller/${sellerId}`);
   await page.getByRole("button", { name: "Follow", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Following", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Following", exact: true }),
+  ).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("button", { name: "Following", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Following", exact: true }),
+  ).toBeVisible();
   await page.goto("/following");
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
 
@@ -84,13 +92,19 @@ test("customer journey persists in PostgreSQL without payment", async ({
 
   await page.goto("/notifications");
   await expect(page.getByText("Order received", { exact: true })).toBeVisible();
-  await expect(page.getByText("Your order was created. No payment has been taken.")).toBeVisible();
+  await expect(
+    page.getByText("Your order was created. No payment has been taken."),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Read all" }).click();
-  await expect(page.getByRole("heading", { name: "Notifications", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Notifications", exact: true }),
+  ).toBeVisible();
   await page.goto("/edit-profile");
   await page.getByLabel("Full name").fill("Updated Customer");
   await page.getByRole("button", { name: "Save changes" }).click();
-  await expect(page.getByRole("heading", { name: "Updated Customer" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Updated Customer" }),
+  ).toBeVisible();
 
   // Force an expired access token and verify the actual refresh endpoint.
   await page.evaluate(() => {
@@ -100,7 +114,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
     localStorage.setItem(key, JSON.stringify(tokens));
   });
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Updated Customer" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Updated Customer" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Log out" }).click();
   await page.goto("/login");
   await page.getByLabel("Email address").fill(email);
@@ -123,7 +139,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
   expect(errors).toEqual([]);
 });
 
-test("API trusts database prices and enforces CORS and ownership", async ({ request }) => {
+test("API trusts database prices and enforces CORS and ownership", async ({
+  request,
+}) => {
   const result = await request.post(`${api}/auth/register`, {
     data: {
       name: "Price Test",
@@ -132,12 +150,17 @@ test("API trusts database prices and enforces CORS and ownership", async ({ requ
     },
   });
   expect(result.status()).toBe(201);
-  const headers = { Authorization: `Bearer ${(await result.json()).tokens.accessToken}` };
+  const headers = {
+    Authorization: `Bearer ${(await result.json()).tokens.accessToken}`,
+  };
   const address = await request.post(`${api}/addresses`, {
     headers,
     data: {
-      line1: "1 Demo Street", city: "Lagos", region: "Lagos",
-      postalCode: "100001", country: "Nigeria",
+      line1: "1 Demo Street",
+      city: "Lagos",
+      region: "Lagos",
+      postalCode: "100001",
+      country: "Nigeria",
     },
   });
   expect(address.status()).toBe(201);

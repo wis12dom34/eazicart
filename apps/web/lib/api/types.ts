@@ -86,4 +86,3 @@ export type Tokens = {
 export type AuthResponse = { user: User; tokens: Tokens };
 export type DataResponse<T> = { data: T };
 export type ListResponse<T> = { data: T[] };
-

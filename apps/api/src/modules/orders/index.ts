@@ -101,4 +101,3 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     return reply.code(201).send({ data: output(created) });
   });
 }
-
