@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
+
 import Link from "next/link";
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,8 @@ import {
   LoadingState,
 } from "../../components/async-state";
 import { useAuth } from "../../providers/auth-provider";
+import styles from "./product-detail.module.css";
+
 export default function ProductPage({
   params,
 }: {
@@ -27,6 +30,7 @@ export default function ProductPage({
   const result = useRequest(() => productsApi.get(id), [id]);
   const [message, setMessage] = useState("");
   const product = result.data?.data;
+
   const protectedAction = async (
     action: () => Promise<unknown>,
     success: string,
@@ -35,6 +39,7 @@ export default function ProductPage({
       router.push(`/login?next=/product/${id}`);
       return;
     }
+
     setMessage("");
     try {
       await action();
@@ -43,35 +48,45 @@ export default function ProductPage({
       setMessage(e instanceof Error ? e.message : "Action failed");
     }
   };
-  if (result.loading)
+
+  if (result.loading) {
     return (
       <main className="app-shell">
         <Header title="Product details" back="/" />
         <LoadingState label="Loading product…" />
       </main>
     );
-  if (result.error)
+  }
+
+  if (result.error) {
     return (
       <main className="app-shell">
         <Header title="Product details" back="/" />
         <ErrorState message={result.error} retry={() => void result.reload()} />
       </main>
     );
-  if (!product)
+  }
+
+  if (!product) {
     return (
       <main className="app-shell">
         <Header title="Product details" back="/" />
         <EmptyState message="Product not found." />
       </main>
     );
+  }
+
+  const inStock = product.stock > 0;
+  const primaryImage = product.images[0];
+
   return (
-    <main className="app-shell detail-page">
+    <main className={`app-shell detail-page ${styles.page}`}>
       <Header
         title="Product details"
         back="/"
         action={
           <button
-            className="icon-button"
+            className={`icon-button ${styles.saveButton}`}
             aria-label="Save product"
             onClick={() =>
               void protectedAction(() => savedApi.save(id), "Saved")
@@ -81,46 +96,94 @@ export default function ProductPage({
           </button>
         }
       />
-      <div className="detail-image" style={{ background: "#eee8e1" }}>
+
+      <section
+        className={`detail-image ${styles.media}`}
+        aria-label={`${product.name} image`}
+      >
         <span>
-          {product.images[0] ? (
+          {primaryImage ? (
             <img
-              src={product.images[0].url}
-              alt={product.images[0].altText ?? product.name}
+              className={styles.mediaImage}
+              src={primaryImage.url}
+              alt={primaryImage.altText ?? product.name}
             />
           ) : (
-            "🛍️"
+            <span className={styles.mediaFallback} aria-hidden="true">
+              🛍️
+            </span>
           )}
         </span>
-      </div>
-      <section className="product-info">
-        <p className="product-brand">{product.seller.displayName}</p>
-        <h2>{product.name}</h2>
-        <div className="price large">
-          <strong>{money(product.price)}</strong>
+        <div className={styles.mediaMeta} aria-hidden="true">
+          <span className={styles.categoryBadge}>{product.category.name}</span>
+          <span
+            className={`${styles.stockBadge} ${!inStock ? styles.outOfStock : ""}`}
+          >
+            {inStock ? "Available" : "Out of stock"}
+          </span>
         </div>
-        <p className="rating">
-          {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
-        </p>
-        <div className="divider" />
-        <h3>About this item</h3>
-        <p className="description">
-          {product.description || "No description provided."}
-        </p>
-        <Link href={`/seller/${product.seller.id}`} className="seller-line">
-          <span>{product.seller.displayName.slice(0, 2).toUpperCase()}</span>
+      </section>
+
+      <section className={`product-info ${styles.content}`}>
+        <Link
+          href={`/seller/${product.seller.id}`}
+          className={styles.sellerLink}
+        >
+          {product.seller.displayName}
+        </Link>
+        <h2 className={styles.title}>{product.name}</h2>
+
+        <div className={styles.priceRow}>
+          <div className={`price large ${styles.price}`}>
+            <strong>{money(product.price)}</strong>
+          </div>
+          <span
+            className={`${styles.inventory} ${!inStock ? styles.inventoryOut : ""}`}
+          >
+            {inStock ? `${product.stock} in stock` : "Currently unavailable"}
+          </span>
+        </div>
+
+        <hr className={styles.divider} />
+
+        <section aria-labelledby="about-product">
+          <h3 id="about-product" className={styles.sectionTitle}>
+            About this item
+          </h3>
+          <p className={styles.description}>
+            {product.description || "No description provided."}
+          </p>
+        </section>
+
+        <Link
+          href={`/seller/${product.seller.id}`}
+          className={`seller-line ${styles.sellerCard}`}
+          aria-label={`View ${product.seller.displayName} seller profile`}
+        >
+          <span aria-hidden="true">
+            {product.seller.displayName.slice(0, 2).toUpperCase()}
+          </span>
           <div>
             <strong>{product.seller.displayName}</strong>
-            <small>{product.category.name}</small>
+            <small>{product.category.name} seller</small>
           </div>
           <Icon name="chevron" />
         </Link>
-        {message && <p role="status">{message}</p>}
+
+        {message && (
+          <p className={styles.status} role="status" aria-live="polite">
+            {message}
+          </p>
+        )}
       </section>
-      <div className="sticky-actions">
+
+      <div
+        className={`sticky-actions ${styles.actions}`}
+        aria-label="Product actions"
+      >
         <button
-          disabled={product.stock < 1}
-          className="secondary-button"
+          disabled={!inStock}
+          className={`secondary-button ${styles.actionButton}`}
           onClick={() =>
             void protectedAction(() => cartApi.add(id, 1), "Added to cart")
           }
@@ -128,8 +191,8 @@ export default function ProductPage({
           Add to cart
         </button>
         <button
-          disabled={product.stock < 1}
-          className="dark-button"
+          disabled={!inStock}
+          className={`dark-button ${styles.actionButton}`}
           onClick={() =>
             void protectedAction(async () => {
               await cartApi.add(id, 1);
