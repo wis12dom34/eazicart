@@ -11,6 +11,12 @@ import {
   SignInState,
 } from "../components/async-state";
 import { useAuth } from "../providers/auth-provider";
+
+const formString = (form: FormData, key: string) => {
+  const value = form.get(key);
+  return typeof value === "string" ? value : "";
+};
+
 export default function AddressBook() {
   const auth = useAuth();
   const [adding, setAdding] = useState(false);
@@ -25,12 +31,12 @@ export default function AddressBook() {
     const f = new FormData(e.currentTarget);
     try {
       await addressesApi.create({
-        label: String(f.get("label")),
-        line1: String(f.get("line1")),
-        city: String(f.get("city")),
-        region: String(f.get("region")),
-        postalCode: String(f.get("postalCode")),
-        country: String(f.get("country")),
+        label: formString(f, "label"),
+        line1: formString(f, "line1"),
+        city: formString(f, "city"),
+        region: formString(f, "region"),
+        postalCode: formString(f, "postalCode"),
+        country: formString(f, "country"),
         isDefault: f.get("isDefault") === "on",
       });
       setAdding(false);
@@ -132,7 +138,7 @@ export default function AddressBook() {
                     onClick={() =>
                       void addressesApi
                         .update(a.id, { isDefault: true })
-                        .then(result.reload)
+                        .then(() => result.reload())
                         .catch((x: unknown) =>
                           setError(
                             x instanceof Error
