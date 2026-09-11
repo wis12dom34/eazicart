@@ -25,6 +25,21 @@ export function buildApp(
     requestIdHeader: "x-request-id",
   });
   const store = dependencies.authStore ?? new MemoryAuthStore();
+  app.addHook("onRequest", async (request, reply) => {
+    if (request.headers.origin === config.WEB_ORIGIN) {
+      reply.header("Access-Control-Allow-Origin", config.WEB_ORIGIN);
+      reply.header("Vary", "Origin");
+      reply.header(
+        "Access-Control-Allow-Headers",
+        "Authorization, Content-Type",
+      );
+      reply.header(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PATCH, DELETE, OPTIONS",
+      );
+    }
+    if (request.method === "OPTIONS") return reply.code(204).send();
+  });
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError)
       return reply.code(400).send({

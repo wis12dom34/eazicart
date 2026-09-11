@@ -1,61 +1,94 @@
-import Link from "next/link";
+"use client";
+import { use } from "react";
 import { Header } from "../../components/header";
 import { Icon } from "../../components/icon";
-import { products } from "../../data";
-
-export default function OrderDetail() {
-  const product = products[0];
-
+import { money } from "../../data";
+import { ordersApi } from "../../../lib/api/orders";
+import { useRequest } from "../../hooks/use-request";
+import {
+  ErrorState,
+  LoadingState,
+  SignInState,
+} from "../../components/async-state";
+import { useAuth } from "../../providers/auth-provider";
+export default function OrderDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const auth = useAuth();
+  const result = useRequest(
+    async () =>
+      auth.isAuthenticated ? ordersApi.get(id) : Promise.resolve(undefined),
+    [auth.isAuthenticated, id],
+  );
+  if (auth.loading || result.loading)
+    return (
+      <main className="app-shell">
+        <Header title="Order details" back="/orders" />
+        <LoadingState />
+      </main>
+    );
+  if (!auth.isAuthenticated)
+    return (
+      <main className="app-shell">
+        <Header title="Order details" back="/orders" />
+        <SignInState />
+      </main>
+    );
+  if (result.error || !result.data)
+    return (
+      <main className="app-shell">
+        <Header title="Order details" back="/orders" />
+        <ErrorState message={result.error || "Order not found"} />
+      </main>
+    );
+  const order = result.data.data;
   return (
     <main className="app-shell">
       <Header title="Order details" back="/orders" />
       <section className="order-status">
-        <span className="status-badge">In transit</span>
-        <h2>Your order is on the way</h2>
-        <p>Estimated delivery 19–21 September</p>
-        <Link className="secondary-button" href="/tracking">
-          Track package
-        </Link>
+        <span className="status-badge">
+          {order.status.replaceAll("_", " ")}
+        </span>
+        <h2>Order status</h2>
+        <p>This is the latest status available from EaziCart.</p>
       </section>
       <section className="checkout-section">
         <h2>Items</h2>
-        {product ? (
-          <div className="order-product">
-            <div style={{ background: product.color }}>{product.image}</div>
+        {order.items.map((item) => (
+          <div className="order-product" key={item.id}>
+            <div style={{ background: "#eee8e1" }}>📦</div>
             <span>
-              <strong>{product.name}</strong>
-              <small>Qty 1 · ₦48,500</small>
+              <strong>{item.productName}</strong>
+              <small>
+                Qty {item.quantity} · {money(item.unitPrice)} each
+              </small>
             </span>
           </div>
-        ) : (
-          <p>No order items found.</p>
-        )}
+        ))}
       </section>
       <section className="checkout-section">
         <h2>Delivery details</h2>
         <div className="info-line">
           <Icon name="location" />
           <p>
-            <strong>Home</strong>
+            <strong>{order.address.label || "Delivery address"}</strong>
             <br />
-            14 Admiralty Way, Lekki Phase 1, Lagos
+            {order.address.line1}
+            {order.address.line2 ? `, ${order.address.line2}` : ""},{" "}
+            {order.address.city}, {order.address.region},{" "}
+            {order.address.country}
           </p>
         </div>
       </section>
       <section className="checkout-section">
         <h2>Payment summary</h2>
         <div className="summary">
-          <div>
-            <span>Items</span>
-            <b>₦48,500</b>
-          </div>
-          <div>
-            <span>Delivery</span>
-            <b>₦2,500</b>
-          </div>
           <div className="total">
             <strong>Total</strong>
-            <strong>₦51,000</strong>
+            <strong>{money(order.total)}</strong>
           </div>
         </div>
       </section>

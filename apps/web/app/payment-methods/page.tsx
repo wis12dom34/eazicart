@@ -8,16 +8,15 @@ export default function Payments() {
         <article className="payment-card">
           <Icon name="card" size={30} />
           <div>
-            <strong>•••• •••• •••• 4242</strong>
-            <small>Visa · Expires 08/28</small>
+            <strong>Payment methods coming soon</strong>
+            <small>No payment provider is connected in this MVP.</small>
           </div>
-          <span className="status-badge">Default</span>
         </article>
-        <button className="add-card">
+        <button className="add-card" disabled>
           <Icon name="plus" /> Add payment method
         </button>
         <p className="secure-note">
-          Your payment information is encrypted and stored securely.
+          EaziCart is not collecting or storing card information yet.
         </p>
       </section>
     </main>

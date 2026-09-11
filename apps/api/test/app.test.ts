@@ -27,6 +27,7 @@ const config: AppConfig = {
   JWT_SECRET: "test-secret-that-is-at-least-32-characters",
   ACCESS_TOKEN_TTL: "15m",
   REFRESH_TOKEN_TTL_DAYS: 30,
+  WEB_ORIGIN: "http://localhost:3000",
 };
 const apps: ReturnType<typeof buildApp>[] = [];
 const makeApp = () => {

@@ -1,44 +1,76 @@
+"use client";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { Header } from "../components/header";
 import { Icon } from "../components/icon";
 import { ProductGrid } from "../components/product-card";
-import { products, sellers } from "../data";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "../components/async-state";
+import { productsApi } from "../../lib/api/products";
+import { sellersApi } from "../../lib/api/sellers";
+import { categoriesApi } from "../../lib/api/categories";
+import { useRequest } from "../hooks/use-request";
 export default function ExplorePage() {
+  const params = useSearchParams();
+  const search = params.get("search") ?? "";
+  const category = params.get("category") ?? "";
+  const products = useRequest(
+    () => productsApi.list({ search, category, limit: 40 }),
+    [search, category],
+  );
+  const categories = useRequest(() => categoriesApi.list(), []);
+  const sellers = useRequest(() => sellersApi.list(), []);
+  const error = products.error || categories.error || sellers.error;
   return (
     <main className="app-shell with-nav">
       <Header title="Explore" />
-      <label className="search-bar">
+      <form className="search-bar">
         <Icon name="search" size={20} />
         <input
+          name="search"
+          defaultValue={search}
           aria-label="Search products, brands and sellers"
           placeholder="Search products, brands and sellers"
         />
-        <button aria-label="Filter">
+        <button aria-label="Search">
           <Icon name="filter" size={20} />
         </button>
-      </label>
+      </form>
       <div className="filter-tabs">
         <button className="active">Products</button>
         <Link href="#categories">Categories</Link>
         <Link href="#brands">Brands</Link>
         <Link href="#sellers">Sellers</Link>
       </div>
+      {error && (
+        <ErrorState
+          message={error}
+          retry={() => {
+            void products.reload();
+            void categories.reload();
+            void sellers.reload();
+          }}
+        />
+      )}
       <section className="section" id="categories">
         <div className="section-header">
           <h2>Browse categories</h2>
         </div>
         <div className="wide-cards">
-          {["Women", "Men", "Accessories", "Home & living"].map((x, i) => (
+          {categories.data?.data.map((x, i) => (
             <Link
-              href={`?category=${x}`}
+              href={`?category=${encodeURIComponent(x.slug)}`}
               className="wide-card"
-              key={x}
+              key={x.id}
               style={{
-                background: ["#e9ddd4", "#dce1df", "#e6e0d5", "#d8dfdc"][i],
+                background: ["#e9ddd4", "#dce1df", "#e6e0d5", "#d8dfdc"][i % 4],
               }}
             >
-              {x}
+              {x.name}
               <Icon name="chevron" size={18} />
             </Link>
           ))}
@@ -50,11 +82,11 @@ export default function ExplorePage() {
           <Link href="#sellers">See all</Link>
         </div>
         <div className="seller-row">
-          {sellers.map((s) => (
+          {sellers.data?.data.map((s) => (
             <Link href={`/seller/${s.id}`} className="seller-chip" key={s.id}>
-              <span>{s.initials}</span>
-              <strong>{s.name}</strong>
-              <small>{s.followers} followers</small>
+              <span>{s.displayName.slice(0, 2).toUpperCase()}</span>
+              <strong>{s.displayName}</strong>
+              <small>{s._count?.products ?? 0} products</small>
             </Link>
           ))}
         </div>
@@ -63,7 +95,13 @@ export default function ExplorePage() {
         <div className="section-header">
           <h2>Popular picks</h2>
         </div>
-        <ProductGrid products={products} />
+        {products.loading ? (
+          <LoadingState />
+        ) : products.data?.data.length ? (
+          <ProductGrid products={products.data.data} />
+        ) : (
+          <EmptyState message="No products match your search." />
+        )}
       </section>
       <BottomNavigation />
     </main>

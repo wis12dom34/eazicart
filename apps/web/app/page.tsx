@@ -1,10 +1,13 @@
+"use client";
 import Link from "next/link";
 
 import { BottomNavigation } from "./components/bottom-navigation";
 import { Header } from "./components/header";
 import { Icon } from "./components/icon";
 import { ProductGrid } from "./components/product-card";
-import { products } from "./data";
+import { productsApi } from "../lib/api/products";
+import { ErrorState, LoadingState, EmptyState } from "./components/async-state";
+import { useRequest } from "./hooks/use-request";
 
 const categories = [
   ["bag", "Bags"],
@@ -14,6 +17,10 @@ const categories = [
 ] as const;
 
 export default function HomePage() {
+  const { data, loading, error, reload } = useRequest(
+    () => productsApi.list({ limit: 4 }),
+    [],
+  );
   return (
     <main className="app-shell with-nav">
       <Header
@@ -69,7 +76,15 @@ export default function HomePage() {
           <h2>Trending now</h2>
           <Link href="/explore">View all</Link>
         </div>
-        <ProductGrid products={products.slice(0, 4)} />
+        {loading ? (
+          <LoadingState label="Loading products…" />
+        ) : error ? (
+          <ErrorState message={error} retry={reload} />
+        ) : data?.data.length ? (
+          <ProductGrid products={data.data} />
+        ) : (
+          <EmptyState message="No products are available yet." />
+        )}
       </section>
       <BottomNavigation />
     </main>
