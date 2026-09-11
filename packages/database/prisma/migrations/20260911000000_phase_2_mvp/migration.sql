@@ -1,0 +1,11 @@
+ALTER TABLE "Address" ADD COLUMN "isDefault" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "OrderItem" ADD COLUMN "productName" TEXT NOT NULL DEFAULT '';
+UPDATE "OrderItem" AS oi SET "productName" = p."name" FROM "Product" AS p WHERE oi."productId" = p."id";
+ALTER TABLE "OrderItem" ALTER COLUMN "productName" DROP DEFAULT;
+CREATE INDEX "Address_userId_idx" ON "Address"("userId");
+CREATE INDEX "Follow_sellerId_idx" ON "Follow"("sellerId");
+CREATE INDEX "SavedProduct_productId_idx" ON "SavedProduct"("productId");
+CREATE INDEX "Order_userId_createdAt_idx" ON "Order"("userId", "createdAt");
+CREATE INDEX "Product_active_createdAt_idx" ON "Product"("active", "createdAt");
+CREATE INDEX "Product_categoryId_active_idx" ON "Product"("categoryId", "active");
+CREATE INDEX "Product_sellerId_active_idx" ON "Product"("sellerId", "active");
