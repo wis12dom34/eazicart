@@ -32,7 +32,7 @@ export default function OrdersPage() {
       ) : !auth.isAuthenticated ? (
         <SignInState message="Sign in to see your orders." />
       ) : result.error ? (
-        <ErrorState message={result.error} retry={result.reload} />
+        <ErrorState message={result.error} retry={() => void result.reload()} />
       ) : !result.data?.data.length ? (
         <EmptyState message="You have no orders yet." />
       ) : (
