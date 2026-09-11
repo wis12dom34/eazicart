@@ -27,7 +27,10 @@ export default function Saved() {
         ) : !auth.isAuthenticated ? (
           <SignInState />
         ) : result.error ? (
-          <ErrorState message={result.error} retry={() => void result.reload()} />
+          <ErrorState
+            message={result.error}
+            retry={() => void result.reload()}
+          />
         ) : result.data?.data.length ? (
           <ProductGrid products={result.data.data.map((x) => x.product)} />
         ) : (
