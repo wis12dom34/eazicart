@@ -1,0 +1,4 @@
+{
+  "extends": "@eazicart/config/typescript/library.json",
+  "include": ["src/**/*.ts"]
+}
