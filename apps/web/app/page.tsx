@@ -79,7 +79,7 @@ export default function HomePage() {
         {loading ? (
           <LoadingState label="Loading products…" />
         ) : error ? (
-          <ErrorState message={error} retry={reload} />
+          <ErrorState message={error} retry={() => void reload()} />
         ) : data?.data.length ? (
           <ProductGrid products={data.data} />
         ) : (
