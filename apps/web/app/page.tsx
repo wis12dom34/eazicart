@@ -217,6 +217,7 @@ export default function HomePage() {
                     <Link
                       className="figma-home-product-media"
                       href={`/product/${product.id}`}
+                      aria-label={`View ${product.name}`}
                     >
                       {product.images[0] ? (
                         <img
