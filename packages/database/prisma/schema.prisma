@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
+}
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  FULFILLED
+  CANCELLED
+}
+enum NotificationType {
+  ORDER
+  SYSTEM
+  SOCIAL
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  passwordHash String
+  name String
+  role UserRole @default(BUYER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  refreshTokens RefreshToken[]
+  sellerProfile SellerProfile?
+  cart Cart?
+  orders Order[]
+  addresses Address[]
+  savedProducts SavedProduct[]
+  following Follow[] @relation("Follower")
+  followers Follow[] @relation("SellerFollowers")
+  notifications Notification[]
+}
+
+model RefreshToken {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([userId])
+}
+
+model SellerProfile {
+  id String @id @default(cuid())
+  displayName String
+  bio String?
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+}
+
+model Category {
+  id String @id @default(cuid())
+  name String @unique
+  slug String @unique
+  products Product[]
+}
+
+model Product {
+  id String @id @default(cuid())
+  name String
+  description String?
+  price Decimal @db.Decimal(12, 2)
+  stock Int @default(0)
+  active Boolean @default(true)
+  sellerId String
+  categoryId String
+  seller SellerProfile @relation(fields: [sellerId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+  images ProductImage[]
+  cartItems CartItem[]
+  orderItems OrderItem[]
+  savedBy SavedProduct[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductImage {
+  id String @id @default(cuid())
+  url String
+  altText String?
+  position Int @default(0)
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id String @id @default(cuid())
+  quantity Int
+  cartId String
+  productId String
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id String @id @default(cuid())
+  status OrderStatus @default(PENDING)
+  total Decimal @db.Decimal(12, 2)
+  userId String
+  addressId String
+  user User @relation(fields: [userId], references: [id])
+  address Address @relation(fields: [addressId], references: [id])
+  items OrderItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id String @id @default(cuid())
+  quantity Int
+  unitPrice Decimal @db.Decimal(12, 2)
+  orderId String
+  productId String
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Address {
+  id String @id @default(cuid())
+  label String?
+  line1 String
+  line2 String?
+  city String
+  region String
+  postalCode String
+  country String
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+}
+
+model SavedProduct {
+  userId String
+  productId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([userId, productId])
+}
+
+model Follow {
+  followerId String
+  sellerId String
+  follower User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  seller User @relation("SellerFollowers", fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([followerId, sellerId])
+}
+
+model Notification {
+  id String @id @default(cuid())
+  type NotificationType
+  title String
+  body String
+  readAt DateTime?
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+}

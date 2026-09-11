@@ -15,6 +15,10 @@
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "outputs": ["*.tsbuildinfo"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
     }
   }
 }
