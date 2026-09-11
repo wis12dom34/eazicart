@@ -71,7 +71,9 @@ export function ExploreContent() {
               href={`?category=${encodeURIComponent(x.slug)}`}
               className="wide-card"
               key={x.id}
-              style={{ background: categoryColors[i % categoryColors.length] }}
+              style={{
+                background: categoryColors[i % categoryColors.length],
+              }}
             >
               {x.name}
               <Icon name="chevron" size={18} />
