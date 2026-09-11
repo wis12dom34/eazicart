@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@eazicart/database";
-import type { AuthStore } from "./store.js";
+import { Prisma, type PrismaClient } from "@eazicart/database";
+import { EmailAlreadyExistsError, type AuthStore } from "./store.js";
 
 export class PrismaAuthStore implements AuthStore {
   constructor(private readonly database: PrismaClient) {}
@@ -27,10 +27,19 @@ export class PrismaAuthStore implements AuthStore {
     name: string;
     passwordHash: string;
   }) {
-    return this.database.user.create({
-      data: input,
-      select: { id: true, email: true, name: true, passwordHash: true },
-    });
+    try {
+      return await this.database.user.create({
+        data: input,
+        select: { id: true, email: true, name: true, passwordHash: true },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      )
+        throw new EmailAlreadyExistsError();
+      throw error;
+    }
   }
 
   async saveRefreshToken(input: {
@@ -54,11 +63,15 @@ export class PrismaAuthStore implements AuthStore {
       });
       if (!token || token.revokedAt || token.expiresAt <= new Date())
         return undefined;
-      await transaction.refreshToken.update({
-        where: { id: token.id },
+      const consumed = await transaction.refreshToken.updateMany({
+        where: {
+          id: token.id,
+          revokedAt: null,
+          expiresAt: { gt: new Date() },
+        },
         data: { revokedAt: new Date() },
       });
-      return token.userId;
+      return consumed.count === 1 ? token.userId : undefined;
     });
   }
 }

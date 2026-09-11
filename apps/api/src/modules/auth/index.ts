@@ -5,7 +5,11 @@ import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
 import type { AppConfig } from "../../config.js";
 import { AppError } from "../../errors.js";
-import type { AuthStore, StoredUser } from "./store.js";
+import {
+  EmailAlreadyExistsError,
+  type AuthStore,
+  type StoredUser,
+} from "./store.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -53,7 +57,9 @@ export function registerAuth(
     if (!token)
       throw new AppError(401, "UNAUTHORIZED", "A bearer token is required");
     try {
-      request.userId = (await jwtVerify(token, secret)).payload.sub;
+      const subject = (await jwtVerify(token, secret)).payload.sub;
+      if (!subject) throw new Error("Access token has no subject");
+      request.userId = subject;
     } catch {
       throw new AppError(
         401,
@@ -70,10 +76,21 @@ export function registerAuth(
         "EMAIL_IN_USE",
         "An account already exists for this email",
       );
-    const user = await store.createUser({
-      ...input,
-      passwordHash: await argon2.hash(input.password),
-    });
+    let user: StoredUser;
+    try {
+      user = await store.createUser({
+        ...input,
+        passwordHash: await argon2.hash(input.password),
+      });
+    } catch (error) {
+      if (error instanceof EmailAlreadyExistsError)
+        throw new AppError(
+          409,
+          "EMAIL_IN_USE",
+          "An account already exists for this email",
+        );
+      throw error;
+    }
     return reply
       .code(201)
       .send({ user: publicUser(user), tokens: await issueTokens(user.id) });
