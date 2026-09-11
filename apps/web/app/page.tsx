@@ -10,7 +10,11 @@ export default function HomePage() {
 
       <section className="hero">
         <p className="eyebrow">Commerce, made social</p>
-        <h1>Discover what’s next.<br />Shop it with ease.</h1>
+        <h1>
+          Discover what’s next.
+          <br />
+          Shop it with ease.
+        </h1>
         <p className="intro">
           EaziCart is a new home for discovering products, connecting with
           trusted sellers, and growing modern businesses.
