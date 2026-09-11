@@ -54,7 +54,7 @@ export default function ProductPage({
     return (
       <main className="app-shell">
         <Header title="Product details" back="/" />
-        <ErrorState message={result.error} retry={result.reload} />
+        <ErrorState message={result.error} retry={() => void result.reload()} />
       </main>
     );
   if (!product)
