@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BottomNavigation } from "../components/bottom-navigation";
@@ -14,7 +15,8 @@ import { productsApi } from "../../lib/api/products";
 import { sellersApi } from "../../lib/api/sellers";
 import { categoriesApi } from "../../lib/api/categories";
 import { useRequest } from "../hooks/use-request";
-export default function ExplorePage() {
+
+function ExploreContent() {
   const params = useSearchParams();
   const search = params.get("search") ?? "";
   const category = params.get("category") ?? "";
@@ -25,6 +27,7 @@ export default function ExplorePage() {
   const categories = useRequest(() => categoriesApi.list(), []);
   const sellers = useRequest(() => sellersApi.list(), []);
   const error = products.error || categories.error || sellers.error;
+
   return (
     <main className="app-shell with-nav">
       <Header title="Explore" />
@@ -67,7 +70,9 @@ export default function ExplorePage() {
               className="wide-card"
               key={x.id}
               style={{
-                background: ["#e9ddd4", "#dce1df", "#e6e0d5", "#d8dfdc"][i % 4],
+                background: ["#e9ddd4", "#dce1df", "#e6e0d5", "#d8dfdc"][
+                  i % 4
+                ],
               }}
             >
               {x.name}
@@ -105,5 +110,13 @@ export default function ExplorePage() {
       </section>
       <BottomNavigation />
     </main>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <ExploreContent />
+    </Suspense>
   );
 }
