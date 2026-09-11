@@ -2,7 +2,11 @@ import Link from "next/link";
 import { Header } from "../components/header";
 import { Icon } from "../components/icon";
 import { money, products } from "../data";
+
 export default function CheckoutPage() {
+  const product = products[0];
+  const itemTotal = product ? product.price : 0;
+
   return (
     <main className="app-shell checkout">
       <Header title="Checkout" back="/cart" />
@@ -42,7 +46,7 @@ export default function CheckoutPage() {
         <div className="summary">
           <div>
             <span>Items</span>
-            <strong>{money(products[0].price)}</strong>
+            <strong>{money(itemTotal)}</strong>
           </div>
           <div>
             <span>Delivery fee</span>
