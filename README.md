@@ -51,7 +51,8 @@ pnpm format:check
 
 ## Status
 
-The initial monorepo foundation and a minimal web landing screen are in place.
+The customer MVP connects the Next.js web app to the Fastify API and PostgreSQL.
+See the development guide for seeded local setup and browser-flow checks.
 
 ## Security
 

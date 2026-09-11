@@ -95,7 +95,7 @@ jobs:
           git diff -- . ':!pnpm-lock.yaml'
 
       - name: Upload browser test results
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: browser-test-results
