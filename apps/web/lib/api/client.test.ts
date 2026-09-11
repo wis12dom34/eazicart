@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiRequest, ApiError } from "./client";
+import { apiRequest } from "./client";
 import { cartApi } from "./cart";
 import { productsApi } from "./products";
 import { authApi } from "./auth";
@@ -19,13 +19,11 @@ describe("API client", () => {
         ),
       ),
     );
-    await expect(apiRequest("/failure")).rejects.toEqual(
-      expect.objectContaining<ApiError>({
-        status: 409,
-        code: "NOPE",
-        message: "Not available",
-      }),
-    );
+    await expect(apiRequest("/failure")).rejects.toMatchObject({
+      status: 409,
+      code: "NOPE",
+      message: "Not available",
+    });
   });
   it("supports query parameters and 204 responses", async () => {
     const fetchMock = vi
