@@ -92,7 +92,9 @@ export default function CartPage() {
                   onClick={() =>
                     void (item.quantity === 1
                       ? mutate(() => cartApi.remove(item.id))
-                      : mutate(() => cartApi.update(item.id, item.quantity - 1)))
+                      : mutate(() =>
+                          cartApi.update(item.id, item.quantity - 1),
+                        ))
                   }
                 >
                   <Icon name="minus" size={16} />
@@ -101,7 +103,9 @@ export default function CartPage() {
                 <button
                   aria-label="Increase quantity"
                   onClick={() =>
-                    void mutate(() => cartApi.update(item.id, item.quantity + 1))
+                    void mutate(() =>
+                      cartApi.update(item.id, item.quantity + 1),
+                    )
                   }
                 >
                   <Icon name="plus" size={16} />
