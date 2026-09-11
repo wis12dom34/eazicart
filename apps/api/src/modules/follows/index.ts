@@ -33,11 +33,9 @@ export function registerFollows(app: FastifyInstance, client?: PrismaClient) {
         "ALREADY_FOLLOWING",
         "Seller is already followed",
       );
-    return reply
-      .code(201)
-      .send({
-        data: await db().follow.create({ data: { followerId: uid, sellerId } }),
-      });
+    return reply.code(201).send({
+      data: await db().follow.create({ data: { followerId: uid, sellerId } }),
+    });
   });
   app.delete("/sellers/:sellerId/follow", auth, async (r, reply) => {
     const { sellerId } = p.parse(r.params);
