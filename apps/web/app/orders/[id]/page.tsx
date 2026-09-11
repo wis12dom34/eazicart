@@ -2,7 +2,10 @@ import Link from "next/link";
 import { Header } from "../../components/header";
 import { Icon } from "../../components/icon";
 import { products } from "../../data";
+
 export default function OrderDetail() {
+  const product = products[0];
+
   return (
     <main className="app-shell">
       <Header title="Order details" back="/orders" />
@@ -16,15 +19,17 @@ export default function OrderDetail() {
       </section>
       <section className="checkout-section">
         <h2>Items</h2>
-        <div className="order-product">
-          <div style={{ background: products[0].color }}>
-            {products[0].image}
+        {product ? (
+          <div className="order-product">
+            <div style={{ background: product.color }}>{product.image}</div>
+            <span>
+              <strong>{product.name}</strong>
+              <small>Qty 1 · ₦48,500</small>
+            </span>
           </div>
-          <span>
-            <strong>{products[0].name}</strong>
-            <small>Qty 1 · ₦48,500</small>
-          </span>
-        </div>
+        ) : (
+          <p>No order items found.</p>
+        )}
       </section>
       <section className="checkout-section">
         <h2>Delivery details</h2>
