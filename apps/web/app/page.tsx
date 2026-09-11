@@ -6,6 +6,13 @@ import { Icon } from "./components/icon";
 import { ProductGrid } from "./components/product-card";
 import { products } from "./data";
 
+const categories = [
+  ["bag", "Bags"],
+  ["shirt", "Fashion"],
+  ["sparkle", "Beauty"],
+  ["home", "Home"],
+] as const;
+
 export default function HomePage() {
   return (
     <main className="app-shell with-nav">
@@ -43,12 +50,7 @@ export default function HomePage() {
           <Link href="/explore">See all</Link>
         </div>
         <div className="category-row">
-          {[
-            ["bag", "Bags"],
-            ["shirt", "Fashion"],
-            ["sparkle", "Beauty"],
-            ["home", "Home"],
-          ].map(([icon, label]) => (
+          {categories.map(([icon, label]) => (
             <Link
               className="category-pill"
               href={`/explore?category=${label}`}
