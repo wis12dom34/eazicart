@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
 
 export function registerProducts(app: FastifyInstance) {
-  app.get("/products", async () => ({ data: [] }));
+  app.get("/products", () => ({ data: [] }));
 }
