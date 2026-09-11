@@ -38,11 +38,6 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Show exact Prettier CSS diff
-        run: |
-          pnpm exec prettier --write apps/web/app/styles.css
-          git diff -- apps/web/app/styles.css
-
       - name: Format check
         run: pnpm format:check
 
