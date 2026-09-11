@@ -47,7 +47,7 @@ export default function CartPage() {
     return (
       <main className="app-shell">
         <Header title="My cart" back="/" />
-        <ErrorState message={cart.error} retry={cart.reload} />
+        <ErrorState message={cart.error} retry={() => void cart.reload()} />
       </main>
     );
   const data = cart.data?.data;
@@ -66,7 +66,7 @@ export default function CartPage() {
         action={
           <button
             className="text-link"
-            onClick={() => void mutate(cartApi.clear)}
+            onClick={() => void mutate(() => cartApi.clear())}
           >
             Clear
           </button>
@@ -92,9 +92,7 @@ export default function CartPage() {
                   onClick={() =>
                     void (item.quantity === 1
                       ? mutate(() => cartApi.remove(item.id))
-                      : mutate(() =>
-                          cartApi.update(item.id, item.quantity - 1),
-                        ))
+                      : mutate(() => cartApi.update(item.id, item.quantity - 1)))
                   }
                 >
                   <Icon name="minus" size={16} />
@@ -103,9 +101,7 @@ export default function CartPage() {
                 <button
                   aria-label="Increase quantity"
                   onClick={() =>
-                    void mutate(() =>
-                      cartApi.update(item.id, item.quantity + 1),
-                    )
+                    void mutate(() => cartApi.update(item.id, item.quantity + 1))
                   }
                 >
                   <Icon name="plus" size={16} />
