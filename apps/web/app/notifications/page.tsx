@@ -45,7 +45,7 @@ export default function Notifications() {
       ) : !auth.isAuthenticated ? (
         <SignInState />
       ) : result.error ? (
-        <ErrorState message={result.error} retry={result.reload} />
+        <ErrorState message={result.error} retry={() => void result.reload()} />
       ) : !result.data?.data.length ? (
         <EmptyState message="You have no notifications." />
       ) : (
@@ -54,7 +54,9 @@ export default function Notifications() {
             <article
               key={n.id}
               className={n.readAt ? "" : "unread"}
-              onClick={() => !n.readAt && void read(n.id)}
+              onClick={() => {
+                if (!n.readAt) void read(n.id);
+              }}
             >
               <span>
                 <Icon name="bell" />
