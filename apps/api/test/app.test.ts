@@ -85,6 +85,60 @@ describe("API foundation", () => {
     expect(body.tokens.accessToken).toBeTypeOf("string");
   });
 
+  it("rejects duplicate emails after normalization", async () => {
+    const app = makeApp();
+    const payload = {
+      email: "buyer@example.com",
+      name: "Buyer",
+      password: "correct-horse",
+    };
+    expect(
+      (await app.inject({ method: "POST", url: "/auth/register", payload }))
+        .statusCode,
+    ).toBe(201);
+    const response = await app.inject({
+      method: "POST",
+      url: "/auth/register",
+      payload: { ...payload, email: "BUYER@EXAMPLE.COM" },
+    });
+    expect(response.statusCode).toBe(409);
+    expect(response.json<{ error: { code: string } }>().error.code).toBe(
+      "EMAIL_IN_USE",
+    );
+  });
+
+  it("rotates refresh tokens and prevents their reuse", async () => {
+    const app = makeApp();
+    const registered = await app.inject({
+      method: "POST",
+      url: "/auth/register",
+      payload: {
+        email: "buyer@example.com",
+        name: "Buyer",
+        password: "correct-horse",
+      },
+    });
+    const refreshToken = registered.json<AuthResponse>().tokens.refreshToken;
+    const rotated = await app.inject({
+      method: "POST",
+      url: "/auth/refresh",
+      payload: { refreshToken },
+    });
+    expect(rotated.statusCode).toBe(200);
+    expect(
+      rotated.json<{ tokens: AuthTokensResponse }>().tokens.refreshToken,
+    ).not.toBe(refreshToken);
+    const reused = await app.inject({
+      method: "POST",
+      url: "/auth/refresh",
+      payload: { refreshToken },
+    });
+    expect(reused.statusCode).toBe(401);
+    expect(reused.json<{ error: { code: string } }>().error.code).toBe(
+      "INVALID_REFRESH_TOKEN",
+    );
+  });
+
   it("protects and authorizes the current-user route", async () => {
     const app = makeApp();
     expect(

@@ -4,6 +4,13 @@ export interface StoredUser {
   name: string;
   passwordHash: string;
 }
+
+export class EmailAlreadyExistsError extends Error {
+  constructor() {
+    super("A user with this email already exists");
+    this.name = "EmailAlreadyExistsError";
+  }
+}
 export interface AuthStore {
   findUserByEmail(email: string): Promise<StoredUser | undefined>;
   findUserById(id: string): Promise<StoredUser | undefined>;
@@ -34,6 +41,8 @@ export class MemoryAuthStore implements AuthStore {
   }
 
   createUser(input: Omit<StoredUser, "id">): Promise<StoredUser> {
+    if ([...this.users.values()].some((user) => user.email === input.email))
+      throw new EmailAlreadyExistsError();
     const user = { ...input, id: crypto.randomUUID() };
     this.users.set(user.id, user);
     return Promise.resolve(user);
