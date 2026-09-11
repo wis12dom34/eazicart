@@ -2,6 +2,23 @@ import { afterEach, describe, expect, it } from "vitest";
 import { buildApp } from "../src/app.js";
 import type { AppConfig } from "../src/config.js";
 
+interface PublicUserResponse {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface AuthTokensResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
+
+interface AuthResponse {
+  user: PublicUserResponse;
+  tokens: AuthTokensResponse;
+}
+
 const config: AppConfig = {
   NODE_ENV: "test",
   HOST: "127.0.0.1",
@@ -23,8 +40,12 @@ describe("API foundation", () => {
   it("reports health", async () => {
     const response = await makeApp().inject({ method: "GET", url: "/health" });
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ status: "ok", service: "eazicart-api" });
+    expect(response.json<{ status: string; service: string }>()).toEqual({
+      status: "ok",
+      service: "eazicart-api",
+    });
   });
+
   it("registers without exposing a password or stored token", async () => {
     const response = await makeApp().inject({
       method: "POST",
@@ -36,11 +57,13 @@ describe("API foundation", () => {
       },
     });
     expect(response.statusCode).toBe(201);
-    expect(response.json().user).toEqual(
+    const body = response.json<AuthResponse>();
+    expect(body.user).toEqual(
       expect.objectContaining({ email: "buyer@example.com" }),
     );
     expect(response.body).not.toContain("passwordHash");
   });
+
   it("logs in registered users", async () => {
     const app = makeApp();
     await app.inject({
@@ -58,8 +81,10 @@ describe("API foundation", () => {
       payload: { email: "buyer@example.com", password: "correct-horse" },
     });
     expect(response.statusCode).toBe(200);
-    expect(response.json().tokens.accessToken).toBeTypeOf("string");
+    const body = response.json<AuthResponse>();
+    expect(body.tokens.accessToken).toBeTypeOf("string");
   });
+
   it("protects and authorizes the current-user route", async () => {
     const app = makeApp();
     expect(
@@ -74,13 +99,13 @@ describe("API foundation", () => {
         password: "correct-horse",
       },
     });
-    const token = registered.json().tokens.accessToken as string;
+    const token = registered.json<AuthResponse>().tokens.accessToken;
     const response = await app.inject({
       method: "GET",
       url: "/users/me",
       headers: { authorization: `Bearer ${token}` },
     });
     expect(response.statusCode).toBe(200);
-    expect(response.json().email).toBe("buyer@example.com");
+    expect(response.json<PublicUserResponse>().email).toBe("buyer@example.com");
   });
 });
