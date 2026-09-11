@@ -7,12 +7,20 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "build": "prisma generate",
     "lint": "eslint . --max-warnings=0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.1"
   },
   "devDependencies": {
     "@eazicart/config": "workspace:*",
     "eslint": "^9.35.0",
+    "prisma": "^6.16.1",
     "typescript": "^5.9.2"
   }
 }

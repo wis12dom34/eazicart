@@ -9,3 +9,6 @@ export interface DatabaseConfig {
 }
 
 export const DATABASE_URL_ENV_KEY = "DATABASE_URL";
+
+export { PrismaClient } from "@prisma/client";
+export type * from "@prisma/client";
