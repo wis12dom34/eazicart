@@ -79,7 +79,8 @@ export function registerAuth(
     let user: StoredUser;
     try {
       user = await store.createUser({
-        ...input,
+        email: input.email,
+        name: input.name,
         passwordHash: await argon2.hash(input.password),
       });
     } catch (error) {
