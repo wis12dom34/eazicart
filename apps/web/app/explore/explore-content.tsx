@@ -16,6 +16,8 @@ import { sellersApi } from "../../lib/api/sellers";
 import { categoriesApi } from "../../lib/api/categories";
 import { useRequest } from "../hooks/use-request";
 
+const categoryColors = ["#e9ddd4", "#dce1df", "#e6e0d5", "#d8dfdc"];
+
 export function ExploreContent() {
   const params = useSearchParams();
   const search = params.get("search") ?? "";
@@ -69,11 +71,7 @@ export function ExploreContent() {
               href={`?category=${encodeURIComponent(x.slug)}`}
               className="wide-card"
               key={x.id}
-              style={{
-                background: ["#e9ddd4", "#dce1df", "#e6e0d5", "#d8dfdc"][
-                  i % 4
-                ],
-              }}
+              style={{ background: categoryColors[i % categoryColors.length] }}
             >
               {x.name}
               <Icon name="chevron" size={18} />
