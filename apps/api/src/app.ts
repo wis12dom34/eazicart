@@ -48,7 +48,7 @@ export function buildApp(
       requestId: request.id,
     });
   });
-  app.get("/health", async () => ({ status: "ok", service: "eazicart-api" }));
+  app.get("/health", () => ({ status: "ok", service: "eazicart-api" }));
   registerAuth(app, config, store);
   registerUsers(app, store);
   registerSellerProfiles(app);
