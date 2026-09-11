@@ -66,11 +66,13 @@ describe("API client", () => {
   });
 
   it("cart mutations submit identifiers and quantities, never prices", async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockImplementation(() =>
-      Promise.resolve(
-        new Response(JSON.stringify({ data: {} }), { status: 201 }),
-      ),
-    );
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockImplementation(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ data: {} }), { status: 201 }),
+        ),
+      );
     vi.stubGlobal("fetch", fetchMock);
     await cartApi.add("product-1", 2);
     await cartApi.update("item-1", 3);
