@@ -57,14 +57,12 @@ export function registerSellerProfiles(
         "SELLER_PROFILE_EXISTS",
         "Seller profile already exists",
       );
-    return reply
-      .code(201)
-      .send({
-        data: await db().sellerProfile.create({
-          data: { ...body.parse(r.body), userId: uid },
-          include,
-        }),
-      });
+    return reply.code(201).send({
+      data: await db().sellerProfile.create({
+        data: { ...body.parse(r.body), userId: uid },
+        include,
+      }),
+    });
   });
   app.patch("/seller-profile", protectedRoute(app), async (r) => {
     const uid = userId(r);
