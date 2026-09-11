@@ -33,7 +33,9 @@ test("Home feed follow and cart actions persist through the real API", async ({
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
 
   await page.goto("/cart");
-  await expect(page.getByText("Woven everyday tote", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Woven everyday tote", { exact: true }),
+  ).toBeVisible();
   await expect(page.locator(".quantity span")).toHaveText("1");
   await expect(page.locator(".summary .total")).toContainText("18,500");
 });
