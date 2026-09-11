@@ -60,7 +60,9 @@ describe("API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
     await productsApi.get("a/b");
-    expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain("/products/a%2Fb");
+    expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain(
+      "/products/a%2Fb",
+    );
   });
 
   it("cart mutations submit identifiers and quantities, never prices", async () => {
