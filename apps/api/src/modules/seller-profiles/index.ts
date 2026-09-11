@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
 
 export function registerSellerProfiles(app: FastifyInstance) {
-  app.get("/seller-profiles", { preHandler: app.authenticate }, async () => ({
-    data: [],
-  }));
+  app.get(
+    "/seller-profiles",
+    { preHandler: (request) => app.authenticate(request) },
+    () => ({ data: [] }),
+  );
 }
