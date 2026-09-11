@@ -22,30 +22,40 @@ export class MemoryAuthStore implements AuthStore {
     string,
     { userId: string; expiresAt: Date }
   >();
-  async findUserByEmail(email: string) {
-    return [...this.users.values()].find((user) => user.email === email);
+
+  findUserByEmail(email: string): Promise<StoredUser | undefined> {
+    return Promise.resolve(
+      [...this.users.values()].find((user) => user.email === email),
+    );
   }
-  async findUserById(id: string) {
-    return this.users.get(id);
+
+  findUserById(id: string): Promise<StoredUser | undefined> {
+    return Promise.resolve(this.users.get(id));
   }
-  async createUser(input: Omit<StoredUser, "id">) {
+
+  createUser(input: Omit<StoredUser, "id">): Promise<StoredUser> {
     const user = { ...input, id: crypto.randomUUID() };
     this.users.set(user.id, user);
-    return user;
+    return Promise.resolve(user);
   }
-  async saveRefreshToken(input: {
+
+  saveRefreshToken(input: {
     hash: string;
     userId: string;
     expiresAt: Date;
-  }) {
+  }): Promise<void> {
     this.tokens.set(input.hash, {
       userId: input.userId,
       expiresAt: input.expiresAt,
     });
+    return Promise.resolve();
   }
-  async consumeRefreshToken(hash: string) {
+
+  consumeRefreshToken(hash: string): Promise<string | undefined> {
     const token = this.tokens.get(hash);
     this.tokens.delete(hash);
-    return token && token.expiresAt > new Date() ? token.userId : undefined;
+    return Promise.resolve(
+      token && token.expiresAt > new Date() ? token.userId : undefined,
+    );
   }
 }
