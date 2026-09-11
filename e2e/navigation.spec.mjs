@@ -19,7 +19,7 @@ test("navigation matches Figma sizing and leaves products reachable", async ({
   }
   await page.screenshot({ path: testInfo.outputPath("home.png") });
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  const lastCard = await page.locator(".product-card").last().boundingBox();
+  const lastCard = await page.locator(".figma-home-product").last().boundingBox();
   const navBox = await nav.boundingBox();
   expect(lastCard.y + lastCard.height).toBeLessThanOrEqual(navBox.y);
   await page.getByRole("link", { name: "Fashion", exact: true }).click();
