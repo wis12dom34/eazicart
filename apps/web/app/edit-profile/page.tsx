@@ -12,8 +12,9 @@ export default function EditProfile() {
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
+    const name = data.get("name");
     try {
-      await usersApi.update(String(data.get("name")));
+      await usersApi.update(typeof name === "string" ? name : "");
       await auth.reloadUser();
       router.push("/profile");
     } catch (x) {
