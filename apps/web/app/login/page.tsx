@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { LoadingState } from "../components/async-state";
-import { ExploreContent } from "./explore-content";
+import { LoginContent } from "./login-content";
 
-export default function ExplorePage() {
+export default function LoginPage() {
   return (
     <Suspense fallback={<LoadingState />}>
-      <ExploreContent />
+      <LoginContent />
     </Suspense>
   );
 }

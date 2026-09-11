@@ -1,3 +1,4 @@
+// Demo content is intentionally retained only for the deferred Reels experience.
 export type Product = {
   id: string;
   name: string;
@@ -98,4 +99,9 @@ export const sellers = [
   },
 ];
 
-export const money = (value: number) => `₦${value.toLocaleString("en-NG")}`;
+export const money = (value: string | number) => {
+  const normalized = String(value);
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return "₦—";
+  const [whole, fraction] = normalized.split(".");
+  return `₦${BigInt(whole ?? "0").toLocaleString("en-NG")}${fraction ? `.${fraction.padEnd(2, "0")}` : ""}`;
+};

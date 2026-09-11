@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
 import "./styles.css";
+import { AuthProvider } from "./providers/auth-provider";
 
 export const metadata: Metadata = {
   title: "EaziCart — Commerce in motion",
@@ -18,7 +19,9 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

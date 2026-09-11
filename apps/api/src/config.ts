@@ -10,6 +10,7 @@ const environmentSchema = z.object({
   JWT_SECRET: z.string().min(32),
   ACCESS_TOKEN_TTL: z.string().default("15m"),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
+  WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
 });
 
 export type AppConfig = z.infer<typeof environmentSchema>;

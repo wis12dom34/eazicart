@@ -234,6 +234,37 @@ button {
   font-size: 70px;
   filter: drop-shadow(0 12px 8px #0002);
 }
+.product-image img,
+.detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.state-card {
+  margin: 24px 16px;
+  padding: 28px 20px;
+  border-radius: 14px;
+  background: var(--soft);
+  color: var(--muted);
+  text-align: center;
+}
+.state-card .compact {
+  margin-top: 12px;
+}
+.error-state {
+  color: #9b2c2c;
+}
+.form-error {
+  color: #9b2c2c;
+  font-size: 13px;
+}
+.auth-links {
+  text-align: center;
+  font-size: 13px;
+}
+.unread {
+  background: #f2f6fc;
+}
 .heart {
   position: absolute;
   right: 8px;
@@ -624,6 +655,12 @@ button {
   display: grid;
   place-items: center;
   font-size: 55px;
+}
+.cart-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 .cart-item h2 {
   font-size: 15px;

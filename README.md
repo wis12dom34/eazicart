@@ -26,6 +26,17 @@ pnpm dev
 
 The web application is then available at `http://localhost:3000`.
 
+The API and web app run together with `pnpm dev`. Copy `apps/api/.env.example`
+and `apps/web/.env.example` to their local `.env` files, then configure the
+database and auth values. The browser uses `NEXT_PUBLIC_API_BASE_URL` (default
+`http://localhost:3001`) and the API permits the single `WEB_ORIGIN` value
+(default `http://localhost:3000`).
+
+For this MVP only, access and rotating refresh tokens are centralized in the
+web API client and persisted in browser local storage. This is not presented as
+production-grade token storage; a production deployment should move refresh
+credentials to secure, HTTP-only same-site cookies.
+
 ## Quality checks
 
 ```bash
