@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import "./home.css";
 import { BottomNavigation } from "./components/bottom-navigation";
 import { EmptyState, ErrorState, LoadingState } from "./components/async-state";
 import { Icon } from "./components/icon";
