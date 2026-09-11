@@ -12,13 +12,16 @@ export default function Register() {
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
+    const name = f.get("name");
+    const email = f.get("email");
+    const password = f.get("password");
     setBusy(true);
     setError("");
     try {
       await auth.register(
-        String(f.get("name")),
-        String(f.get("email")),
-        String(f.get("password")),
+        typeof name === "string" ? name : "",
+        typeof email === "string" ? email : "",
+        typeof password === "string" ? password : "",
       );
       router.replace("/");
     } catch (x) {
