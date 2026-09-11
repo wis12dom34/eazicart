@@ -67,10 +67,7 @@ export default function ProfilePage() {
             />
           </section>
           <section className="profile-menu">
-            <button
-              className="secondary-button"
-              onClick={() => auth.logout()}
-            >
+            <button className="secondary-button" onClick={() => auth.logout()}>
               Log out
             </button>
           </section>
