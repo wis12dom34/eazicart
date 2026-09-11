@@ -2,7 +2,10 @@ import Link from "next/link";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { Header } from "../components/header";
 import { products } from "../data";
+
 export default function OrdersPage() {
+  const product = products[0];
+
   return (
     <main className="app-shell with-nav">
       <Header title="Orders" />
@@ -17,15 +20,17 @@ export default function OrdersPage() {
             <span className="status-badge">In transit</span>
             <small>Order #EC-240918</small>
           </div>
-          <div className="order-product">
-            <div style={{ background: products[0].color }}>
-              {products[0].image}
+          {product ? (
+            <div className="order-product">
+              <div style={{ background: product.color }}>{product.image}</div>
+              <span>
+                <strong>{product.name}</strong>
+                <small>1 item · ₦51,000</small>
+              </span>
             </div>
-            <span>
-              <strong>{products[0].name}</strong>
-              <small>1 item · ₦51,000</small>
-            </span>
-          </div>
+          ) : (
+            <p>No order items found.</p>
+          )}
           <div className="order-footer">
             <span>Arriving 19–21 Sep</span>
             <strong>View details →</strong>
