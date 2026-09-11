@@ -108,4 +108,19 @@ describe("API foundation", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json<PublicUserResponse>().email).toBe("buyer@example.com");
   });
+
+  it.each([
+    ["GET", "/cart"],
+    ["GET", "/addresses"],
+    ["GET", "/saved-products"],
+    ["GET", "/following"],
+    ["GET", "/orders"],
+    ["GET", "/notifications"],
+  ] as const)("rejects unauthenticated %s %s access", async (method, url) => {
+    const response = await makeApp().inject({ method, url });
+    expect(response.statusCode).toBe(401);
+    expect(response.json<{ error: { code: string } }>().error.code).toBe(
+      "UNAUTHORIZED",
+    );
+  });
 });

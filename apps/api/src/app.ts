@@ -14,10 +14,11 @@ import { registerProducts } from "./modules/products/index.js";
 import { registerSavedProducts } from "./modules/saved-products/index.js";
 import { registerSellerProfiles } from "./modules/seller-profiles/index.js";
 import { registerUsers } from "./modules/users.js";
+import type { PrismaClient } from "@eazicart/database";
 
 export function buildApp(
   config: AppConfig,
-  dependencies: { authStore?: AuthStore } = {},
+  dependencies: { authStore?: AuthStore; database?: PrismaClient } = {},
 ) {
   const app = Fastify({
     logger: config.NODE_ENV !== "test",
@@ -50,15 +51,15 @@ export function buildApp(
   });
   app.get("/health", () => ({ status: "ok", service: "eazicart-api" }));
   registerAuth(app, config, store);
-  registerUsers(app, store);
-  registerSellerProfiles(app);
-  registerCategories(app);
-  registerProducts(app);
-  registerCart(app);
-  registerOrders(app);
-  registerAddresses(app);
-  registerSavedProducts(app);
-  registerFollows(app);
-  registerNotifications(app);
+  registerUsers(app, store, dependencies.database);
+  registerSellerProfiles(app, dependencies.database);
+  registerCategories(app, dependencies.database);
+  registerProducts(app, dependencies.database);
+  registerCart(app, dependencies.database);
+  registerOrders(app, dependencies.database);
+  registerAddresses(app, dependencies.database);
+  registerSavedProducts(app, dependencies.database);
+  registerFollows(app, dependencies.database);
+  registerNotifications(app, dependencies.database);
   return app;
 }
