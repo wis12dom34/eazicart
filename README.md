@@ -38,6 +38,8 @@ pnpm format:check
 ## Status
 
 The initial monorepo foundation and a minimal web landing screen are in place.
+The current Figma implementation audit and design-access prerequisite are
+documented in [`docs/figma-implementation-audit.md`](docs/figma-implementation-audit.md).
 
 ## Security
 
