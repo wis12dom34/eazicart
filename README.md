@@ -2,21 +2,42 @@
 
 EaziCart is a scalable commerce platform being prepared as a TypeScript-first monorepo.
 
-## Planned workspace
+## Workspace
 
-The repository will support:
+The repository is organized with pnpm workspaces and Turborepo:
 
-- Customer app
-- Seller experience
-- Admin
-- Mobile app
-- Backend / API
-- Shared packages
-- Future scalable infrastructure
+- `apps/web` – the initial Next.js customer experience
+- `packages/ui` – framework-compatible shared React components
+- `packages/types` – shared domain contracts
+- `packages/config` – shared TypeScript and lint configuration
+- `packages/database` – an unconnected PostgreSQL configuration boundary
+
+Seller, admin, mobile, API, worker, and infrastructure workspaces will be added
+when those products begin. This keeps the foundation intentional rather than
+shipping empty applications.
+
+## Getting started
+
+```bash
+corepack enable
+pnpm install
+pnpm dev
+```
+
+The web application is then available at `http://localhost:3000`.
+
+## Quality checks
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm build
+pnpm format:check
+```
 
 ## Status
 
-Repository foundation only. Application development has not started yet.
+The initial monorepo foundation and a minimal web landing screen are in place.
 
 ## Security
 
