@@ -35,3 +35,8 @@ Thumbs.db
 .expo/
 android/.gradle/
 ios/Pods/
+
+
+# Browser test artifacts
+playwright-report/
+test-results/

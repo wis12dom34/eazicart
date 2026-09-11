@@ -37,6 +37,9 @@ web API client and persisted in browser local storage. This is not presented as
 production-grade token storage; a production deployment should move refresh
 credentials to secure, HTTP-only same-site cookies.
 
+See [the PostgreSQL development guide](docs/development.md) for local setup,
+seed data, environment variables and real browser-flow validation.
+
 ## Quality checks
 
 ```bash

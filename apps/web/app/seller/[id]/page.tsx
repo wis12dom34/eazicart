@@ -16,9 +16,16 @@ export default function SellerPage({
   const { id } = use(params);
   const auth = useAuth();
   const router = useRouter();
-  const [following, setFollowing] = useState(false);
-  const [message, setMessage] = useState("");
   const seller = useRequest(() => sellersApi.get(id), [id]);
+  const follows = useRequest(
+    async () =>
+      auth.isAuthenticated ? followsApi.list() : Promise.resolve(undefined),
+    [auth.isAuthenticated],
+  );
+  const following = Boolean(
+    follows.data?.data.some((f) => f.sellerId === seller.data?.data.userId),
+  );
+  const [message, setMessage] = useState("");
   const products = useRequest(() => sellersApi.products(id), [id]);
   const count = useRequest(
     () => followsApi.count(seller.data?.data.userId ?? id),
@@ -44,7 +51,7 @@ export default function SellerPage({
     try {
       if (following) await followsApi.unfollow(s.userId);
       else await followsApi.follow(s.userId);
-      setFollowing(!following);
+      await follows.reload();
       await count.reload();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Unable to update follow");
@@ -58,7 +65,7 @@ export default function SellerPage({
           {s.displayName.slice(0, 2).toUpperCase()}
         </div>
         <h2>{s.displayName}</h2>
-        <p>{s.bio || "Verified seller"}</p>
+        <p>{s.bio || "Seller on EaziCart"}</p>
         <div className="seller-stats">
           <span>
             <strong>{count.data?.data.count ?? s.followerCount ?? 0}</strong>
@@ -75,6 +82,7 @@ export default function SellerPage({
           className={
             following ? "secondary-button compact" : "dark-button compact"
           }
+          disabled={auth.loading || follows.loading}
           onClick={() => void follow()}
         >
           {following ? "Following" : "Follow"}

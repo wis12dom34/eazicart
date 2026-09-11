@@ -3,7 +3,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": ["NEXT_PUBLIC_API_BASE_URL"]
     },
     "dev": {
       "cache": false,
@@ -20,5 +21,15 @@
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
     }
-  }
+  },
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "HOST",
+    "PORT",
+    "WEB_ORIGIN",
+    "ACCESS_TOKEN_TTL",
+    "REFRESH_TOKEN_TTL_DAYS",
+    "NODE_ENV"
+  ]
 }

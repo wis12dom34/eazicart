@@ -73,7 +73,7 @@ export type Order = {
 export type Notification = {
   id: string;
   title: string;
-  message: string;
+  body: string;
   readAt?: string | null;
   createdAt: string;
   type?: string;

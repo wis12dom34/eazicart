@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: eazicart
+      POSTGRES_USER: eazicart
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run pnpm setup:dev first}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - eazicart_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eazicart -d eazicart"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+volumes:
+  eazicart_postgres:

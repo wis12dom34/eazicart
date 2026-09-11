@@ -85,6 +85,14 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
           },
           include,
         });
+        await tx.notification.create({
+          data: {
+            userId: uid,
+            type: "ORDER",
+            title: "Order received",
+            body: "Your order was created. No payment has been taken.",
+          },
+        });
         await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
         return order;
       },

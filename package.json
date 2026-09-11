@@ -8,18 +8,24 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
+    "dev": "pnpm --filter @eazicart/database build && turbo run dev --parallel",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "setup:dev": "node scripts/setup-dev.mjs",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:migrate": "pnpm --filter @eazicart/database prisma:deploy",
+    "db:seed": "pnpm --filter @eazicart/database seed",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eazicart/config": "workspace:*",
     "eslint": "^9.35.0",
     "prettier": "^3.6.2",
     "turbo": "^2.5.6",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "@playwright/test": "^1.55.0"
   }
 }

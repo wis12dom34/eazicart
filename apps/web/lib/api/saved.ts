@@ -1,6 +1,10 @@
 import { apiRequest } from "./client";
 import type { ListResponse, Product } from "./types";
-export type SavedProduct = { id: string; productId: string; product: Product };
+export type SavedProduct = {
+  userId: string;
+  productId: string;
+  product: Product;
+};
 export const savedApi = {
   list: () =>
     apiRequest<ListResponse<SavedProduct>>("/saved-products", { auth: true }),

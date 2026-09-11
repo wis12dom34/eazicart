@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { MemoryAuthStore } from "../src/modules/auth/store.js";
 import { buildApp } from "../src/app.js";
 import type { AppConfig } from "../src/config.js";
 
@@ -63,6 +64,30 @@ describe("API foundation", () => {
       expect.objectContaining({ email: "buyer@example.com" }),
     );
     expect(response.body).not.toContain("passwordHash");
+  });
+
+  it("passes only persistable fields to the auth store", async () => {
+    const store = new MemoryAuthStore();
+    const createUser = vi.spyOn(store, "createUser");
+    const app = buildApp(config, { authStore: store });
+    apps.push(app);
+    const response = await app.inject({
+      method: "POST",
+      url: "/auth/register",
+      payload: {
+        email: "buyer@example.com",
+        name: "Buyer",
+        password: "correct-horse",
+      },
+    });
+    expect(response.statusCode).toBe(201);
+    const input = createUser.mock.calls[0]?.[0];
+    expect(Object.keys(input ?? {}).sort()).toEqual([
+      "email",
+      "name",
+      "passwordHash",
+    ]);
+    expect(input?.passwordHash).toMatch(/^\$argon2/);
   });
 
   it("logs in registered users", async () => {

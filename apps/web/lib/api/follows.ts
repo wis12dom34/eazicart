@@ -1,7 +1,7 @@
 import { apiRequest } from "./client";
 import type { ListResponse, Seller } from "./types";
 export type Follow = {
-  id: string;
+  followerId: string;
   sellerId: string;
   seller: { id: string; name: string; sellerProfile?: Seller | null };
 };

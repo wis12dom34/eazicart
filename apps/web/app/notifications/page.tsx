@@ -63,7 +63,7 @@ export default function Notifications() {
               </span>
               <div>
                 <strong>{n.title}</strong>
-                <p>{n.message}</p>
+                <p>{n.body}</p>
               </div>
               <small>{new Date(n.createdAt).toLocaleDateString()}</small>
             </article>
