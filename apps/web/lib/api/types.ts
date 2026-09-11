@@ -73,7 +73,7 @@ export type Order = {
 export type Notification = {
   id: string;
   title: string;
-  message: string;
+  body: string;
   readAt?: string | null;
   createdAt: string;
   type?: string;
@@ -86,3 +86,4 @@ export type Tokens = {
 export type AuthResponse = { user: User; tokens: Tokens };
 export type DataResponse<T> = { data: T };
 export type ListResponse<T> = { data: T[] };
+

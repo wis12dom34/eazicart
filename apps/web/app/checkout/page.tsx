@@ -112,10 +112,10 @@ export default function CheckoutPage() {
         <div className="select-card">
           <Icon name="card" />
           <div>
-            <strong>Payment integration deferred</strong>
+            <strong>No payment required yet</strong>
             <p>
-              This MVP creates an unpaid order; no payment provider is
-              connected.
+              Placing this order will not charge you. Payment is not yet
+              available.
             </p>
           </div>
         </div>
@@ -148,3 +148,4 @@ export default function CheckoutPage() {
     </main>
   );
 }
+

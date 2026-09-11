@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "../components/header";
+import { safeNextPath } from "../../lib/api/navigation";
 import { useAuth } from "../providers/auth-provider";
 
 export function LoginContent() {
@@ -26,7 +27,7 @@ export function LoginContent() {
         typeof email === "string" ? email : "",
         typeof password === "string" ? password : "",
       );
-      router.replace(params.get("next") || "/");
+      router.replace(safeNextPath(params.get("next")));
     } catch (x) {
       setError(x instanceof Error ? x.message : "Unable to sign in");
       setBusy(false);
@@ -66,3 +67,4 @@ export function LoginContent() {
     </main>
   );
 }
+

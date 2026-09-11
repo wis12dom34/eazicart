@@ -13,6 +13,24 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: eazicart
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: eazicart_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U eazicart -d eazicart_test"
+          --health-interval 2s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://eazicart:ci-only-password@127.0.0.1:5432/eazicart_test
+      JWT_SECRET: ci-only-secret-not-for-deployment-at-least-32-characters
+      ALLOW_DEMO_SEED: "true"
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+      WEB_ORIGIN: http://localhost:3000
 
     steps:
       - name: Checkout
@@ -35,6 +53,20 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @eazicart/database prisma:generate
 
+      - name: Apply migrations to fresh PostgreSQL
+        run: pnpm db:migrate
+
+      - name: Verify migration schema
+        run: >-
+          pnpm --filter @eazicart/database exec prisma migrate diff
+          --from-url "$DATABASE_URL"
+          --to-schema-datamodel prisma/schema.prisma --exit-code
+
+      - name: Seed twice to verify repeatability
+        run: |
+          pnpm --filter @eazicart/database seed:ci
+          pnpm --filter @eazicart/database seed:ci
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -49,3 +81,25 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Real customer flow against PostgreSQL
+        run: pnpm test:e2e
+
+      - name: Formatting diagnostics on failure
+        if: failure()
+        run: |
+          pnpm exec prettier --write . > /dev/null
+          git diff -- . ':!pnpm-lock.yaml'
+
+      - name: Upload browser test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-results
+          path: test-results/
+          retention-days: 3
+          if-no-files-found: ignore

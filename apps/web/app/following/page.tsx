@@ -41,7 +41,7 @@ export default function Following() {
           {result.data.data.map((f) => {
             const s = f.seller.sellerProfile;
             return (
-              <article key={f.id}>
+              <article key={f.sellerId}>
                 <Link
                   href={`/seller/${s?.id ?? f.sellerId}`}
                   className="seller-avatar small"
@@ -66,3 +66,4 @@ export default function Following() {
     </main>
   );
 }
+
