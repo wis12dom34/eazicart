@@ -6,7 +6,11 @@ import { useSearchParams } from "next/navigation";
 
 import "./explore.css";
 import { BottomNavigation } from "../components/bottom-navigation";
-import { EmptyState, ErrorState, LoadingState } from "../components/async-state";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "../components/async-state";
 import { Icon } from "../components/icon";
 import { money } from "../data";
 import { useRequest } from "../hooks/use-request";
@@ -92,7 +96,10 @@ export function ExploreContent() {
 
       <section className="figma-explore-section" id="categories">
         <h2>Trending Now</h2>
-        <div className="figma-explore-trending" aria-label="Trending categories">
+        <div
+          className="figma-explore-trending"
+          aria-label="Trending categories"
+        >
           {trendingCategories.map((item) => (
             <Link
               className={item.slug === category ? "active" : undefined}
@@ -140,7 +147,10 @@ export function ExploreContent() {
         )}
       </section>
 
-      <section className="figma-explore-section figma-explore-sellers" id="sellers">
+      <section
+        className="figma-explore-section figma-explore-sellers"
+        id="sellers"
+      >
         <div className="figma-explore-section-heading">
           <h2>Top Sellers</h2>
           <a href="#sellers">All sellers</a>
