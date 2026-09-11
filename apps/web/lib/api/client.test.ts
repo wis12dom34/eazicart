@@ -10,7 +10,7 @@ describe("API client", () => {
   it("surfaces structured non-2xx errors", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
+      vi.fn<typeof fetch>().mockResolvedValue(
         new Response(
           JSON.stringify({
             error: { code: "NOPE", message: "Not available" },
@@ -27,7 +27,7 @@ describe("API client", () => {
   });
   it("supports query parameters and 204 responses", async () => {
     const fetchMock = vi
-      .fn()
+      .fn<typeof fetch>()
       .mockResolvedValue(new Response(null, { status: 204 }));
     vi.stubGlobal("fetch", fetchMock);
     await expect(
@@ -37,7 +37,7 @@ describe("API client", () => {
   });
   it("fetches product details by encoded id", async () => {
     const fetchMock = vi
-      .fn()
+      .fn<typeof fetch>()
       .mockResolvedValue(
         new Response(JSON.stringify({ data: { id: "a/b" } }), { status: 200 }),
       );
@@ -47,7 +47,7 @@ describe("API client", () => {
   });
   it("cart mutations submit identifiers and quantities, never prices", async () => {
     const fetchMock = vi
-      .fn()
+      .fn<typeof fetch>()
       .mockResolvedValue(
         new Response(JSON.stringify({ data: {} }), { status: 201 }),
       );
@@ -66,7 +66,7 @@ describe("API client", () => {
   });
   it("submits login credentials and omits authorization when signed out", async () => {
     const fetchMock = vi
-      .fn()
+      .fn<typeof fetch>()
       .mockResolvedValue(
         new Response(JSON.stringify({ user: {}, tokens: {} }), { status: 200 }),
       );
