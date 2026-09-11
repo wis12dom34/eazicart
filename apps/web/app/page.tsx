@@ -40,12 +40,15 @@ export default function HomePage() {
   const categories = useRequest(() => categoriesApi.list(), []);
   const products = useRequest(() => productsApi.list({ limit: 12 }), []);
   const following = useRequest(
-    () => (auth.isAuthenticated ? followsApi.list() : Promise.resolve({ data: [] })),
+    () =>
+      auth.isAuthenticated ? followsApi.list() : Promise.resolve({ data: [] }),
     [auth.isAuthenticated],
   );
   const [busyCart, setBusyCart] = useState<string | null>(null);
   const [busyFollow, setBusyFollow] = useState<string | null>(null);
-  const [localFollowing, setLocalFollowing] = useState<Record<string, boolean>>({});
+  const [localFollowing, setLocalFollowing] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const sellerGroups = useMemo<SellerGroup[]>(() => {
     const grouped = new Map<string, SellerGroup>();
@@ -82,7 +85,9 @@ export default function HomePage() {
     try {
       await cartApi.add(product.id, 1);
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Unable to add item to cart");
+      window.alert(
+        error instanceof Error ? error.message : "Unable to add item to cart",
+      );
     } finally {
       setBusyCart(null);
     }
@@ -100,7 +105,11 @@ export default function HomePage() {
       else await followsApi.unfollow(sellerId);
       setLocalFollowing((current) => ({ ...current, [sellerId]: next }));
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Unable to update follow status");
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to update follow status",
+      );
     } finally {
       setBusyFollow(null);
     }
@@ -109,14 +118,22 @@ export default function HomePage() {
   return (
     <main className="app-shell with-nav figma-home">
       <header className="figma-home-header">
-        <Link className="figma-home-avatar" href={auth.isAuthenticated ? "/profile" : "/login"} aria-label="Profile">
+        <Link
+          className="figma-home-avatar"
+          href={auth.isAuthenticated ? "/profile" : "/login"}
+          aria-label="Profile"
+        >
           {auth.user?.name?.slice(0, 1).toUpperCase() ?? ""}
         </Link>
         <Link className="figma-home-logo" href="/" aria-label="EaziCart home">
           <span aria-hidden="true">↗</span>
         </Link>
         <div className="figma-home-actions">
-          <Link className="figma-home-icon" href="/notifications" aria-label="Notifications">
+          <Link
+            className="figma-home-icon"
+            href="/notifications"
+            aria-label="Notifications"
+          >
             <Icon name="bell" size={20} />
           </Link>
           <Link className="figma-home-icon" href="/cart" aria-label="Cart">
@@ -136,7 +153,10 @@ export default function HomePage() {
           <small>For You</small>
         </Link>
         {categories.data?.data.map((category) => (
-          <Link href={`/explore?category=${encodeURIComponent(category.slug)}`} key={category.id}>
+          <Link
+            href={`/explore?category=${encodeURIComponent(category.slug)}`}
+            key={category.id}
+          >
             <span className="figma-home-category-icon" aria-hidden="true">
               <Icon name={categoryIcons[category.slug] ?? "bag"} size={18} />
             </span>
@@ -148,46 +168,78 @@ export default function HomePage() {
       {products.loading ? (
         <LoadingState label="Loading products…" />
       ) : products.error ? (
-        <ErrorState message={products.error} retry={() => void products.reload()} />
+        <ErrorState
+          message={products.error}
+          retry={() => void products.reload()}
+        />
       ) : sellerGroups.length ? (
         <section className="figma-home-feed" aria-label="For you product feed">
           {sellerGroups.map((seller) => (
             <section className="figma-home-seller" key={seller.id}>
               <div className="figma-home-seller-row">
-                <Link className="figma-home-seller-avatar" href={`/seller/${seller.id}`} aria-hidden="true">
+                <Link
+                  className="figma-home-seller-avatar"
+                  href={`/seller/${seller.id}`}
+                  aria-hidden="true"
+                >
                   {seller.displayName.slice(0, 1).toUpperCase()}
                 </Link>
-                <Link className="figma-home-seller-copy" href={`/seller/${seller.id}`}>
+                <Link
+                  className="figma-home-seller-copy"
+                  href={`/seller/${seller.id}`}
+                >
                   <strong>{seller.displayName}</strong>
-                  <span>{seller.bio || "Shop this seller's latest products."}</span>
+                  <span>
+                    {seller.bio || "Shop this seller's latest products."}
+                  </span>
                 </Link>
                 <button
-                  className={isFollowing(seller.id) ? "figma-home-follow following" : "figma-home-follow"}
+                  className={
+                    isFollowing(seller.id)
+                      ? "figma-home-follow following"
+                      : "figma-home-follow"
+                  }
                   type="button"
                   disabled={busyFollow === seller.id}
                   onClick={() => void toggleFollow(seller.id)}
                 >
-                  {busyFollow === seller.id ? "…" : isFollowing(seller.id) ? "Following" : "Follow"}
+                  {busyFollow === seller.id
+                    ? "…"
+                    : isFollowing(seller.id)
+                      ? "Following"
+                      : "Follow"}
                 </button>
               </div>
 
               <div className="figma-home-product-grid">
                 {seller.products.slice(0, 2).map((product) => (
                   <article className="figma-home-product" key={product.id}>
-                    <Link className="figma-home-product-media" href={`/product/${product.id}`}>
+                    <Link
+                      className="figma-home-product-media"
+                      href={`/product/${product.id}`}
+                    >
                       {product.images[0] ? (
-                        <img src={product.images[0].url} alt={product.images[0].altText ?? product.name} />
+                        <img
+                          src={product.images[0].url}
+                          alt={product.images[0].altText ?? product.name}
+                        />
                       ) : null}
                     </Link>
                     <div className="figma-home-product-copy">
-                      <Link href={`/product/${product.id}`}>{product.name}</Link>
+                      <Link href={`/product/${product.id}`}>
+                        {product.name}
+                      </Link>
                       <strong>{money(product.price)}</strong>
                       <button
                         type="button"
                         disabled={product.stock < 1 || busyCart === product.id}
                         onClick={() => void addToCart(product)}
                       >
-                        {product.stock < 1 ? "Out of stock" : busyCart === product.id ? "Adding…" : "Add to Cart"}
+                        {product.stock < 1
+                          ? "Out of stock"
+                          : busyCart === product.id
+                            ? "Adding…"
+                            : "Add to Cart"}
                       </button>
                     </div>
                   </article>
