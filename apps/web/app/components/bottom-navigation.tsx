@@ -23,7 +23,7 @@ export function BottomNavigation() {
             className={active ? "active" : ""}
             aria-current={active ? "page" : undefined}
           >
-            <Icon name={tab.icon} size={23} />
+            <Icon name={tab.icon} size={24} />
             <span>{tab.label}</span>
           </Link>
         );

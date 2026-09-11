@@ -11,7 +11,18 @@ export default defineConfig({
     baseURL: "http://localhost:3000",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "mobile-chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 430, height: 932 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+  ],
   webServer: [
     {
       command: "pnpm --filter @eazicart/api start",

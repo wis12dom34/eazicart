@@ -5,18 +5,19 @@ import { BottomNavigation } from "./components/bottom-navigation";
 import { Header } from "./components/header";
 import { Icon } from "./components/icon";
 import { ProductGrid } from "./components/product-card";
+import { categoriesApi } from "../lib/api/categories";
 import { productsApi } from "../lib/api/products";
 import { ErrorState, LoadingState, EmptyState } from "./components/async-state";
 import { useRequest } from "./hooks/use-request";
 
-const categories = [
-  ["bag", "Bags"],
-  ["shirt", "Fashion"],
-  ["sparkle", "Beauty"],
-  ["home", "Home"],
-] as const;
+const categoryIcons: Record<string, string> = {
+  fashion: "shirt",
+  home: "home",
+  beauty: "sparkle",
+};
 
 export default function HomePage() {
+  const categories = useRequest(() => categoriesApi.list(), []);
   const { data, loading, error, reload } = useRequest(
     () => productsApi.list({ limit: 4 }),
     [],
@@ -57,16 +58,16 @@ export default function HomePage() {
           <Link href="/explore">See all</Link>
         </div>
         <div className="category-row">
-          {categories.map(([icon, label]) => (
+          {categories.data?.data.map((category) => (
             <Link
               className="category-pill"
-              href={`/explore?category=${label}`}
-              key={label}
+              href={`/explore?category=${encodeURIComponent(category.slug)}`}
+              key={category.id}
             >
               <span>
-                <Icon name={icon} />
+                <Icon name={categoryIcons[category.slug] ?? "bag"} />
               </span>
-              {label}
+              {category.name}
             </Link>
           ))}
         </div>
