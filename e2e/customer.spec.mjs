@@ -29,8 +29,12 @@ test("customer journey persists in PostgreSQL without payment", async ({
   const profileCounts = page.getByRole("region", {
     name: "Profile activity counts",
   });
-  await expect(profileCounts.getByRole("link", { name: "0 Orders" })).toBeVisible();
-  await expect(profileCounts.getByRole("link", { name: "0 Saved" })).toBeVisible();
+  await expect(
+    profileCounts.getByRole("link", { name: "0 Orders" }),
+  ).toBeVisible();
+  await expect(
+    profileCounts.getByRole("link", { name: "0 Saved" }),
+  ).toBeVisible();
   await expect(
     profileCounts.getByRole("link", { name: "0 Following" }),
   ).toBeVisible();
@@ -133,12 +137,18 @@ test("customer journey persists in PostgreSQL without payment", async ({
   const populatedCounts = page.getByRole("region", {
     name: "Profile activity counts",
   });
-  await expect(populatedCounts.getByRole("link", { name: "1 Orders" })).toBeVisible();
-  await expect(populatedCounts.getByRole("link", { name: "1 Saved" })).toBeVisible();
+  await expect(
+    populatedCounts.getByRole("link", { name: "1 Orders" }),
+  ).toBeVisible();
+  await expect(
+    populatedCounts.getByRole("link", { name: "1 Saved" }),
+  ).toBeVisible();
   await expect(
     populatedCounts.getByRole("link", { name: "1 Following" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: /Reviews Your ratings and feedback/ }).click();
+  await page
+    .getByRole("link", { name: /Reviews Your ratings and feedback/ })
+    .click();
   await expect(page).toHaveURL("http://localhost:3000/reviews");
   await expect(
     page.getByRole("heading", { name: "Reviews are not available yet" }),
