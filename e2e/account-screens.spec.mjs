@@ -18,7 +18,9 @@ test("edit profile and address book use real supported account data", async ({
   await expect(
     page.getByRole("heading", { name: "Edit profile", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Change photo" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Change photo" }),
+  ).toBeDisabled();
   await expect(page.getByLabel("Username")).toBeDisabled();
   await expect(page.getByLabel("Username")).toHaveValue("Not available yet");
   await expect(page.getByLabel("Phone number")).toBeDisabled();
@@ -37,7 +39,10 @@ test("edit profile and address book use real supported account data", async ({
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page).toHaveURL("http://localhost:3000/profile");
   await expect(
-    page.getByRole("heading", { name: "Updated Account Customer", exact: true }),
+    page.getByRole("heading", {
+      name: "Updated Account Customer",
+      exact: true,
+    }),
   ).toBeVisible();
 
   await page.goto("/address-book");
@@ -62,7 +67,9 @@ test("edit profile and address book use real supported account data", async ({
   await expect(addressCard).toContainText("Nigeria");
 
   await addressCard.getByRole("button", { name: "Edit" }).click();
-  await addressCard.getByLabel("Address", { exact: true }).fill("2 Demo Street");
+  await addressCard
+    .getByLabel("Address", { exact: true })
+    .fill("2 Demo Street");
   await addressCard.getByRole("button", { name: "Save changes" }).click();
   await expect(addressCard).toContainText("2 Demo Street");
 
