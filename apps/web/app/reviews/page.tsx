@@ -12,7 +12,11 @@ export default function ReviewsPage() {
 
   return (
     <main className={`app-shell ${styles.page}`}>
-      <Link className={styles.back} href="/profile" aria-label="Back to profile">
+      <Link
+        className={styles.back}
+        href="/profile"
+        aria-label="Back to profile"
+      >
         <Icon name="back" size={22} />
       </Link>
       <header className={styles.header}>
