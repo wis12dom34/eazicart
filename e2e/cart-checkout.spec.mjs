@@ -77,5 +77,7 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   );
   await expect(page.getByText("Service fee", { exact: true })).toHaveCount(0);
   await expect(page.locator(".summary .total")).toContainText("18,500");
-  await expect(page.getByRole("button", { name: "Place Order" })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: /Place order/i }),
+  ).toBeEnabled();
 });
