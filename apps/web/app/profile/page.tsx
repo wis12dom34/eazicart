@@ -53,17 +53,28 @@ export default function ProfilePage() {
             </Link>
           </section>
 
-          <section className={styles.stats} aria-label="Profile activity counts">
+          <section
+            className={styles.stats}
+            aria-label="Profile activity counts"
+          >
             <ProfileStat
               href="/orders"
               label="Orders"
-              value={metricValue(orders.loading, orders.error, orders.data?.data.length)}
+              value={metricValue(
+                orders.loading,
+                orders.error,
+                orders.data?.data.length,
+              )}
               hasError={Boolean(orders.error)}
             />
             <ProfileStat
               href="/saved"
               label="Saved"
-              value={metricValue(saved.loading, saved.error, saved.data?.data.length)}
+              value={metricValue(
+                saved.loading,
+                saved.error,
+                saved.data?.data.length,
+              )}
               hasError={Boolean(saved.error)}
             />
             <ProfileStat
@@ -148,7 +159,9 @@ function ProfileStat({
 }) {
   return (
     <Link className={styles.stat} href={href}>
-      <strong className={hasError ? styles.metricError : undefined}>{value}</strong>
+      <strong className={hasError ? styles.metricError : undefined}>
+        {value}
+      </strong>
       <span>{label}</span>
     </Link>
   );
