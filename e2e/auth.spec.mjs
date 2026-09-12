@@ -47,7 +47,7 @@ test("auth screens use supported credentials flows and honest validation states"
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("wrong-password");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByRole("alert")).toHaveText(
+  await expect(page.locator("#login-error")).toHaveText(
     "Email or password is incorrect. Try again.",
   );
   await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
