@@ -20,17 +20,16 @@ export default function Register() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const name = String(form.get("name") || "").trim();
-    const email = String(form.get("email") || "").trim();
-    const password = String(form.get("password") || "");
-    const confirmPassword = String(form.get("confirmPassword") || "");
+    const name = formValue(form, "name").trim();
+    const email = formValue(form, "email").trim();
+    const password = formValue(form, "password");
+    const confirmPassword = formValue(form, "confirmPassword");
     const nextErrors: FieldErrors = {};
 
     if (name.length < 2) nextErrors.name = "Enter your full name.";
     if (!/^\S+@\S+\.\S+$/.test(email))
       nextErrors.email = "Enter a valid email address.";
-    if (password.length < 8)
-      nextErrors.password = "Use at least 8 characters.";
+    if (password.length < 8) nextErrors.password = "Use at least 8 characters.";
     if (confirmPassword !== password)
       nextErrors.confirmPassword = "Passwords do not match.";
 
@@ -146,4 +145,9 @@ function AuthField({
       )}
     </div>
   );
+}
+
+function formValue(form: FormData, name: string) {
+  const value = form.get(name);
+  return typeof value === "string" ? value : "";
 }
