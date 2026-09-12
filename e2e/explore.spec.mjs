@@ -58,7 +58,9 @@ test("Explore matches Figma and opens live search and category discovery", async
   await page.goto("/explore");
   await page.getByRole("link", { name: "Fashion", exact: true }).click();
   await expect(page).toHaveURL(/\/category\/fashion$/);
-  await expect(page.getByRole("heading", { name: "Fashion" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Fashion", exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("2 products", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("link", { name: "View Woven everyday tote" }),
@@ -69,5 +71,5 @@ test("Explore matches Figma and opens live search and category discovery", async
   await expect(
     page.getByRole("heading", { name: "Sellers in Fashion" }),
   ).toBeVisible();
-  await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Lagos Studio/ })).toBeVisible();
 });
