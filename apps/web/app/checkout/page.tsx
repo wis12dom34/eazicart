@@ -179,6 +179,7 @@ export default function CheckoutPage() {
           </p>
         ) : null}
         <button
+          aria-label="Place order"
           disabled={submitting || !data?.items.length}
           className={styles.placeButton}
           type="button"
