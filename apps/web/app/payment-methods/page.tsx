@@ -31,7 +31,10 @@ export default function PaymentMethods() {
         </button>
 
         <h2 className={styles.sectionTitle}>Saved methods</h2>
-        <section className={styles.unavailableCard} aria-label="Payment methods unavailable">
+        <section
+          className={styles.unavailableCard}
+          aria-label="Payment methods unavailable"
+        >
           <span className={styles.methodIcon} aria-hidden="true">
             <Icon name="card" size={22} />
           </span>
