@@ -94,10 +94,9 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   ).toBeVisible();
   await expect(page.getByText("Order placed", { exact: true })).toBeVisible();
   await expect(
-    page.getByText(
-      "Your order was created and is waiting for confirmation.",
-      { exact: true },
-    ),
+    page.getByText("Your order was created and is waiting for confirmation.", {
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", {
