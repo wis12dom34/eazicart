@@ -8,7 +8,12 @@ const tabs = [
   { href: "/", label: "Home", icon: "home", paths: ["/", "/cart"] },
   { href: "/explore", label: "Explore", icon: "search", paths: ["/explore"] },
   { href: "/reels", label: "Reels", icon: "reels", paths: ["/reels"] },
-  { href: "/orders", label: "Orders", icon: "bag", paths: ["/orders"] },
+  {
+    href: "/orders",
+    label: "Orders",
+    icon: "bag",
+    paths: ["/orders", "/tracking"],
+  },
   {
     href: "/profile",
     label: "Profile",
