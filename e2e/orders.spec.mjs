@@ -55,10 +55,14 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   await expect(
     page.getByRole("heading", { name: "My Orders", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Woven everyday tote", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Woven everyday tote", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("PENDING", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Pending", exact: true }).click();
-  await expect(page.getByText("Woven everyday tote", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Woven everyday tote", { exact: true }),
+  ).toBeVisible();
   await expect(
     page
       .getByRole("navigation", { name: "Customer navigation" })
@@ -68,7 +72,9 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   await page.locator(`a[href="/orders/${order.id}"]`).click();
   await expect(page).toHaveURL(`http://localhost:3000/orders/${order.id}`);
   await expect(page.getByText("PENDING", { exact: true })).toBeVisible();
-  await expect(page.getByText("12 Orders Street", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("12 Orders Street", { exact: false }),
+  ).toBeVisible();
   await expect(page.locator(".summary .total")).toContainText("18,500");
   await expect(page.getByText("Service fee", { exact: true })).toHaveCount(0);
 
@@ -83,8 +89,12 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
       name: "Detailed delivery tracking isn’t available yet.",
     }),
   ).toBeVisible();
-  await expect(page.getByText("Swift Dispatch", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Payment confirmed", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Swift Dispatch", { exact: true })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByText("Payment confirmed", { exact: true }),
+  ).toHaveCount(0);
   await expect(page.getByText(/Estimated delivery/i)).toHaveCount(0);
   await expect(
     page
