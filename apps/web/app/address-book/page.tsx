@@ -47,7 +47,9 @@ export default function AddressBook() {
     event.preventDefault();
     try {
       setError("");
-      await addressesApi.create(addressPayload(new FormData(event.currentTarget)));
+      await addressesApi.create(
+        addressPayload(new FormData(event.currentTarget)),
+      );
       setAdding(false);
       await result.reload();
     } catch (x) {
@@ -99,7 +101,11 @@ export default function AddressBook() {
     <main className={`app-shell ${styles.page}`}>
       <header className={styles.header}>
         <div className={styles.titleRow}>
-          <Link className={styles.back} href="/profile" aria-label="Back to profile">
+          <Link
+            className={styles.back}
+            href="/profile"
+            aria-label="Back to profile"
+          >
             <Icon name="back" size={22} />
           </Link>
           <h1>Address Book</h1>
@@ -125,7 +131,10 @@ export default function AddressBook() {
         {adding ? (
           <div className={styles.formCard}>
             <h2 className={styles.formTitle}>Add new address</h2>
-            <AddressForm submitLabel="Save address" onSubmit={addAddress} />
+            <AddressForm
+              submitLabel="Save address"
+              onSubmit={(event) => void addAddress(event)}
+            />
           </div>
         ) : null}
 
@@ -140,7 +149,10 @@ export default function AddressBook() {
         ) : !auth.isAuthenticated ? (
           <SignInState message="Sign in to manage delivery addresses." />
         ) : result.error ? (
-          <ErrorState message={result.error} retry={() => void result.reload()} />
+          <ErrorState
+            message={result.error}
+            retry={() => void result.reload()}
+          />
         ) : (
           <>
             <h2 className={styles.sectionTitle}>Saved addresses</h2>
