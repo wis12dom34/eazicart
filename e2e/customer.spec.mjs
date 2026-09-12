@@ -58,7 +58,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
   await page.getByRole("tab", { name: "About" }).click();
   await expect(
-    page.getByText("Demo fashion and everyday essentials."),
+    page
+      .getByRole("tabpanel", { name: "About" })
+      .getByText("Demo fashion and everyday essentials."),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Reviews" }).click();
   await expect(
