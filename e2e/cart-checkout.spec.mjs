@@ -15,6 +15,7 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await page.getByLabel("Full name").fill("Cart Customer");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL("http://localhost:3000/");
 

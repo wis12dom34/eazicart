@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Header } from "../components/header";
 import { safeNextPath } from "../../lib/api/navigation";
 import { useAuth } from "../providers/auth-provider";
+import styles from "../auth.module.css";
 
 export function LoginContent() {
   const auth = useAuth();
@@ -14,11 +14,11 @@ export function LoginContent() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const submit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const email = f.get("email");
-    const password = f.get("password");
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const email = form.get("email");
+    const password = form.get("password");
     setBusy(true);
     setError("");
 
@@ -28,42 +28,70 @@ export function LoginContent() {
         typeof password === "string" ? password : "",
       );
       router.replace(safeNextPath(params.get("next")));
-    } catch (x) {
-      setError(x instanceof Error ? x.message : "Unable to sign in");
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : "Unable to sign in";
+      setError(
+        message === "Email or password is incorrect"
+          ? "Email or password is incorrect. Try again."
+          : message,
+      );
       setBusy(false);
     }
   };
 
   return (
-    <main className="app-shell">
-      <Header title="Sign in" back="/" />
-      <form className="profile-form" onSubmit={(e) => void submit(e)}>
-        <label>
-          Email address
-          <input name="email" type="email" autoComplete="email" required />
-        </label>
-        <label>
-          Password
+    <main className={`app-shell ${styles.page} ${styles.loginPage}`}>
+      <h1 className={styles.heading}>Welcome back</h1>
+      <p className={styles.subtitle}>
+        Sign in to continue shopping on EaziCart.
+      </p>
+
+      <form className={styles.form} onSubmit={(event) => void submit(event)}>
+        <div className={styles.field}>
+          <label htmlFor="login-email">Email address</label>
           <input
+            id="login-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label htmlFor="login-password">Password</label>
+          <input
+            id="login-password"
             name="password"
             type="password"
             autoComplete="current-password"
             minLength={8}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? "login-error" : undefined}
             required
           />
-        </label>
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-        <button className="dark-button" disabled={busy}>
+          {error && (
+            <p className={styles.formError} id="login-error" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
+
+        <button className={styles.primaryButton} disabled={busy}>
           {busy ? "Signing in…" : "Sign in"}
         </button>
-        <p className="auth-links">
-          New to EaziCart? <Link href="/register">Create an account</Link>
-        </p>
+        {busy && (
+          <p className={styles.busyNote} role="status">
+            Checking your details…
+          </p>
+        )}
       </form>
+
+      <p className={styles.switchLink}>
+        Don’t have an account? <Link href="/register">Create one</Link>
+      </p>
     </main>
   );
 }

@@ -11,6 +11,7 @@ test("edit profile and address book use real supported account data", async ({
   await page.getByLabel("Full name").fill("Account Customer");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL("http://localhost:3000/");
 

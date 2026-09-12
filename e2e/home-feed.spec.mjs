@@ -11,6 +11,7 @@ test("Home feed follow and cart actions persist through the real API", async ({
   await page.getByLabel("Full name").fill("Home Feed Customer");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL("http://localhost:3000/");
 
