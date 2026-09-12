@@ -1,0 +1,219 @@
+.page {
+  min-height: 100svh;
+  padding-bottom: calc(122px + env(safe-area-inset-bottom));
+}
+
+.identityRow {
+  min-height: 142px;
+  padding: calc(56px + env(safe-area-inset-top)) 20px 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.identityLink {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.avatar {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f4f5f7;
+  color: #5e626a;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.identityCopy {
+  min-width: 0;
+}
+
+.identityCopy h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.identityCopy p {
+  margin: 6px 0 0;
+  color: #6b707a;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.settingsLink {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  margin: 8px -6px 0 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.stats {
+  min-height: 82px;
+  margin: 12px 20px 0;
+  border: 1px solid #e8ebf0;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.stat {
+  min-width: 0;
+  padding: 15px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.stat strong {
+  font-size: 18px;
+  line-height: 22px;
+  letter-spacing: -0.025em;
+}
+
+.stat span {
+  margin-top: 6px;
+  color: #6b707a;
+  font-size: 11px;
+  line-height: 13px;
+}
+
+.section {
+  padding: 0 20px;
+}
+
+.activitySection {
+  margin-top: 36px;
+}
+
+.accountSection {
+  margin-top: 40px;
+}
+
+.sectionTitle {
+  margin: 0 0 15px;
+  font-size: 17px;
+  line-height: 21px;
+  letter-spacing: -0.025em;
+}
+
+.activityList {
+  display: grid;
+  gap: 16px;
+}
+
+.activityItem {
+  min-height: 62px;
+  padding: 10px 14px 10px 16px;
+  border: 1px solid #e8ebf0;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 16px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.activityIcon {
+  display: grid;
+  place-items: center;
+}
+
+.activityCopy {
+  min-width: 0;
+}
+
+.activityCopy strong,
+.activityCopy span {
+  display: block;
+}
+
+.activityCopy strong {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 650;
+}
+
+.activityCopy span {
+  margin-top: 5px;
+  color: #6b707a;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.chevron {
+  color: #6b707a;
+  justify-self: end;
+}
+
+.accountList {
+  display: grid;
+}
+
+.accountItem {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.accountCopy strong,
+.accountCopy span {
+  display: block;
+}
+
+.accountCopy strong {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 650;
+}
+
+.accountCopy span {
+  margin-top: 6px;
+  color: #6b707a;
+  font-size: 11px;
+  line-height: 13px;
+}
+
+.metricError {
+  color: #9b2c2c;
+}
+
+@media (max-width: 380px) {
+  .identityRow,
+  .section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .stats {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+}
