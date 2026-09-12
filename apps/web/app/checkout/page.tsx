@@ -75,7 +75,9 @@ export default function CheckoutPage() {
       router.push(`/orders/${order.data.id}`);
     } catch (placeError) {
       setError(
-        placeError instanceof Error ? placeError.message : "Could not place order",
+        placeError instanceof Error
+          ? placeError.message
+          : "Could not place order",
       );
       setSubmitting(false);
     }
@@ -112,7 +114,10 @@ export default function CheckoutPage() {
           </span>
           <div>
             <strong>No payment required yet</strong>
-            <p>Placing this order will not charge you. Payments are not connected.</p>
+            <p>
+              Placing this order will not charge you. Payments are not
+              connected.
+            </p>
           </div>
         </div>
       </section>
@@ -138,9 +143,13 @@ export default function CheckoutPage() {
                 <div className={styles.itemCopy}>
                   <strong>{item.product.name}</strong>
                   <span>{item.product.seller.displayName}</span>
-                  {item.quantity > 1 ? <small>Qty {item.quantity}</small> : null}
+                  {item.quantity > 1 ? (
+                    <small>Qty {item.quantity}</small>
+                  ) : null}
                 </div>
-                <strong className={styles.itemPrice}>{money(item.lineTotal)}</strong>
+                <strong className={styles.itemPrice}>
+                  {money(item.lineTotal)}
+                </strong>
               </article>
             ))}
           </div>
@@ -207,7 +216,9 @@ function formatAddress(address: {
   return [
     address.line1,
     address.line2,
-    [address.city, address.region, address.postalCode].filter(Boolean).join(", "),
+    [address.city, address.region, address.postalCode]
+      .filter(Boolean)
+      .join(", "),
     address.country,
   ]
     .filter(Boolean)
