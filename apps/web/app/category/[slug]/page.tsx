@@ -35,7 +35,9 @@ export default function CategoryPage() {
     .slice(0, 4);
   const productRows = products.data?.data ?? [];
   const sellerRows = Array.from(
-    new Map(productRows.map((product) => [product.seller.id, product.seller])).values(),
+    new Map(
+      productRows.map((product) => [product.seller.id, product.seller]),
+    ).values(),
   ).slice(0, 4);
   const loading = categories.loading || products.loading;
   const error = categories.error || products.error;
@@ -45,7 +47,11 @@ export default function CategoryPage() {
     return (
       <main className={`app-shell with-nav ${styles.page}`}>
         <header className={styles.header}>
-          <Link className={styles.back} href="/explore" aria-label="Back to Explore">
+          <Link
+            className={styles.back}
+            href="/explore"
+            aria-label="Back to Explore"
+          >
             <Icon name="back" size={22} />
           </Link>
           <h1 className={styles.title}>Category</h1>
@@ -62,7 +68,11 @@ export default function CategoryPage() {
   return (
     <main className={`app-shell with-nav ${styles.page}`}>
       <header className={styles.header}>
-        <Link className={styles.back} href="/explore" aria-label="Back to Explore">
+        <Link
+          className={styles.back}
+          href="/explore"
+          aria-label="Back to Explore"
+        >
           <Icon name="back" size={22} />
         </Link>
         <h1 className={styles.title}>{categoryName}</h1>
@@ -74,7 +84,10 @@ export default function CategoryPage() {
           : `${products.data?.pagination.total ?? 0} products`}
       </p>
 
-      <form className={styles.search} action={`/category/${encodeURIComponent(slug)}`}>
+      <form
+        className={styles.search}
+        action={`/category/${encodeURIComponent(slug)}`}
+      >
         <Icon name="search" size={17} />
         <input
           key={search}
@@ -112,7 +125,9 @@ export default function CategoryPage() {
       {!error && !loading ? (
         <section className={styles.section} aria-labelledby="category-products">
           <h2 id="category-products">
-            {search ? `Results in ${categoryName}` : `Popular in ${categoryName}`}
+            {search
+              ? `Results in ${categoryName}`
+              : `Popular in ${categoryName}`}
           </h2>
           {productRows.length > 0 ? (
             <div className={styles.grid}>
