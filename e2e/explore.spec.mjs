@@ -45,10 +45,9 @@ test("Explore matches Figma and opens live search and category discovery", async
     page.getByRole("link", { name: "View Woven everyday tote" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("navigation", { name: "Customer navigation" }).getByRole(
-      "link",
-      { name: "Explore" },
-    ),
+    page
+      .getByRole("navigation", { name: "Customer navigation" })
+      .getByRole("link", { name: "Explore" }),
   ).toHaveAttribute("aria-current", "page");
   await expect(
     page
