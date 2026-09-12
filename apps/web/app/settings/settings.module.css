@@ -1,0 +1,242 @@
+.page {
+  min-height: 100svh;
+  padding: calc(44px + env(safe-area-inset-top)) 20px calc(44px + env(safe-area-inset-bottom));
+}
+
+.titleRow {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.back {
+  width: 34px;
+  height: 42px;
+  margin-left: -10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.titleRow h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+
+.intro {
+  margin: 2px 0 14px;
+  color: #6b707a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.identityCard {
+  min-height: 92px;
+  padding: 18px 26px 18px 17px;
+  border: 1px solid #e5e8ed;
+  border-radius: 20px;
+  background: #f6f7f9;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #0a0a0d;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.identityCopy {
+  min-width: 0;
+}
+
+.identityCopy strong,
+.identityCopy span {
+  display: block;
+}
+
+.identityCopy strong {
+  font-size: 16px;
+  line-height: 20px;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.identityCopy span {
+  margin-top: 6px;
+  color: #6b707a;
+  font-size: 12px;
+  line-height: 15px;
+  overflow-wrap: anywhere;
+}
+
+.editLink {
+  color: #0d73f2;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.settingsList {
+  margin-top: 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.settingCard,
+.disabledCard {
+  min-height: 72px;
+  padding: 14px 16px 14px 17px;
+  border: 1px solid #e5e8ed;
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+  background: #fff;
+}
+
+.settingCopy strong,
+.settingCopy span {
+  display: block;
+}
+
+.settingCopy strong {
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 650;
+}
+
+.settingCopy span {
+  margin-top: 6px;
+  color: #6b707a;
+  font-size: 12px;
+  line-height: 15px;
+}
+
+.chevron {
+  justify-self: end;
+  color: #6b707a;
+}
+
+.disabledCard {
+  color: #5d6169;
+  background: #fcfcfc;
+}
+
+.disabledCard .chevron {
+  opacity: 0.45;
+}
+
+.preferencesTitle {
+  margin: 28px 0 10px;
+  color: #6b707a;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 650;
+}
+
+.preferencesCard {
+  min-height: 136px;
+  padding: 7px 17px;
+  border: 1px solid #e5e8ed;
+  border-radius: 18px;
+}
+
+.preferenceLink,
+.preferenceDisabled {
+  min-height: 60px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.preferenceDisabled {
+  color: #5d6169;
+}
+
+.preferenceCopy strong,
+.preferenceCopy span {
+  display: block;
+}
+
+.preferenceCopy strong {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 650;
+}
+
+.preferenceCopy span {
+  margin-top: 4px;
+  color: #6b707a;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.manage {
+  color: #0d73f2;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.unavailable {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #f2f3f5;
+  color: #7b7f87;
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.logout {
+  width: 100%;
+  min-height: 58px;
+  margin-top: 32px;
+  padding: 0 17px;
+  border: 1px solid #e5e8ed;
+  border-radius: 16px;
+  background: #fff;
+  color: #db1f1f;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+@media (max-width: 380px) {
+  .page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .identityCard {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .editLink {
+    grid-column: 2;
+  }
+}
