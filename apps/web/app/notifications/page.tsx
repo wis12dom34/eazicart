@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Icon } from "../components/icon";
 import {
   ErrorState,
@@ -35,13 +35,10 @@ export default function Notifications() {
     [auth.isAuthenticated],
   );
   const notifications = result.data?.data ?? [];
-  const visible = useMemo(
-    () =>
-      filter === "ALL"
-        ? notifications
-        : notifications.filter((notification) => notification.type === filter),
-    [filter, notifications],
-  );
+  const visible =
+    filter === "ALL"
+      ? notifications
+      : notifications.filter((notification) => notification.type === filter);
 
   const markRead = async (id: string) => {
     try {
@@ -50,7 +47,9 @@ export default function Notifications() {
       await result.reload();
     } catch (error) {
       setActionError(
-        error instanceof Error ? error.message : "Unable to update notification",
+        error instanceof Error
+          ? error.message
+          : "Unable to update notification",
       );
     }
   };
