@@ -67,9 +67,7 @@ test("edit profile and address book use real supported account data", async ({
   await expect(homeCard.getByText("Default", { exact: true })).toBeVisible();
 
   await homeCard.getByRole("button", { name: "Edit" }).click();
-  await homeCard
-    .getByLabel("Address", { exact: true })
-    .fill("2 Demo Street");
+  await homeCard.getByLabel("Address", { exact: true }).fill("2 Demo Street");
   await homeCard.getByRole("button", { name: "Save changes" }).click();
   await expect(homeCard).toContainText("2 Demo Street");
 
