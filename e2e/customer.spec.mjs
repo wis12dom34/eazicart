@@ -45,7 +45,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.goto("/saved");
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
 
-  await page.goto(`/seller/${sellerId}`);
+  await page.goto(`/product/${productId}`);
+  await page.getByRole("link", { name: /View .* seller profile/ }).click();
+  await expect(page).toHaveURL(`http://localhost:3000/seller/${sellerId}`);
   await page.getByRole("button", { name: "Follow", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Following", exact: true }),
@@ -58,7 +60,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
 
   await page.goto(`/product/${productId}`);
-  await page.getByRole("button", { name: "Add to cart", exact: true }).click();
+  await page.getByRole("button", { name: "Add to Cart", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Added to cart");
   await page.goto("/cart");
   await page.getByRole("button", { name: "Increase quantity" }).click();

@@ -29,6 +29,7 @@ export default function ProductPage({
   const auth = useAuth();
   const result = useRequest(() => productsApi.get(id), [id]);
   const [message, setMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(0);
   const product = result.data?.data;
 
   const protectedAction = async (
@@ -52,7 +53,7 @@ export default function ProductPage({
   if (result.loading) {
     return (
       <main className="app-shell">
-        <Header title="Product details" back="/" />
+        <Header title="Product" back="/" />
         <LoadingState label="Loading product…" />
       </main>
     );
@@ -61,7 +62,7 @@ export default function ProductPage({
   if (result.error) {
     return (
       <main className="app-shell">
-        <Header title="Product details" back="/" />
+        <Header title="Product" back="/" />
         <ErrorState message={result.error} retry={() => void result.reload()} />
       </main>
     );
@@ -70,90 +71,118 @@ export default function ProductPage({
   if (!product) {
     return (
       <main className="app-shell">
-        <Header title="Product details" back="/" />
+        <Header title="Product" back="/" />
         <EmptyState message="Product not found." />
       </main>
     );
   }
 
   const inStock = product.stock > 0;
-  const primaryImage = product.images[0];
+  const imageIndex = Math.min(
+    selectedImage,
+    Math.max(product.images.length - 1, 0),
+  );
+  const activeImage = product.images[imageIndex];
+
+  const shareProduct = async () => {
+    const url = window.location.href;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product.name, url });
+        return;
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setMessage("Product link copied");
+        return;
+      }
+
+      setMessage("Share this page from your browser");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setMessage("Unable to share product");
+    }
+  };
 
   return (
     <main className={`app-shell detail-page ${styles.page}`}>
       <Header
-        title="Product details"
+        title="Product"
         back="/"
         action={
-          <button
-            className={`icon-button ${styles.saveButton}`}
-            aria-label="Save product"
-            onClick={() =>
-              void protectedAction(() => savedApi.save(id), "Saved")
-            }
-          >
-            <Icon name="heart" />
-          </button>
+          <div className={styles.headerActions}>
+            <button
+              className={`icon-button ${styles.headerIconButton}`}
+              aria-label="Save product"
+              onClick={() =>
+                void protectedAction(() => savedApi.save(id), "Saved")
+              }
+            >
+              <Icon name="heart" />
+            </button>
+            <button
+              className={`icon-button ${styles.headerIconButton}`}
+              aria-label="Share product"
+              onClick={() => void shareProduct()}
+            >
+              <Icon name="share" />
+            </button>
+          </div>
         }
       />
 
       <section
         className={`detail-image ${styles.media}`}
-        aria-label={`${product.name} image`}
+        aria-label={`${product.name} product images`}
       >
-        <span>
-          {primaryImage ? (
-            <img
-              className={styles.mediaImage}
-              src={primaryImage.url}
-              alt={primaryImage.altText ?? product.name}
-            />
-          ) : (
-            <span className={styles.mediaFallback} aria-hidden="true">
-              🛍️
-            </span>
-          )}
-        </span>
-        <div className={styles.mediaMeta} aria-hidden="true">
-          <span className={styles.categoryBadge}>{product.category.name}</span>
-          <span
-            className={`${styles.stockBadge} ${!inStock ? styles.outOfStock : ""}`}
-          >
-            {inStock ? "Available" : "Out of stock"}
+        {activeImage ? (
+          <img
+            className={styles.mediaImage}
+            src={activeImage.url}
+            alt={activeImage.altText ?? product.name}
+          />
+        ) : (
+          <span className={styles.mediaFallback} aria-hidden="true">
+            <Icon name="bag" size={56} />
           </span>
-        </div>
+        )}
+
+        {product.images.length > 0 ? (
+          <div className={styles.galleryMeta}>
+            <div className={styles.galleryDots} aria-label="Product images">
+              {product.images.map((image, index) => (
+                <button
+                  key={image.id ?? `${image.url}-${index}`}
+                  type="button"
+                  className={`${styles.galleryDot} ${
+                    imageIndex === index ? styles.galleryDotActive : ""
+                  }`}
+                  aria-label={`Show product image ${index + 1}`}
+                  aria-pressed={imageIndex === index}
+                  onClick={() => setSelectedImage(index)}
+                />
+              ))}
+            </div>
+            <span className={styles.galleryCount} aria-live="polite">
+              {imageIndex + 1} / {product.images.length}
+            </span>
+          </div>
+        ) : null}
       </section>
 
       <section className={`product-info ${styles.content}`}>
-        <Link
-          href={`/seller/${product.seller.id}`}
-          className={styles.sellerLink}
-        >
-          {product.seller.displayName}
-        </Link>
         <h2 className={styles.title}>{product.name}</h2>
 
-        <div className={styles.priceRow}>
-          <div className={`price large ${styles.price}`}>
-            <strong>{money(product.price)}</strong>
-          </div>
-          <span
-            className={`${styles.inventory} ${!inStock ? styles.inventoryOut : ""}`}
-          >
-            {inStock ? `${product.stock} in stock` : "Currently unavailable"}
-          </span>
+        <div className={`price large ${styles.price}`}>
+          <strong>{money(product.price)}</strong>
         </div>
-
-        <hr className={styles.divider} />
-
-        <section aria-labelledby="about-product">
-          <h3 id="about-product" className={styles.sectionTitle}>
-            About this item
-          </h3>
-          <p className={styles.description}>
-            {product.description || "No description provided."}
-          </p>
-        </section>
+        <p
+          className={`${styles.inventory} ${!inStock ? styles.inventoryOut : ""}`}
+        >
+          {inStock ? `${product.stock} in stock` : "Out of stock"}
+        </p>
 
         <Link
           href={`/seller/${product.seller.id}`}
@@ -165,10 +194,21 @@ export default function ProductPage({
           </span>
           <div>
             <strong>{product.seller.displayName}</strong>
-            <small>{product.category.name} seller</small>
+            <small>{product.category.name}</small>
           </div>
           <Icon name="chevron" />
         </Link>
+
+        <hr className={styles.divider} />
+
+        <section aria-labelledby="about-product">
+          <h3 id="about-product" className={styles.sectionTitle}>
+            About this item
+          </h3>
+          <p className={styles.description}>
+            {product.description || "No description provided."}
+          </p>
+        </section>
 
         {message && (
           <p className={styles.status} role="status" aria-live="polite">
@@ -188,7 +228,7 @@ export default function ProductPage({
             void protectedAction(() => cartApi.add(id, 1), "Added to cart")
           }
         >
-          Add to cart
+          Add to Cart
         </button>
         <button
           disabled={!inStock}
@@ -200,7 +240,7 @@ export default function ProductPage({
             }, "")
           }
         >
-          Buy now
+          Buy Now
         </button>
       </div>
     </main>
