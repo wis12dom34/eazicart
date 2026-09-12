@@ -37,10 +37,12 @@ test("auth screens use supported credentials flows and honest validation states"
   await expect(
     page.getByRole("heading", { name: "Welcome back", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Continue with Google", { exact: true })).toHaveCount(
+  await expect(
+    page.getByText("Continue with Google", { exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByText("Forgot password?", { exact: true })).toHaveCount(
     0,
   );
-  await expect(page.getByText("Forgot password?", { exact: true })).toHaveCount(0);
 
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill("wrong-password");
