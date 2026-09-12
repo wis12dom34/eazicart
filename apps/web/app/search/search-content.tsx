@@ -60,7 +60,11 @@ export function SearchContent() {
   return (
     <main className={`app-shell with-nav ${styles.page}`}>
       <header className={styles.header}>
-        <Link className={styles.back} href="/explore" aria-label="Back to Explore">
+        <Link
+          className={styles.back}
+          href="/explore"
+          aria-label="Back to Explore"
+        >
           <Icon name="back" size={22} />
         </Link>
         <h1 className={styles.title}>Search</h1>
