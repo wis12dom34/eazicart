@@ -29,7 +29,8 @@ export function LoginContent() {
       );
       router.replace(safeNextPath(params.get("next")));
     } catch (caught) {
-      const message = caught instanceof Error ? caught.message : "Unable to sign in";
+      const message =
+        caught instanceof Error ? caught.message : "Unable to sign in";
       setError(
         message === "Email or password is incorrect"
           ? "Email or password is incorrect. Try again."
@@ -42,7 +43,9 @@ export function LoginContent() {
   return (
     <main className={`app-shell ${styles.page} ${styles.loginPage}`}>
       <h1 className={styles.heading}>Welcome back</h1>
-      <p className={styles.subtitle}>Sign in to continue shopping on EaziCart.</p>
+      <p className={styles.subtitle}>
+        Sign in to continue shopping on EaziCart.
+      </p>
 
       <form className={styles.form} onSubmit={(event) => void submit(event)}>
         <div className={styles.field}>
