@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Icon } from "../components/icon";
-import { ErrorState, LoadingState, SignInState } from "../components/async-state";
+import {
+  ErrorState,
+  LoadingState,
+  SignInState,
+} from "../components/async-state";
 import { notificationsApi } from "../../lib/api/notifications";
 import type { Notification } from "../../lib/api/types";
 import { useRequest } from "../hooks/use-request";
@@ -58,7 +62,9 @@ export default function Notifications() {
       await result.reload();
     } catch (error) {
       setActionError(
-        error instanceof Error ? error.message : "Unable to update notifications",
+        error instanceof Error
+          ? error.message
+          : "Unable to update notifications",
       );
     }
   };
@@ -91,7 +97,9 @@ export default function Notifications() {
             {filters.map((item) => (
               <button
                 key={item.key}
-                className={filter === item.key ? styles.filterActive : styles.filter}
+                className={
+                  filter === item.key ? styles.filterActive : styles.filter
+                }
                 type="button"
                 aria-pressed={filter === item.key}
                 onClick={() => setFilter(item.key)}
@@ -131,6 +139,7 @@ export default function Notifications() {
             <button
               className={styles.readAll}
               type="button"
+              aria-label="Read all"
               onClick={() => void markAllRead()}
             >
               Mark all as read
