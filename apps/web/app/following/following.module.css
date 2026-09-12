@@ -1,0 +1,159 @@
+.page {
+  max-width: 430px;
+  min-height: 100svh;
+  padding-bottom: calc(122px + env(safe-area-inset-bottom));
+}
+
+.header {
+  padding: calc(28px + env(safe-area-inset-top)) 24px 0;
+}
+
+.header > a {
+  align-items: center;
+  color: #0a0a0d;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  margin-left: -12px;
+  text-decoration: none;
+  width: 40px;
+}
+
+.header h1 {
+  color: #0a0a0d;
+  font-size: 28px;
+  letter-spacing: -0.035em;
+  line-height: 34px;
+  margin: 8px 0 0;
+}
+
+.header p {
+  color: #6b707a;
+  font-size: 13px;
+  line-height: 16px;
+  margin: 4px 0 0;
+}
+
+.search {
+  align-items: center;
+  background: #f6f7f9;
+  border-radius: 14px;
+  color: #6b707a;
+  display: flex;
+  gap: 10px;
+  height: 44px;
+  margin: 18px 24px 0;
+  padding: 0 16px;
+}
+
+.search input {
+  background: transparent;
+  border: 0;
+  color: #0a0a0d;
+  flex: 1;
+  font-size: 13px;
+  min-width: 0;
+  outline: 0;
+}
+
+.search input::placeholder {
+  color: #6b707a;
+  opacity: 1;
+}
+
+.list {
+  display: grid;
+  gap: 22px;
+  padding: 24px;
+}
+
+.sellerCard {
+  align-items: center;
+  border: 1px solid #e5e8ed;
+  border-radius: 18px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  min-height: 106px;
+  padding: 19px 17px 19px 15px;
+}
+
+.avatar {
+  align-items: center;
+  background: #f6f7f9;
+  border-radius: 50%;
+  color: #5d6169;
+  display: flex;
+  font-size: 14px;
+  font-weight: 700;
+  height: 64px;
+  justify-content: center;
+  text-decoration: none;
+  width: 64px;
+}
+
+.sellerCopy {
+  color: #0a0a0d;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.sellerCopy strong,
+.sellerCopy span,
+.sellerCopy small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sellerCopy strong {
+  font-size: 15px;
+  line-height: 18px;
+}
+
+.sellerCopy span,
+.sellerCopy small {
+  color: #6b707a;
+  font-size: 11px;
+  line-height: 14px;
+  margin-top: 5px;
+}
+
+.followingButton {
+  background: #fff;
+  border: 1px solid #e5e8ed;
+  border-radius: 17px;
+  color: #0a0a0d;
+  font-size: 11px;
+  font-weight: 600;
+  height: 34px;
+  padding: 0 12px;
+}
+
+@media (max-width: 374px) {
+  .header {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .search {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .list {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .sellerCard {
+    gap: 12px;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+  }
+
+  .avatar {
+    height: 56px;
+    width: 56px;
+  }
+}

@@ -31,7 +31,24 @@ test("Home feed follow and cart actions persist through the real API", async ({
   await product.getByRole("button", { name: "Add to Cart" }).click();
 
   await page.goto("/following");
+  await expect(
+    page.getByRole("heading", { name: "Saved Sellers", exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Saved sellers" })
+      .getByText(/^\d+ followers?$/),
+  ).toBeVisible();
+  await expect(page.getByLabel("Search saved sellers")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Unfollow Lagos Studio" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Customer navigation" })
+      .getByRole("link", { name: "Profile" }),
+  ).toHaveAttribute("aria-current", "page");
 
   await page.goto("/cart");
   await expect(
