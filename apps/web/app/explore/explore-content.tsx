@@ -64,7 +64,7 @@ export function ExploreContent() {
 
       <h1 className="figma-explore-title">Explore</h1>
 
-      <form className="figma-explore-search">
+      <form className="figma-explore-search" action="/search">
         <Icon name="search" size={16} />
         <input
           name="search"
@@ -101,11 +101,7 @@ export function ExploreContent() {
           aria-label="Trending categories"
         >
           {trendingCategories.map((item) => (
-            <Link
-              className={item.slug === category ? "active" : undefined}
-              href={`?category=${encodeURIComponent(item.slug)}`}
-              key={item.id}
-            >
+            <Link href={`/category/${item.slug}`} key={item.id}>
               {item.name}
             </Link>
           ))}
