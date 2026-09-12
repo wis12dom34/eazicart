@@ -59,23 +59,36 @@ test("edit profile and address book use real supported account data", async ({
   await page.getByLabel("Country", { exact: true }).fill("Nigeria");
   await page.getByRole("button", { name: "Save address" }).click();
 
-  const addressCard = page.locator(".address-card").first();
-  await expect(addressCard).toContainText("Home");
-  await expect(addressCard).toContainText("1 Demo Street");
-  await expect(addressCard).toContainText("Near Demo Park");
-  await expect(addressCard).toContainText("Lagos, Lagos 100001");
-  await expect(addressCard).toContainText("Nigeria");
+  const homeCard = page.locator(".address-card").filter({ hasText: "Home" });
+  await expect(homeCard).toContainText("1 Demo Street");
+  await expect(homeCard).toContainText("Near Demo Park");
+  await expect(homeCard).toContainText("Lagos, Lagos 100001");
+  await expect(homeCard).toContainText("Nigeria");
+  await expect(homeCard.getByText("Default", { exact: true })).toBeVisible();
 
-  await addressCard.getByRole("button", { name: "Edit" }).click();
-  await addressCard
+  await homeCard.getByRole("button", { name: "Edit" }).click();
+  await homeCard
     .getByLabel("Address", { exact: true })
     .fill("2 Demo Street");
-  await addressCard.getByRole("button", { name: "Save changes" }).click();
-  await expect(addressCard).toContainText("2 Demo Street");
+  await homeCard.getByRole("button", { name: "Save changes" }).click();
+  await expect(homeCard).toContainText("2 Demo Street");
 
-  await addressCard.getByRole("button", { name: "Edit" }).click();
-  await addressCard.getByRole("button", { name: "Make default" }).click();
-  await expect(addressCard.getByText("Default", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: /Add new address/ }).click();
+  await page.getByLabel("Label", { exact: true }).fill("Work");
+  await page.getByLabel("Address", { exact: true }).fill("10 Market Road");
+  await page.getByLabel("City", { exact: true }).fill("Lagos");
+  await page.getByLabel("State / region").fill("Lagos");
+  await page.getByLabel("Postal code").fill("100002");
+  await page.getByLabel("Country", { exact: true }).fill("Nigeria");
+  await page.getByRole("button", { name: "Save address" }).click();
+
+  const workCard = page.locator(".address-card").filter({ hasText: "Work" });
+  await expect(workCard).toContainText("10 Market Road");
+  await expect(workCard.getByText("Default", { exact: true })).toHaveCount(0);
+  await workCard.getByRole("button", { name: "Edit" }).click();
+  await workCard.getByRole("button", { name: "Make default" }).click();
+  await expect(workCard.getByText("Default", { exact: true })).toBeVisible();
+  await expect(homeCard.getByText("Default", { exact: true })).toHaveCount(0);
 
   await expect(
     page
