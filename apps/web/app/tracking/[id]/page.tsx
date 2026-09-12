@@ -13,6 +13,7 @@ import {
   SignInState,
 } from "../../components/async-state";
 import { useAuth } from "../../providers/auth-provider";
+import { orderStatusCopy, orderStatusLabel } from "../../orders/order-utils";
 import styles from "./tracking.module.css";
 
 export default function TrackingPage({
@@ -43,7 +44,10 @@ export default function TrackingPage({
   if (result.error || !result.data)
     return (
       <TrackingShell>
-        <ErrorState message={result.error || "Order not found"} />
+        <ErrorState
+          message={result.error || "Order not found"}
+          retry={() => void result.reload()}
+        />
       </TrackingShell>
     );
 
@@ -77,14 +81,33 @@ export default function TrackingPage({
       </section>
 
       <section className={styles.progressSection}>
-        <h2>Current order status</h2>
-        <div className={styles.currentStatus}>
-          <span className={styles.statusDot} aria-hidden="true" />
-          <div>
-            <strong>{order.status}</strong>
-            <p>{statusCopy(order.status)}</p>
+        <h2>Order progress</h2>
+        <div className={styles.timeline}>
+          <div className={styles.timelineEvent}>
+            <span className={styles.completeDot} aria-hidden="true" />
+            <div>
+              <strong>Order placed</strong>
+              <p>{formatStatusDate(order.createdAt)}</p>
+            </div>
           </div>
+          {order.status !== "PENDING" && (
+            <div className={styles.timelineEvent}>
+              <span
+                className={
+                  order.status === "CANCELLED"
+                    ? styles.cancelledDot
+                    : styles.currentDot
+                }
+                aria-hidden="true"
+              />
+              <div>
+                <strong>{orderStatusLabel(order.status)}</strong>
+                <p>{formatStatusDate(order.updatedAt)}</p>
+              </div>
+            </div>
+          )}
         </div>
+        <p className={styles.statusCopy}>{orderStatusCopy(order.status)}</p>
       </section>
 
       <section className={styles.unavailable}>
@@ -134,9 +157,11 @@ function formatPlacedDate(value: string) {
   }).format(new Date(value));
 }
 
-function statusCopy(status: string) {
-  if (status === "CONFIRMED") return "Your order has been confirmed.";
-  if (status === "FULFILLED") return "This order is marked fulfilled.";
-  if (status === "CANCELLED") return "This order has been cancelled.";
-  return "Your order has been created and is waiting for the next update.";
+function formatStatusDate(value: string) {
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }

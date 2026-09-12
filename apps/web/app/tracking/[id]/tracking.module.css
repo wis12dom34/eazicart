@@ -83,36 +83,77 @@
   line-height: 1.3;
 }
 
-.currentStatus {
+.timeline {
+  position: relative;
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 14px;
+  gap: 34px;
   margin-top: 20px;
-  padding: 18px 16px;
-  border: 1px solid #e5e8ed;
-  border-radius: 18px;
-  background: #fff;
+  padding-left: 8px;
 }
 
-.statusDot {
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
+.timeline::before {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 15px;
+  width: 1px;
+  background: #dfe3e8;
+  content: "";
+}
+
+.timelineEvent {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.completeDot,
+.currentDot,
+.cancelledDot {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border: 1px solid #fff;
   border-radius: 50%;
-  background: #0a0a0d;
+  box-shadow: 0 0 0 1px currentColor;
 }
 
-.currentStatus strong {
+.completeDot {
+  background: #1f9953;
+  color: #1f9953;
+}
+
+.currentDot {
+  background: #0a0a0d;
+  color: #0a0a0d;
+}
+
+.cancelledDot {
+  background: #a22b2b;
+  color: #a22b2b;
+}
+
+.timelineEvent strong {
   color: #0a0a0d;
   font-size: 14px;
   font-weight: 700;
 }
 
-.currentStatus p {
+.timelineEvent p {
   margin: 6px 0 0;
   color: #6b707a;
   font-size: 12px;
   line-height: 1.45;
+}
+
+.statusCopy {
+  margin: 22px 0 0;
+  color: #6b707a;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .unavailable {

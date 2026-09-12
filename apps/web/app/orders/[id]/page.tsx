@@ -14,6 +14,11 @@ import {
   SignInState,
 } from "../../components/async-state";
 import { useAuth } from "../../providers/auth-provider";
+import {
+  multiplyMoney,
+  orderStatusCopy,
+  orderStatusLabel,
+} from "../order-utils";
 import styles from "./order-detail.module.css";
 
 export default function OrderDetail({
@@ -44,7 +49,10 @@ export default function OrderDetail({
   if (result.error || !result.data)
     return (
       <OrderShell>
-        <ErrorState message={result.error || "Order not found"} />
+        <ErrorState
+          message={result.error || "Order not found"}
+          retry={() => void result.reload()}
+        />
       </OrderShell>
     );
 
@@ -68,10 +76,10 @@ export default function OrderDetail({
 
       <section className={styles.statusPanel} aria-label="Order status">
         <div>
-          <strong>{order.status}</strong>
-          <p>{statusCopy(order.status)}</p>
+          <strong>{orderStatusLabel(order.status)}</strong>
+          <p>{orderStatusCopy(order.status)}</p>
         </div>
-        <Link href={`/tracking/${order.id}`}>Track status</Link>
+        <Link href={`/tracking/${order.id}`}>Track order</Link>
       </section>
 
       <section className={styles.section}>
@@ -94,7 +102,9 @@ export default function OrderDetail({
                 <div className={styles.itemCopy}>
                   <strong>{item.productName}</strong>
                   <span>Qty {item.quantity}</span>
-                  <span>{money(item.unitPrice)} each</span>
+                  <span>
+                    {money(multiplyMoney(item.unitPrice, item.quantity))}
+                  </span>
                 </div>
               </article>
             );
@@ -105,13 +115,17 @@ export default function OrderDetail({
       <section className={styles.section}>
         <h2>Delivery</h2>
         <div className={styles.deliveryCard}>
-          <strong>{order.address.label || "Delivery address"}</strong>
-          <p>{formatAddress(order.address)}</p>
+          <strong>{order.address.line1}</strong>
+          <p>{formatAddressDetails(order.address)}</p>
         </div>
       </section>
 
       <section className={`summary ${styles.summary}`}>
-        <h2>Order summary</h2>
+        <h2>Payment summary</h2>
+        <div className={styles.summaryRow}>
+          <span>Subtotal</span>
+          <strong>{money(order.total)}</strong>
+        </div>
         <div className={`total ${styles.total}`}>
           <strong>Total</strong>
           <strong>{money(order.total)}</strong>
@@ -141,7 +155,7 @@ function formatPlacedDate(value: string) {
   }).format(new Date(value));
 }
 
-function formatAddress(address: {
+function formatAddressDetails(address: {
   line1: string;
   line2?: string | null;
   city: string;
@@ -150,7 +164,6 @@ function formatAddress(address: {
   country: string;
 }) {
   return [
-    address.line1,
     address.line2,
     [address.city, address.region, address.postalCode]
       .filter(Boolean)
@@ -159,11 +172,4 @@ function formatAddress(address: {
   ]
     .filter(Boolean)
     .join(" · ");
-}
-
-function statusCopy(status: string) {
-  if (status === "CONFIRMED") return "Your order has been confirmed.";
-  if (status === "FULFILLED") return "This order is marked fulfilled.";
-  if (status === "CANCELLED") return "This order has been cancelled.";
-  return "Your order has been created and is waiting for the next update.";
 }

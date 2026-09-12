@@ -67,6 +67,7 @@ export type Order = {
   status: string;
   total: Money;
   createdAt: string;
+  updatedAt: string;
   address: Address;
   items: OrderItem[];
 };
