@@ -24,26 +24,23 @@ type FollowedSeller = Awaited<
 export default function FollowingPage() {
   const auth = useAuth();
   const [search, setSearch] = useState("");
-  const result = useRequest(
-    async () => {
-      if (!auth.isAuthenticated) return undefined;
+  const result = useRequest(async () => {
+    if (!auth.isAuthenticated) return undefined;
 
-      const follows = await followsApi.list();
-      const data = await Promise.all(
-        follows.data.map(async (follow): Promise<FollowedSeller> => {
-          try {
-            const count = await followsApi.count(follow.sellerId);
-            return { ...follow, followerCount: count.data.count };
-          } catch {
-            return follow;
-          }
-        }),
-      );
+    const follows = await followsApi.list();
+    const data = await Promise.all(
+      follows.data.map(async (follow): Promise<FollowedSeller> => {
+        try {
+          const count = await followsApi.count(follow.sellerId);
+          return { ...follow, followerCount: count.data.count };
+        } catch {
+          return follow;
+        }
+      }),
+    );
 
-      return { data };
-    },
-    [auth.isAuthenticated],
-  );
+    return { data };
+  }, [auth.isAuthenticated]);
 
   const sellers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -92,10 +89,7 @@ export default function FollowingPage() {
       ) : !auth.isAuthenticated ? (
         <SignInState message="Sign in to view the sellers you follow." />
       ) : result.error ? (
-        <ErrorState
-          message={result.error}
-          retry={() => void result.reload()}
-        />
+        <ErrorState message={result.error} retry={() => void result.reload()} />
       ) : !result.data?.data.length ? (
         <EmptyState message="You are not following any sellers." />
       ) : !sellers.length ? (
