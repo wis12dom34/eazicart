@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -31,7 +32,11 @@ export default function ReelsPage() {
       })
       .catch((requestError: unknown) => {
         if (!active) return;
-        setError(requestError instanceof Error ? requestError.message : "Unable to load reels");
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load reels",
+        );
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -52,7 +57,11 @@ export default function ReelsPage() {
       await navigator.clipboard.writeText(url);
       setShareStatus("Product link copied");
     } catch (shareError) {
-      if (shareError instanceof DOMException && shareError.name === "AbortError") return;
+      if (
+        shareError instanceof DOMException &&
+        shareError.name === "AbortError"
+      )
+        return;
       setShareStatus("Unable to share product");
     }
   };
@@ -82,13 +91,18 @@ export default function ReelsPage() {
   }
 
   const image = product.images[0];
-  const sellerName = product.seller.displayName || product.seller.user?.name || "Seller";
+  const sellerName =
+    product.seller.displayName || product.seller.user?.name || "Seller";
   const description = product.description?.trim();
 
   return (
     <main className={styles.page}>
       {image ? (
-        <img className={styles.media} src={image.url} alt={image.altText || product.name} />
+        <img
+          className={styles.media}
+          src={image.url}
+          alt={image.altText || product.name}
+        />
       ) : (
         <div className={styles.fallback} aria-label="Product media unavailable">
           <Icon name="bag" size={64} />
@@ -103,10 +117,17 @@ export default function ReelsPage() {
       </div>
       <div className={styles.details}>
         <div className={styles.sellerRow}>
-          <Link className={styles.avatar} href={`/seller/${product.seller.id}`} aria-label={`View ${sellerName} seller profile`}>
+          <Link
+            className={styles.avatar}
+            href={`/seller/${product.seller.id}`}
+            aria-label={`View ${sellerName} seller profile`}
+          >
             {sellerName.slice(0, 1).toUpperCase()}
           </Link>
-          <Link className={styles.sellerName} href={`/seller/${product.seller.id}`}>
+          <Link
+            className={styles.sellerName}
+            href={`/seller/${product.seller.id}`}
+          >
             {sellerName}
           </Link>
         </div>
@@ -114,11 +135,20 @@ export default function ReelsPage() {
         <strong className={styles.productName}>{product.name}</strong>
         <strong className={styles.price}>{formatNaira(product.price)}</strong>
       </div>
-      <button className={styles.share} type="button" onClick={shareProduct} aria-label={`Share ${product.name}`}>
+      <button
+        className={styles.share}
+        type="button"
+        onClick={() => void shareProduct()}
+        aria-label={`Share ${product.name}`}
+      >
         <Icon name="share" />
         <span>Share</span>
       </button>
-      {shareStatus ? <span className={styles.shareStatus} role="status">{shareStatus}</span> : null}
+      {shareStatus ? (
+        <span className={styles.shareStatus} role="status">
+          {shareStatus}
+        </span>
+      ) : null}
       <Link className={styles.viewProduct} href={`/product/${product.id}`}>
         <span>View Product</span>
         <strong>{formatNaira(product.price)}</strong>
