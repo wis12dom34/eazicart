@@ -90,5 +90,7 @@ test("payment methods stay honest and notifications use live account data", asyn
   await expect(
     page.getByRole("button", { name: "Order received, read" }),
   ).toBeVisible();
-  await expect(page.getByText("Mark all as read", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Mark all as read", { exact: true })).toHaveCount(
+    0,
+  );
 });
