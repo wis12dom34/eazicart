@@ -37,7 +37,9 @@ export default function SellerPage({
   const [activeTab, setActiveTab] = useState<SellerTab>("products");
 
   const following = Boolean(
-    follows.data?.data.some((follow) => follow.sellerId === seller.data?.data.userId),
+    follows.data?.data.some(
+      (follow) => follow.sellerId === seller.data?.data.userId,
+    ),
   );
 
   if (seller.loading) {
@@ -132,7 +134,11 @@ export default function SellerPage({
         </p>
       ) : null}
 
-      <div className={styles.tabs} role="tablist" aria-label="Seller profile sections">
+      <div
+        className={styles.tabs}
+        role="tablist"
+        aria-label="Seller profile sections"
+      >
         <SellerTabButton
           label="Products"
           tab="products"
