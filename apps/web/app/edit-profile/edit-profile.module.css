@@ -1,0 +1,149 @@
+.page {
+  min-height: 100svh;
+  padding: calc(42px + env(safe-area-inset-top)) 24px
+    calc(122px + env(safe-area-inset-bottom));
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back {
+  width: 26px;
+  height: 40px;
+  margin-left: -10px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.titleRow h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+
+.intro {
+  margin: 2px 0 0;
+  color: #6b707a;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.avatarBlock {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f6f7f9;
+  color: #6b707a;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.photoButton {
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: #0d73f2;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.photoButton:disabled {
+  opacity: 1;
+}
+
+.form {
+  margin-top: 14px;
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field > span {
+  color: #0a0a0d;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 650;
+}
+
+.input {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 15px;
+  border: 1px solid #e5e8ed;
+  border-radius: 14px;
+  background: #fff;
+  color: #0a0a0d;
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #aeb5c0;
+  box-shadow: 0 0 0 3px rgba(13, 115, 242, 0.08);
+}
+
+.input:disabled {
+  background: #fafbfc;
+  color: #767b84;
+  opacity: 1;
+}
+
+.unsupportedNote {
+  margin: -1px 0 0;
+  color: #8a8f98;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.error {
+  margin: 0;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.save {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 44px;
+  border: 0;
+  border-radius: 16px;
+  background: #0a0a0d;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.save:disabled {
+  opacity: 0.55;
+}
+
+@media (max-width: 380px) {
+  .page {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
