@@ -1,0 +1,163 @@
+.page {
+  min-height: 100svh;
+  padding-bottom: calc(122px + env(safe-area-inset-bottom));
+}
+
+.header {
+  padding: calc(44px + env(safe-area-inset-top)) 20px 14px;
+  border-bottom: 1px solid #e5e8ed;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back {
+  width: 30px;
+  height: 38px;
+  margin-left: -9px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.titleRow h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.header p {
+  margin: 5px 0 0;
+  color: #6b707a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.content {
+  padding: 21px 20px 0;
+}
+
+.addButton {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 16px;
+  background: #0a0a0d;
+  color: #fff;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.addButton:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.sectionTitle,
+.otherTitle {
+  margin: 27px 0 10px;
+  font-size: 14px;
+  line-height: 18px;
+  letter-spacing: -0.02em;
+}
+
+.unavailableCard {
+  min-height: 108px;
+  padding: 17px 15px;
+  border: 1px solid #e5e8ed;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+}
+
+.methodIcon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #0a0a0d;
+  color: #fff;
+}
+
+.methodCopy {
+  min-width: 0;
+  display: block;
+}
+
+.methodCopy strong,
+.methodCopy span {
+  display: block;
+}
+
+.methodCopy strong {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 650;
+}
+
+.methodCopy span {
+  margin-top: 7px;
+  color: #6b707a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.otherTitle {
+  margin-top: 32px;
+}
+
+.disabledMethod {
+  min-height: 76px;
+  padding: 14px 15px;
+  border: 1px solid #e5e8ed;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+}
+
+.chevron {
+  color: #9a9ea6;
+}
+
+.securityCard {
+  min-height: 92px;
+  margin-top: 24px;
+  padding: 17px 15px;
+  border: 1px solid #e5e8ed;
+  border-radius: 18px;
+  background: #f6f7f9;
+}
+
+.securityCard strong {
+  display: block;
+  font-size: 13px;
+}
+
+.securityCard p {
+  margin: 7px 0 0;
+  color: #6b707a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+@media (max-width: 380px) {
+  .header,
+  .content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
