@@ -51,8 +51,10 @@ test("Explore matches Figma and opens live search and category discovery", async
     ),
   ).toHaveAttribute("aria-current", "page");
   await expect(
-    page.getByText("Reels", { exact: true }).filter({ visible: true }),
-  ).toBeVisible();
+    page
+      .getByRole("navigation", { name: "Search filters" })
+      .getByText("Reels", { exact: true }),
+  ).toHaveAttribute("aria-disabled", "true");
 
   await page.goto("/explore");
   await page.getByRole("link", { name: "Fashion", exact: true }).click();
