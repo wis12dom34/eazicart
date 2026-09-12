@@ -48,7 +48,10 @@ export default function TrackingPage({
     );
 
   const order = result.data.data;
-  const quantity = order.items.reduce((total, item) => total + item.quantity, 0);
+  const quantity = order.items.reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
   const itemNames = order.items.map((item) => item.productName);
 
   return (
