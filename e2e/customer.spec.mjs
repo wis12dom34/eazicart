@@ -125,7 +125,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.getByRole("button", { name: /Place order/ }).click();
   await expect(page).toHaveURL(/\/orders\/[^/]+$/);
   const orderUrl = page.url();
-  await expect(page.getByText("PENDING", { exact: true })).toBeVisible();
+  await expect(page.getByText("Processing", { exact: true })).toBeVisible();
   await expect(page.locator(".summary .total")).toContainText("37,000");
   await page.goto("/cart");
   await expect(page.getByText("Your cart is empty.")).toBeVisible();
