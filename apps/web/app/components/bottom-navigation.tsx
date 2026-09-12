@@ -6,7 +6,12 @@ import { Icon } from "./icon";
 
 const tabs = [
   { href: "/", label: "Home", icon: "home", paths: ["/", "/cart"] },
-  { href: "/explore", label: "Explore", icon: "search", paths: ["/explore"] },
+  {
+    href: "/explore",
+    label: "Explore",
+    icon: "search",
+    paths: ["/explore", "/search", "/category"],
+  },
   { href: "/reels", label: "Reels", icon: "reels", paths: ["/reels"] },
   {
     href: "/orders",
