@@ -61,7 +61,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
     page.getByText("Demo fashion and everyday essentials."),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Reviews" }).click();
-  await expect(page.getByText("Seller reviews are not available yet.")).toBeVisible();
+  await expect(
+    page.getByText("Seller reviews are not available yet."),
+  ).toBeVisible();
   await page.getByRole("tab", { name: "Products" }).click();
   await page.getByRole("button", { name: "Follow", exact: true }).click();
   await expect(
