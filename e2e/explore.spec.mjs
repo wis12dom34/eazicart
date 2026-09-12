@@ -1,14 +1,15 @@
 import { test, expect } from "@playwright/test";
 
-test("Explore matches the Figma structure and filters the live catalog", async ({
+test("Explore matches Figma and opens live search and category discovery", async ({
   page,
 }, testInfo) => {
   await page.goto("/explore");
 
   await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
-  await expect(
-    page.getByRole("textbox", { name: "Search products, brands and sellers" }),
-  ).toBeVisible();
+  const search = page.getByRole("textbox", {
+    name: "Search products, brands and sellers",
+  });
+  await expect(search).toBeVisible();
 
   const browse = page.getByRole("navigation", { name: "Explore browse" });
   await expect(browse.getByRole("link", { name: "Categories" })).toBeVisible();
@@ -35,12 +36,37 @@ test("Explore matches the Figma structure and filters the live catalog", async (
 
   await page.screenshot({ path: testInfo.outputPath("explore.png") });
 
+  await search.fill("Woven");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/search\?search=Woven/);
+  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
+  await expect(page.getByText("1 results", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "View Woven everyday tote" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Customer navigation" }).getByRole(
+      "link",
+      { name: "Explore" },
+    ),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    page.getByText("Reels", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+
+  await page.goto("/explore");
   await page.getByRole("link", { name: "Fashion", exact: true }).click();
-  await expect(page).toHaveURL(/category=fashion/);
+  await expect(page).toHaveURL(/\/category\/fashion$/);
+  await expect(page.getByRole("heading", { name: "Fashion" })).toBeVisible();
+  await expect(page.getByText("2 products", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("link", { name: "View Woven everyday tote" }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "View Relaxed linen shirt" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Sellers in Fashion" }),
+  ).toBeVisible();
+  await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
 });
