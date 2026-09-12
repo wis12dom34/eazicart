@@ -36,12 +36,18 @@ export default function EditProfile() {
   return (
     <main className={`app-shell ${styles.page}`}>
       <div className={styles.titleRow}>
-        <Link className={styles.back} href="/profile" aria-label="Back to profile">
+        <Link
+          className={styles.back}
+          href="/profile"
+          aria-label="Back to profile"
+        >
           <Icon name="back" size={22} />
         </Link>
         <h1>Edit profile</h1>
       </div>
-      <p className={styles.intro}>Update how your profile appears on EaziCart.</p>
+      <p className={styles.intro}>
+        Update how your profile appears on EaziCart.
+      </p>
 
       {auth.loading ? (
         <LoadingState />
@@ -63,7 +69,10 @@ export default function EditProfile() {
             </button>
           </div>
 
-          <form className={styles.form} onSubmit={(event) => void submit(event)}>
+          <form
+            className={styles.form}
+            onSubmit={(event) => void submit(event)}
+          >
             <label className={styles.field}>
               <span>Full name</span>
               <input
