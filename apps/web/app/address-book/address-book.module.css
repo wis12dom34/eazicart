@@ -174,11 +174,14 @@
 }
 
 .card {
+  width: 100%;
+  min-width: 0;
   min-height: 142px;
   padding: 17px 15px 16px;
   border: 1px solid #e5e8ed;
   border-radius: 18px;
   background: #fff;
+  display: block;
 }
 
 .cardTop {
