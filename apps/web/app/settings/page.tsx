@@ -19,7 +19,11 @@ export default function SettingsPage() {
   return (
     <main className={`app-shell ${styles.page}`}>
       <div className={styles.titleRow}>
-        <Link className={styles.back} href="/profile" aria-label="Back to profile">
+        <Link
+          className={styles.back}
+          href="/profile"
+          aria-label="Back to profile"
+        >
           <Icon name="back" size={22} />
         </Link>
         <h1>Account Settings</h1>
@@ -32,7 +36,10 @@ export default function SettingsPage() {
         <SignInState message="Sign in to manage your account settings." />
       ) : (
         <>
-          <section className={styles.identityCard} aria-label="Account identity">
+          <section
+            className={styles.identityCard}
+            aria-label="Account identity"
+          >
             <div className={styles.avatar} aria-hidden="true">
               {initials(auth.user.name)}
             </div>
@@ -45,7 +52,10 @@ export default function SettingsPage() {
             </Link>
           </section>
 
-          <section className={styles.settingsList} aria-label="Account settings">
+          <section
+            className={styles.settingsList}
+            aria-label="Account settings"
+          >
             <SettingLink
               href="/edit-profile"
               label="Personal information"
