@@ -22,8 +22,30 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
 
   await page.goto("/profile");
+  await expect(
+    page.getByRole("heading", { name: "Demo Customer", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText(email)).toBeVisible();
+  const profileCounts = page.getByRole("region", {
+    name: "Profile activity counts",
+  });
+  await expect(
+    profileCounts.getByRole("link", { name: "0 Orders" }),
+  ).toBeVisible();
+  await expect(
+    profileCounts.getByRole("link", { name: "0 Saved" }),
+  ).toBeVisible();
+  await expect(
+    profileCounts.getByRole("link", { name: "0 Following" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Account settings" }).click();
+  await expect(page).toHaveURL("http://localhost:3000/settings");
+  await expect(
+    page.getByRole("heading", { name: "Account Settings", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Edit profile" })).toBeVisible();
   await page.getByRole("button", { name: "Log out" }).click();
-  await page.goto("/login");
+  await expect(page).toHaveURL("http://localhost:3000/login");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -111,6 +133,32 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(page).toHaveURL(orderUrl);
   await expect(page.getByText("Woven everyday tote")).toBeVisible();
 
+  await page.goto("/profile");
+  const populatedCounts = page.getByRole("region", {
+    name: "Profile activity counts",
+  });
+  await expect(
+    populatedCounts.getByRole("link", { name: "1 Orders" }),
+  ).toBeVisible();
+  await expect(
+    populatedCounts.getByRole("link", { name: "1 Saved" }),
+  ).toBeVisible();
+  await expect(
+    populatedCounts.getByRole("link", { name: "1 Following" }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: /Reviews Your ratings and feedback/ })
+    .click();
+  await expect(page).toHaveURL("http://localhost:3000/reviews");
+  await expect(
+    page.getByRole("heading", { name: "Reviews are not available yet" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Customer navigation" })
+      .getByRole("link", { name: "Profile" }),
+  ).toHaveAttribute("aria-current", "page");
+
   await page.goto("/notifications");
   await expect(page.getByText("Order received", { exact: true })).toBeVisible();
   await expect(
@@ -138,8 +186,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
+  await page.getByRole("link", { name: "Account settings" }).click();
   await page.getByRole("button", { name: "Log out" }).click();
-  await page.goto("/login");
+  await expect(page).toHaveURL("http://localhost:3000/login");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
