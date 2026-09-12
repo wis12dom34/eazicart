@@ -15,6 +15,7 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   await page.getByLabel("Full name").fill("Orders Customer");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL("http://localhost:3000/");
 
