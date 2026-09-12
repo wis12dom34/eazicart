@@ -17,7 +17,13 @@ import {
 import { useAuth } from "../providers/auth-provider";
 import styles from "./orders.module.css";
 
-const filters = ["ALL", "PENDING", "CONFIRMED", "FULFILLED", "CANCELLED"] as const;
+const filters = [
+  "ALL",
+  "PENDING",
+  "CONFIRMED",
+  "FULFILLED",
+  "CANCELLED",
+] as const;
 type OrderFilter = (typeof filters)[number];
 
 const filterLabels: Record<OrderFilter, string> = {
@@ -39,7 +45,9 @@ export default function OrdersPage() {
 
   const orders = result.data?.data ?? [];
   const visibleOrders =
-    filter === "ALL" ? orders : orders.filter((order) => order.status === filter);
+    filter === "ALL"
+      ? orders
+      : orders.filter((order) => order.status === filter);
 
   return (
     <main className={`app-shell with-nav ${styles.page}`}>
@@ -93,10 +101,13 @@ export default function OrdersPage() {
                   <div>
                     <strong>{firstItem?.productName ?? "Order"}</strong>
                     <span>
-                      Order #{order.id.slice(-8)} · {formatOrderDate(order.createdAt)}
+                      Order #{order.id.slice(-8)} ·{" "}
+                      {formatOrderDate(order.createdAt)}
                     </span>
                   </div>
-                  <span className={`${styles.status} ${statusClass(order.status)}`}>
+                  <span
+                    className={`${styles.status} ${statusClass(order.status)}`}
+                  >
                     {order.status}
                   </span>
                 </div>
@@ -104,7 +115,10 @@ export default function OrdersPage() {
                 <div className={styles.cardBody}>
                   <div className={styles.thumb}>
                     {image ? (
-                      <img src={image.url} alt={image.altText || firstItem?.productName || ""} />
+                      <img
+                        src={image.url}
+                        alt={image.altText || firstItem?.productName || ""}
+                      />
                     ) : (
                       <Icon name="bag" size={24} />
                     )}
@@ -113,7 +127,9 @@ export default function OrdersPage() {
                     <strong>{money(order.total)}</strong>
                     <span>
                       {quantity} {quantity === 1 ? "item" : "items"}
-                      {order.items.length > 1 ? ` · ${order.items.length} products` : ""}
+                      {order.items.length > 1
+                        ? ` · ${order.items.length} products`
+                        : ""}
                     </span>
                   </div>
                   <span className={styles.viewOrder}>View order →</span>
