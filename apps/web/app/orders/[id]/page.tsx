@@ -53,7 +53,11 @@ export default function OrderDetail({
   return (
     <OrderShell>
       <header className={styles.header}>
-        <Link href="/orders" aria-label="Back to orders" className={styles.back}>
+        <Link
+          href="/orders"
+          aria-label="Back to orders"
+          className={styles.back}
+        >
           <Icon name="back" size={20} />
         </Link>
         <h1>Order Details</h1>
@@ -79,7 +83,10 @@ export default function OrderDetail({
               <article className={styles.item} key={item.id}>
                 <div className={styles.thumb}>
                   {image ? (
-                    <img src={image.url} alt={image.altText || item.productName} />
+                    <img
+                      src={image.url}
+                      alt={image.altText || item.productName}
+                    />
                   ) : (
                     <Icon name="bag" size={24} />
                   )}
@@ -109,7 +116,9 @@ export default function OrderDetail({
           <strong>Total</strong>
           <strong>{money(order.total)}</strong>
         </div>
-        <p className={styles.paymentNote}>No payment has been taken for this MVP order.</p>
+        <p className={styles.paymentNote}>
+          No payment has been taken for this MVP order.
+        </p>
       </section>
     </OrderShell>
   );
