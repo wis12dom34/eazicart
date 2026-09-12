@@ -15,22 +15,16 @@ import {
   SignInState,
 } from "../components/async-state";
 import { useAuth } from "../providers/auth-provider";
+import { orderStatusLabel } from "./order-utils";
 import styles from "./orders.module.css";
 
-const filters = [
-  "ALL",
-  "PENDING",
-  "CONFIRMED",
-  "FULFILLED",
-  "CANCELLED",
-] as const;
+const filters = ["ALL", "PROCESSING", "FULFILLED", "CANCELLED"] as const;
 type OrderFilter = (typeof filters)[number];
 
 const filterLabels: Record<OrderFilter, string> = {
   ALL: "All",
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  FULFILLED: "Fulfilled",
+  PROCESSING: "Processing",
+  FULFILLED: "Delivered",
   CANCELLED: "Cancelled",
 };
 
@@ -47,7 +41,11 @@ export default function OrdersPage() {
   const visibleOrders =
     filter === "ALL"
       ? orders
-      : orders.filter((order) => order.status === filter);
+      : orders.filter((order) =>
+          filter === "PROCESSING"
+            ? order.status === "PENDING" || order.status === "CONFIRMED"
+            : order.status === filter,
+        );
 
   return (
     <main className={`app-shell with-nav ${styles.page}`}>
@@ -108,7 +106,7 @@ export default function OrdersPage() {
                   <span
                     className={`${styles.status} ${statusClass(order.status)}`}
                   >
-                    {order.status}
+                    {orderStatusLabel(order.status)}
                   </span>
                 </div>
 
