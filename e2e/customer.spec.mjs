@@ -46,9 +46,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
 
   await page.goto(`/product/${productId}`);
-  await page
-    .getByRole("link", { name: /View .* seller profile/ })
-    .click();
+  await page.getByRole("link", { name: /View .* seller profile/ }).click();
   await expect(page).toHaveURL(`http://localhost:3000/seller/${sellerId}`);
   await page.getByRole("button", { name: "Follow", exact: true }).click();
   await expect(
