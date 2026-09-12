@@ -47,7 +47,9 @@ test("cart and checkout match the customer flow without fake payment data", asyn
     page.getByRole("heading", { name: "Cart", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("1 item", { exact: true })).toBeVisible();
-  await expect(page.getByText("Woven everyday tote", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Woven everyday tote", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();
   await expect(page.locator(".summary .total")).toContainText("18,500");
@@ -63,10 +65,16 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await expect(
     page.getByRole("heading", { name: "Checkout", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("1 Checkout Street", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("1 Checkout Street", { exact: false }),
+  ).toBeVisible();
   await expect(page.getByText("No payment required yet")).toBeVisible();
-  await expect(page.getByText("Woven everyday tote", { exact: true })).toBeVisible();
-  await expect(page.getByText("Wallet balance", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText("Woven everyday tote", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Wallet balance", { exact: true })).toHaveCount(
+    0,
+  );
   await expect(page.getByText("Service fee", { exact: true })).toHaveCount(0);
   await expect(page.locator(".summary .total")).toContainText("18,500");
   await expect(page.getByRole("button", { name: "Place Order" })).toBeEnabled();
