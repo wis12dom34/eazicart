@@ -105,7 +105,6 @@ export function registerProducts(app: FastifyInstance, client?: PrismaClient) {
       where: { sellerId: seller.id },
       include,
       orderBy: { createdAt: "desc" },
-      take: 250,
     });
     return { data: rows.map(serialize) };
   });
