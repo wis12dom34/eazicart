@@ -479,8 +479,11 @@ function ProductForm({
           <input
             name="price"
             required
+            type="number"
             inputMode="decimal"
-            pattern="^\\d{1,10}(\\.\\d{1,2})?$"
+            min={0}
+            max={9999999999.99}
+            step="0.01"
             defaultValue={product?.price || ""}
             placeholder="25000"
           />
