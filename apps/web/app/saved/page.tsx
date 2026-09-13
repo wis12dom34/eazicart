@@ -102,10 +102,7 @@ export default function SavedPage() {
                   aria-label={`View ${product.name}`}
                 >
                   {image ? (
-                    <img
-                      src={image.url}
-                      alt={image.altText ?? product.name}
-                    />
+                    <img src={image.url} alt={image.altText ?? product.name} />
                   ) : (
                     <Icon name="bag" size={30} />
                   )}
