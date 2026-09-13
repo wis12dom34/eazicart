@@ -288,6 +288,10 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
           <DataRow label="Confirmed" value={dashboard.orders.confirmed} />
           <DataRow label="Fulfilled" value={dashboard.orders.fulfilled} />
           <DataRow label="Cancelled" value={dashboard.orders.cancelled} />
+          <Link className={styles.panelLink} href="/seller/orders">
+            Manage orders
+            <Icon name="chevron" size={17} />
+          </Link>
         </section>
       </div>
 
