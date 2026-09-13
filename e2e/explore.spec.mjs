@@ -75,7 +75,9 @@ test("Explore matches Figma and opens live search and category discovery", async
   await expect(page.getByRole("link", { name: /Lagos Studio/ })).toBeVisible();
 });
 
-test("Explore recovers from a failed live product request", async ({ page }) => {
+test("Explore recovers from a failed live product request", async ({
+  page,
+}) => {
   let failedOnce = false;
   await page.route(/\/products(?:\?|$)/, async (route) => {
     if (!failedOnce) {
