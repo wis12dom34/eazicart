@@ -68,6 +68,7 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
     },
   });
   expect(sellerTwoProduct.status()).toBe(201);
+  const sellerTwoProductId = (await sellerTwoProduct.json()).data.id;
 
   const address = await request.post(`${api}/addresses`, {
     headers: headers(buyerToken),
@@ -144,4 +145,15 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
     cancelled: 0,
   });
   expect(sellerTwoData.customers).toEqual({ total: 0 });
+
+  const sellerOneCleanup = await request.delete(
+    `${api}/products/${sellerOneProductId}`,
+    { headers: headers(sellerOneToken) },
+  );
+  expect(sellerOneCleanup.status()).toBe(204);
+  const sellerTwoCleanup = await request.delete(
+    `${api}/products/${sellerTwoProductId}`,
+    { headers: headers(sellerTwoToken) },
+  );
+  expect(sellerTwoCleanup.status()).toBe(204);
 });
