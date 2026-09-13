@@ -293,6 +293,20 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
             <Icon name="chevron" size={17} />
           </Link>
         </section>
+
+        <section className={`${styles.panel} ${styles.customerPanel}`}>
+          <div className={styles.panelHeading}>
+            <div>
+              <p className={styles.eyebrow}>Customers</p>
+              <h2>Buyer relationships</h2>
+            </div>
+          </div>
+          <DataRow label="Unique buyers" value={dashboard.customers.total} />
+          <Link className={styles.panelLink} href="/seller/customers">
+            Manage customers
+            <Icon name="chevron" size={17} />
+          </Link>
+        </section>
       </div>
 
       <section className={styles.analyticsPanel}>
