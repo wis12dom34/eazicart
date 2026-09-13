@@ -72,6 +72,23 @@ export type Order = {
   address: Address;
   items: OrderItem[];
 };
+export type SellerOrderItem = {
+  id: string;
+  productName: string;
+  quantity: number;
+  unitPrice: Money;
+  product: { id: string; images: Image[] };
+};
+export type SellerOrder = {
+  id: string;
+  status: string;
+  subtotal: Money;
+  createdAt: string;
+  updatedAt: string;
+  customer: { name: string };
+  address: Address;
+  items: SellerOrderItem[];
+};
 export type Notification = {
   id: string;
   title: string;
