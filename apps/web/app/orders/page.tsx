@@ -75,7 +75,12 @@ export default function OrdersPage() {
       ) : result.error ? (
         <ErrorState message={result.error} retry={() => void result.reload()} />
       ) : !orders.length ? (
-        <EmptyState message="You have no orders yet." />
+        <EmptyState
+          title="No orders yet"
+          message="Your purchases will appear here."
+          icon="bag"
+          action={{ href: "/explore", label: "Start shopping" }}
+        />
       ) : !visibleOrders.length ? (
         <section className={styles.filteredEmpty}>
           <p>No {filterLabels[filter].toLowerCase()} orders.</p>

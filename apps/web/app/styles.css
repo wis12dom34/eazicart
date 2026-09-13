@@ -251,6 +251,54 @@ button {
 .state-card .compact {
   margin-top: 12px;
 }
+.state-card.rich-state {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 374px;
+  min-height: 188px;
+  margin: 24px auto;
+  padding: 22px 20px;
+  border: 1px solid #e5e8ed;
+  border-radius: 18px;
+  background: #fff;
+  color: #0a0a0d;
+  text-align: left;
+}
+.state-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--soft);
+  color: #292b30;
+}
+.rich-state h2 {
+  margin: 14px 0 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.rich-state p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.state-action {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #111216;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
 .error-state {
   color: #9b2c2c;
 }
