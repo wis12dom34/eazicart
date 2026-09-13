@@ -159,7 +159,7 @@ export default function HomePage() {
         </Link>
         {categories.data?.data.map((category) => (
           <Link
-            href={`/explore?category=${encodeURIComponent(category.slug)}`}
+            href={`/category/${encodeURIComponent(category.slug)}`}
             key={category.id}
           >
             <span className="figma-home-category-icon" aria-hidden="true">

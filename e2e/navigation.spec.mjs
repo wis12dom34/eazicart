@@ -26,7 +26,10 @@ test("navigation matches Figma sizing and leaves products reachable", async ({
   const navBox = await nav.boundingBox();
   expect(lastCard.y + lastCard.height).toBeLessThanOrEqual(navBox.y);
   await page.getByRole("link", { name: "Fashion", exact: true }).click();
-  await expect(page).toHaveURL(/category=fashion/);
+  await expect(page).toHaveURL(/\/category\/fashion$/);
+  await expect(
+    page.getByRole("heading", { name: "Fashion", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "View Woven everyday tote" }),
   ).toBeVisible();
