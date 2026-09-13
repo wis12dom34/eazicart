@@ -26,6 +26,12 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
   expect(unauthenticated.status()).toBe(401);
 
   const buyerToken = await register(request, "Dashboard Buyer");
+  const buyerProfile = await request.get(`${api}/seller-profile`, {
+    headers: headers(buyerToken),
+  });
+  expect(buyerProfile.status()).toBe(200);
+  expect((await buyerProfile.json()).data).toBeNull();
+
   const buyerDashboard = await request.get(`${api}/seller/dashboard`, {
     headers: headers(buyerToken),
   });
@@ -38,6 +44,14 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
     data: { displayName: "Seller One Store" },
   });
   expect(sellerOneProfile.status()).toBe(201);
+
+  const currentSellerProfile = await request.get(`${api}/seller-profile`, {
+    headers: headers(sellerOneToken),
+  });
+  expect(currentSellerProfile.status()).toBe(200);
+  expect((await currentSellerProfile.json()).data).toEqual(
+    expect.objectContaining({ displayName: "Seller One Store" }),
+  );
 
   const sellerOneProduct = await request.post(`${api}/products`, {
     headers: headers(sellerOneToken),
@@ -156,4 +170,42 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
     { headers: headers(sellerTwoToken) },
   );
   expect(sellerTwoCleanup.status()).toBe(204);
+});
+
+test("seller workspace lets an authenticated customer create a store without fake analytics", async ({
+  page,
+}) => {
+  const email = `seller-ui-${randomUUID()}@eazicart.invalid`;
+  const password = `seller-ui-${randomUUID()}`;
+
+  await page.goto("/register");
+  await page.getByLabel("Full name").fill("Seller UI Owner");
+  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password").fill(password);
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page).toHaveURL("http://localhost:3000/");
+
+  await page.goto("/profile");
+  await page.getByRole("link", { name: /Seller workspace/ }).click();
+  await expect(page).toHaveURL("http://localhost:3000/seller/dashboard");
+  await expect(
+    page.getByRole("heading", { name: "Start selling on EaziCart" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Store name")).toHaveValue("Seller UI Owner");
+
+  await page.getByLabel("Store name").fill("Seller UI Store");
+  await page.getByLabel(/Store bio/).fill("Independent seller test store");
+  await page.getByRole("button", { name: "Create seller profile" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Seller UI Store", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Real operational data from your EaziCart store.")).toBeVisible();
+  await expect(page.getByText("Nothing is estimated or fabricated here.")).toBeVisible();
+  await expect(page.getByText("Not available yet")).toHaveCount(6);
+  await expect(page.getByRole("link", { name: /View store/ })).toHaveAttribute(
+    "href",
+    /^\/seller\//,
+  );
 });
