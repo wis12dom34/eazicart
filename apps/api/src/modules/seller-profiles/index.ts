@@ -49,6 +49,12 @@ export function registerSellerProfiles(
       }),
     };
   });
+  app.get("/seller-profile", protectedRoute(app), async (r) => ({
+    data: await db().sellerProfile.findUnique({
+      where: { userId: userId(r) },
+      include,
+    }),
+  }));
   app.get("/seller/dashboard", protectedRoute(app), async (r) => {
     const seller = await db().sellerProfile.findUnique({
       where: { userId: userId(r) },

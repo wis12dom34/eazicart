@@ -1,0 +1,339 @@
+.page {
+  min-height: 100svh;
+  padding: 0 20px 72px;
+  background: #fff;
+}
+
+.topbar {
+  min-height: 72px;
+  padding-top: env(safe-area-inset-top);
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.back {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #6b707a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero {
+  padding: 28px 0 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.hero h1,
+.setupIntro h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.hero > div > p:last-child,
+.setupIntro > p:last-child {
+  max-width: 620px;
+  margin: 10px 0 0;
+  color: #6b707a;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.storeLink {
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e8ebf0;
+  border-radius: 14px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.metricCard,
+.panel,
+.analyticsPanel,
+.setupCard {
+  border: 1px solid #e8ebf0;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.metricCard {
+  min-height: 142px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.metricCard span,
+.unavailableMetric span {
+  color: #6b707a;
+  font-size: 12px;
+}
+
+.metricCard strong {
+  margin-top: 18px;
+  color: var(--ink);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.metricCard small {
+  margin-top: auto;
+  padding-top: 14px;
+  color: #8b9099;
+  font-size: 11px;
+}
+
+.columns {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.panel,
+.analyticsPanel {
+  padding: 22px;
+}
+
+.panelHeading {
+  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panelHeading h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.dataRow {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #f0f1f3;
+}
+
+.dataRow span {
+  color: #6b707a;
+  font-size: 13px;
+}
+
+.dataRow strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.analyticsPanel {
+  margin-top: 14px;
+}
+
+.analyticsNote {
+  max-width: 720px;
+  margin: -4px 0 20px;
+  color: #6b707a;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.unavailableMetric {
+  min-height: 92px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #f8f9fa;
+}
+
+.unavailableMetric strong {
+  margin-top: 14px;
+  display: block;
+  color: #6b707a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.setupCard {
+  max-width: 760px;
+  margin: 26px auto 0;
+  padding: 28px;
+}
+
+.setupIcon {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #f4f5f7;
+  color: var(--ink);
+}
+
+.setupForm {
+  margin-top: 28px;
+  display: grid;
+  gap: 18px;
+}
+
+.setupForm label {
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.setupForm label span {
+  color: #8b9099;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.setupForm input,
+.setupForm textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e8;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+  outline: none;
+}
+
+.setupForm input {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.setupForm textarea {
+  min-height: 112px;
+  padding: 13px 14px;
+  resize: vertical;
+}
+
+.setupForm input:focus,
+.setupForm textarea:focus {
+  border-color: #9aa0aa;
+  box-shadow: 0 0 0 3px #f4f5f7;
+}
+
+.formError {
+  margin: 0;
+  color: #9b2c2c;
+  font-size: 12px;
+}
+
+.primaryButton {
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primaryButton:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+@media (min-width: 900px) {
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .metricGrid,
+  .columns,
+  .analyticsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .storeLink {
+    align-self: stretch;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 440px) {
+  .metricGrid,
+  .columns,
+  .analyticsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .metricCard {
+    min-height: 126px;
+  }
+
+  .panel,
+  .analyticsPanel,
+  .setupCard {
+    padding: 18px;
+    border-radius: 18px;
+  }
+}

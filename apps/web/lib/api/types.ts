@@ -79,6 +79,31 @@ export type Notification = {
   createdAt: string;
   type?: string;
 };
+export type SellerDashboard = {
+  seller: Pick<Seller, "id" | "displayName">;
+  inventory: {
+    totalProducts: number;
+    activeProducts: number;
+    outOfStockProducts: number;
+    unitsInStock: number;
+  };
+  orders: {
+    total: number;
+    pending: number;
+    confirmed: number;
+    fulfilled: number;
+    cancelled: number;
+  };
+  customers: { total: number };
+  analytics: {
+    revenue: null;
+    productViews: null;
+    impressions: null;
+    profileVisits: null;
+    clicks: null;
+    conversionRate: null;
+  };
+};
 export type Tokens = {
   accessToken: string;
   refreshToken: string;

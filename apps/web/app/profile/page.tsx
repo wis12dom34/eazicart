@@ -123,6 +123,11 @@ export default function ProfilePage() {
             <h2 className={styles.sectionTitle}>Account</h2>
             <div className={styles.accountList}>
               <AccountLink
+                href="/seller/dashboard"
+                label="Seller workspace"
+                detail="Manage your store, stock and orders"
+              />
+              <AccountLink
                 href="/address-book"
                 label="Address book"
                 detail="Manage delivery addresses"
