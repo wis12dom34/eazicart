@@ -4,6 +4,7 @@ import type { AuthStore } from "./auth/store.js";
 import type { PrismaClient } from "@eazicart/database";
 import { z } from "zod";
 import { requireDatabase, userId } from "./shared.js";
+import argon2 from "argon2";
 
 export function registerUsers(
   app: FastifyInstance,
@@ -34,6 +35,36 @@ export function registerUsers(
         select: { id: true, email: true, name: true },
       });
       return { data };
+    },
+  );
+  app.post(
+    "/users/me/password",
+    { preHandler: (request) => app.authenticate(request) },
+    async (request, reply) => {
+      const input = z
+        .object({
+          currentPassword: z.string().min(8).max(128),
+          newPassword: z.string().min(8).max(128),
+        })
+        .refine((value) => value.currentPassword !== value.newPassword, {
+          path: ["newPassword"],
+          message: "New password must be different",
+        })
+        .parse(request.body);
+      const id = userId(request);
+      const user = await store.findUserById(id);
+      if (
+        !user ||
+        !(await argon2.verify(user.passwordHash, input.currentPassword))
+      )
+        throw new AppError(
+          400,
+          "INVALID_CURRENT_PASSWORD",
+          "Current password is incorrect",
+        );
+      await store.updatePassword(id, await argon2.hash(input.newPassword));
+      await store.revokeRefreshTokens(id);
+      return reply.code(204).send();
     },
   );
 }

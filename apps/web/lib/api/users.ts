@@ -8,4 +8,10 @@ export const usersApi = {
       auth: true,
       body: { name },
     }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiRequest<void>("/users/me/password", {
+      method: "POST",
+      auth: true,
+      body: { currentPassword, newPassword },
+    }),
 };

@@ -46,6 +46,11 @@ export function LoginContent() {
       <p className={styles.subtitle}>
         Sign in to continue shopping on EaziCart.
       </p>
+      {params.get("passwordChanged") === "1" && (
+        <p className={styles.success} role="status">
+          Password updated. Sign in with your new password.
+        </p>
+      )}
 
       <form className={styles.form} onSubmit={(event) => void submit(event)}>
         <div className={styles.field}>

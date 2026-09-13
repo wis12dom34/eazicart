@@ -71,13 +71,11 @@ export default function SettingsPage() {
               label="Payment methods"
               detail="Cards and wallet"
             />
-            <div className={styles.disabledCard} aria-disabled="true">
-              <span className={styles.settingCopy}>
-                <strong>Privacy &amp; security</strong>
-                <span>Password and account protection</span>
-              </span>
-              <Icon className={styles.chevron} name="chevron" size={20} />
-            </div>
+            <SettingLink
+              href="/privacy-security"
+              label="Privacy & security"
+              detail="Password and account protection"
+            />
           </section>
 
           <h2 className={styles.preferencesTitle}>Preferences</h2>

@@ -92,6 +92,16 @@
   font-size: 13px;
 }
 
+.success {
+  margin: 20px 0 -24px;
+  border-radius: 12px;
+  background: #eaf8ef;
+  color: #18733b;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .primaryButton {
   width: 100%;
   height: 56px;

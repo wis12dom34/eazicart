@@ -1,0 +1,106 @@
+.page {
+  min-height: 100svh;
+  padding: calc(44px + env(safe-area-inset-top)) 20px
+    calc(40px + env(safe-area-inset-bottom));
+}
+.header {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  gap: 4px;
+}
+.header a {
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 42px;
+  margin-left: -10px;
+}
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.035em;
+}
+.account,
+.section {
+  border: 1px solid #e5e8ed;
+  border-radius: 18px;
+  margin-top: 18px;
+  padding: 18px;
+}
+.account h2,
+.section h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.account span,
+.account strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.account span {
+  color: #6b707a;
+  font-size: 12px;
+  margin-top: 16px;
+}
+.account strong {
+  font-size: 14px;
+  margin-top: 4px;
+}
+.section > p {
+  color: #6b707a;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 6px 0 20px;
+}
+.section form {
+  display: grid;
+  gap: 16px;
+}
+.field {
+  display: grid;
+  gap: 8px;
+}
+.field span {
+  font-size: 13px;
+  font-weight: 650;
+}
+.field input {
+  border: 1px solid #e5e8ed;
+  border-radius: 14px;
+  height: 52px;
+  outline: 0;
+  padding: 0 14px;
+  font-size: 15px;
+}
+.field input:focus {
+  border-color: #aeb4bd;
+  box-shadow: 0 0 0 3px #0d73f214;
+}
+.section button {
+  background: #0a0a0d;
+  border: 0;
+  border-radius: 16px;
+  color: white;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 650;
+  height: 54px;
+  margin-top: 8px;
+}
+.section button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.error {
+  color: #d92d20;
+  font-size: 13px;
+  margin: 0;
+}
+@media (max-width: 380px) {
+  .page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
