@@ -143,9 +143,7 @@ export default function SellerOrdersPage() {
         <SummaryCard label="Confirmed" value={confirmed} />
         <SummaryCard
           label="Delivered"
-          value={
-            orders.filter((order) => order.status === "FULFILLED").length
-          }
+          value={orders.filter((order) => order.status === "FULFILLED").length}
         />
       </section>
 
