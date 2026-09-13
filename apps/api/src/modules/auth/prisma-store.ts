@@ -42,6 +42,20 @@ export class PrismaAuthStore implements AuthStore {
     }
   }
 
+  async updatePassword(userId: string, passwordHash: string) {
+    await this.database.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+  }
+
+  async revokeRefreshTokens(userId: string) {
+    await this.database.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
   async saveRefreshToken(input: {
     hash: string;
     userId: string;

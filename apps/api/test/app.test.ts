@@ -111,6 +111,75 @@ describe("API foundation", () => {
     expect(body.tokens.accessToken).toBeTypeOf("string");
   });
 
+  it("changes a password only after verifying the current password", async () => {
+    const app = makeApp();
+    const registered = await app.inject({
+      method: "POST",
+      url: "/auth/register",
+      payload: {
+        email: "buyer@example.com",
+        name: "Buyer",
+        password: "correct-horse",
+      },
+    });
+    const registeredTokens = registered.json<AuthResponse>().tokens;
+    const token = registeredTokens.accessToken;
+    const incorrect = await app.inject({
+      method: "POST",
+      url: "/users/me/password",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        currentPassword: "wrong-password",
+        newPassword: "new-correct-horse",
+      },
+    });
+    expect(incorrect.statusCode).toBe(400);
+    expect(incorrect.json<{ error: { code: string } }>().error.code).toBe(
+      "INVALID_CURRENT_PASSWORD",
+    );
+
+    const changed = await app.inject({
+      method: "POST",
+      url: "/users/me/password",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        currentPassword: "correct-horse",
+        newPassword: "new-correct-horse",
+      },
+    });
+    expect(changed.statusCode).toBe(204);
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/auth/refresh",
+          payload: { refreshToken: registeredTokens.refreshToken },
+        })
+      ).statusCode,
+    ).toBe(401);
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/auth/login",
+          payload: { email: "buyer@example.com", password: "correct-horse" },
+        })
+      ).statusCode,
+    ).toBe(401);
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/auth/login",
+          payload: {
+            email: "buyer@example.com",
+            password: "new-correct-horse",
+          },
+        })
+      ).statusCode,
+    ).toBe(200);
+  });
+
   it("rejects duplicate emails after normalization", async () => {
     const app = makeApp();
     const payload = {
