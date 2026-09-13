@@ -93,7 +93,5 @@ test("Explore recovers from a failed live product request", async ({
     page.getByRole("heading", { name: "Something went wrong" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Refresh" }).click();
-  await expect(
-    page.getByRole("link", { name: "View Woven everyday tote" }),
-  ).toBeVisible();
+  await expect(page.locator(".figma-explore-product")).toHaveCount(2);
 });
