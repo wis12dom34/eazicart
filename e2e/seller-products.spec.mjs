@@ -42,9 +42,9 @@ test("seller inventory is private and retains inactive products for management",
   expect((await buyerInventory.json()).error.code).toBe("SELLER_REQUIRED");
 
   const sellerOneToken = await register(request, "Inventory Seller One");
-  await createSeller(request, sellerOneToken, "Inventory Seller One Store");
+  await createSeller(request, sellerOneToken, "ZZZ Inventory Seller One Store");
   const sellerTwoToken = await register(request, "Inventory Seller Two");
-  await createSeller(request, sellerTwoToken, "Inventory Seller Two Store");
+  await createSeller(request, sellerTwoToken, "ZZZ Inventory Seller Two Store");
 
   const sellerOneCreate = await request.post(`${api}/products`, {
     headers: headers(sellerOneToken),
