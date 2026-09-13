@@ -3,7 +3,12 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { EmptyState, ErrorState, LoadingState, SignInState } from "../../components/async-state";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SignInState,
+} from "../../components/async-state";
 import { Icon } from "../../components/icon";
 import { useRequest } from "../../hooks/use-request";
 import { useAuth } from "../../providers/auth-provider";
@@ -58,7 +63,9 @@ export default function SellerProductsPage() {
   );
   const inventory = useRequest(
     async () =>
-      profile.data?.data ? productsApi.sellerList() : Promise.resolve(undefined),
+      profile.data?.data
+        ? productsApi.sellerList()
+        : Promise.resolve(undefined),
     [profile.data?.data?.id],
   );
   const categories = useRequest(
@@ -76,7 +83,9 @@ export default function SellerProductsPage() {
     setSubmitting(true);
     setActionError("");
     try {
-      await productsApi.create(productPayload(new FormData(event.currentTarget)));
+      await productsApi.create(
+        productPayload(new FormData(event.currentTarget)),
+      );
       setAdding(false);
       await reloadInventory();
     } catch (value) {
@@ -158,7 +167,10 @@ export default function SellerProductsPage() {
     return (
       <main className={`app-shell ${styles.page}`}>
         <SellerProductsHeader />
-        <ErrorState message={profile.error} retry={() => void profile.reload()} />
+        <ErrorState
+          message={profile.error}
+          retry={() => void profile.reload()}
+        />
       </main>
     );
   }
@@ -184,7 +196,12 @@ export default function SellerProductsPage() {
     );
   }
 
-  if (inventory.loading || categories.loading) {
+  if (
+    inventory.loading ||
+    categories.loading ||
+    (!inventory.data && !inventory.error) ||
+    (!categories.data && !categories.error)
+  ) {
     return (
       <main className={`app-shell ${styles.page}`}>
         <SellerProductsHeader />
@@ -193,13 +210,20 @@ export default function SellerProductsPage() {
     );
   }
 
-  if (inventory.error || categories.error || !inventory.data || !categories.data) {
+  if (
+    inventory.error ||
+    categories.error ||
+    !inventory.data ||
+    !categories.data
+  ) {
     return (
       <main className={`app-shell ${styles.page}`}>
         <SellerProductsHeader />
         <ErrorState
           message={
-            inventory.error || categories.error || "Seller inventory is unavailable."
+            inventory.error ||
+            categories.error ||
+            "Seller inventory is unavailable."
           }
           retry={() => {
             void inventory.reload();
@@ -211,6 +235,7 @@ export default function SellerProductsPage() {
   }
 
   const products = inventory.data.data;
+  const categoryOptions = categories.data.data;
   const activeProducts = products.filter((product) => product.active !== false);
   const inactiveProducts = products.length - activeProducts.length;
 
@@ -223,8 +248,8 @@ export default function SellerProductsPage() {
           <p className={styles.eyebrow}>Inventory</p>
           <h1>Products</h1>
           <p>
-            Manage real products owned by {profile.data.data.displayName}. Changes
-            update the existing EaziCart catalog.
+            Manage real products owned by {profile.data.data.displayName}.
+            Changes update the existing EaziCart catalog.
           </p>
         </div>
         <button
@@ -252,7 +277,10 @@ export default function SellerProductsPage() {
       </section>
 
       {adding ? (
-        <section className={styles.formCard} aria-labelledby="add-product-title">
+        <section
+          className={styles.formCard}
+          aria-labelledby="add-product-title"
+        >
           <div className={styles.sectionHeading}>
             <div>
               <p className={styles.eyebrow}>New listing</p>
@@ -260,7 +288,7 @@ export default function SellerProductsPage() {
             </div>
           </div>
           <ProductForm
-            categories={categories.data.data}
+            categories={categoryOptions}
             submitLabel="Create product"
             submitting={submitting}
             onSubmit={(event) => void createProduct(event)}
@@ -274,7 +302,10 @@ export default function SellerProductsPage() {
         </p>
       ) : null}
 
-      <section className={styles.inventorySection} aria-labelledby="inventory-title">
+      <section
+        className={styles.inventorySection}
+        aria-labelledby="inventory-title"
+      >
         <div className={styles.sectionHeading}>
           <div>
             <p className={styles.eyebrow}>Catalog management</p>
@@ -363,10 +394,12 @@ export default function SellerProductsPage() {
                   <div className={styles.editPanel}>
                     <ProductForm
                       product={product}
-                      categories={categories.data.data}
+                      categories={categoryOptions}
                       submitLabel="Save changes"
                       submitting={submitting}
-                      onSubmit={(event) => void updateProduct(event, product.id)}
+                      onSubmit={(event) =>
+                        void updateProduct(event, product.id)
+                      }
                     />
                   </div>
                 ) : null}
@@ -379,8 +412,9 @@ export default function SellerProductsPage() {
       <aside className={styles.note}>
         <strong>About deactivation</strong>
         <p>
-          Deactivated products stay visible here for your records but are removed
-          from public product listings. This action does not delete order history.
+          Deactivated products stay visible here for your records but are
+          removed from public product listings. This action does not delete
+          order history.
         </p>
       </aside>
     </main>
@@ -503,8 +537,8 @@ function ProductForm({
           placeholder="https://example.com/product.jpg"
         />
         <small>
-          Optional. Use a real hosted product image URL; no image is fabricated by
-          EaziCart.
+          Optional. Use a real hosted product image URL; no image is fabricated
+          by EaziCart.
         </small>
       </label>
 
