@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { ErrorState, LoadingState, SignInState } from "../../components/async-state";
+import {
+  ErrorState,
+  LoadingState,
+  SignInState,
+} from "../../components/async-state";
 import { Icon } from "../../components/icon";
 import { useRequest } from "../../hooks/use-request";
 import { useAuth } from "../../providers/auth-provider";
@@ -49,7 +53,10 @@ export default function SellerDashboardPage() {
     return (
       <main className={`app-shell ${styles.page}`}>
         <DashboardHeader />
-        <ErrorState message={profile.error} retry={() => void profile.reload()} />
+        <ErrorState
+          message={profile.error}
+          retry={() => void profile.reload()}
+        />
       </main>
     );
   }
@@ -98,7 +105,11 @@ export default function SellerDashboardPage() {
 function DashboardHeader() {
   return (
     <header className={styles.topbar}>
-      <Link className={styles.back} href="/profile" aria-label="Back to profile">
+      <Link
+        className={styles.back}
+        href="/profile"
+        aria-label="Back to profile"
+      >
         <Icon name="back" size={22} />
       </Link>
       <span>Seller workspace</span>
@@ -129,7 +140,9 @@ function SellerSetup({
       });
       await onCreated();
     } catch (value) {
-      setError(value instanceof Error ? value.message : "Unable to start selling");
+      setError(
+        value instanceof Error ? value.message : "Unable to start selling",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -149,7 +162,10 @@ function SellerSetup({
         </p>
       </div>
 
-      <form className={styles.setupForm} onSubmit={(event) => void submit(event)}>
+      <form
+        className={styles.setupForm}
+        onSubmit={(event) => void submit(event)}
+      >
         <label>
           Store name
           <input
@@ -176,7 +192,11 @@ function SellerSetup({
             {error}
           </p>
         ) : null}
-        <button className={styles.primaryButton} disabled={submitting} type="submit">
+        <button
+          className={styles.primaryButton}
+          disabled={submitting}
+          type="submit"
+        >
           {submitting ? "Creating store…" : "Create seller profile"}
         </button>
       </form>
@@ -193,17 +213,36 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
           <h1>{dashboard.seller.displayName}</h1>
           <p>Real operational data from your EaziCart store.</p>
         </div>
-        <Link className={styles.storeLink} href={`/seller/${dashboard.seller.id}`}>
+        <Link
+          className={styles.storeLink}
+          href={`/seller/${dashboard.seller.id}`}
+        >
           View store
           <Icon name="chevron" size={18} />
         </Link>
       </section>
 
       <section className={styles.metricGrid} aria-label="Seller summary">
-        <MetricCard label="Products" value={dashboard.inventory.totalProducts} detail={`${dashboard.inventory.activeProducts} active`} />
-        <MetricCard label="Orders" value={dashboard.orders.total} detail={`${dashboard.orders.pending} pending`} />
-        <MetricCard label="Customers" value={dashboard.customers.total} detail="Unique buyers" />
-        <MetricCard label="Units in stock" value={dashboard.inventory.unitsInStock} detail={`${dashboard.inventory.outOfStockProducts} out of stock`} />
+        <MetricCard
+          label="Products"
+          value={dashboard.inventory.totalProducts}
+          detail={`${dashboard.inventory.activeProducts} active`}
+        />
+        <MetricCard
+          label="Orders"
+          value={dashboard.orders.total}
+          detail={`${dashboard.orders.pending} pending`}
+        />
+        <MetricCard
+          label="Customers"
+          value={dashboard.customers.total}
+          detail="Unique buyers"
+        />
+        <MetricCard
+          label="Units in stock"
+          value={dashboard.inventory.unitsInStock}
+          detail={`${dashboard.inventory.outOfStockProducts} out of stock`}
+        />
       </section>
 
       <div className={styles.columns}>
@@ -215,10 +254,22 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
             </div>
             <Icon name="box" size={22} />
           </div>
-          <DataRow label="Total products" value={dashboard.inventory.totalProducts} />
-          <DataRow label="Active products" value={dashboard.inventory.activeProducts} />
-          <DataRow label="Units available" value={dashboard.inventory.unitsInStock} />
-          <DataRow label="Out of stock" value={dashboard.inventory.outOfStockProducts} />
+          <DataRow
+            label="Total products"
+            value={dashboard.inventory.totalProducts}
+          />
+          <DataRow
+            label="Active products"
+            value={dashboard.inventory.activeProducts}
+          />
+          <DataRow
+            label="Units available"
+            value={dashboard.inventory.unitsInStock}
+          />
+          <DataRow
+            label="Out of stock"
+            value={dashboard.inventory.outOfStockProducts}
+          />
         </section>
 
         <section className={styles.panel}>
