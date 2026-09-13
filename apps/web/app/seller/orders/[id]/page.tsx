@@ -12,10 +12,7 @@ import {
 import { Icon } from "../../../components/icon";
 import { money } from "../../../data";
 import { useRequest } from "../../../hooks/use-request";
-import {
-  multiplyMoney,
-  orderStatusLabel,
-} from "../../../orders/order-utils";
+import { multiplyMoney, orderStatusLabel } from "../../../orders/order-utils";
 import { useAuth } from "../../../providers/auth-provider";
 import { sellerDashboardApi } from "../../../../lib/api/seller-dashboard";
 import { sellerOrdersApi } from "../../../../lib/api/seller-orders";
@@ -71,7 +68,9 @@ export default function SellerOrderDetailPage() {
       <DetailShell>
         <section className={styles.setupPrompt}>
           <h1>Seller profile required</h1>
-          <p>Create your seller profile before viewing seller order activity.</p>
+          <p>
+            Create your seller profile before viewing seller order activity.
+          </p>
           <Link className={styles.primaryLink} href="/seller/dashboard">
             Open seller workspace
           </Link>
