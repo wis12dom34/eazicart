@@ -105,9 +105,7 @@ export default function SellerCustomersPage() {
           customer.location.city,
           customer.location.region,
           customer.location.country,
-        ].some((value) =>
-          value.toLocaleLowerCase().includes(normalizedQuery),
-        ),
+        ].some((value) => value.toLocaleLowerCase().includes(normalizedQuery)),
       )
     : customers;
   const totalOrders = customers.reduce(
@@ -128,7 +126,8 @@ export default function SellerCustomersPage() {
         <p className={styles.eyebrow}>Seller relationships</p>
         <h1>Customers</h1>
         <p>
-          Real buyers who have ordered products from {profile.data.data.displayName}.
+          Real buyers who have ordered products from{" "}
+          {profile.data.data.displayName}.
         </p>
       </section>
 
@@ -181,7 +180,8 @@ export default function SellerCustomersPage() {
                 <p>{formatLocation(customer.location)}</p>
                 <div className={styles.customerMeta}>
                   <span>
-                    {customer.orders} {customer.orders === 1 ? "order" : "orders"}
+                    {customer.orders}{" "}
+                    {customer.orders === 1 ? "order" : "orders"}
                   </span>
                   <span>
                     {customer.units} {customer.units === 1 ? "unit" : "units"}
