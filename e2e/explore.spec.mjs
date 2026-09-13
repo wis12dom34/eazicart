@@ -74,3 +74,24 @@ test("Explore matches Figma and opens live search and category discovery", async
   ).toBeVisible();
   await expect(page.getByRole("link", { name: /Lagos Studio/ })).toBeVisible();
 });
+
+test("Explore recovers from a failed live product request", async ({
+  page,
+}) => {
+  let failedOnce = false;
+  await page.route(/\/products(?:\?|$)/, async (route) => {
+    if (!failedOnce) {
+      failedOnce = true;
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.goto("/explore");
+  await expect(
+    page.getByRole("heading", { name: "Something went wrong" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Refresh" }).click();
+  await expect(page.locator(".figma-explore-product")).toHaveCount(2);
+});

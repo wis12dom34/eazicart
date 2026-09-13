@@ -15,11 +15,15 @@ export function ErrorState({
   retry?: () => void;
 }) {
   return (
-    <section className="state-card error-state" role="alert">
+    <section
+      className={`state-card error-state${retry ? " recoverable-error" : ""}`}
+      role="alert"
+    >
+      {retry ? <h2>Something went wrong</h2> : null}
       <p>{message}</p>
       {retry && (
-        <button className="secondary-button compact" onClick={retry}>
-          Try again
+        <button className="error-retry" type="button" onClick={retry}>
+          Refresh
         </button>
       )}
     </section>
