@@ -73,7 +73,9 @@ async function createBuyerOrder(request, buyerToken, items) {
   return (await orderResponse.json()).data;
 }
 
-test("seller order endpoints isolate mixed-seller orders", async ({ request }) => {
+test("seller order endpoints isolate mixed-seller orders", async ({
+  request,
+}) => {
   const unauthenticated = await request.get(`${api}/seller/orders`);
   expect(unauthenticated.status()).toBe(401);
 
@@ -160,7 +162,11 @@ test("seller order endpoints isolate mixed-seller orders", async ({ request }) =
   );
 
   const unrelatedToken = await register(request, "Unrelated Order Seller");
-  await createSeller(request, unrelatedToken, "ZZZ Unrelated Order Seller Store");
+  await createSeller(
+    request,
+    unrelatedToken,
+    "ZZZ Unrelated Order Seller Store",
+  );
   const unrelatedDetail = await request.get(
     `${api}/seller/orders/${order.id}`,
     { headers: headers(unrelatedToken) },
@@ -221,7 +227,9 @@ test("seller workspace renders seller-only order list and detail", async ({
   await expect(page.getByRole("heading", { name: "Orders" })).toBeVisible();
   await expect(page.getByText("Seller UI Order Customer")).toBeVisible();
   await expect(page.getByText("₦29,000", { exact: true })).toBeVisible();
-  await page.getByRole("link", { name: new RegExp(`Order #${order.id.slice(-8)}`) }).click();
+  await page
+    .getByRole("link", { name: new RegExp(`Order #${order.id.slice(-8)}`) })
+    .click();
 
   await expect(
     page.getByRole("heading", { name: `Order #${order.id.slice(-8)}` }),
