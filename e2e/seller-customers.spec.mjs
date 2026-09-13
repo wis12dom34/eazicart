@@ -89,11 +89,7 @@ test("seller customer endpoints expose only real seller relationships", async ({
   expect((await buyerCustomers.json()).error.code).toBe("SELLER_REQUIRED");
 
   const sellerOne = await register(request, "Customer Seller One");
-  await createSeller(
-    request,
-    sellerOne.token,
-    "ZZZ Customer Seller One Store",
-  );
+  await createSeller(request, sellerOne.token, "ZZZ Customer Seller One Store");
   const sellerOneProduct = await createProduct(
     request,
     sellerOne.token,
@@ -102,11 +98,7 @@ test("seller customer endpoints expose only real seller relationships", async ({
   );
 
   const sellerTwo = await register(request, "Customer Seller Two");
-  await createSeller(
-    request,
-    sellerTwo.token,
-    "ZZZ Customer Seller Two Store",
-  );
+  await createSeller(request, sellerTwo.token, "ZZZ Customer Seller Two Store");
   const sellerTwoProduct = await createProduct(
     request,
     sellerTwo.token,
@@ -155,9 +147,7 @@ test("seller customer endpoints expose only real seller relationships", async ({
     repeatOrder.id,
     mixedOrder.id,
   ]);
-  expect(
-    sellerOneDetail.orders.flatMap((order) => order.items),
-  ).toEqual(
+  expect(sellerOneDetail.orders.flatMap((order) => order.items)).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
         productName: "Seller one customer product",
@@ -268,9 +258,7 @@ test("seller workspace renders customer list and privacy-safe detail", async ({
   await expect(page.getByText(buyer.email)).toHaveCount(0);
   await expect(page.getByText("71 Private Customer Test Road")).toHaveCount(0);
 
-  await page
-    .getByRole("link", { name: /Seller UI Customer Buyer/ })
-    .click();
+  await page.getByRole("link", { name: /Seller UI Customer Buyer/ }).click();
   await expect(
     page.getByRole("heading", { name: "Seller UI Customer Buyer" }),
   ).toBeVisible();
