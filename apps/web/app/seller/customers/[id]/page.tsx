@@ -153,10 +153,22 @@ export default function SellerCustomerDetailPage() {
               <h2 id="customer-summary">Customer summary</h2>
             </div>
             <div className={styles.statList}>
-              <StatRow label="Orders" value={customer.orders.toLocaleString()} />
-              <StatRow label="Units ordered" value={customer.units.toLocaleString()} />
-              <StatRow label="First order" value={formatDate(customer.firstOrderAt)} />
-              <StatRow label="Latest order" value={formatDate(customer.latestOrderAt)} />
+              <StatRow
+                label="Orders"
+                value={customer.orders.toLocaleString()}
+              />
+              <StatRow
+                label="Units ordered"
+                value={customer.units.toLocaleString()}
+              />
+              <StatRow
+                label="First order"
+                value={formatDate(customer.firstOrderAt)}
+              />
+              <StatRow
+                label="Latest order"
+                value={formatDate(customer.latestOrderAt)}
+              />
             </div>
           </section>
 
