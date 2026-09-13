@@ -21,8 +21,7 @@ const routes = [
   },
   {
     path: "/product/demo-product-woven-tote",
-    ready: (page) =>
-      page.getByRole("heading", { name: "Woven everyday tote" }),
+    ready: (page) => page.getByRole("heading", { name: "Woven everyday tote" }),
   },
   {
     path: "/login",
