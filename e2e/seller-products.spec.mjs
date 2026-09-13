@@ -166,7 +166,10 @@ test("seller can create edit and deactivate a product from the workspace", async
   await page.getByRole("button", { name: "Create seller profile" }).click();
 
   await expect(
-    page.getByRole("heading", { name: "Seller Products UI Store", exact: true }),
+    page.getByRole("heading", {
+      name: "Seller Products UI Store",
+      exact: true,
+    }),
   ).toBeVisible();
   await page.getByRole("link", { name: /Manage products/ }).click();
   await expect(page).toHaveURL("http://localhost:3000/seller/products");
@@ -186,22 +189,32 @@ test("seller can create edit and deactivate a product from the workspace", async
   await expect(productCard).toBeVisible();
   await expect(productCard.getByText("Active", { exact: true })).toBeVisible();
   await expect(productCard.getByText("₦15,750", { exact: true })).toBeVisible();
-  await expect(productCard.getByText("8 in stock", { exact: true })).toBeVisible();
+  await expect(
+    productCard.getByText("8 in stock", { exact: true }),
+  ).toBeVisible();
 
   await productCard.getByRole("button", { name: "Edit" }).click();
   await productCard.getByLabel("Price (NGN)").fill("16250");
   await productCard.getByLabel("Stock").fill("11");
   await productCard.getByRole("button", { name: "Save changes" }).click();
 
-  productCard = page.getByRole("article").filter({ hasText: "UI Inventory Product" });
+  productCard = page
+    .getByRole("article")
+    .filter({ hasText: "UI Inventory Product" });
   await expect(productCard.getByText("₦16,250", { exact: true })).toBeVisible();
-  await expect(productCard.getByText("11 in stock", { exact: true })).toBeVisible();
+  await expect(
+    productCard.getByText("11 in stock", { exact: true }),
+  ).toBeVisible();
 
   page.once("dialog", (dialog) => dialog.accept());
   await productCard.getByRole("button", { name: "Deactivate" }).click();
 
-  productCard = page.getByRole("article").filter({ hasText: "UI Inventory Product" });
-  await expect(productCard.getByText("Inactive", { exact: true })).toBeVisible();
+  productCard = page
+    .getByRole("article")
+    .filter({ hasText: "UI Inventory Product" });
+  await expect(
+    productCard.getByText("Inactive", { exact: true }),
+  ).toBeVisible();
   await expect(
     productCard.getByRole("button", { name: "Deactivate" }),
   ).toHaveCount(0);
