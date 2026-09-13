@@ -201,8 +201,12 @@ test("seller workspace lets an authenticated customer create a store without fak
   await expect(
     page.getByRole("heading", { name: "Seller UI Store", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Real operational data from your EaziCart store.")).toBeVisible();
-  await expect(page.getByText("Nothing is estimated or fabricated here.")).toBeVisible();
+  await expect(
+    page.getByText("Real operational data from your EaziCart store."),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Nothing is estimated or fabricated here."),
+  ).toBeVisible();
   await expect(page.getByText("Not available yet")).toHaveCount(6);
   await expect(page.getByRole("link", { name: /View store/ })).toHaveAttribute(
     "href",
