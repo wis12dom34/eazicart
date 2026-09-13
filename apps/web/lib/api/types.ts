@@ -27,6 +27,7 @@ export type Product = {
   description?: string | null;
   price: Money;
   stock: number;
+  active?: boolean;
   images: Image[];
   category: Category;
   seller: Seller & { user?: { id: string; name: string } };
