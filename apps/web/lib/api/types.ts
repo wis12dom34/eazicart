@@ -89,6 +89,31 @@ export type SellerOrder = {
   address: Address;
   items: SellerOrderItem[];
 };
+export type SellerCustomerLocation = {
+  city: string;
+  region: string;
+  country: string;
+};
+export type SellerCustomer = {
+  id: string;
+  name: string;
+  orders: number;
+  units: number;
+  firstOrderAt: string;
+  latestOrderAt: string;
+  location: SellerCustomerLocation;
+};
+export type SellerCustomerOrder = {
+  id: string;
+  status: string;
+  createdAt: string;
+  units: number;
+  items: Array<{ productName: string; quantity: number }>;
+};
+export type SellerCustomerDetail = {
+  customer: SellerCustomer;
+  orders: SellerCustomerOrder[];
+};
 export type Notification = {
   id: string;
   title: string;

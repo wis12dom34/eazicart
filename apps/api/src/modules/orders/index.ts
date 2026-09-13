@@ -56,6 +56,15 @@ type SellerOrderRow = {
   }>;
 };
 
+type SellerCustomerOrderRow = {
+  id: string;
+  status: string;
+  createdAt: Date;
+  user: { id: string; name: string };
+  address: { city: string; region: string; country: string };
+  items: Array<{ productName: string; quantity: number }>;
+};
+
 const sellerOrderInclude = (sellerId: string) => ({
   user: { select: { name: true } },
   address: true,
@@ -89,6 +98,46 @@ const sellerOrderOutput = (order: SellerOrderRow) => ({
     ...item,
     unitPrice: item.unitPrice.toString(),
   })),
+});
+
+const sellerCustomerSelect = (sellerId: string) => ({
+  id: true,
+  status: true,
+  createdAt: true,
+  user: { select: { id: true, name: true } },
+  address: { select: { city: true, region: true, country: true } },
+  items: {
+    where: { product: { sellerId } },
+    select: { productName: true, quantity: true },
+  },
+});
+
+const sellerCustomerOutput = (orders: SellerCustomerOrderRow[]) => {
+  const latest = orders[0];
+  const earliest = orders.at(-1);
+  if (!latest || !earliest)
+    throw new AppError(404, "CUSTOMER_NOT_FOUND", "Customer not found");
+  return {
+    id: latest.user.id,
+    name: latest.user.name,
+    orders: orders.length,
+    units: orders.reduce(
+      (sum, order) =>
+        sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+      0,
+    ),
+    firstOrderAt: earliest.createdAt,
+    latestOrderAt: latest.createdAt,
+    location: latest.address,
+  };
+};
+
+const sellerCustomerOrderOutput = (order: SellerCustomerOrderRow) => ({
+  id: order.id,
+  status: order.status,
+  createdAt: order.createdAt,
+  units: order.items.reduce((sum, item) => sum + item.quantity, 0),
+  items: order.items,
 });
 
 export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
@@ -144,6 +193,63 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     });
     if (!row) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     return { data: sellerOrderOutput(row) };
+  });
+  app.get("/seller/customers", auth, async (r) => {
+    const seller = await db().sellerProfile.findUnique({
+      where: { userId: userId(r) },
+      select: { id: true },
+    });
+    if (!seller)
+      throw new AppError(
+        403,
+        "SELLER_REQUIRED",
+        "Create a seller profile first",
+      );
+    const rows = await db().order.findMany({
+      where: { items: { some: { product: { sellerId: seller.id } } } },
+      select: sellerCustomerSelect(seller.id),
+      orderBy: { createdAt: "desc" },
+    });
+    const grouped = new Map<string, SellerCustomerOrderRow[]>();
+    for (const row of rows) {
+      const current = grouped.get(row.user.id) ?? [];
+      current.push(row);
+      grouped.set(row.user.id, current);
+    }
+    return {
+      data: Array.from(grouped.values()).map((orders) =>
+        sellerCustomerOutput(orders),
+      ),
+    };
+  });
+  app.get("/seller/customers/:id", auth, async (r) => {
+    const { id } = z.object({ id: z.string() }).parse(r.params);
+    const seller = await db().sellerProfile.findUnique({
+      where: { userId: userId(r) },
+      select: { id: true },
+    });
+    if (!seller)
+      throw new AppError(
+        403,
+        "SELLER_REQUIRED",
+        "Create a seller profile first",
+      );
+    const rows = await db().order.findMany({
+      where: {
+        userId: id,
+        items: { some: { product: { sellerId: seller.id } } },
+      },
+      select: sellerCustomerSelect(seller.id),
+      orderBy: { createdAt: "desc" },
+    });
+    if (!rows.length)
+      throw new AppError(404, "CUSTOMER_NOT_FOUND", "Customer not found");
+    return {
+      data: {
+        customer: sellerCustomerOutput(rows),
+        orders: rows.map((order) => sellerCustomerOrderOutput(order)),
+      },
+    };
   });
   app.get("/orders/:id", auth, async (r) => {
     const { id } = z.object({ id: z.string() }).parse(r.params);
