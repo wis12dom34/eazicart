@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "@eazicart/database";
+import type { Prisma, PrismaClient } from "@eazicart/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../errors.js";
