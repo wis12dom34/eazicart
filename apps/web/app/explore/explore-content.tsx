@@ -78,7 +78,13 @@ export function ExploreContent() {
         <strong>Browse</strong>
         <div>
           <Link href="#categories">Categories</Link>
-          <Link href="#sellers">Brands</Link>
+          <button
+            type="button"
+            disabled
+            title="Brand browsing is not available yet."
+          >
+            Brands
+          </button>
           <Link href="#sellers">Sellers</Link>
         </div>
       </nav>
