@@ -13,7 +13,8 @@ test("Explore matches Figma and opens live search and category discovery", async
 
   const browse = page.getByRole("navigation", { name: "Explore browse" });
   await expect(browse.getByRole("link", { name: "Categories" })).toBeVisible();
-  await expect(browse.getByRole("link", { name: "Brands" })).toBeVisible();
+  await expect(browse.getByRole("button", { name: "Brands" })).toBeDisabled();
+  await expect(browse.getByRole("link", { name: "Brands" })).toHaveCount(0);
   await expect(browse.getByRole("link", { name: "Sellers" })).toBeVisible();
 
   await expect(
