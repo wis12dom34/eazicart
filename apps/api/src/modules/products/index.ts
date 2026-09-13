@@ -90,6 +90,24 @@ export function registerProducts(app: FastifyInstance, client?: PrismaClient) {
       },
     };
   });
+  app.get("/seller/products", protectedRoute(app), async (request) => {
+    const seller = await db().sellerProfile.findUnique({
+      where: { userId: userId(request) },
+      select: { id: true },
+    });
+    if (!seller)
+      throw new AppError(
+        403,
+        "SELLER_REQUIRED",
+        "Create a seller profile first",
+      );
+    const rows = await db().product.findMany({
+      where: { sellerId: seller.id },
+      include,
+      orderBy: { createdAt: "desc" },
+    });
+    return { data: rows.map(serialize) };
+  });
   app.get("/products/:id", async (request) => {
     const { id } = params.parse(request.params);
     const row = await db().product.findFirst({

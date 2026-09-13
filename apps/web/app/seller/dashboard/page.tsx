@@ -270,6 +270,10 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
             label="Out of stock"
             value={dashboard.inventory.outOfStockProducts}
           />
+          <Link className={styles.panelLink} href="/seller/products">
+            Manage products
+            <Icon name="chevron" size={17} />
+          </Link>
         </section>
 
         <section className={styles.panel}>
