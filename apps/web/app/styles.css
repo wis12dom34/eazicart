@@ -302,6 +302,46 @@ button {
 .error-state {
   color: #9b2c2c;
 }
+.state-card.recoverable-error {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 374px;
+  min-height: 126px;
+  margin: 24px auto;
+  padding: 18px 19px;
+  border: 1px solid #e5e8ed;
+  border-radius: 18px;
+  background: #fff;
+  color: #0a0a0d;
+  text-align: left;
+}
+.recoverable-error h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.recoverable-error p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.error-retry {
+  display: inline-flex;
+  min-width: 108px;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 0 16px;
+  border: 1px solid #e5e8ed;
+  border-radius: 999px;
+  background: #fff;
+  color: #0a0a0d;
+  font-size: 12px;
+  font-weight: 600;
+}
 .form-error {
   color: #9b2c2c;
   font-size: 13px;
