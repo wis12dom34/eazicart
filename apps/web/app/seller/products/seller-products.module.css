@@ -1,0 +1,490 @@
+.page {
+  min-height: 100svh;
+  padding: 0 20px 72px;
+  background: #fff;
+}
+
+.topbar {
+  min-height: 72px;
+  padding-top: env(safe-area-inset-top);
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.back {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #6b707a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero {
+  padding: 28px 0 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.hero h1,
+.setupPrompt h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.hero > div > p:last-child,
+.setupPrompt > p:not(.eyebrow) {
+  max-width: 660px;
+  margin: 10px 0 0;
+  color: #6b707a;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.primaryButton,
+.submitButton,
+.primaryLink {
+  min-height: 46px;
+  border: 0;
+  border-radius: 14px;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.primaryButton {
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.primaryLink {
+  width: fit-content;
+  margin-top: 24px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summaryCard,
+.formCard,
+.inventorySection,
+.productCard,
+.note,
+.setupPrompt {
+  border: 1px solid #e8ebf0;
+  background: #fff;
+}
+
+.summaryCard {
+  min-height: 112px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+}
+
+.summaryCard span {
+  color: #6b707a;
+  font-size: 12px;
+}
+
+.summaryCard strong {
+  margin-top: auto;
+  padding-top: 18px;
+  color: var(--ink);
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.formCard,
+.inventorySection,
+.note {
+  margin-top: 14px;
+  border-radius: 20px;
+}
+
+.formCard,
+.inventorySection {
+  padding: 22px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.sectionHeading h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.sectionHeading > span {
+  color: #8b9099;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.productForm {
+  margin-top: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e8;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+  outline: none;
+}
+
+.field input,
+.field select {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.field textarea {
+  min-height: 112px;
+  padding: 13px 14px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #9aa0aa;
+  box-shadow: 0 0 0 3px #f4f5f7;
+}
+
+.field small {
+  color: #8b9099;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.submitButton {
+  width: fit-content;
+  min-width: 150px;
+  padding: 0 18px;
+  cursor: pointer;
+}
+
+.submitButton:disabled,
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.actionError {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #f3cccc;
+  border-radius: 14px;
+  background: #fff8f8;
+  color: #9b2c2c;
+  font-size: 12px;
+}
+
+.inventorySection {
+  margin-top: 14px;
+}
+
+.productList {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.productCard {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.productMain {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.productImage {
+  width: 84px;
+  height: 84px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #f4f5f7;
+  color: #8b9099;
+}
+
+.productImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.productInfo {
+  min-width: 0;
+}
+
+.productTitleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.productTitleRow h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.productTitleRow p {
+  margin: 5px 0 0;
+  color: #8b9099;
+  font-size: 12px;
+}
+
+.statusBadge {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #eef9f1;
+  color: #2f6f43;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.inactiveBadge {
+  background: #f4f5f7;
+  color: #6b707a;
+}
+
+.productMeta {
+  margin-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  color: #4f545d;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.productActions {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid #f0f1f3;
+}
+
+.secondaryButton,
+.secondaryLink,
+.dangerButton {
+  min-height: 38px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.secondaryButton,
+.secondaryLink {
+  border: 1px solid #dfe3e8;
+  background: #fff;
+  color: var(--ink);
+}
+
+.secondaryButton,
+.dangerButton {
+  cursor: pointer;
+}
+
+.dangerButton {
+  border: 1px solid #f0d1d1;
+  background: #fffafa;
+  color: #9b2c2c;
+}
+
+.editPanel {
+  padding: 0 16px 18px;
+  border-top: 1px solid #f0f1f3;
+  background: #fcfcfd;
+}
+
+.editPanel .productForm {
+  margin-top: 18px;
+}
+
+.emptyWrap {
+  margin-top: 18px;
+}
+
+.note {
+  padding: 18px 20px;
+}
+
+.note strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.note p {
+  margin: 6px 0 0;
+  color: #6b707a;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.setupPrompt {
+  max-width: 720px;
+  margin: 28px auto 0;
+  padding: 28px;
+  border-radius: 20px;
+}
+
+.setupIcon {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #f4f5f7;
+  color: var(--ink);
+}
+
+@media (min-width: 900px) {
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .primaryButton {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 520px) {
+  .formCard,
+  .inventorySection,
+  .setupPrompt {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .formGrid,
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .productMain {
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .productImage {
+    width: 68px;
+    height: 68px;
+  }
+
+  .productTitleRow {
+    gap: 8px;
+  }
+
+  .productActions > * {
+    flex: 1 1 auto;
+  }
+
+  .submitButton {
+    width: 100%;
+  }
+}
