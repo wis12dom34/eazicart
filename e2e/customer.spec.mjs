@@ -66,7 +66,38 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.getByRole("button", { name: "Save product", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Saved");
   await page.goto("/saved");
+  await expect(
+    page.getByRole("heading", { name: "Saved", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Products you want to come back to"),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Saved sections" })
+      .getByText("Products", { exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Saved sections" })
+      .getByRole("link", { name: "Sellers" }),
+  ).toHaveAttribute("href", "/following");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Saved sections" })
+      .getByRole("button", { name: "Collections" }),
+  ).toBeDisabled();
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "Remove Woven everyday tote from saved products",
+    }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Customer navigation" })
+      .getByRole("link", { name: "Profile" }),
+  ).toHaveAttribute("aria-current", "page");
 
   await page.goto(`/product/${productId}`);
   await page.getByRole("link", { name: /View .* seller profile/ }).click();
@@ -159,6 +190,16 @@ test("customer journey persists in PostgreSQL without payment", async ({
       .getByRole("navigation", { name: "Customer navigation" })
       .getByRole("link", { name: "Profile" }),
   ).toHaveAttribute("aria-current", "page");
+
+  await page.goto("/saved");
+  await page
+    .getByRole("button", {
+      name: "Remove Woven everyday tote from saved products",
+    })
+    .click();
+  await expect(page.getByText("You have no saved products.")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("You have no saved products.")).toBeVisible();
 
   await page.goto("/notifications");
   await expect(page.getByText("Order received", { exact: true })).toBeVisible();
