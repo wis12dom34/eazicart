@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@eazicart/database";
+import type { Prisma, PrismaClient } from "@eazicart/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../errors.js";
@@ -47,6 +47,90 @@ export function registerSellerProfiles(
         include: { images: true, category: true, seller: true },
         take: 100,
       }),
+    };
+  });
+  app.get("/seller/dashboard", protectedRoute(app), async (r) => {
+    const seller = await db().sellerProfile.findUnique({
+      where: { userId: userId(r) },
+      select: { id: true, displayName: true },
+    });
+    if (!seller)
+      throw new AppError(
+        403,
+        "SELLER_REQUIRED",
+        "Create a seller profile first",
+      );
+
+    const sellerOrderWhere: Prisma.OrderWhereInput = {
+      items: { some: { product: { sellerId: seller.id } } },
+    };
+    const [
+      totalProducts,
+      activeProducts,
+      outOfStockProducts,
+      stockSummary,
+      totalOrders,
+      pendingOrders,
+      confirmedOrders,
+      fulfilledOrders,
+      cancelledOrders,
+      customers,
+    ] = await Promise.all([
+      db().product.count({ where: { sellerId: seller.id } }),
+      db().product.count({ where: { sellerId: seller.id, active: true } }),
+      db().product.count({
+        where: { sellerId: seller.id, active: true, stock: 0 },
+      }),
+      db().product.aggregate({
+        where: { sellerId: seller.id, active: true },
+        _sum: { stock: true },
+      }),
+      db().order.count({ where: sellerOrderWhere }),
+      db().order.count({
+        where: { ...sellerOrderWhere, status: "PENDING" },
+      }),
+      db().order.count({
+        where: { ...sellerOrderWhere, status: "CONFIRMED" },
+      }),
+      db().order.count({
+        where: { ...sellerOrderWhere, status: "FULFILLED" },
+      }),
+      db().order.count({
+        where: { ...sellerOrderWhere, status: "CANCELLED" },
+      }),
+      db().order.findMany({
+        where: sellerOrderWhere,
+        select: { userId: true },
+        distinct: ["userId"],
+      }),
+    ]);
+
+    return {
+      data: {
+        seller,
+        inventory: {
+          totalProducts,
+          activeProducts,
+          outOfStockProducts,
+          unitsInStock: stockSummary._sum.stock ?? 0,
+        },
+        orders: {
+          total: totalOrders,
+          pending: pendingOrders,
+          confirmed: confirmedOrders,
+          fulfilled: fulfilledOrders,
+          cancelled: cancelledOrders,
+        },
+        customers: { total: customers.length },
+        analytics: {
+          revenue: null,
+          productViews: null,
+          impressions: null,
+          profileVisits: null,
+          clicks: null,
+          conversionRate: null,
+        },
+      },
     };
   });
   app.post("/seller-profile", protectedRoute(app), async (r, reply) => {
