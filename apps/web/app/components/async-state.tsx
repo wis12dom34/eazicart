@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "./icon";
 export function LoadingState({ label = "Loading…" }: { label?: string }) {
   return (
     <section className="state-card" role="status">
@@ -24,10 +25,31 @@ export function ErrorState({
     </section>
   );
 }
-export function EmptyState({ message }: { message: string }) {
+export function EmptyState({
+  message,
+  title,
+  icon,
+  action,
+}: {
+  message: string;
+  title?: string;
+  icon?: string;
+  action?: { href: string; label: string };
+}) {
   return (
-    <section className="state-card">
+    <section className={`state-card${title ? " rich-state" : ""}`}>
+      {icon ? (
+        <span className="state-icon">
+          <Icon name={icon} size={24} />
+        </span>
+      ) : null}
+      {title ? <h2>{title}</h2> : null}
       <p>{message}</p>
+      {action ? (
+        <Link className="state-action" href={action.href}>
+          {action.label}
+        </Link>
+      ) : null}
     </section>
   );
 }

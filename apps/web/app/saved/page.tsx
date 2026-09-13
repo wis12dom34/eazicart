@@ -136,7 +136,12 @@ export default function SavedPage() {
           })}
         </section>
       ) : (
-        <EmptyState message="You have no saved products." />
+        <EmptyState
+          title="Your wishlist is empty"
+          message="Save products you love and find them later."
+          icon="heart"
+          action={{ href: "/explore", label: "Explore products" }}
+        />
       )}
 
       <BottomNavigation />

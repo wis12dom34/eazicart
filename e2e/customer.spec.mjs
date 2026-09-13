@@ -39,6 +39,17 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(
     profileCounts.getByRole("link", { name: "0 Following" }),
   ).toBeVisible();
+  await page.goto("/orders");
+  await expect(
+    page.getByRole("heading", { name: "No orders yet" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Your purchases will appear here."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Start shopping" }),
+  ).toHaveAttribute("href", "/explore");
+  await page.goto("/profile");
   await page.getByRole("link", { name: "Account settings" }).click();
   await expect(page).toHaveURL("http://localhost:3000/settings");
   await expect(
@@ -197,9 +208,19 @@ test("customer journey persists in PostgreSQL without payment", async ({
       name: "Remove Woven everyday tote from saved products",
     })
     .click();
-  await expect(page.getByText("You have no saved products.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your wishlist is empty" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Save products you love and find them later."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Explore products" }),
+  ).toHaveAttribute("href", "/explore");
   await page.reload();
-  await expect(page.getByText("You have no saved products.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your wishlist is empty" }),
+  ).toBeVisible();
 
   await page.goto("/notifications");
   await expect(page.getByText("Order received", { exact: true })).toBeVisible();
