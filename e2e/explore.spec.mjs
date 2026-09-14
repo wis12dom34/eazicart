@@ -1,8 +1,15 @@
 import { test, expect } from "@playwright/test";
 
+const api = "http://localhost:3001";
+
 test("Explore matches Figma and opens live search and category discovery", async ({
   page,
+  request,
 }, testInfo) => {
+  const sellersResponse = await request.get(`${api}/sellers`);
+  expect(sellersResponse.status()).toBe(200);
+  const expectedTopSellers = (await sellersResponse.json()).data.slice(0, 3);
+
   await page.goto("/explore");
 
   await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
@@ -26,8 +33,11 @@ test("Explore matches Figma and opens live search and category discovery", async
   await expect(
     page.getByRole("heading", { name: "Top Sellers" }),
   ).toBeVisible();
-  await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
-  await expect(page.getByText("Home Edit", { exact: true })).toBeVisible();
+  for (const seller of expectedTopSellers) {
+    await expect(
+      page.getByText(seller.displayName, { exact: true }),
+    ).toBeVisible();
+  }
 
   const productCards = page.locator(".figma-explore-product");
   await expect(productCards).toHaveCount(2);
