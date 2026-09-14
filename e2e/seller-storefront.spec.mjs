@@ -147,7 +147,9 @@ test("seller can edit storefront details from the workspace and see them publicl
   await expect(page.getByLabel("Store name")).toHaveValue(
     "Storefront UI Store",
   );
-  await expect(page.getByLabel(/Store bio/)).toHaveValue("Original UI store bio");
+  await expect(page.getByLabel(/Store bio/)).toHaveValue(
+    "Original UI store bio",
+  );
 
   await page.getByLabel("Store name").fill("Storefront UI Updated");
   await page.getByLabel(/Store bio/).fill("Updated UI public bio");
@@ -161,7 +163,9 @@ test("seller can edit storefront details from the workspace and see them publicl
   await page.getByRole("link", { name: "View public store" }).click();
   await expect(page).toHaveURL(/http:\/\/localhost:3000\/seller\/.+/);
   await expect(
-    page.getByRole("heading", { name: "Storefront UI Updated", exact: true }).first(),
+    page
+      .getByRole("heading", { name: "Storefront UI Updated", exact: true })
+      .first(),
   ).toBeVisible();
   await expect(page.getByText("Updated UI public bio").first()).toBeVisible();
 });
