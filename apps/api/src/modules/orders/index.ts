@@ -13,7 +13,9 @@ const output = <
     total: { toString(): string };
     items: Array<{ unitPrice: { toString(): string } }>;
   },
->(x: T) => ({
+>(
+  x: T,
+) => ({
   ...x,
   total: x.total.toString(),
   items: x.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toString() })),
@@ -165,11 +167,7 @@ const sellerForRequest = async (db: PrismaClient, uid: string) => {
     select: { id: true },
   });
   if (!seller)
-    throw new AppError(
-      403,
-      "SELLER_REQUIRED",
-      "Create a seller profile first",
-    );
+    throw new AppError(403, "SELLER_REQUIRED", "Create a seller profile first");
   return seller;
 };
 
