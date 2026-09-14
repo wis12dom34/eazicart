@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../errors.js";
 import { protectedRoute, requireDatabase, userId } from "../shared.js";
+
 const include = {
   address: true,
   items: { include: { product: { include: { images: { take: 1 } } } } },
@@ -12,9 +13,7 @@ const output = <
     total: { toString(): string };
     items: Array<{ unitPrice: { toString(): string } }>;
   },
->(
-  x: T,
-) => ({
+>(x: T) => ({
   ...x,
   total: x.total.toString(),
   items: x.items.map((i) => ({ ...i, unitPrice: i.unitPrice.toString() })),
@@ -38,6 +37,7 @@ type SellerOrderRow = {
     isDefault: boolean;
     userId: string;
   };
+  fulfillments: Array<{ status: string; updatedAt: Date }>;
   items: Array<{
     id: string;
     productName: string;
@@ -65,9 +65,18 @@ type SellerCustomerOrderRow = {
   items: Array<{ productName: string; quantity: number }>;
 };
 
+const fulfillmentBody = z.object({
+  status: z.enum(["CONFIRMED", "FULFILLED", "CANCELLED"]),
+});
+
 const sellerOrderInclude = (sellerId: string) => ({
   user: { select: { name: true } },
   address: true,
+  fulfillments: {
+    where: { sellerId },
+    select: { status: true, updatedAt: true },
+    take: 1,
+  },
   items: {
     where: { product: { sellerId } },
     include: {
@@ -81,24 +90,34 @@ const sellerOrderInclude = (sellerId: string) => ({
   },
 });
 
-const sellerOrderOutput = (order: SellerOrderRow) => ({
-  id: order.id,
-  status: order.status,
-  createdAt: order.createdAt,
-  updatedAt: order.updatedAt,
-  customer: { name: order.user.name },
-  address: order.address,
-  subtotal: order.items
-    .reduce(
-      (sum, item) => sum.add(item.unitPrice.mul(item.quantity)),
-      new Prisma.Decimal(0),
-    )
-    .toString(),
-  items: order.items.map((item) => ({
-    ...item,
-    unitPrice: item.unitPrice.toString(),
-  })),
-});
+const sellerOrderOutput = (order: SellerOrderRow) => {
+  const fulfillment = order.fulfillments[0];
+  if (!fulfillment)
+    throw new AppError(
+      409,
+      "FULFILLMENT_NOT_FOUND",
+      "Seller fulfillment state is unavailable",
+    );
+  return {
+    id: order.id,
+    status: fulfillment.status,
+    globalStatus: order.status,
+    createdAt: order.createdAt,
+    updatedAt: fulfillment.updatedAt,
+    customer: { name: order.user.name },
+    address: order.address,
+    subtotal: order.items
+      .reduce(
+        (sum, item) => sum.add(item.unitPrice.mul(item.quantity)),
+        new Prisma.Decimal(0),
+      )
+      .toString(),
+    items: order.items.map((item) => ({
+      ...item,
+      unitPrice: item.unitPrice.toString(),
+    })),
+  };
+};
 
 const sellerCustomerSelect = (sellerId: string) => ({
   id: true,
@@ -140,9 +159,40 @@ const sellerCustomerOrderOutput = (order: SellerCustomerOrderRow) => ({
   items: order.items,
 });
 
+const sellerForRequest = async (db: PrismaClient, uid: string) => {
+  const seller = await db.sellerProfile.findUnique({
+    where: { userId: uid },
+    select: { id: true },
+  });
+  if (!seller)
+    throw new AppError(
+      403,
+      "SELLER_REQUIRED",
+      "Create a seller profile first",
+    );
+  return seller;
+};
+
+const assertTransition = (current: string, next: string) => {
+  if (current === next) return;
+  const allowed =
+    current === "PENDING"
+      ? ["CONFIRMED", "CANCELLED"]
+      : current === "CONFIRMED"
+        ? ["FULFILLED", "CANCELLED"]
+        : [];
+  if (!allowed.includes(next))
+    throw new AppError(
+      409,
+      "INVALID_FULFILLMENT_TRANSITION",
+      `Cannot change seller fulfillment from ${current} to ${next}`,
+    );
+};
+
 export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
   const db = () => requireDatabase(client),
     auth = protectedRoute(app);
+
   app.get("/orders", auth, async (r) => ({
     data: (
       await db().order.findMany({
@@ -153,58 +203,54 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
       })
     ).map(output),
   }));
+
   app.get("/seller/orders", auth, async (r) => {
-    const seller = await db().sellerProfile.findUnique({
-      where: { userId: userId(r) },
-      select: { id: true },
-    });
-    if (!seller)
-      throw new AppError(
-        403,
-        "SELLER_REQUIRED",
-        "Create a seller profile first",
-      );
+    const seller = await sellerForRequest(db(), userId(r));
     const rows = await db().order.findMany({
-      where: { items: { some: { product: { sellerId: seller.id } } } },
+      where: { fulfillments: { some: { sellerId: seller.id } } },
       include: sellerOrderInclude(seller.id),
       orderBy: { createdAt: "desc" },
       take: 100,
     });
     return { data: rows.map((row) => sellerOrderOutput(row)) };
   });
+
   app.get("/seller/orders/:id", auth, async (r) => {
     const { id } = z.object({ id: z.string() }).parse(r.params);
-    const seller = await db().sellerProfile.findUnique({
-      where: { userId: userId(r) },
-      select: { id: true },
-    });
-    if (!seller)
-      throw new AppError(
-        403,
-        "SELLER_REQUIRED",
-        "Create a seller profile first",
-      );
+    const seller = await sellerForRequest(db(), userId(r));
     const row = await db().order.findFirst({
-      where: {
-        id,
-        items: { some: { product: { sellerId: seller.id } } },
-      },
+      where: { id, fulfillments: { some: { sellerId: seller.id } } },
       include: sellerOrderInclude(seller.id),
     });
     if (!row) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     return { data: sellerOrderOutput(row) };
   });
-  app.get("/seller/customers", auth, async (r) => {
-    const seller = await db().sellerProfile.findUnique({
-      where: { userId: userId(r) },
-      select: { id: true },
+
+  app.patch("/seller/orders/:id/fulfillment", auth, async (r) => {
+    const { id } = z.object({ id: z.string() }).parse(r.params);
+    const { status } = fulfillmentBody.parse(r.body);
+    const seller = await sellerForRequest(db(), userId(r));
+    const current = await db().sellerFulfillment.findUnique({
+      where: { orderId_sellerId: { orderId: id, sellerId: seller.id } },
     });
-    if (!seller)
-      throw new AppError(
-        403,
-        "SELLER_REQUIRED",
-        "Create a seller profile first",
-      );
+    if (!current) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+    assertTransition(current.status, status);
+    if (current.status !== status) {
+      await db().sellerFulfillment.update({
+        where: { id: current.id },
+        data: { status },
+      });
+    }
+    const row = await db().order.findUnique({
+      where: { id },
+      include: sellerOrderInclude(seller.id),
+    });
+    if (!row) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+    return { data: sellerOrderOutput(row) };
+  });
+
+  app.get("/seller/customers", auth, async (r) => {
+    const seller = await sellerForRequest(db(), userId(r));
     const rows = await db().order.findMany({
       where: { items: { some: { product: { sellerId: seller.id } } } },
       select: sellerCustomerSelect(seller.id),
@@ -222,18 +268,10 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
       ),
     };
   });
+
   app.get("/seller/customers/:id", auth, async (r) => {
     const { id } = z.object({ id: z.string() }).parse(r.params);
-    const seller = await db().sellerProfile.findUnique({
-      where: { userId: userId(r) },
-      select: { id: true },
-    });
-    if (!seller)
-      throw new AppError(
-        403,
-        "SELLER_REQUIRED",
-        "Create a seller profile first",
-      );
+    const seller = await sellerForRequest(db(), userId(r));
     const rows = await db().order.findMany({
       where: {
         userId: id,
@@ -251,6 +289,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
       },
     };
   });
+
   app.get("/orders/:id", auth, async (r) => {
     const { id } = z.object({ id: z.string() }).parse(r.params);
     const data = await db().order.findFirst({
@@ -260,6 +299,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     if (!data) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     return { data: output(data) };
   });
+
   app.post("/orders", auth, async (r, reply) => {
     const { addressId } = z.object({ addressId: z.string() }).parse(r.body),
       uid = userId(r);
@@ -303,6 +343,12 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
             },
           },
           include,
+        });
+        const sellerIds = Array.from(
+          new Set(cart.items.map((item) => item.product.sellerId)),
+        );
+        await tx.sellerFulfillment.createMany({
+          data: sellerIds.map((sellerId) => ({ orderId: order.id, sellerId })),
         });
         await tx.notification.create({
           data: {
