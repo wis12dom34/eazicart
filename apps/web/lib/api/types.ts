@@ -73,10 +73,7 @@ export type Order = {
   items: OrderItem[];
 };
 export type SellerFulfillmentStatus =
-  | "PENDING"
-  | "CONFIRMED"
-  | "FULFILLED"
-  | "CANCELLED";
+  "PENDING" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
 export type SellerOrderItem = {
   id: string;
   productName: string;
