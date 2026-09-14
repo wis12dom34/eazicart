@@ -213,6 +213,10 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
           <h1>{dashboard.seller.displayName}</h1>
           <p>Real operational data from your EaziCart store.</p>
         </div>
+        <Link className={styles.storeLink} href="/seller/store">
+          Manage store
+          <Icon name="chevron" size={18} />
+        </Link>
         <Link
           className={styles.storeLink}
           href={`/seller/${dashboard.seller.id}`}
