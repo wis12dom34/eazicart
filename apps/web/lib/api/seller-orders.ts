@@ -1,5 +1,10 @@
 import { apiRequest } from "./client";
-import type { DataResponse, ListResponse, SellerOrder } from "./types";
+import type {
+  DataResponse,
+  ListResponse,
+  SellerFulfillmentStatus,
+  SellerOrder,
+} from "./types";
 
 export const sellerOrdersApi = {
   list: () =>
@@ -8,5 +13,14 @@ export const sellerOrdersApi = {
     apiRequest<DataResponse<SellerOrder>>(
       `/seller/orders/${encodeURIComponent(id)}`,
       { auth: true },
+    ),
+  updateFulfillment: (id: string, status: SellerFulfillmentStatus) =>
+    apiRequest<DataResponse<SellerOrder>>(
+      `/seller/orders/${encodeURIComponent(id)}/fulfillment`,
+      {
+        method: "PATCH",
+        auth: true,
+        body: { status },
+      },
     ),
 };
