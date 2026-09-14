@@ -155,7 +155,10 @@ function StoreEditor({
       </section>
 
       <div className={styles.layout}>
-        <form className={styles.formCard} onSubmit={(event) => void submit(event)}>
+        <form
+          className={styles.formCard}
+          onSubmit={(event) => void submit(event)}
+        >
           <div className={styles.cardHeading}>
             <div>
               <p className={styles.eyebrow}>Store details</p>
@@ -203,7 +206,8 @@ function StoreEditor({
           ) : null}
           {saved ? (
             <p className={styles.success} role="status">
-              Storefront updated. Your public seller page now uses these details.
+              Storefront updated. Your public seller page now uses these
+              details.
             </p>
           ) : null}
 
