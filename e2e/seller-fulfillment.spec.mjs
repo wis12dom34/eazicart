@@ -98,17 +98,23 @@ test("seller fulfillment status is isolated per seller and never mutates buyer o
     productTwo,
   ]);
 
-  const sellerOneInitial = await request.get(`${api}/seller/orders/${order.id}`, {
-    headers: headers(sellerOneToken),
-  });
+  const sellerOneInitial = await request.get(
+    `${api}/seller/orders/${order.id}`,
+    {
+      headers: headers(sellerOneToken),
+    },
+  );
   expect(sellerOneInitial.status()).toBe(200);
   expect((await sellerOneInitial.json()).data).toEqual(
     expect.objectContaining({ status: "PENDING", globalStatus: "PENDING" }),
   );
 
-  const sellerTwoInitial = await request.get(`${api}/seller/orders/${order.id}`, {
-    headers: headers(sellerTwoToken),
-  });
+  const sellerTwoInitial = await request.get(
+    `${api}/seller/orders/${order.id}`,
+    {
+      headers: headers(sellerTwoToken),
+    },
+  );
   expect(sellerTwoInitial.status()).toBe(200);
   expect((await sellerTwoInitial.json()).data.status).toBe("PENDING");
 
@@ -254,7 +260,9 @@ test("seller can confirm and fulfill their own order from the workspace", async 
   ).toBeVisible();
   await expect(page.getByText("Fulfilled", { exact: true })).toBeVisible();
   await expect(
-    page.getByText("Your fulfillment is complete and cannot be moved backward."),
+    page.getByText(
+      "Your fulfillment is complete and cannot be moved backward.",
+    ),
   ).toBeVisible();
 
   const buyerOrder = await request.get(`${api}/orders/${order.id}`, {
