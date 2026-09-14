@@ -12,7 +12,6 @@ import {
 import { Icon } from "../../components/icon";
 import { money } from "../../data";
 import { useRequest } from "../../hooks/use-request";
-import { orderStatusLabel } from "../../orders/order-utils";
 import { useAuth } from "../../providers/auth-provider";
 import { sellerDashboardApi } from "../../../lib/api/seller-dashboard";
 import { sellerOrdersApi } from "../../../lib/api/seller-orders";
@@ -29,9 +28,9 @@ type Filter = (typeof filters)[number];
 
 const filterLabels: Record<Filter, string> = {
   ALL: "All",
-  PENDING: "Processing",
+  PENDING: "Pending",
   CONFIRMED: "Confirmed",
-  FULFILLED: "Delivered",
+  FULFILLED: "Fulfilled",
   CANCELLED: "Cancelled",
 };
 
@@ -131,18 +130,18 @@ export default function SellerOrdersPage() {
           <p className={styles.eyebrow}>Seller operations</p>
           <h1>Orders</h1>
           <p>
-            Only products sold by {profile.data.data.displayName} appear in
-            these order views.
+            Only products sold by {profile.data.data.displayName} appear here,
+            with fulfillment status scoped to your store.
           </p>
         </div>
       </section>
 
       <section className={styles.summaryGrid} aria-label="Seller order summary">
         <SummaryCard label="Total orders" value={orders.length} />
-        <SummaryCard label="Processing" value={pending} />
+        <SummaryCard label="Pending" value={pending} />
         <SummaryCard label="Confirmed" value={confirmed} />
         <SummaryCard
-          label="Delivered"
+          label="Fulfilled"
           value={orders.filter((order) => order.status === "FULFILLED").length}
         />
       </section>
@@ -201,7 +200,7 @@ export default function SellerOrdersPage() {
                   <span
                     className={`${styles.status} ${statusClass(order.status)}`}
                   >
-                    {orderStatusLabel(order.status)}
+                    {fulfillmentLabel(order.status)}
                   </span>
                 </div>
                 <div className={styles.cardBody}>
@@ -232,10 +231,11 @@ export default function SellerOrdersPage() {
       )}
 
       <aside className={styles.note}>
-        <strong>Seller-safe order view</strong>
+        <strong>Seller-safe fulfillment</strong>
         <p>
-          Only your line items and subtotal are shown. Order status is read-only
-          until EaziCart supports seller-specific fulfillment state.
+          Only your line items, subtotal and fulfillment status are shown. Your
+          status changes do not alter another seller&apos;s fulfillment state or
+          the buyer/global order status.
         </p>
       </aside>
     </SellerOrdersShell>
@@ -276,6 +276,13 @@ function formatDate(value: string) {
     month: "short",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function fulfillmentLabel(status: string) {
+  if (status === "FULFILLED") return "Fulfilled";
+  if (status === "CANCELLED") return "Cancelled";
+  if (status === "CONFIRMED") return "Confirmed";
+  return "Pending";
 }
 
 function statusClass(status: string) {
