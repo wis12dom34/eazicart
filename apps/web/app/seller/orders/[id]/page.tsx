@@ -216,7 +216,8 @@ export default function SellerOrderDetailPage() {
             </div>
             <p className={controls.note}>
               This only updates your part of the order. Buyer/global order
-              status remains {orderStatusLabel(order.globalStatus).toLowerCase()}.
+              status remains{" "}
+              {orderStatusLabel(order.globalStatus).toLowerCase()}.
             </p>
             <strong className={controls.readOnly}>
               Status is read-only for the buyer order.
