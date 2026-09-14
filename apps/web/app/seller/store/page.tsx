@@ -79,10 +79,7 @@ export default function SellerStorePage() {
   return (
     <main className={`app-shell ${styles.page}`}>
       <StoreHeader />
-      <StoreEditor
-        profile={profile.data.data}
-        onSaved={() => profile.reload()}
-      />
+      <StoreEditor profile={profile.data.data} />
     </main>
   );
 }
@@ -102,13 +99,7 @@ function StoreHeader() {
   );
 }
 
-function StoreEditor({
-  profile,
-  onSaved,
-}: {
-  profile: Seller;
-  onSaved: () => Promise<unknown>;
-}) {
+function StoreEditor({ profile }: { profile: Seller }) {
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [bio, setBio] = useState(profile.bio ?? "");
   const [submitting, setSubmitting] = useState(false);
@@ -122,11 +113,12 @@ function StoreEditor({
     setSaved(false);
 
     try {
-      await sellerDashboardApi.updateProfile({
+      const updated = await sellerDashboardApi.updateProfile({
         displayName: displayName.trim(),
         bio: bio.trim() ? bio.trim() : null,
       });
-      await onSaved();
+      setDisplayName(updated.data.displayName);
+      setBio(updated.data.bio ?? "");
       setSaved(true);
     } catch (value) {
       setError(
