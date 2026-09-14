@@ -72,6 +72,8 @@ export type Order = {
   address: Address;
   items: OrderItem[];
 };
+export type SellerFulfillmentStatus =
+  "PENDING" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
 export type SellerOrderItem = {
   id: string;
   productName: string;
@@ -81,7 +83,8 @@ export type SellerOrderItem = {
 };
 export type SellerOrder = {
   id: string;
-  status: string;
+  status: SellerFulfillmentStatus;
+  globalStatus: string;
   subtotal: Money;
   createdAt: string;
   updatedAt: string;
