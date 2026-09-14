@@ -9,6 +9,11 @@ test("Explore matches Figma and opens live search and category discovery", async
   const sellersResponse = await request.get(`${api}/sellers`);
   expect(sellersResponse.status()).toBe(200);
   const expectedTopSellers = (await sellersResponse.json()).data.slice(0, 3);
+  const fashionResponse = await request.get(
+    `${api}/products?category=fashion&limit=20`,
+  );
+  expect(fashionResponse.status()).toBe(200);
+  const expectedFashionTotal = (await fashionResponse.json()).pagination.total;
 
   await page.goto("/explore");
 
@@ -72,7 +77,9 @@ test("Explore matches Figma and opens live search and category discovery", async
   await expect(
     page.getByRole("heading", { name: "Fashion", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("2 products", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(`${expectedFashionTotal} products`, { exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "View Woven everyday tote" }),
   ).toBeVisible();
