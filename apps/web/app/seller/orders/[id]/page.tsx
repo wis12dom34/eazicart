@@ -17,6 +17,7 @@ import { useAuth } from "../../../providers/auth-provider";
 import { sellerDashboardApi } from "../../../../lib/api/seller-dashboard";
 import { sellerOrdersApi } from "../../../../lib/api/seller-orders";
 import type { SellerFulfillmentStatus } from "../../../../lib/api/types";
+import controls from "./fulfillment-controls.module.css";
 import styles from "../seller-orders.module.css";
 
 export default function SellerOrderDetailPage() {
@@ -208,31 +209,34 @@ export default function SellerOrderDetailPage() {
             </div>
           </section>
 
-          <section className={styles.fulfillmentPanel}>
+          <section className={controls.panel}>
             <div className={styles.panelHeading}>
               <p>Your fulfillment</p>
               <h2>Update seller status</h2>
             </div>
-            <p className={styles.fulfillmentNote}>
+            <p className={controls.note}>
               This only updates your part of the order. Buyer/global order
               status remains {orderStatusLabel(order.globalStatus).toLowerCase()}.
             </p>
+            <strong className={controls.readOnly}>
+              Status is read-only for the buyer order.
+            </strong>
             {actionError ? (
-              <p className={styles.actionError} role="alert">
+              <p className={controls.error} role="alert">
                 {actionError}
               </p>
             ) : null}
             {actionSuccess ? (
-              <p className={styles.actionSuccess} role="status">
+              <p className={controls.success} role="status">
                 {actionSuccess}
               </p>
             ) : null}
-            <div className={styles.fulfillmentActions}>
+            <div className={controls.actions}>
               {order.status === "PENDING" ? (
                 <>
                   <button
                     type="button"
-                    className={styles.primaryAction}
+                    className={controls.primary}
                     disabled={updating}
                     onClick={() => void updateFulfillment("CONFIRMED")}
                   >
@@ -240,7 +244,7 @@ export default function SellerOrderDetailPage() {
                   </button>
                   <button
                     type="button"
-                    className={styles.dangerAction}
+                    className={controls.danger}
                     disabled={updating}
                     onClick={() => void updateFulfillment("CANCELLED")}
                   >
@@ -252,7 +256,7 @@ export default function SellerOrderDetailPage() {
                 <>
                   <button
                     type="button"
-                    className={styles.primaryAction}
+                    className={controls.primary}
                     disabled={updating}
                     onClick={() => void updateFulfillment("FULFILLED")}
                   >
@@ -260,7 +264,7 @@ export default function SellerOrderDetailPage() {
                   </button>
                   <button
                     type="button"
-                    className={styles.dangerAction}
+                    className={controls.danger}
                     disabled={updating}
                     onClick={() => void updateFulfillment("CANCELLED")}
                   >
@@ -269,12 +273,12 @@ export default function SellerOrderDetailPage() {
                 </>
               ) : null}
               {order.status === "FULFILLED" ? (
-                <p className={styles.terminalState}>
+                <p className={controls.terminal}>
                   Your fulfillment is complete and cannot be moved backward.
                 </p>
               ) : null}
               {order.status === "CANCELLED" ? (
-                <p className={styles.terminalState}>
+                <p className={controls.terminal}>
                   Your fulfillment is cancelled and cannot be reopened.
                 </p>
               ) : null}
