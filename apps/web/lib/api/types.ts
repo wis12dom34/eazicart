@@ -72,6 +72,22 @@ export type Order = {
   address: Address;
   items: OrderItem[];
 };
+export type PaymentStatus =
+  | "PENDING"
+  | "SUCCESS"
+  | "FAILED"
+  | "REVIEW_REQUIRED";
+export type Payment = {
+  id: string;
+  orderId: string;
+  reference: string;
+  status: PaymentStatus;
+  amount: Money;
+  currency: string;
+  authorizationUrl?: string | null;
+  paidAt?: string | null;
+  failureReason?: string | null;
+};
 export type SellerFulfillmentStatus =
   "PENDING" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
 export type SellerOrderItem = {
