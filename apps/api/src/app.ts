@@ -10,6 +10,7 @@ import { registerCategories } from "./modules/categories/index.js";
 import { registerFollows } from "./modules/follows/index.js";
 import { registerNotifications } from "./modules/notifications/index.js";
 import { registerOrders } from "./modules/orders/index.js";
+import { registerPayments } from "./modules/payments/index.js";
 import { registerProducts } from "./modules/products/index.js";
 import { registerSavedProducts } from "./modules/saved-products/index.js";
 import { registerSellerProfiles } from "./modules/seller-profiles/index.js";
@@ -72,6 +73,7 @@ export function buildApp(
   registerProducts(app, dependencies.database);
   registerCart(app, dependencies.database);
   registerOrders(app, dependencies.database);
+  registerPayments(app, config, dependencies.database);
   registerAddresses(app, dependencies.database);
   registerSavedProducts(app, dependencies.database);
   registerFollows(app, dependencies.database);
