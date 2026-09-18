@@ -8,6 +8,11 @@ export const paymentsApi = {
       auth: true,
       body: { orderId },
     }),
+  forOrder: (orderId: string) =>
+    apiRequest<DataResponse<Payment | null>>(
+      `/payments/order/${encodeURIComponent(orderId)}`,
+      { auth: true },
+    ),
   verify: (reference: string) =>
     apiRequest<DataResponse<Payment>>(
       `/payments/${encodeURIComponent(reference)}/verify`,
