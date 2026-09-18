@@ -1,4 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { Readable } from "node:stream";
 import { Prisma, type PrismaClient } from "@eazicart/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
@@ -37,6 +38,8 @@ type PaystackVerify = {
     paid_at?: string | null;
   };
 };
+
+type RequestWithRawBody = { rawBody?: Buffer };
 
 class InventoryConflict extends Error {}
 
@@ -85,7 +88,6 @@ const paystackRequest = async <T>(
       headers: {
         Authorization: `Bearer ${secret}`,
         "Content-Type": "application/json",
-        ...init.headers,
       },
     });
   } catch {
@@ -136,7 +138,7 @@ const initializePaystack = async (
         currency: "NGN",
         reference: input.reference,
         callback_url: `${config.WEB_ORIGIN}/payment-pending`,
-        metadata: JSON.stringify({ orderId: input.orderId }),
+        metadata: { orderId: input.orderId },
       }),
     },
   );
@@ -204,7 +206,8 @@ const finalizeVerifiedPayment = async (
   });
   if (!current)
     throw new AppError(404, "PAYMENT_NOT_FOUND", "Payment not found");
-  if (current.status === "SUCCESS") return current;
+  if (current.status === "SUCCESS" || current.status === "REVIEW_REQUIRED")
+    return current;
 
   const expectedSubunits = current.amount.mul(100);
   if (!expectedSubunits.equals(new Prisma.Decimal(verified.amount)))
@@ -225,11 +228,23 @@ const finalizeVerifiedPayment = async (
       async (tx) => {
         const payment = await tx.payment.findUnique({
           where: { reference: verified.reference },
-          include: { order: { include: { items: true } } },
+          include: {
+            order: {
+              include: {
+                items: {
+                  include: { product: { select: { sellerId: true } } },
+                },
+              },
+            },
+          },
         });
         if (!payment)
           throw new AppError(404, "PAYMENT_NOT_FOUND", "Payment not found");
-        if (payment.status === "SUCCESS") return payment;
+        if (
+          payment.status === "SUCCESS" ||
+          payment.status === "REVIEW_REQUIRED"
+        )
+          return payment;
 
         for (const item of payment.order.items) {
           const changed = await tx.product.updateMany({
@@ -242,6 +257,17 @@ const finalizeVerifiedPayment = async (
           });
           if (changed.count !== 1) throw new InventoryConflict();
         }
+
+        const sellerIds = Array.from(
+          new Set(payment.order.items.map((item) => item.product.sellerId)),
+        );
+        await tx.sellerFulfillment.createMany({
+          data: sellerIds.map((sellerId) => ({
+            orderId: payment.orderId,
+            sellerId,
+          })),
+          skipDuplicates: true,
+        });
 
         const updated = await tx.payment.update({
           where: { id: payment.id },
@@ -308,13 +334,11 @@ const verifyAndSync = async (
 
 const signatureMatches = (
   secret: string,
-  body: unknown,
+  rawBody: Buffer | undefined,
   signature: string | undefined,
 ) => {
-  if (!signature) return false;
-  const expected = createHmac("sha512", secret)
-    .update(JSON.stringify(body))
-    .digest("hex");
+  if (!signature || !rawBody) return false;
+  const expected = createHmac("sha512", secret).update(rawBody).digest("hex");
   const expectedBuffer = Buffer.from(expected, "utf8");
   const suppliedBuffer = Buffer.from(signature, "utf8");
   return (
@@ -340,20 +364,36 @@ export function registerPayments(
     if (!order) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     if (order.payment?.status === "SUCCESS")
       return { data: paymentOutput(order.payment) };
-    if (order.payment?.authorizationUrl)
+    if (
+      order.payment?.status === "PENDING" &&
+      order.payment.authorizationUrl
+    )
       return { data: paymentOutput(order.payment) };
 
-    const reference = order.payment?.reference ?? `EC-${randomUUID()}`;
-    const payment =
-      order.payment ??
-      (await db().payment.create({
-        data: {
-          orderId: order.id,
-          reference,
-          amount: order.total,
-          currency: "NGN",
-        },
-      }));
+    const reference = `EC-${randomUUID()}`;
+    const payment = order.payment
+      ? await db().payment.update({
+          where: { id: order.payment.id },
+          data: {
+            reference,
+            status: "PENDING",
+            amount: order.total,
+            currency: "NGN",
+            authorizationUrl: null,
+            accessCode: null,
+            providerTransactionId: null,
+            failureReason: null,
+            paidAt: null,
+          },
+        })
+      : await db().payment.create({
+          data: {
+            orderId: order.id,
+            reference,
+            amount: order.total,
+            currency: "NGN",
+          },
+        });
 
     const initialized = await initializePaystack(config, {
       email: order.user.email,
@@ -382,29 +422,43 @@ export function registerPayments(
     return { data: paymentOutput(updated) };
   });
 
-  app.post("/payments/paystack/webhook", async (r, reply) => {
-    const secret = requireSecret(config);
-    const signature = r.headers["x-paystack-signature"];
-    if (
-      !signatureMatches(
-        secret,
-        r.body,
-        typeof signature === "string" ? signature : undefined,
+  app.post(
+    "/payments/paystack/webhook",
+    {
+      preParsing: async (request, _reply, payload) => {
+        const chunks: Buffer[] = [];
+        for await (const chunk of payload)
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        const rawBody = Buffer.concat(chunks);
+        (request as typeof request & RequestWithRawBody).rawBody = rawBody;
+        return Readable.from(rawBody);
+      },
+    },
+    async (r, reply) => {
+      const secret = requireSecret(config);
+      const signature = r.headers["x-paystack-signature"];
+      const rawBody = (r as typeof r & RequestWithRawBody).rawBody;
+      if (
+        !signatureMatches(
+          secret,
+          rawBody,
+          typeof signature === "string" ? signature : undefined,
+        )
       )
-    )
-      throw new AppError(
-        401,
-        "INVALID_PAYMENT_SIGNATURE",
-        "Invalid payment signature",
-      );
+        throw new AppError(
+          401,
+          "INVALID_PAYMENT_SIGNATURE",
+          "Invalid payment signature",
+        );
 
-    const event = webhookEvent.parse(r.body);
-    if (event.event === "charge.success") {
-      const known = await db().payment.findUnique({
-        where: { reference: event.data.reference },
-      });
-      if (known) await verifyAndSync(db(), config, event.data.reference);
-    }
-    return reply.code(200).send({ received: true });
-  });
+      const event = webhookEvent.parse(r.body);
+      if (event.event === "charge.success") {
+        const known = await db().payment.findUnique({
+          where: { reference: event.data.reference },
+        });
+        if (known) await verifyAndSync(db(), config, event.data.reference);
+      }
+      return reply.code(200).send({ received: true });
+    },
+  );
 }
