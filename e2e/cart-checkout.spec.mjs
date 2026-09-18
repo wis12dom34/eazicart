@@ -69,7 +69,7 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await expect(
     page.getByText("1 Checkout Street", { exact: false }),
   ).toBeVisible();
-  await expect(page.getByText("No payment required yet")).toBeVisible();
+  await expect(page.getByText("Pay securely with Paystack")).toBeVisible();
   await expect(
     page.getByText("Woven everyday tote", { exact: true }),
   ).toBeVisible();
@@ -81,4 +81,5 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await expect(
     page.getByRole("button", { name: /Place order/i }),
   ).toBeEnabled();
+  await expect(page.getByText("Pay with Paystack", { exact: true })).toBeVisible();
 });
