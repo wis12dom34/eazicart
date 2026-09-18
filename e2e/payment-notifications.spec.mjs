@@ -27,7 +27,9 @@ test("payment settings stay honest and notifications use live account data", asy
     page.getByRole("button", { name: /Add payment method/ }),
   ).toBeDisabled();
   await expect(
-    page.getByText("Saved payment methods aren't available yet", { exact: true }),
+    page.getByText("Saved payment methods aren't available yet", {
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
   await expect(page.getByText(/Balance ₦86,400/)).toHaveCount(0);
