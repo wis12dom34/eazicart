@@ -8,6 +8,7 @@ import { AppError } from "../../errors.js";
 import { protectedRoute, requireDatabase, userId } from "../shared.js";
 
 const initializeBody = z.object({ orderId: z.string().min(1) });
+const orderParams = z.object({ orderId: z.string().min(1) });
 const referenceParams = z.object({ reference: z.string().min(1) });
 const webhookEvent = z
   .object({
@@ -409,6 +410,16 @@ export function registerPayments(
       },
     });
     return reply.code(201).send({ data: paymentOutput(updated) });
+  });
+
+  app.get("/payments/order/:orderId", auth, async (r) => {
+    const { orderId } = orderParams.parse(r.params);
+    const order = await db().order.findFirst({
+      where: { id: orderId, userId: userId(r) },
+      select: { id: true, payment: true },
+    });
+    if (!order) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+    return { data: order.payment ? paymentOutput(order.payment) : null };
   });
 
   app.get("/payments/:reference/verify", auth, async (r) => {
