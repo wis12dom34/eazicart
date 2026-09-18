@@ -20,8 +20,8 @@ export default function PaymentSuccess() {
       <p className="eyebrow">Payment confirmed</p>
       <h1>Thank you for your order!</h1>
       <p>
-        EaziCart verified your payment with Paystack. Your order is now available
-        to the seller for processing.
+        EaziCart verified your payment with Paystack. Your order is now
+        available to the seller for processing.
       </p>
       {orderId ? (
         <>
