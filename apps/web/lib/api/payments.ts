@@ -1,0 +1,16 @@
+import { apiRequest } from "./client";
+import type { DataResponse, Payment } from "./types";
+
+export const paymentsApi = {
+  initialize: (orderId: string) =>
+    apiRequest<DataResponse<Payment>>("/payments/initialize", {
+      method: "POST",
+      auth: true,
+      body: { orderId },
+    }),
+  verify: (reference: string) =>
+    apiRequest<DataResponse<Payment>>(
+      `/payments/${encodeURIComponent(reference)}/verify`,
+      { auth: true },
+    ),
+};
