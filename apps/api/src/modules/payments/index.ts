@@ -40,7 +40,7 @@ type PaystackVerify = {
   };
 };
 
-type RequestWithRawBody = { rawBody?: Buffer };
+type RequestWithRawBody = { rawBody?: string };
 
 class InventoryConflict extends Error {}
 
@@ -335,10 +335,10 @@ const verifyAndSync = async (
 
 const signatureMatches = (
   secret: string,
-  rawBody: Buffer | undefined,
+  rawBody: string | undefined,
   signature: string | undefined,
 ) => {
-  if (!signature || !rawBody) return false;
+  if (!signature || rawBody === undefined) return false;
   const expected = createHmac("sha512", secret).update(rawBody).digest("hex");
   const expectedBuffer = Buffer.from(expected, "utf8");
   const suppliedBuffer = Buffer.from(signature, "utf8");
@@ -438,7 +438,8 @@ export function registerPayments(
         for await (const chunk of payload)
           chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
         const rawBody = Buffer.concat(chunks);
-        (request as typeof request & RequestWithRawBody).rawBody = rawBody;
+        (request as typeof request & RequestWithRawBody).rawBody =
+          rawBody.toString("utf8");
         return Readable.from(rawBody);
       },
     },
