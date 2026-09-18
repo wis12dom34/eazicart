@@ -25,7 +25,7 @@ export default function PaymentMethods() {
           className={styles.addButton}
           type="button"
           disabled
-          title="Payment providers are not connected yet"
+          title="Saved payment methods are not supported yet"
         >
           +&nbsp; Add payment method
         </button>
@@ -33,29 +33,37 @@ export default function PaymentMethods() {
         <h2 className={styles.sectionTitle}>Saved methods</h2>
         <section
           className={styles.unavailableCard}
-          aria-label="Payment methods unavailable"
+          aria-label="Saved payment methods unavailable"
         >
           <span className={styles.methodIcon} aria-hidden="true">
             <Icon name="card" size={22} />
           </span>
           <span className={styles.methodCopy}>
-            <strong>Payment methods aren&apos;t available yet</strong>
-            <span>No payment provider is connected in this MVP.</span>
+            <strong>Saved payment methods aren&apos;t available yet</strong>
+            <span>
+              EaziCart does not store card or bank details in your account.
+            </span>
           </span>
         </section>
 
-        <h2 className={styles.otherTitle}>Other ways to pay</h2>
-        <div className={styles.disabledMethod} aria-disabled="true">
+        <h2 className={styles.otherTitle}>Checkout payment</h2>
+        <div className={styles.disabledMethod}>
           <span className={styles.methodCopy}>
-            <strong>Payment providers not connected</strong>
-            <span>Checkout does not collect payment details yet.</span>
+            <strong>Paystack</strong>
+            <span>
+              Paystack shows the payment options available for your transaction
+              when you check out.
+            </span>
           </span>
           <Icon className={styles.chevron} name="chevron" size={20} />
         </div>
 
         <aside className={styles.securityCard}>
           <strong>Payment safety</strong>
-          <p>EaziCart is not collecting or storing card information yet.</p>
+          <p>
+            Payment is completed with Paystack. EaziCart verifies the
+            transaction server-side and does not store your card details.
+          </p>
         </aside>
       </div>
       <BottomNavigation />
