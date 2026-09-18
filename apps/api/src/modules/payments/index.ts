@@ -434,13 +434,11 @@ export function registerPayments(
     "/payments/paystack/webhook",
     {
       preParsing: async (request, _reply, payload) => {
-        const chunks: Buffer[] = [];
-        for await (const chunk of payload)
-          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-        const rawBody = Buffer.concat(chunks);
-        (request as typeof request & RequestWithRawBody).rawBody =
-          rawBody.toString("utf8");
-        return Readable.from(rawBody);
+        payload.setEncoding("utf8");
+        let rawBody = "";
+        for await (const chunk of payload) rawBody += chunk as string;
+        (request as typeof request & RequestWithRawBody).rawBody = rawBody;
+        return Readable.from([rawBody]);
       },
     },
     async (r, reply) => {
