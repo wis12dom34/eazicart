@@ -2,11 +2,13 @@
 "use client";
 
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BottomNavigation } from "../../components/bottom-navigation";
 import { Icon } from "../../components/icon";
 import { money } from "../../data";
 import { ordersApi } from "../../../lib/api/orders";
+import { paymentsApi } from "../../../lib/api/payments";
 import { useRequest } from "../../hooks/use-request";
 import {
   ErrorState,
@@ -28,13 +30,23 @@ export default function OrderDetail({
 }) {
   const { id } = use(params);
   const auth = useAuth();
+  const router = useRouter();
+  const [paymentStarting, setPaymentStarting] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
   const result = useRequest(
     async () =>
       auth.isAuthenticated ? ordersApi.get(id) : Promise.resolve(undefined),
     [auth.isAuthenticated, id],
   );
+  const paymentResult = useRequest(
+    async () =>
+      auth.isAuthenticated
+        ? paymentsApi.forOrder(id)
+        : Promise.resolve(undefined),
+    [auth.isAuthenticated, id],
+  );
 
-  if (auth.loading || result.loading)
+  if (auth.loading || result.loading || paymentResult.loading)
     return (
       <OrderShell>
         <LoadingState label="Loading order…" />
@@ -57,6 +69,28 @@ export default function OrderDetail({
     );
 
   const order = result.data.data;
+  const payment = paymentResult.data?.data ?? null;
+
+  const continuePayment = async () => {
+    setPaymentStarting(true);
+    setPaymentError("");
+    try {
+      const response = await paymentsApi.initialize(order.id);
+      if (response.data.status === "SUCCESS") {
+        router.push(`/payment-success?orderId=${encodeURIComponent(order.id)}`);
+        return;
+      }
+      if (!response.data.authorizationUrl)
+        throw new Error("Payment could not be started. Please try again.");
+      window.location.assign(response.data.authorizationUrl);
+    } catch (error) {
+      setPaymentError(
+        error instanceof Error ? error.message : "Could not start payment",
+      );
+      setPaymentStarting(false);
+      await paymentResult.reload();
+    }
+  };
 
   return (
     <OrderShell>
@@ -130,11 +164,72 @@ export default function OrderDetail({
           <strong>Total</strong>
           <strong>{money(order.total)}</strong>
         </div>
-        <p className={styles.paymentNote}>
-          No payment has been taken for this MVP order.
-        </p>
+        <PaymentState payment={payment} />
+        {payment && ["PENDING", "FAILED"].includes(payment.status) ? (
+          <button
+            className="dark-button"
+            type="button"
+            disabled={paymentStarting}
+            onClick={() => void continuePayment()}
+          >
+            {paymentStarting
+              ? "Starting payment…"
+              : payment.status === "FAILED"
+                ? "Retry payment"
+                : "Continue payment"}
+          </button>
+        ) : null}
+        {paymentError ? (
+          <p className={styles.paymentNote} role="alert">
+            {paymentError}
+          </p>
+        ) : null}
+        {paymentResult.error ? (
+          <p className={styles.paymentNote} role="alert">
+            Payment status is temporarily unavailable.
+          </p>
+        ) : null}
       </section>
     </OrderShell>
+  );
+}
+
+function PaymentState({
+  payment,
+}: {
+  payment: Awaited<ReturnType<typeof paymentsApi.forOrder>>["data"] | null;
+}) {
+  if (!payment)
+    return (
+      <p className={styles.paymentNote}>
+        This order does not have a Paystack payment record.
+      </p>
+    );
+  if (payment.status === "SUCCESS")
+    return (
+      <p className={styles.paymentNote}>
+        Payment confirmed by Paystack. Seller processing is enabled.
+      </p>
+    );
+  if (payment.status === "REVIEW_REQUIRED")
+    return (
+      <p className={styles.paymentNote}>
+        Payment was received, but this order needs support review before seller
+        processing.
+      </p>
+    );
+  if (payment.status === "FAILED")
+    return (
+      <p className={styles.paymentNote}>
+        Payment was not completed. The order has not been released to the
+        seller.
+      </p>
+    );
+  return (
+    <p className={styles.paymentNote}>
+      Payment is pending. The seller cannot process this order until Paystack
+      confirms it.
+    </p>
   );
 }
 
