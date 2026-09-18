@@ -75,7 +75,9 @@ export default function CheckoutPage() {
       const order = await ordersApi.create(address.id);
       const payment = await paymentsApi.initialize(order.data.id);
       if (payment.data.status === "SUCCESS") {
-        router.push(`/payment-success?orderId=${encodeURIComponent(order.data.id)}`);
+        router.push(
+          `/payment-success?orderId=${encodeURIComponent(order.data.id)}`,
+        );
         return;
       }
       if (!payment.data.authorizationUrl)
