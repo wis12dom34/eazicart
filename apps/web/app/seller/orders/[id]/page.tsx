@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ErrorState,
   LoadingState,
@@ -16,11 +16,16 @@ import { multiplyMoney, orderStatusLabel } from "../../../orders/order-utils";
 import { useAuth } from "../../../providers/auth-provider";
 import { sellerDashboardApi } from "../../../../lib/api/seller-dashboard";
 import { sellerOrdersApi } from "../../../../lib/api/seller-orders";
+import type { SellerFulfillmentStatus } from "../../../../lib/api/types";
+import controls from "./fulfillment-controls.module.css";
 import styles from "../seller-orders.module.css";
 
 export default function SellerOrderDetailPage() {
   const params = useParams<{ id: string }>();
   const auth = useAuth();
+  const [updating, setUpdating] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
   const profile = useRequest(
     async () =>
       auth.isAuthenticated
@@ -35,6 +40,24 @@ export default function SellerOrderDetailPage() {
         : Promise.resolve(undefined),
     [profile.data?.data?.id, params.id],
   );
+
+  const updateFulfillment = async (status: SellerFulfillmentStatus) => {
+    if (!params.id) return;
+    setUpdating(true);
+    setActionError("");
+    setActionSuccess("");
+    try {
+      await sellerOrdersApi.updateFulfillment(params.id, status);
+      await result.reload();
+      setActionSuccess(`Fulfillment updated to ${fulfillmentLabel(status)}.`);
+    } catch (value) {
+      setActionError(
+        value instanceof Error ? value.message : "Unable to update fulfillment",
+      );
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   if (auth.loading || (auth.isAuthenticated && profile.loading)) {
     return (
@@ -104,7 +127,7 @@ export default function SellerOrderDetailPage() {
     <DetailShell>
       <section className={styles.detailHero}>
         <div>
-          <p className={styles.eyebrow}>Seller order</p>
+          <p className={styles.eyebrow}>Seller fulfillment</p>
           <h1>Order #{order.id.slice(-8)}</h1>
           <div className={styles.detailMeta}>
             <span>{formatDate(order.createdAt)}</span>
@@ -118,7 +141,7 @@ export default function SellerOrderDetailPage() {
           </div>
         </div>
         <span className={`${styles.status} ${statusClass(order.status)}`}>
-          {orderStatusLabel(order.status)}
+          {fulfillmentLabel(order.status)}
         </span>
       </section>
 
@@ -186,14 +209,82 @@ export default function SellerOrderDetailPage() {
             </div>
           </section>
 
-          <aside className={styles.note}>
-            <strong>Status is read-only</strong>
-            <p>
-              This order can contain products from other sellers. EaziCart will
-              add seller-specific fulfillment controls before allowing status
-              changes here.
+          <section className={controls.panel}>
+            <div className={styles.panelHeading}>
+              <p>Your fulfillment</p>
+              <h2>Update seller status</h2>
+            </div>
+            <p className={controls.note}>
+              This only updates your part of the order. Buyer/global order
+              status remains{" "}
+              {orderStatusLabel(order.globalStatus).toLowerCase()}.
             </p>
-          </aside>
+            <strong className={controls.readOnly}>
+              Status is read-only for the buyer order.
+            </strong>
+            {actionError ? (
+              <p className={controls.error} role="alert">
+                {actionError}
+              </p>
+            ) : null}
+            {actionSuccess ? (
+              <p className={controls.success} role="status">
+                {actionSuccess}
+              </p>
+            ) : null}
+            <div className={controls.actions}>
+              {order.status === "PENDING" ? (
+                <>
+                  <button
+                    type="button"
+                    className={controls.primary}
+                    disabled={updating}
+                    onClick={() => void updateFulfillment("CONFIRMED")}
+                  >
+                    {updating ? "Updating…" : "Confirm fulfillment"}
+                  </button>
+                  <button
+                    type="button"
+                    className={controls.danger}
+                    disabled={updating}
+                    onClick={() => void updateFulfillment("CANCELLED")}
+                  >
+                    Cancel fulfillment
+                  </button>
+                </>
+              ) : null}
+              {order.status === "CONFIRMED" ? (
+                <>
+                  <button
+                    type="button"
+                    className={controls.primary}
+                    disabled={updating}
+                    onClick={() => void updateFulfillment("FULFILLED")}
+                  >
+                    {updating ? "Updating…" : "Mark fulfilled"}
+                  </button>
+                  <button
+                    type="button"
+                    className={controls.danger}
+                    disabled={updating}
+                    onClick={() => void updateFulfillment("CANCELLED")}
+                  >
+                    Cancel fulfillment
+                  </button>
+                </>
+              ) : null}
+              {order.status === "FULFILLED" ? (
+                <p className={controls.terminal}>
+                  Your fulfillment is complete and cannot be moved backward.
+                </p>
+              ) : null}
+              {order.status === "CANCELLED" ? (
+                <p className={controls.terminal}>
+                  Your fulfillment is cancelled and cannot be reopened.
+                </p>
+              ) : null}
+            </div>
+          </section>
         </div>
       </div>
     </DetailShell>
@@ -227,6 +318,13 @@ function formatDate(value: string) {
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function fulfillmentLabel(status: string) {
+  if (status === "FULFILLED") return "Fulfilled";
+  if (status === "CANCELLED") return "Cancelled";
+  if (status === "CONFIRMED") return "Confirmed";
+  return "Pending";
 }
 
 function statusClass(status: string) {

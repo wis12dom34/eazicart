@@ -1,0 +1,80 @@
+.panel {
+  margin-top: 14px;
+  padding: 20px;
+  border: 1px solid #e8ebf0;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.note {
+  margin: -4px 0 0;
+  color: #6b707a;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.readOnly {
+  display: block;
+  margin-top: 12px;
+  color: #4f5560;
+  font-size: 12px;
+}
+
+.actions {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.primary,
+.danger {
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primary {
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+}
+
+.danger {
+  border: 1px solid #ecd3d3;
+  background: #fff;
+  color: #9b3d3d;
+}
+
+.primary:disabled,
+.danger:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.error,
+.success,
+.terminal {
+  margin: 14px 0 0;
+  padding: 11px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.error {
+  background: #fff3f3;
+  color: #9b3d3d;
+}
+
+.success {
+  background: #f3faf6;
+  color: #257044;
+}
+
+.terminal {
+  background: #f7f8fa;
+  color: #626872;
+}

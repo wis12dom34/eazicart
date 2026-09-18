@@ -18,6 +18,12 @@ enum OrderStatus {
   FULFILLED
   CANCELLED
 }
+enum SellerFulfillmentStatus {
+  PENDING
+  CONFIRMED
+  FULFILLED
+  CANCELLED
+}
 enum NotificationType {
   ORDER
   SYSTEM
@@ -61,6 +67,7 @@ model SellerProfile {
   userId String @unique
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   products Product[]
+  fulfillments SellerFulfillment[]
 }
 
 model Category {
@@ -128,6 +135,7 @@ model Order {
   user User @relation(fields: [userId], references: [id])
   address Address @relation(fields: [addressId], references: [id])
   items OrderItem[]
+  fulfillments SellerFulfillment[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([userId, createdAt])
@@ -142,6 +150,20 @@ model OrderItem {
   productId String
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
+}
+
+model SellerFulfillment {
+  id String @id @default(cuid())
+  status SellerFulfillmentStatus @default(PENDING)
+  orderId String
+  sellerId String
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([orderId, sellerId])
+  @@index([sellerId, status])
+  @@index([orderId])
 }
 
 model Address {

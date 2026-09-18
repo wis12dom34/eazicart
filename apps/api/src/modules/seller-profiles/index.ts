@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@eazicart/database";
+import type { PrismaClient } from "@eazicart/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../errors.js";
@@ -67,7 +67,7 @@ export function registerSellerProfiles(
         "Create a seller profile first",
       );
 
-    const sellerOrderWhere: Prisma.OrderWhereInput = {
+    const sellerOrderWhere = {
       items: { some: { product: { sellerId: seller.id } } },
     };
     const [
@@ -91,18 +91,18 @@ export function registerSellerProfiles(
         where: { sellerId: seller.id, active: true },
         _sum: { stock: true },
       }),
-      db().order.count({ where: sellerOrderWhere }),
-      db().order.count({
-        where: { ...sellerOrderWhere, status: "PENDING" },
+      db().sellerFulfillment.count({ where: { sellerId: seller.id } }),
+      db().sellerFulfillment.count({
+        where: { sellerId: seller.id, status: "PENDING" },
       }),
-      db().order.count({
-        where: { ...sellerOrderWhere, status: "CONFIRMED" },
+      db().sellerFulfillment.count({
+        where: { sellerId: seller.id, status: "CONFIRMED" },
       }),
-      db().order.count({
-        where: { ...sellerOrderWhere, status: "FULFILLED" },
+      db().sellerFulfillment.count({
+        where: { sellerId: seller.id, status: "FULFILLED" },
       }),
-      db().order.count({
-        where: { ...sellerOrderWhere, status: "CANCELLED" },
+      db().sellerFulfillment.count({
+        where: { sellerId: seller.id, status: "CANCELLED" },
       }),
       db().order.findMany({
         where: sellerOrderWhere,
