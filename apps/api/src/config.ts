@@ -12,7 +12,7 @@ const environmentSchema = z.object({
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
   WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
-  PAYSTACK_BASE_URL: z.string().url().default("https://api.paystack.co"),
+  PAYSTACK_BASE_URL: z.string().url().optional(),
 });
 
 export type AppConfig = z.infer<typeof environmentSchema>;
