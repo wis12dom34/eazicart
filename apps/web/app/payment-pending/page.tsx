@@ -64,7 +64,9 @@ export default function PaymentPending() {
   if (!auth.isAuthenticated)
     return (
       <StatusShell icon="pending" title="Sign in to confirm payment">
-        <p>Sign in with the account that placed this order, then return here.</p>
+        <p>
+          Sign in with the account that placed this order, then return here.
+        </p>
         <Link className="dark-button" href="/login">
           Sign in
         </Link>
@@ -111,9 +113,7 @@ export default function PaymentPending() {
         Paystack has not confirmed this transaction yet. You can check again
         without creating another order.
       </p>
-      {error ? (
-        <p role="alert">{error}</p>
-      ) : null}
+      {error ? <p role="alert">{error}</p> : null}
       <button
         className="dark-button"
         type="button"
