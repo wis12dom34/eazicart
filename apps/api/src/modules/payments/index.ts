@@ -82,9 +82,10 @@ const paystackRequest = async <T>(
   init: RequestInit = {},
 ): Promise<T> => {
   const secret = requireSecret(config);
+  const baseUrl = config.PAYSTACK_BASE_URL ?? "https://api.paystack.co";
   let response: Response;
   try {
-    response = await fetch(`${config.PAYSTACK_BASE_URL}${path}`, {
+    response = await fetch(`${baseUrl}${path}`, {
       ...init,
       headers: {
         Authorization: `Bearer ${secret}`,
@@ -185,9 +186,7 @@ const markNonSuccess = async (
 ) => {
   const payment = await db.payment.findUnique({ where: { reference } });
   if (!payment || payment.status === "SUCCESS") return payment;
-  const terminal = ["failed", "abandoned", "reversed"].includes(
-    providerStatus,
-  );
+  const terminal = ["failed", "abandoned", "reversed"].includes(providerStatus);
   if (!terminal) return payment;
   return db.payment.update({
     where: { reference },
@@ -303,7 +302,8 @@ const finalizeVerifiedPayment = async (
         status: "REVIEW_REQUIRED",
         paidAt: verified.paid_at ? new Date(verified.paid_at) : new Date(),
         providerTransactionId: String(verified.id),
-        failureReason: "Inventory became unavailable after payment confirmation",
+        failureReason:
+          "Inventory became unavailable after payment confirmation",
       },
       include: { order: true },
     });
@@ -365,10 +365,7 @@ export function registerPayments(
     if (!order) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     if (order.payment?.status === "SUCCESS")
       return { data: paymentOutput(order.payment) };
-    if (
-      order.payment?.status === "PENDING" &&
-      order.payment.authorizationUrl
-    )
+    if (order.payment?.status === "PENDING" && order.payment.authorizationUrl)
       return { data: paymentOutput(order.payment) };
 
     const reference = `EC-${randomUUID()}`;
