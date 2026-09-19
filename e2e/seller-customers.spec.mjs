@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { markOrderPaid } from "./helpers/paid-order.mjs";
 
 const api = "http://localhost:3001";
 
@@ -72,7 +73,9 @@ async function createBuyerOrder(request, buyerToken, items) {
     data: { addressId },
   });
   expect(orderResponse.status()).toBe(201);
-  return (await orderResponse.json()).data;
+  const order = (await orderResponse.json()).data;
+  await markOrderPaid(order.id);
+  return order;
 }
 
 test("seller customer endpoints expose only real seller relationships", async ({

@@ -11,6 +11,16 @@ const include = {
   user: { select: { id: true, name: true } },
   _count: { select: { products: { where: { active: true } } } },
 };
+const paymentVisibility = (sellerId: string) => ({
+  OR: [
+    { payment: { status: "SUCCESS" as const } },
+    { payment: null, fulfillments: { some: { sellerId } } },
+  ],
+});
+const visibleFulfillmentWhere = (sellerId: string) => ({
+  sellerId,
+  order: paymentVisibility(sellerId),
+});
 export function registerSellerProfiles(
   app: FastifyInstance,
   client?: PrismaClient,
@@ -69,7 +79,9 @@ export function registerSellerProfiles(
 
     const sellerOrderWhere = {
       items: { some: { product: { sellerId: seller.id } } },
+      ...paymentVisibility(seller.id),
     };
+    const fulfillmentWhere = visibleFulfillmentWhere(seller.id);
     const [
       totalProducts,
       activeProducts,
@@ -91,18 +103,18 @@ export function registerSellerProfiles(
         where: { sellerId: seller.id, active: true },
         _sum: { stock: true },
       }),
-      db().sellerFulfillment.count({ where: { sellerId: seller.id } }),
+      db().sellerFulfillment.count({ where: fulfillmentWhere }),
       db().sellerFulfillment.count({
-        where: { sellerId: seller.id, status: "PENDING" },
+        where: { ...fulfillmentWhere, status: "PENDING" },
       }),
       db().sellerFulfillment.count({
-        where: { sellerId: seller.id, status: "CONFIRMED" },
+        where: { ...fulfillmentWhere, status: "CONFIRMED" },
       }),
       db().sellerFulfillment.count({
-        where: { sellerId: seller.id, status: "FULFILLED" },
+        where: { ...fulfillmentWhere, status: "FULFILLED" },
       }),
       db().sellerFulfillment.count({
-        where: { sellerId: seller.id, status: "CANCELLED" },
+        where: { ...fulfillmentWhere, status: "CANCELLED" },
       }),
       db().order.findMany({
         where: sellerOrderWhere,

@@ -187,6 +187,13 @@ const assertTransition = (current: string, next: string) => {
     );
 };
 
+const sellerPaymentVisibility = (sellerId: string) => ({
+  OR: [
+    { payment: { status: "SUCCESS" as const } },
+    { payment: null, fulfillments: { some: { sellerId } } },
+  ],
+});
+
 export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
   const db = () => requireDatabase(client),
     auth = protectedRoute(app);
@@ -205,7 +212,10 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
   app.get("/seller/orders", auth, async (r) => {
     const seller = await sellerForRequest(db(), userId(r));
     const rows = await db().order.findMany({
-      where: { fulfillments: { some: { sellerId: seller.id } } },
+      where: {
+        fulfillments: { some: { sellerId: seller.id } },
+        ...sellerPaymentVisibility(seller.id),
+      },
       include: sellerOrderInclude(seller.id),
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -217,7 +227,11 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     const { id } = z.object({ id: z.string() }).parse(r.params);
     const seller = await sellerForRequest(db(), userId(r));
     const row = await db().order.findFirst({
-      where: { id, fulfillments: { some: { sellerId: seller.id } } },
+      where: {
+        id,
+        fulfillments: { some: { sellerId: seller.id } },
+        ...sellerPaymentVisibility(seller.id),
+      },
       include: sellerOrderInclude(seller.id),
     });
     if (!row) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
@@ -230,8 +244,17 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     const seller = await sellerForRequest(db(), userId(r));
     const current = await db().sellerFulfillment.findUnique({
       where: { orderId_sellerId: { orderId: id, sellerId: seller.id } },
+      include: {
+        order: { select: { payment: { select: { status: true } } } },
+      },
     });
     if (!current) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+    if (current.order.payment && current.order.payment.status !== "SUCCESS")
+      throw new AppError(
+        409,
+        "PAYMENT_NOT_CONFIRMED",
+        "Seller fulfillment cannot start before payment is confirmed",
+      );
     assertTransition(current.status, status);
     if (current.status !== status) {
       await db().sellerFulfillment.update({
@@ -250,7 +273,10 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
   app.get("/seller/customers", auth, async (r) => {
     const seller = await sellerForRequest(db(), userId(r));
     const rows = await db().order.findMany({
-      where: { items: { some: { product: { sellerId: seller.id } } } },
+      where: {
+        items: { some: { product: { sellerId: seller.id } } },
+        ...sellerPaymentVisibility(seller.id),
+      },
       select: sellerCustomerSelect(seller.id),
       orderBy: { createdAt: "desc" },
     });
@@ -274,6 +300,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
       where: {
         userId: id,
         items: { some: { product: { sellerId: seller.id } } },
+        ...sellerPaymentVisibility(seller.id),
       },
       select: sellerCustomerSelect(seller.id),
       orderBy: { createdAt: "desc" },
@@ -341,12 +368,6 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
             },
           },
           include,
-        });
-        const sellerIds = Array.from(
-          new Set(cart.items.map((item) => item.product.sellerId)),
-        );
-        await tx.sellerFulfillment.createMany({
-          data: sellerIds.map((sellerId) => ({ orderId: order.id, sellerId })),
         });
         await tx.notification.create({
           data: {

@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 const api = "http://localhost:3001";
 const productId = "demo-product-woven-tote";
 
-test("payment methods stay honest and notifications use live account data", async ({
+test("payment settings stay honest and notifications use live account data", async ({
   page,
   request,
 }) => {
@@ -27,13 +27,11 @@ test("payment methods stay honest and notifications use live account data", asyn
     page.getByRole("button", { name: /Add payment method/ }),
   ).toBeDisabled();
   await expect(
-    page.getByText("Payment methods aren't available yet", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("No payment provider is connected in this MVP.", {
+    page.getByText("Saved payment methods aren't available yet", {
       exact: true,
     }),
   ).toBeVisible();
+  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
   await expect(page.getByText(/Balance ₦86,400/)).toHaveCount(0);
   await expect(page.getByText(/Visa •••• 2048/)).toHaveCount(0);
   await expect(

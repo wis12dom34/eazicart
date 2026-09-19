@@ -9,6 +9,7 @@ import { money } from "../data";
 import { cartApi } from "../../lib/api/cart";
 import { addressesApi } from "../../lib/api/addresses";
 import { ordersApi } from "../../lib/api/orders";
+import { paymentsApi } from "../../lib/api/payments";
 import { useRequest } from "../hooks/use-request";
 import {
   ErrorState,
@@ -72,12 +73,21 @@ export default function CheckoutPage() {
     setError("");
     try {
       const order = await ordersApi.create(address.id);
-      router.push(`/orders/${order.data.id}`);
+      const payment = await paymentsApi.initialize(order.data.id);
+      if (payment.data.status === "SUCCESS") {
+        router.push(
+          `/payment-success?orderId=${encodeURIComponent(order.data.id)}`,
+        );
+        return;
+      }
+      if (!payment.data.authorizationUrl)
+        throw new Error("Payment could not be started. Please try again.");
+      window.location.assign(payment.data.authorizationUrl);
     } catch (placeError) {
       setError(
         placeError instanceof Error
           ? placeError.message
-          : "Could not place order",
+          : "Could not start payment",
       );
       setSubmitting(false);
     }
@@ -113,10 +123,11 @@ export default function CheckoutPage() {
             <Icon name="card" size={20} />
           </span>
           <div>
-            <strong>No payment required yet</strong>
+            <strong>Pay securely with Paystack</strong>
             <p>
-              Placing this order will not charge you. Payments are not
-              connected.
+              You&apos;ll complete payment on Paystack. EaziCart confirms the
+              transaction on the server before the order is released for seller
+              processing.
             </p>
           </div>
         </div>
@@ -185,7 +196,7 @@ export default function CheckoutPage() {
           type="button"
           onClick={() => void place()}
         >
-          {submitting ? "Placing order…" : "Place Order"}
+          {submitting ? "Starting payment…" : "Pay with Paystack"}
         </button>
       </div>
     </CheckoutShell>

@@ -163,9 +163,31 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(page.locator(".address-card")).toContainText("1 Demo Street");
 
   await page.goto("/checkout");
-  await expect(page.getByText("No payment required yet")).toBeVisible();
-  await page.getByRole("button", { name: /Place order/ }).click();
-  await expect(page).toHaveURL(/\/orders\/[^/]+$/);
+  await expect(
+    page.getByText("Pay with Paystack", { exact: true }),
+  ).toBeVisible();
+  const accessToken = await page.evaluate(() => {
+    const stored = localStorage.getItem("eazicart.auth.tokens");
+    if (!stored) throw new Error("Missing auth tokens");
+    return JSON.parse(stored).accessToken;
+  });
+  const orderHeaders = { Authorization: `Bearer ${accessToken}` };
+  const addresses = await request.get(`${api}/addresses`, {
+    headers: orderHeaders,
+  });
+  expect(addresses.status()).toBe(200);
+  const addressId = (await addresses.json()).data.find(
+    (address) => address.isDefault,
+  )?.id;
+  expect(addressId).toBeTruthy();
+  const createdOrder = await request.post(`${api}/orders`, {
+    headers: orderHeaders,
+    data: { addressId },
+  });
+  expect(createdOrder.status()).toBe(201);
+  const order = (await createdOrder.json()).data;
+  await page.goto(`/orders/${order.id}`);
+  await expect(page).toHaveURL(`http://localhost:3000/orders/${order.id}`);
   const orderUrl = page.url();
   await expect(page.getByText("Processing", { exact: true })).toBeVisible();
   await expect(page.locator(".summary .total")).toContainText("37,000");

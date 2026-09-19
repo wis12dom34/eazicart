@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { markOrderPaid } from "./helpers/paid-order.mjs";
 
 const api = "http://localhost:3001";
 
@@ -70,7 +71,9 @@ async function createMixedOrder(request, buyerToken, products) {
     data: { addressId },
   });
   expect(order.status()).toBe(201);
-  return (await order.json()).data;
+  const created = (await order.json()).data;
+  await markOrderPaid(created.id);
+  return created;
 }
 
 test("seller fulfillment status is isolated per seller and never mutates buyer order status", async ({
@@ -106,7 +109,7 @@ test("seller fulfillment status is isolated per seller and never mutates buyer o
   );
   expect(sellerOneInitial.status()).toBe(200);
   expect((await sellerOneInitial.json()).data).toEqual(
-    expect.objectContaining({ status: "PENDING", globalStatus: "PENDING" }),
+    expect.objectContaining({ status: "PENDING", globalStatus: "CONFIRMED" }),
   );
 
   const sellerTwoInitial = await request.get(
@@ -151,7 +154,7 @@ test("seller fulfillment status is isolated per seller and never mutates buyer o
     headers: headers(buyerToken),
   });
   expect(buyerAfterConfirm.status()).toBe(200);
-  expect((await buyerAfterConfirm.json()).data.status).toBe("PENDING");
+  expect((await buyerAfterConfirm.json()).data.status).toBe("CONFIRMED");
 
   const fulfilled = await request.patch(
     `${api}/seller/orders/${order.id}/fulfillment`,
@@ -186,7 +189,7 @@ test("seller fulfillment status is isolated per seller and never mutates buyer o
     headers: headers(buyerToken),
   });
   expect(buyerFinal.status()).toBe(200);
-  expect((await buyerFinal.json()).data.status).toBe("PENDING");
+  expect((await buyerFinal.json()).data.status).toBe("CONFIRMED");
 
   const sellerOneDashboard = await request.get(`${api}/seller/dashboard`, {
     headers: headers(sellerOneToken),
@@ -269,5 +272,5 @@ test("seller can confirm and fulfill their own order from the workspace", async 
     headers: headers(buyerToken),
   });
   expect(buyerOrder.status()).toBe(200);
-  expect((await buyerOrder.json()).data.status).toBe("PENDING");
+  expect((await buyerOrder.json()).data.status).toBe("CONFIRMED");
 });
