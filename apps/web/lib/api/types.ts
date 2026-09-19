@@ -114,6 +114,32 @@ export type SellerSubscription = {
 export type SellerSubscriptionSummary = {
   subscription: SellerSubscription | null;
 };
+export type SellerFinanceTotals = {
+  currency: string;
+  paidGross: Money;
+  pendingGross: Money;
+  confirmedGross: Money;
+  fulfilledGross: Money;
+  cancelledGross: Money;
+};
+export type SellerFinanceSale = {
+  orderId: string;
+  fulfillmentStatus: SellerFulfillmentStatus;
+  subtotal: Money;
+  currency: string;
+  paidAt?: string | null;
+};
+export type SellerFinanceSummary = {
+  paidOrders: number;
+  totals: SellerFinanceTotals[];
+  settlement: {
+    platformFees: null;
+    netEarnings: null;
+    availableForPayout: null;
+    payoutsEnabled: false;
+  };
+  recentSales: SellerFinanceSale[];
+};
 export type SellerOrderItem = {
   id: string;
   productName: string;

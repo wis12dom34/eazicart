@@ -228,6 +228,10 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
           Subscription
           <Icon name="chevron" size={18} />
         </Link>
+        <Link className={styles.storeLink} href="/seller/finance">
+          Finance
+          <Icon name="chevron" size={18} />
+        </Link>
       </section>
 
       <section className={styles.metricGrid} aria-label="Seller summary">
