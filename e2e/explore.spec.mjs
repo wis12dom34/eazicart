@@ -13,7 +13,10 @@ test("Explore matches Figma and opens live search and category discovery", async
     `${api}/products?category=fashion&limit=20`,
   );
   expect(fashionResponse.status()).toBe(200);
-  const expectedFashionTotal = (await fashionResponse.json()).pagination.total;
+  const fashionData = await fashionResponse.json();
+  const expectedFashionTotal = fashionData.pagination.total;
+  const expectedFashionSeller = fashionData.data[0]?.seller.displayName;
+  expect(expectedFashionSeller).toBeTruthy();
 
   await page.goto("/explore");
 
@@ -89,7 +92,9 @@ test("Explore matches Figma and opens live search and category discovery", async
   await expect(
     page.getByRole("heading", { name: "Sellers in Fashion" }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: /Lagos Studio/ })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: new RegExp(expectedFashionSeller) }),
+  ).toBeVisible();
 });
 
 test("Explore recovers from a failed live product request", async ({
