@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { markOrderPaid } from "./helpers/paid-order.mjs";
 
 const api = "http://localhost:3001";
 
@@ -109,6 +110,7 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
     data: { addressId },
   });
   expect(order.status()).toBe(201);
+  await markOrderPaid((await order.json()).data.id);
 
   const sellerOneDashboard = await request.get(`${api}/seller/dashboard`, {
     headers: headers(sellerOneToken),
@@ -120,7 +122,7 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
       totalProducts: 1,
       activeProducts: 1,
       outOfStockProducts: 0,
-      unitsInStock: 7,
+      unitsInStock: 5,
     },
     orders: {
       total: 1,

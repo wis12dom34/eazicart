@@ -187,9 +187,12 @@ const assertTransition = (current: string, next: string) => {
     );
 };
 
-const sellerPaymentVisibility = {
-  OR: [{ payment: null }, { payment: { status: "SUCCESS" as const } }],
-};
+const sellerPaymentVisibility = (sellerId: string) => ({
+  OR: [
+    { payment: { status: "SUCCESS" as const } },
+    { payment: null, fulfillments: { some: { sellerId } } },
+  ],
+});
 
 export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
   const db = () => requireDatabase(client),
@@ -211,7 +214,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     const rows = await db().order.findMany({
       where: {
         fulfillments: { some: { sellerId: seller.id } },
-        ...sellerPaymentVisibility,
+        ...sellerPaymentVisibility(seller.id),
       },
       include: sellerOrderInclude(seller.id),
       orderBy: { createdAt: "desc" },
@@ -227,7 +230,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
       where: {
         id,
         fulfillments: { some: { sellerId: seller.id } },
-        ...sellerPaymentVisibility,
+        ...sellerPaymentVisibility(seller.id),
       },
       include: sellerOrderInclude(seller.id),
     });
@@ -272,7 +275,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     const rows = await db().order.findMany({
       where: {
         items: { some: { product: { sellerId: seller.id } } },
-        ...sellerPaymentVisibility,
+        ...sellerPaymentVisibility(seller.id),
       },
       select: sellerCustomerSelect(seller.id),
       orderBy: { createdAt: "desc" },
@@ -297,7 +300,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
       where: {
         userId: id,
         items: { some: { product: { sellerId: seller.id } } },
-        ...sellerPaymentVisibility,
+        ...sellerPaymentVisibility(seller.id),
       },
       select: sellerCustomerSelect(seller.id),
       orderBy: { createdAt: "desc" },
@@ -365,12 +368,6 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
             },
           },
           include,
-        });
-        const sellerIds = Array.from(
-          new Set(cart.items.map((item) => item.product.sellerId)),
-        );
-        await tx.sellerFulfillment.createMany({
-          data: sellerIds.map((sellerId) => ({ orderId: order.id, sellerId })),
         });
         await tx.notification.create({
           data: {

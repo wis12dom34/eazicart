@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { markOrderPaid } from "./helpers/paid-order.mjs";
 
 const api = "http://localhost:3001";
 
@@ -42,7 +43,7 @@ async function createProduct(request, token, name, price, stock = 10) {
   return (await response.json()).data;
 }
 
-async function createBuyerOrder(request, buyerToken, items) {
+async function createBuyerOrder(request, buyerToken, items, paid = true) {
   const addressResponse = await request.post(`${api}/addresses`, {
     headers: headers(buyerToken),
     data: {
@@ -70,8 +71,54 @@ async function createBuyerOrder(request, buyerToken, items) {
     data: { addressId },
   });
   expect(orderResponse.status()).toBe(201);
-  return (await orderResponse.json()).data;
+  const order = (await orderResponse.json()).data;
+  if (paid) await markOrderPaid(order.id);
+  return order;
 }
+
+test("unpaid orders stay out of seller fulfillment and customer views", async ({
+  request,
+}) => {
+  const sellerToken = await register(request, "Unpaid Order Seller");
+  await createSeller(request, sellerToken, "Unpaid Order Store");
+  const product = await createProduct(
+    request,
+    sellerToken,
+    "Unpaid hidden product",
+    "7500",
+  );
+  const buyerToken = await register(request, "Unpaid Order Buyer");
+  const order = await createBuyerOrder(
+    request,
+    buyerToken,
+    [{ productId: product.id, quantity: 1 }],
+    false,
+  );
+
+  const sellerOrder = await request.get(`${api}/seller/orders/${order.id}`, {
+    headers: headers(sellerToken),
+  });
+  expect(sellerOrder.status()).toBe(404);
+
+  const sellerOrders = await request.get(`${api}/seller/orders`, {
+    headers: headers(sellerToken),
+  });
+  expect(sellerOrders.status()).toBe(200);
+  expect((await sellerOrders.json()).data).toEqual([]);
+
+  const customers = await request.get(`${api}/seller/customers`, {
+    headers: headers(sellerToken),
+  });
+  expect(customers.status()).toBe(200);
+  expect((await customers.json()).data).toEqual([]);
+
+  const dashboard = await request.get(`${api}/seller/dashboard`, {
+    headers: headers(sellerToken),
+  });
+  expect(dashboard.status()).toBe(200);
+  expect((await dashboard.json()).data.orders.total).toBe(0);
+  expect((await dashboard.json()).data.customers.total).toBe(0);
+});
 
 test("seller order endpoints isolate mixed-seller orders", async ({
   request,

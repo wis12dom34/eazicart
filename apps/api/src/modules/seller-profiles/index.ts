@@ -11,12 +11,15 @@ const include = {
   user: { select: { id: true, name: true } },
   _count: { select: { products: { where: { active: true } } } },
 };
-const paymentVisibility = {
-  OR: [{ payment: null }, { payment: { status: "SUCCESS" as const } }],
-};
+const paymentVisibility = (sellerId: string) => ({
+  OR: [
+    { payment: { status: "SUCCESS" as const } },
+    { payment: null, fulfillments: { some: { sellerId } } },
+  ],
+});
 const visibleFulfillmentWhere = (sellerId: string) => ({
   sellerId,
-  order: paymentVisibility,
+  order: paymentVisibility(sellerId),
 });
 export function registerSellerProfiles(
   app: FastifyInstance,
@@ -76,7 +79,7 @@ export function registerSellerProfiles(
 
     const sellerOrderWhere = {
       items: { some: { product: { sellerId: seller.id } } },
-      ...paymentVisibility,
+      ...paymentVisibility(seller.id),
     };
     const fulfillmentWhere = visibleFulfillmentWhere(seller.id);
     const [
