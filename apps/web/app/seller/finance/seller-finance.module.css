@@ -1,0 +1,290 @@
+.page {
+  min-height: 100vh;
+  padding: 0 20px 56px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.topbar {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #eceef1;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.back {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  margin-left: -8px;
+  border-radius: 12px;
+  color: inherit;
+}
+
+.hero {
+  max-width: 720px;
+  padding: 42px 0 30px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #787e88;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.sectionHeading h2,
+.emptyCard h1,
+.emptyCard h2 {
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.hero h1 {
+  font-size: clamp(30px, 5vw, 48px);
+  line-height: 1.02;
+}
+
+.hero > p:last-child,
+.note,
+.emptyCard p {
+  color: #676d76;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.hero > p:last-child {
+  max-width: 650px;
+  margin: 16px 0 0;
+  font-size: 14px;
+}
+
+.overviewCard,
+.currencyCard,
+.settlementCard,
+.salesSection,
+.emptyCard {
+  border: 1px solid #e5e8ec;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.overviewCard {
+  min-height: 112px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+}
+
+.overviewCard strong {
+  display: block;
+  font-size: 34px;
+  letter-spacing: -0.04em;
+}
+
+.totalsSection,
+.settlementCard,
+.salesSection {
+  margin-top: 34px;
+}
+
+.sectionHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sectionHeading h2 {
+  font-size: 22px;
+}
+
+.currencyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.currencyCard {
+  padding: 22px;
+}
+
+.currencyTopline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.currencyTopline span {
+  color: #737983;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.currencyTopline strong {
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.breakdown {
+  margin: 22px 0 0;
+  border-top: 1px solid #eceef1;
+}
+
+.breakdown > div {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #eceef1;
+}
+
+.breakdown dt,
+.breakdown dd {
+  margin: 0;
+  font-size: 12px;
+}
+
+.breakdown dt {
+  color: #737983;
+}
+
+.breakdown dd {
+  font-weight: 700;
+}
+
+.settlementCard,
+.salesSection,
+.emptyCard {
+  padding: 22px;
+}
+
+.note {
+  margin: 0;
+  max-width: 720px;
+}
+
+.unavailableGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.unavailableItem {
+  min-height: 92px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f7f8fa;
+}
+
+.unavailableItem span,
+.unavailableItem strong {
+  display: block;
+  font-size: 12px;
+}
+
+.unavailableItem span {
+  color: #7b818a;
+  margin-bottom: 8px;
+}
+
+.salesList {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid #eceef1;
+  border-radius: 16px;
+  background: #eceef1;
+}
+
+.saleRow {
+  min-height: 70px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: #fff;
+}
+
+.saleRow div {
+  display: grid;
+  gap: 5px;
+}
+
+.saleRow span,
+.saleRow small {
+  color: #7a8089;
+  font-size: 11px;
+}
+
+.saleRow span {
+  text-transform: capitalize;
+}
+
+.emptyCard {
+  margin-top: 24px;
+  background: #fafafa;
+}
+
+.emptyCard h2,
+.emptyCard h1 {
+  font-size: 22px;
+}
+
+.primaryLink {
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  border-radius: 14px;
+  background: #111;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (min-width: 900px) {
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .currencyGrid,
+  .unavailableGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding-top: 28px;
+  }
+
+  .saleRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
