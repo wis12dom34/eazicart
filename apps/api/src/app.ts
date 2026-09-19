@@ -14,6 +14,7 @@ import { registerPayments } from "./modules/payments/index.js";
 import { registerProducts } from "./modules/products/index.js";
 import { registerSavedProducts } from "./modules/saved-products/index.js";
 import { registerSellerProfiles } from "./modules/seller-profiles/index.js";
+import { registerSellerSubscriptions } from "./modules/seller-subscriptions/index.js";
 import { registerUsers } from "./modules/users.js";
 import type { PrismaClient } from "@eazicart/database";
 
@@ -69,6 +70,7 @@ export function buildApp(
   registerAuth(app, config, store);
   registerUsers(app, store, dependencies.database);
   registerSellerProfiles(app, dependencies.database);
+  registerSellerSubscriptions(app, dependencies.database);
   registerCategories(app, dependencies.database);
   registerProducts(app, dependencies.database);
   registerCart(app, dependencies.database);

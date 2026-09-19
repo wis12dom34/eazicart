@@ -87,6 +87,33 @@ export type Payment = {
 };
 export type SellerFulfillmentStatus =
   "PENDING" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
+export type SellerPlanCode = "BASIC" | "PRO" | "BUSINESS";
+export type SellerPlan = {
+  code: SellerPlanCode;
+  name: string;
+  monthlyPrice: Money | null;
+  productLimit: number | null;
+  campaignLimit: number | null;
+  advancedAnalytics: boolean | null;
+  published: boolean;
+  displayOrder: number;
+  purchasable: boolean;
+};
+export type SellerSubscriptionStatus =
+  "PENDING" | "ACTIVE" | "CANCELLED" | "EXPIRED";
+export type SellerSubscription = {
+  id: string;
+  status: SellerSubscriptionStatus;
+  startsAt?: string | null;
+  currentPeriodEnd?: string | null;
+  cancelledAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  plan: SellerPlan;
+};
+export type SellerSubscriptionSummary = {
+  subscription: SellerSubscription | null;
+};
 export type SellerOrderItem = {
   id: string;
   productName: string;
