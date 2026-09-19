@@ -30,6 +30,17 @@ enum SellerFulfillmentStatus {
   FULFILLED
   CANCELLED
 }
+enum SellerPlanCode {
+  BASIC
+  PRO
+  BUSINESS
+}
+enum SellerSubscriptionStatus {
+  PENDING
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
 enum NotificationType {
   ORDER
   SYSTEM
@@ -74,6 +85,7 @@ model SellerProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   products Product[]
   fulfillments SellerFulfillment[]
+  subscriptions SellerSubscription[]
 }
 
 model Category {
@@ -190,6 +202,37 @@ model SellerFulfillment {
   @@unique([orderId, sellerId])
   @@index([sellerId, status])
   @@index([orderId])
+}
+
+model SellerPlan {
+  code SellerPlanCode @id
+  name String
+  monthlyPrice Decimal? @db.Decimal(12, 2)
+  productLimit Int?
+  campaignLimit Int?
+  advancedAnalytics Boolean?
+  published Boolean @default(false)
+  displayOrder Int
+  subscriptions SellerSubscription[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([published, displayOrder])
+}
+
+model SellerSubscription {
+  id String @id @default(cuid())
+  status SellerSubscriptionStatus @default(PENDING)
+  sellerId String
+  planCode SellerPlanCode
+  startsAt DateTime?
+  currentPeriodEnd DateTime?
+  cancelledAt DateTime?
+  seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  plan SellerPlan @relation(fields: [planCode], references: [code])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([sellerId, status])
+  @@index([planCode, status])
 }
 
 model Address {
