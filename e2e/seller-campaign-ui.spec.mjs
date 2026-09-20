@@ -53,7 +53,9 @@ test("seller can create a real product-backed campaign draft from the workspace"
 
   await createCampaign.click();
   await expect(page).toHaveURL("http://localhost:3000/seller/campaigns/new");
-  await expect(page.getByLabel("Product")).toContainText("Campaign test tote");
+  await expect(page.locator('select[name="productId"]')).toContainText(
+    "Campaign test tote",
+  );
   await page.getByLabel("Campaign name").fill("New season tote push");
   await page.getByLabel("More orders").check();
   await expect(page.getByLabel("Country")).toHaveValue("Nigeria");
