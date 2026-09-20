@@ -115,17 +115,9 @@ export type SellerSubscriptionSummary = {
   subscription: SellerSubscription | null;
 };
 export type SellerCampaignObjective =
-  | "PRODUCT_VIEWS"
-  | "STORE_VISITS"
-  | "ORDERS"
-  | "FOLLOWERS";
+  "PRODUCT_VIEWS" | "STORE_VISITS" | "ORDERS" | "FOLLOWERS";
 export type SellerCampaignStatus =
-  | "DRAFT"
-  | "SCHEDULED"
-  | "ACTIVE"
-  | "PAUSED"
-  | "COMPLETED"
-  | "CANCELLED";
+  "DRAFT" | "SCHEDULED" | "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED";
 export type SellerCampaign = {
   id: string;
   name: string;
