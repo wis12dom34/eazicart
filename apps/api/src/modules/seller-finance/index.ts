@@ -13,6 +13,8 @@ type Totals = {
   cancelledGross: Prisma.Decimal;
 };
 
+const financeBatchSize = 250;
+
 const zeroTotals = (): Totals => ({
   paidGross: new Prisma.Decimal(0),
   pendingGross: new Prisma.Decimal(0),
@@ -36,6 +38,26 @@ const addStatusGross = (
     totals.cancelledGross = totals.cancelledGross.add(amount);
 };
 
+const financeWhere = (sellerId: string) => ({
+  payment: { status: "SUCCESS" as const },
+  fulfillments: { some: { sellerId } },
+  items: { some: { product: { sellerId } } },
+});
+
+const financeSelect = (sellerId: string) => ({
+  id: true,
+  payment: { select: { currency: true, paidAt: true } },
+  fulfillments: {
+    where: { sellerId },
+    select: { status: true },
+    take: 1,
+  },
+  items: {
+    where: { product: { sellerId } },
+    select: { quantity: true, unitPrice: true },
+  },
+});
+
 export function registerSellerFinance(
   app: FastifyInstance,
   client?: PrismaClient,
@@ -54,63 +76,71 @@ export function registerSellerFinance(
         "Create a seller profile first",
       );
 
-    const orders = await db().order.findMany({
-      where: {
-        payment: { status: "SUCCESS" },
-        fulfillments: { some: { sellerId: seller.id } },
-        items: { some: { product: { sellerId: seller.id } } },
-      },
-      select: {
-        id: true,
-        payment: { select: { currency: true, paidAt: true } },
-        fulfillments: {
-          where: { sellerId: seller.id },
-          select: { status: true },
-          take: 1,
-        },
-        items: {
-          where: { product: { sellerId: seller.id } },
-          select: { quantity: true, unitPrice: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    });
-
+    const where = financeWhere(seller.id);
     const totalsByCurrency = new Map<string, Totals>();
-    const recentSales = [] as Array<{
-      orderId: string;
-      fulfillmentStatus: FulfillmentStatus;
-      subtotal: string;
-      currency: string;
-      paidAt: Date | null;
-    }>;
+    let paidOrders = 0;
+    let cursor: string | undefined;
 
-    for (const order of orders) {
+    while (true) {
+      const orders = await db().order.findMany({
+        where,
+        select: financeSelect(seller.id),
+        orderBy: { id: "asc" },
+        take: financeBatchSize,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
+
+      if (!orders.length) break;
+
+      for (const order of orders) {
+        const payment = order.payment;
+        const fulfillment = order.fulfillments[0];
+        if (!payment || !fulfillment) continue;
+
+        const subtotal = order.items.reduce(
+          (sum, item) => sum.add(item.unitPrice.mul(item.quantity)),
+          new Prisma.Decimal(0),
+        );
+        const totals = totalsByCurrency.get(payment.currency) ?? zeroTotals();
+        totals.paidGross = totals.paidGross.add(subtotal);
+        addStatusGross(totals, fulfillment.status, subtotal);
+        totalsByCurrency.set(payment.currency, totals);
+        paidOrders += 1;
+      }
+
+      if (orders.length < financeBatchSize) break;
+      cursor = orders[orders.length - 1]?.id;
+      if (!cursor) break;
+    }
+
+    const recentOrders = await db().order.findMany({
+      where,
+      select: financeSelect(seller.id),
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 20,
+    });
+    const recentSales = recentOrders.flatMap((order) => {
       const payment = order.payment;
       const fulfillment = order.fulfillments[0];
-      if (!payment || !fulfillment) continue;
+      if (!payment || !fulfillment) return [];
       const subtotal = order.items.reduce(
         (sum, item) => sum.add(item.unitPrice.mul(item.quantity)),
         new Prisma.Decimal(0),
       );
-      const totals = totalsByCurrency.get(payment.currency) ?? zeroTotals();
-      totals.paidGross = totals.paidGross.add(subtotal);
-      addStatusGross(totals, fulfillment.status, subtotal);
-      totalsByCurrency.set(payment.currency, totals);
-      if (recentSales.length < 20)
-        recentSales.push({
+      return [
+        {
           orderId: order.id,
           fulfillmentStatus: fulfillment.status,
           subtotal: subtotal.toString(),
           currency: payment.currency,
           paidAt: payment.paidAt,
-        });
-    }
+        },
+      ];
+    });
 
     return {
       data: {
-        paidOrders: orders.length,
+        paidOrders,
         totals: Array.from(totalsByCurrency.entries()).map(
           ([currency, totals]) => ({
             currency,
