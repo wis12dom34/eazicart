@@ -36,20 +36,21 @@ test("seller can create a real product-backed campaign draft from the workspace"
   await page.getByLabel("Price (NGN)").fill("38500");
   await page.getByLabel("Stock").fill("12");
   await page.getByRole("button", { name: "Create product" }).click();
-  await expect(page.getByText("Campaign test tote", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Campaign test tote", { exact: true }),
+  ).toBeVisible();
 
   await page.goto("/seller/campaigns");
   await expect(page.getByRole("heading", { name: "Campaigns" })).toBeVisible();
   await expect(
     page.getByText("Campaign delivery is not configured yet"),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Create campaign" })).toHaveAttribute(
-    "href",
-    "/seller/campaigns/create",
-  );
+  await expect(
+    page.getByRole("link", { name: "Create campaign" }),
+  ).toHaveAttribute("href", "/seller/campaigns/new");
 
   await page.getByRole("link", { name: "Create campaign" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/seller/campaigns/create");
+  await expect(page).toHaveURL("http://localhost:3000/seller/campaigns/new");
   await expect(page.getByLabel("Product")).toContainText("Campaign test tote");
   await page.getByLabel("Campaign name").fill("New season tote push");
   await page.getByLabel("More orders").check();
@@ -61,8 +62,10 @@ test("seller can create a real product-backed campaign draft from the workspace"
 
   await page.getByRole("button", { name: "Save campaign draft" }).click();
   await expect(page).toHaveURL("http://localhost:3000/seller/campaigns");
-  await expect(page.getByText("New season tote push", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("New season tote push", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("More orders", { exact: true })).toBeVisible();
-  await expect(page.getByText("DRAFT", { exact: true })).toBeVisible();
+  await expect(page.getByText("Draft", { exact: true })).toBeVisible();
   await expect(page.getByText("Performance not available yet")).toBeVisible();
 });
