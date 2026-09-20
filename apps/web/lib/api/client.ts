@@ -2,6 +2,7 @@ const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001"
 ).replace(/\/$/, "");
 const TOKEN_KEY = "eazicart.auth.tokens";
+const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 
 export class ApiError extends Error {
   constructor(
@@ -20,8 +21,50 @@ type RequestOptions = Omit<RequestInit, "body"> & {
   query?: Record<string, string | number | undefined>;
   auth?: boolean;
   retry?: boolean;
+  timeoutMs?: number;
 };
 let refreshPromise: Promise<boolean> | null = null;
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+) {
+  const controller = new AbortController();
+  const externalSignal = init.signal;
+  let timedOut = false;
+  const abortFromCaller = () => controller.abort(externalSignal?.reason);
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+
+  if (externalSignal?.aborted) abortFromCaller();
+  else externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (timedOut) {
+      throw new ApiError(
+        408,
+        "REQUEST_TIMEOUT",
+        "The server took too long to respond. Check your connection and try again.",
+      );
+    }
+    if (error instanceof TypeError) {
+      throw new ApiError(
+        0,
+        "NETWORK_ERROR",
+        "Unable to reach EaziCart. Check your connection and try again.",
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+    externalSignal?.removeEventListener("abort", abortFromCaller);
+  }
+}
 
 export const tokenStore = {
   get: () => {
@@ -56,7 +99,7 @@ async function refresh(): Promise<boolean> {
   const token = tokenStore.get()?.refreshToken;
   if (!token) return false;
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken: token }),
@@ -84,6 +127,7 @@ export async function apiRequest<T>(
     body,
     auth = false,
     retry = true,
+    timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
     headers: customHeaders,
     ...init
   } = options;
@@ -99,11 +143,15 @@ export async function apiRequest<T>(
   const accessToken = tokenStore.get()?.accessToken;
   if (auth && accessToken)
     headers.set("Authorization", `Bearer ${accessToken}`);
-  const response = await fetch(url, {
-    ...init,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  const response = await fetchWithTimeout(
+    url,
+    {
+      ...init,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    },
+    timeoutMs,
+  );
   if (response.status === 401 && auth && retry) {
     refreshPromise ??= refresh().finally(() => {
       refreshPromise = null;

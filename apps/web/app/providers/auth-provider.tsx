@@ -58,9 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await request;
       tokenStore.set(result.tokens);
       setUser(result.user);
-      await reloadUser();
     },
-    [reloadUser],
+    [],
   );
   const value = useMemo<AuthValue>(
     () => ({

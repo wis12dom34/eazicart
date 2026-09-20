@@ -103,4 +103,24 @@ describe("API client", () => {
       new Headers(fetchMock.mock.calls[0]?.[1]?.headers).has("Authorization"),
     ).toBe(false);
   });
+
+  it("aborts stalled requests and returns a useful timeout error", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockImplementation((_input, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("Aborted", "AbortError")),
+          );
+        }),
+      ),
+    );
+
+    await expect(apiRequest("/slow", { timeoutMs: 5 })).rejects.toMatchObject({
+      status: 408,
+      code: "REQUEST_TIMEOUT",
+      message:
+        "The server took too long to respond. Check your connection and try again.",
+    });
+  });
 });
