@@ -70,4 +70,21 @@ test("seller can create a real product-backed campaign draft from the workspace"
   await expect(page.getByText("More orders", { exact: true })).toBeVisible();
   await expect(page.getByText("Draft", { exact: true })).toBeVisible();
   await expect(page.getByText("Performance not available yet")).toBeVisible();
+
+  const campaignCard = page
+    .locator("article")
+    .filter({ hasText: "New season tote push" });
+  page.once("dialog", (dialog) => dialog.accept());
+  await campaignCard.getByRole("button", { name: "Delete draft" }).click();
+  await expect(
+    page.getByText("New season tote push", { exact: true }),
+  ).toHaveCount(0);
+
+  await page.goto("/seller/products");
+  const productCard = page.locator("article").filter({
+    has: page.getByText("Campaign test tote", { exact: true }),
+  });
+  page.once("dialog", (dialog) => dialog.accept());
+  await productCard.getByRole("button", { name: "Deactivate" }).click();
+  await expect(productCard.getByText("Inactive", { exact: true })).toBeVisible();
 });
