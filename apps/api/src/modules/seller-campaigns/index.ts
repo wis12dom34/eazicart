@@ -43,9 +43,7 @@ function serializeCampaign<
   T extends {
     dailyBudget: { toString(): string; mul(value: number): { toString(): string } };
     durationDays: number;
-    product: {
-      price: { toString(): string };
-    };
+    product: { price: { toString(): string } };
   },
 >(campaign: T) {
   return {
@@ -186,7 +184,13 @@ export function registerSellerCampaigns(
       const seller = await sellerForRequest(db(), userId(request));
       const existing = await db().campaign.findFirst({
         where: { id, sellerId: seller.id },
-        select: { id: true, status: true, productId: true },
+        select: {
+          id: true,
+          status: true,
+          productId: true,
+          audienceAgeMin: true,
+          audienceAgeMax: true,
+        },
       });
       if (!existing) {
         throw new AppError(404, "CAMPAIGN_NOT_FOUND", "Campaign not found");
@@ -198,11 +202,9 @@ export function registerSellerCampaigns(
           "Only draft campaigns can be edited",
         );
       }
-      if (
-        input.audienceAgeMin !== undefined &&
-        input.audienceAgeMax !== undefined &&
-        input.audienceAgeMin > input.audienceAgeMax
-      ) {
+      const audienceAgeMin = input.audienceAgeMin ?? existing.audienceAgeMin;
+      const audienceAgeMax = input.audienceAgeMax ?? existing.audienceAgeMax;
+      if (audienceAgeMin > audienceAgeMax) {
         throw new AppError(
           400,
           "INVALID_AUDIENCE_AGE_RANGE",
