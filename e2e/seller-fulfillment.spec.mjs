@@ -234,6 +234,9 @@ test("seller can confirm and fulfill their own order from the workspace", async 
   await page.goto("/seller/dashboard");
   await page.getByLabel("Store name").fill("Fulfillment UI Store");
   await page.getByRole("button", { name: "Create seller profile" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Fulfillment UI Store", exact: true }),
+  ).toBeVisible();
   const sellerToken = await page.evaluate(() => {
     const raw = localStorage.getItem("eazicart.auth.tokens");
     return raw ? JSON.parse(raw).accessToken : null;
