@@ -1,11 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { PrismaClient } from "../packages/database/dist/index.js";
 import { markOrderPaid } from "./helpers/paid-order.mjs";
 
 const api = process.env.E2E_API_BASE ?? "http://localhost:3001";
 const web = process.env.E2E_WEB_BASE ?? "http://localhost:3000";
 
-async function register(request, name) {
+async function registerAccount(request, name) {
   const response = await request.post(`${api}/auth/register`, {
     data: {
       email: `${name.toLowerCase().replaceAll(" ", "-")}-${randomUUID()}@eazicart.invalid`,
@@ -14,7 +15,12 @@ async function register(request, name) {
     },
   });
   expect(response.status()).toBe(201);
-  return (await response.json()).tokens.accessToken;
+  const body = await response.json();
+  return { token: body.tokens.accessToken, user: body.user };
+}
+
+async function register(request, name) {
+  return (await registerAccount(request, name)).token;
 }
 
 function headers(token) {
@@ -44,11 +50,11 @@ async function createProduct(request, token, name, price) {
   return (await response.json()).data;
 }
 
-async function createOrder(request, buyerToken, productId, quantity = 1) {
+async function createAddress(request, token, label = "Finance test") {
   const address = await request.post(`${api}/addresses`, {
-    headers: headers(buyerToken),
+    headers: headers(token),
     data: {
-      label: "Finance test",
+      label,
       line1: "11 Finance Street",
       city: "Lagos",
       region: "Lagos",
@@ -57,7 +63,11 @@ async function createOrder(request, buyerToken, productId, quantity = 1) {
     },
   });
   expect(address.status()).toBe(201);
-  const addressId = (await address.json()).data.id;
+  return (await address.json()).data;
+}
+
+async function createOrder(request, buyerToken, productId, quantity = 1) {
+  const address = await createAddress(request, buyerToken);
 
   const cart = await request.post(`${api}/cart/items`, {
     headers: headers(buyerToken),
@@ -67,7 +77,7 @@ async function createOrder(request, buyerToken, productId, quantity = 1) {
 
   const order = await request.post(`${api}/orders`, {
     headers: headers(buyerToken),
-    data: { addressId },
+    data: { addressId: address.id },
   });
   expect(order.status()).toBe(201);
   return (await order.json()).data;
@@ -179,6 +189,96 @@ test("seller finance only counts verified paid sales and follows fulfillment sta
     availableForPayout: null,
     payoutsEnabled: false,
   });
+});
+
+test("seller finance totals include verified sales beyond the recent history window", async ({
+  request,
+}) => {
+  const db = new PrismaClient();
+  try {
+    const sellerToken = await register(request, "Finance History Seller");
+    const seller = await createSeller(
+      request,
+      sellerToken,
+      "Finance History Store",
+    );
+    const product = await createProduct(
+      request,
+      sellerToken,
+      "Finance history product",
+      "1000",
+    );
+    const buyer = await registerAccount(request, "Finance History Buyer");
+    const address = await createAddress(
+      request,
+      buyer.token,
+      "Finance history address",
+    );
+
+    const sales = Array.from({ length: 101 }, (_, index) => {
+      const orderId = `finance-history-order-${randomUUID()}`;
+      return {
+        orderId,
+        reference: `finance-history-payment-${randomUUID()}`,
+        createdAt: new Date(Date.now() - index * 1000),
+      };
+    });
+
+    await db.$transaction([
+      db.order.createMany({
+        data: sales.map(({ orderId, createdAt }) => ({
+          id: orderId,
+          status: "CONFIRMED",
+          total: "1000",
+          userId: buyer.user.id,
+          addressId: address.id,
+          createdAt,
+        })),
+      }),
+      db.orderItem.createMany({
+        data: sales.map(({ orderId }) => ({
+          quantity: 1,
+          unitPrice: "1000",
+          productName: product.name,
+          orderId,
+          productId: product.id,
+        })),
+      }),
+      db.payment.createMany({
+        data: sales.map(({ orderId, reference, createdAt }) => ({
+          reference,
+          status: "SUCCESS",
+          amount: "1000",
+          currency: "NGN",
+          paidAt: createdAt,
+          orderId,
+        })),
+      }),
+      db.sellerFulfillment.createMany({
+        data: sales.map(({ orderId }) => ({
+          status: "PENDING",
+          orderId,
+          sellerId: seller.id,
+        })),
+      }),
+    ]);
+
+    const summary = await finance(request, sellerToken);
+    expect(summary.paidOrders).toBe(101);
+    expect(summary.totals).toEqual([
+      {
+        currency: "NGN",
+        paidGross: "101000",
+        pendingGross: "101000",
+        confirmedGross: "0",
+        fulfilledGross: "0",
+        cancelledGross: "0",
+      },
+    ]);
+    expect(summary.recentSales).toHaveLength(20);
+  } finally {
+    await db.$disconnect();
+  }
 });
 
 test("seller finance screen shows verified-only empty state and no fake payout balance", async ({
