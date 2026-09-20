@@ -45,11 +45,11 @@ test("seller can create a real product-backed campaign draft from the workspace"
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Create campaign" })).toHaveAttribute(
     "href",
-    "/seller/campaigns/new",
+    "/seller/campaigns/create",
   );
 
   await page.getByRole("link", { name: "Create campaign" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/seller/campaigns/new");
+  await expect(page).toHaveURL("http://localhost:3000/seller/campaigns/create");
   await expect(page.getByLabel("Product")).toContainText("Campaign test tote");
   await page.getByLabel("Campaign name").fill("New season tote push");
   await page.getByLabel("More orders").check();
@@ -57,12 +57,12 @@ test("seller can create a real product-backed campaign draft from the workspace"
   await expect(page.getByLabel("Minimum age")).toHaveValue("18");
   await expect(page.getByLabel("Maximum age")).toHaveValue("44");
   await expect(page.getByLabel("Daily budget (NGN)")).toHaveValue("5000");
-  await expect(page.getByLabel("Duration")).toHaveValue("7");
+  await expect(page.getByLabel("Duration (days)")).toHaveValue("7");
 
   await page.getByRole("button", { name: "Save campaign draft" }).click();
   await expect(page).toHaveURL("http://localhost:3000/seller/campaigns");
   await expect(page.getByText("New season tote push", { exact: true })).toBeVisible();
   await expect(page.getByText("More orders", { exact: true })).toBeVisible();
-  await expect(page.getByText("Draft", { exact: true })).toBeVisible();
+  await expect(page.getByText("DRAFT", { exact: true })).toBeVisible();
   await expect(page.getByText("Performance not available yet")).toBeVisible();
 });
