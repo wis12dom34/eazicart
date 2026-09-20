@@ -112,13 +112,15 @@ export async function getSellerPaidSummary(
 
   return {
     paidOrders,
-    totals: Array.from(totalsByCurrency.entries()).map(([currency, totals]) => ({
-      currency,
-      paidGross: totals.paidGross.toString(),
-      pendingGross: totals.pendingGross.toString(),
-      confirmedGross: totals.confirmedGross.toString(),
-      fulfilledGross: totals.fulfilledGross.toString(),
-      cancelledGross: totals.cancelledGross.toString(),
-    })),
+    totals: Array.from(totalsByCurrency.entries()).map(
+      ([currency, totals]) => ({
+        currency,
+        paidGross: totals.paidGross.toString(),
+        pendingGross: totals.pendingGross.toString(),
+        confirmedGross: totals.confirmedGross.toString(),
+        fulfilledGross: totals.fulfilledGross.toString(),
+        cancelledGross: totals.cancelledGross.toString(),
+      }),
+    ),
   };
 }
