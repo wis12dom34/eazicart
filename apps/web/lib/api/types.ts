@@ -191,6 +191,10 @@ export type Notification = {
   createdAt: string;
   type?: string;
 };
+export type SellerDashboardRevenue = {
+  currency: string;
+  gross: Money;
+};
 export type SellerDashboard = {
   seller: Pick<Seller, "id" | "displayName">;
   inventory: {
@@ -208,7 +212,7 @@ export type SellerDashboard = {
   };
   customers: { total: number };
   analytics: {
-    revenue: null;
+    revenue: SellerDashboardRevenue[];
     productViews: null;
     impressions: null;
     profileVisits: null;
