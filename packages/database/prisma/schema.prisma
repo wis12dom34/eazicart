@@ -41,6 +41,20 @@ enum SellerSubscriptionStatus {
   CANCELLED
   EXPIRED
 }
+enum CampaignObjective {
+  PRODUCT_VIEWS
+  STORE_VISITS
+  ORDERS
+  FOLLOWERS
+}
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
 enum NotificationType {
   ORDER
   SYSTEM
@@ -86,6 +100,7 @@ model SellerProfile {
   products Product[]
   fulfillments SellerFulfillment[]
   subscriptions SellerSubscription[]
+  campaigns Campaign[]
 }
 
 model Category {
@@ -110,6 +125,7 @@ model Product {
   cartItems CartItem[]
   orderItems OrderItem[]
   savedBy SavedProduct[]
+  campaigns Campaign[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([active, createdAt])
@@ -233,6 +249,29 @@ model SellerSubscription {
   updatedAt DateTime @updatedAt
   @@index([sellerId, status])
   @@index([planCode, status])
+}
+
+model Campaign {
+  id String @id @default(cuid())
+  name String
+  objective CampaignObjective
+  status CampaignStatus @default(DRAFT)
+  audienceCountry String @default("Nigeria")
+  audienceAgeMin Int @default(18)
+  audienceAgeMax Int @default(44)
+  audienceInterests String?
+  dailyBudget Decimal @db.Decimal(12, 2)
+  durationDays Int
+  startsAt DateTime?
+  endsAt DateTime?
+  sellerId String
+  productId String
+  seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([sellerId, status, createdAt])
+  @@index([productId])
 }
 
 model Address {
