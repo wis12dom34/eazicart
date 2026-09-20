@@ -47,7 +47,8 @@ export default function SellerCampaignsPage() {
   );
 
   const removeDraft = async (campaign: SellerCampaign) => {
-    if (!window.confirm(`Delete the draft campaign “${campaign.name}”?`)) return;
+    if (!window.confirm(`Delete the draft campaign “${campaign.name}”?`))
+      return;
     setDeletingId(campaign.id);
     setActionError("");
     try {
@@ -124,8 +125,11 @@ export default function SellerCampaignsPage() {
   }
 
   const items = campaigns.data.data;
-  const draftCount = items.filter((campaign) => campaign.status === "DRAFT").length;
-  const uniqueProducts = new Set(items.map((campaign) => campaign.productId)).size;
+  const draftCount = items.filter(
+    (campaign) => campaign.status === "DRAFT",
+  ).length;
+  const uniqueProducts = new Set(items.map((campaign) => campaign.productId))
+    .size;
 
   return (
     <main className={`app-shell ${styles.page}`}>
@@ -271,10 +275,13 @@ function CampaignCard({
             <div>
               <h3>{campaign.name}</h3>
               <p>
-                {campaign.product.name} · {campaign.audienceCountry} · Ages {campaign.audienceAgeMin}–{campaign.audienceAgeMax}
+                {campaign.product.name} · {campaign.audienceCountry} · Ages{" "}
+                {campaign.audienceAgeMin}–{campaign.audienceAgeMax}
               </p>
             </div>
-            <span className={styles.statusBadge}>{statusLabel(campaign.status)}</span>
+            <span className={styles.statusBadge}>
+              {statusLabel(campaign.status)}
+            </span>
           </div>
 
           <div className={styles.metaGrid}>
@@ -282,12 +289,18 @@ function CampaignCard({
               label="Objective"
               value={objectiveLabels[campaign.objective]}
             />
-            <CampaignMeta label="Daily budget" value={money(campaign.dailyBudget)} />
+            <CampaignMeta
+              label="Daily budget"
+              value={money(campaign.dailyBudget)}
+            />
             <CampaignMeta
               label="Duration"
               value={`${campaign.durationDays} ${campaign.durationDays === 1 ? "day" : "days"}`}
             />
-            <CampaignMeta label="Total budget" value={money(campaign.totalBudget)} />
+            <CampaignMeta
+              label="Total budget"
+              value={money(campaign.totalBudget)}
+            />
           </div>
         </div>
       </div>
@@ -299,7 +312,9 @@ function CampaignCard({
         >
           View product
         </Link>
-        <span className={styles.secondaryLink}>Performance not available yet</span>
+        <span className={styles.secondaryLink}>
+          Performance not available yet
+        </span>
         {campaign.status === "DRAFT" ? (
           <button
             type="button"
