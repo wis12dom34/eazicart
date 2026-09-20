@@ -41,7 +41,10 @@ const campaignInclude = {
 
 function serializeCampaign<
   T extends {
-    dailyBudget: { toString(): string; mul(value: number): { toString(): string } };
+    dailyBudget: {
+      toString(): string;
+      mul(value: number): { toString(): string };
+    };
     durationDays: number;
     product: { price: { toString(): string } };
   },
@@ -76,11 +79,7 @@ async function sellerForRequest(db: PrismaClient, requestUserId: string) {
     select: { id: true },
   });
   if (!seller) {
-    throw new AppError(
-      403,
-      "SELLER_REQUIRED",
-      "Create a seller profile first",
-    );
+    throw new AppError(403, "SELLER_REQUIRED", "Create a seller profile first");
   }
   return seller;
 }
@@ -120,31 +119,95 @@ export function registerSellerCampaigns(
     return { data: serializeCampaign(campaign) };
   });
 
-  app.post(
-    "/seller/campaigns",
-    protectedRoute(app),
-    async (request, reply) => {
-      const input = campaignBody.parse(request.body);
-      if (input.audienceAgeMin > input.audienceAgeMax) {
-        throw new AppError(
-          400,
-          "INVALID_AUDIENCE_AGE_RANGE",
-          "Minimum audience age cannot exceed maximum audience age",
-        );
-      }
-      const budget = new Prisma.Decimal(input.dailyBudget);
-      if (budget.lte(0)) {
-        throw new AppError(
-          400,
-          "INVALID_CAMPAIGN_BUDGET",
-          "Daily budget must be greater than zero",
-        );
-      }
+  app.post("/seller/campaigns", protectedRoute(app), async (request, reply) => {
+    const input = campaignBody.parse(request.body);
+    if (input.audienceAgeMin > input.audienceAgeMax) {
+      throw new AppError(
+        400,
+        "INVALID_AUDIENCE_AGE_RANGE",
+        "Minimum audience age cannot exceed maximum audience age",
+      );
+    }
+    const budget = new Prisma.Decimal(input.dailyBudget);
+    if (budget.lte(0)) {
+      throw new AppError(
+        400,
+        "INVALID_CAMPAIGN_BUDGET",
+        "Daily budget must be greater than zero",
+      );
+    }
 
-      const seller = await sellerForRequest(db(), userId(request));
+    const seller = await sellerForRequest(db(), userId(request));
+    const product = await db().product.findFirst({
+      where: { id: input.productId, sellerId: seller.id, active: true },
+      select: { id: true, name: true },
+    });
+    if (!product) {
+      throw new AppError(
+        404,
+        "PRODUCT_NOT_FOUND",
+        "Choose an active product from your store",
+      );
+    }
+
+    const campaign = await db().campaign.create({
+      data: {
+        sellerId: seller.id,
+        productId: product.id,
+        name: input.name ?? `${product.name} Campaign`,
+        objective: input.objective,
+        status: "DRAFT",
+        audienceCountry: input.audienceCountry,
+        audienceAgeMin: input.audienceAgeMin,
+        audienceAgeMax: input.audienceAgeMax,
+        audienceInterests: input.audienceInterests,
+        dailyBudget: budget,
+        durationDays: input.durationDays,
+      },
+      include: campaignInclude,
+    });
+
+    return reply.code(201).send({ data: serializeCampaign(campaign) });
+  });
+
+  app.patch("/seller/campaigns/:id", protectedRoute(app), async (request) => {
+    const { id } = params.parse(request.params);
+    const input = campaignBody.partial().parse(request.body);
+    const seller = await sellerForRequest(db(), userId(request));
+    const existing = await db().campaign.findFirst({
+      where: { id, sellerId: seller.id },
+      select: {
+        id: true,
+        status: true,
+        productId: true,
+        audienceAgeMin: true,
+        audienceAgeMax: true,
+      },
+    });
+    if (!existing) {
+      throw new AppError(404, "CAMPAIGN_NOT_FOUND", "Campaign not found");
+    }
+    if (existing.status !== "DRAFT") {
+      throw new AppError(
+        409,
+        "CAMPAIGN_NOT_EDITABLE",
+        "Only draft campaigns can be edited",
+      );
+    }
+    const audienceAgeMin = input.audienceAgeMin ?? existing.audienceAgeMin;
+    const audienceAgeMax = input.audienceAgeMax ?? existing.audienceAgeMax;
+    if (audienceAgeMin > audienceAgeMax) {
+      throw new AppError(
+        400,
+        "INVALID_AUDIENCE_AGE_RANGE",
+        "Minimum audience age cannot exceed maximum audience age",
+      );
+    }
+
+    if (input.productId && input.productId !== existing.productId) {
       const product = await db().product.findFirst({
         where: { id: input.productId, sellerId: seller.id, active: true },
-        select: { id: true, name: true },
+        select: { id: true },
       });
       if (!product) {
         throw new AppError(
@@ -153,102 +216,30 @@ export function registerSellerCampaigns(
           "Choose an active product from your store",
         );
       }
+    }
 
-      const campaign = await db().campaign.create({
-        data: {
-          sellerId: seller.id,
-          productId: product.id,
-          name: input.name ?? `${product.name} Campaign`,
-          objective: input.objective,
-          status: "DRAFT",
-          audienceCountry: input.audienceCountry,
-          audienceAgeMin: input.audienceAgeMin,
-          audienceAgeMax: input.audienceAgeMax,
-          audienceInterests: input.audienceInterests,
-          dailyBudget: budget,
-          durationDays: input.durationDays,
-        },
-        include: campaignInclude,
-      });
+    const dailyBudget =
+      input.dailyBudget === undefined
+        ? undefined
+        : new Prisma.Decimal(input.dailyBudget);
+    if (dailyBudget?.lte(0)) {
+      throw new AppError(
+        400,
+        "INVALID_CAMPAIGN_BUDGET",
+        "Daily budget must be greater than zero",
+      );
+    }
 
-      return reply.code(201).send({ data: serializeCampaign(campaign) });
-    },
-  );
-
-  app.patch(
-    "/seller/campaigns/:id",
-    protectedRoute(app),
-    async (request) => {
-      const { id } = params.parse(request.params);
-      const input = campaignBody.partial().parse(request.body);
-      const seller = await sellerForRequest(db(), userId(request));
-      const existing = await db().campaign.findFirst({
-        where: { id, sellerId: seller.id },
-        select: {
-          id: true,
-          status: true,
-          productId: true,
-          audienceAgeMin: true,
-          audienceAgeMax: true,
-        },
-      });
-      if (!existing) {
-        throw new AppError(404, "CAMPAIGN_NOT_FOUND", "Campaign not found");
-      }
-      if (existing.status !== "DRAFT") {
-        throw new AppError(
-          409,
-          "CAMPAIGN_NOT_EDITABLE",
-          "Only draft campaigns can be edited",
-        );
-      }
-      const audienceAgeMin = input.audienceAgeMin ?? existing.audienceAgeMin;
-      const audienceAgeMax = input.audienceAgeMax ?? existing.audienceAgeMax;
-      if (audienceAgeMin > audienceAgeMax) {
-        throw new AppError(
-          400,
-          "INVALID_AUDIENCE_AGE_RANGE",
-          "Minimum audience age cannot exceed maximum audience age",
-        );
-      }
-
-      if (input.productId && input.productId !== existing.productId) {
-        const product = await db().product.findFirst({
-          where: { id: input.productId, sellerId: seller.id, active: true },
-          select: { id: true },
-        });
-        if (!product) {
-          throw new AppError(
-            404,
-            "PRODUCT_NOT_FOUND",
-            "Choose an active product from your store",
-          );
-        }
-      }
-
-      const dailyBudget =
-        input.dailyBudget === undefined
-          ? undefined
-          : new Prisma.Decimal(input.dailyBudget);
-      if (dailyBudget?.lte(0)) {
-        throw new AppError(
-          400,
-          "INVALID_CAMPAIGN_BUDGET",
-          "Daily budget must be greater than zero",
-        );
-      }
-
-      const campaign = await db().campaign.update({
-        where: { id },
-        data: {
-          ...input,
-          dailyBudget,
-        },
-        include: campaignInclude,
-      });
-      return { data: serializeCampaign(campaign) };
-    },
-  );
+    const campaign = await db().campaign.update({
+      where: { id },
+      data: {
+        ...input,
+        dailyBudget,
+      },
+      include: campaignInclude,
+    });
+    return { data: serializeCampaign(campaign) };
+  });
 
   app.delete(
     "/seller/campaigns/:id",
