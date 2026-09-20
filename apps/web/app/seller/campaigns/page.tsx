@@ -2,9 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
-  EmptyState,
   ErrorState,
   LoadingState,
   SignInState,
@@ -12,6 +11,7 @@ import {
 import { Icon } from "../../components/icon";
 import { useRequest } from "../../hooks/use-request";
 import { useAuth } from "../../providers/auth-provider";
+import { money } from "../../data";
 import { sellerCampaignsApi } from "../../../lib/api/seller-campaigns";
 import { sellerDashboardApi } from "../../../lib/api/seller-dashboard";
 import type {
@@ -64,38 +64,34 @@ export default function SellerCampaignsPage() {
 
   if (auth.loading || (auth.isAuthenticated && profile.loading)) {
     return (
-      <main className={`app-shell ${styles.page}`}>
-        <CampaignHeader />
+      <PageShell>
         <LoadingState label="Loading campaigns…" />
-      </main>
+      </PageShell>
     );
   }
 
   if (!auth.user) {
     return (
-      <main className={`app-shell ${styles.page}`}>
-        <CampaignHeader />
+      <PageShell>
         <SignInState message="Sign in to manage seller campaigns." />
-      </main>
+      </PageShell>
     );
   }
 
   if (profile.error) {
     return (
-      <main className={`app-shell ${styles.page}`}>
-        <CampaignHeader />
+      <PageShell>
         <ErrorState
           message={profile.error}
           retry={() => void profile.reload()}
         />
-      </main>
+      </PageShell>
     );
   }
 
   if (!profile.data?.data) {
     return (
-      <main className={`app-shell ${styles.page}`}>
-        <CampaignHeader />
+      <PageShell>
         <section className={styles.setupPrompt}>
           <p className={styles.eyebrow}>Seller account required</p>
           <h1>Create your store before creating campaigns</h1>
@@ -104,36 +100,32 @@ export default function SellerCampaignsPage() {
             Open seller workspace
           </Link>
         </section>
-      </main>
+      </PageShell>
     );
   }
 
   if (campaigns.loading || (!campaigns.data && !campaigns.error)) {
     return (
-      <main className={`app-shell ${styles.page}`}>
-        <CampaignHeader />
+      <PageShell>
         <LoadingState label="Loading campaign workspace…" />
-      </main>
+      </PageShell>
     );
   }
 
   if (campaigns.error || !campaigns.data) {
     return (
-      <main className={`app-shell ${styles.page}`}>
-        <CampaignHeader />
+      <PageShell>
         <ErrorState
           message={campaigns.error || "Campaigns are unavailable."}
           retry={() => void campaigns.reload()}
         />
-      </main>
+      </PageShell>
     );
   }
 
   const items = campaigns.data.data;
-  const plannedBudget = items.reduce(
-    (sum, campaign) => sum + Number(campaign.totalBudget),
-    0,
-  );
+  const draftCount = items.filter((campaign) => campaign.status === "DRAFT").length;
+  const uniqueProducts = new Set(items.map((campaign) => campaign.productId)).size;
 
   return (
     <main className={`app-shell ${styles.page}`}>
@@ -149,7 +141,7 @@ export default function SellerCampaignsPage() {
             engine.
           </p>
         </div>
-        <Link className={styles.primaryLink} href="/seller/campaigns/create">
+        <Link className={styles.primaryLink} href="/seller/campaigns/new">
           <Icon name="plus" size={18} />
           Create campaign
         </Link>
@@ -169,12 +161,9 @@ export default function SellerCampaignsPage() {
       </aside>
 
       <section className={styles.summaryGrid} aria-label="Campaign summary">
-        <SummaryCard label="Campaign drafts" value={items.length.toString()} />
-        <SummaryCard
-          label="Planned budget"
-          value={formatMoney(plannedBudget)}
-        />
-        <SummaryCard label="Delivery" value="Not live yet" />
+        <SummaryCard label="Campaign drafts" value={draftCount} />
+        <SummaryCard label="Products planned" value={uniqueProducts} />
+        <SummaryCard label="Delivery" value="Off" />
       </section>
 
       {actionError ? (
@@ -194,8 +183,12 @@ export default function SellerCampaignsPage() {
 
         {!items.length ? (
           <div className={styles.emptyState}>
-            <EmptyState message="No campaign drafts yet. Create one to plan your first promotion." />
-            <Link className={styles.primaryLink} href="/seller/campaigns/create">
+            <h3>No campaign drafts yet</h3>
+            <p>
+              Choose one of your active products, set an objective and audience,
+              then save the plan as a draft.
+            </p>
+            <Link className={styles.primaryLink} href="/seller/campaigns/new">
               Create campaign
             </Link>
           </div>
@@ -216,6 +209,15 @@ export default function SellerCampaignsPage() {
   );
 }
 
+function PageShell({ children }: { children: ReactNode }) {
+  return (
+    <main className={`app-shell ${styles.page}`}>
+      <CampaignHeader />
+      {children}
+    </main>
+  );
+}
+
 function CampaignHeader() {
   return (
     <header className={styles.topbar}>
@@ -232,7 +234,7 @@ function CampaignHeader() {
   );
 }
 
-function SummaryCard({ label, value }: { label: string; value: string }) {
+function SummaryCard({ label, value }: { label: string; value: ReactNode }) {
   return (
     <article className={styles.summaryCard}>
       <span>{label}</span>
@@ -268,9 +270,11 @@ function CampaignCard({
           <div className={styles.titleRow}>
             <div>
               <h3>{campaign.name}</h3>
-              <p>{campaign.product.name}</p>
+              <p>
+                {campaign.product.name} · {campaign.audienceCountry} · Ages {campaign.audienceAgeMin}–{campaign.audienceAgeMax}
+              </p>
             </div>
-            <span className={styles.statusBadge}>{campaign.status}</span>
+            <span className={styles.statusBadge}>{statusLabel(campaign.status)}</span>
           </div>
 
           <div className={styles.metaGrid}>
@@ -278,32 +282,34 @@ function CampaignCard({
               label="Objective"
               value={objectiveLabels[campaign.objective]}
             />
+            <CampaignMeta label="Daily budget" value={money(campaign.dailyBudget)} />
             <CampaignMeta
-              label="Audience"
-              value={`${campaign.audienceCountry} · ${campaign.audienceAgeMin}–${campaign.audienceAgeMax}`}
+              label="Duration"
+              value={`${campaign.durationDays} ${campaign.durationDays === 1 ? "day" : "days"}`}
             />
-            <CampaignMeta
-              label="Daily budget"
-              value={formatMoney(Number(campaign.dailyBudget))}
-            />
-            <CampaignMeta label="Duration" value={`${campaign.durationDays} days`} />
+            <CampaignMeta label="Total budget" value={money(campaign.totalBudget)} />
           </div>
         </div>
       </div>
 
       <div className={styles.campaignActions}>
-        <span className={styles.secondaryLink}>
-          Total {formatMoney(Number(campaign.totalBudget))}
-        </span>
-        <span className={styles.secondaryLink}>Performance not available yet</span>
-        <button
-          type="button"
-          className={styles.deleteButton}
-          disabled={deleting || campaign.status !== "DRAFT"}
-          onClick={onDelete}
+        <Link
+          className={styles.secondaryLink}
+          href={`/product/${campaign.product.id}`}
         >
-          {deleting ? "Deleting…" : "Delete draft"}
-        </button>
+          View product
+        </Link>
+        <span className={styles.secondaryLink}>Performance not available yet</span>
+        {campaign.status === "DRAFT" ? (
+          <button
+            type="button"
+            className={styles.deleteButton}
+            disabled={deleting}
+            onClick={onDelete}
+          >
+            {deleting ? "Deleting…" : "Delete draft"}
+          </button>
+        ) : null}
       </div>
     </article>
   );
@@ -318,10 +324,6 @@ function CampaignMeta({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 2,
-  }).format(value);
+function statusLabel(status: SellerCampaign["status"]) {
+  return status.charAt(0) + status.slice(1).toLowerCase();
 }
