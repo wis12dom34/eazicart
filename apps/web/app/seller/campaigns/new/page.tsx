@@ -86,7 +86,9 @@ export default function CreateSellerCampaignPage() {
       router.refresh();
     } catch (value) {
       setActionError(
-        value instanceof Error ? value.message : "Unable to save campaign draft",
+        value instanceof Error
+          ? value.message
+          : "Unable to save campaign draft",
       );
     } finally {
       setSubmitting(false);
@@ -130,7 +132,9 @@ export default function CreateSellerCampaignPage() {
         <section className={styles.setupPrompt}>
           <p className={styles.eyebrow}>Seller account required</p>
           <h1>Create your store before creating campaigns</h1>
-          <p>Campaigns stay connected to your existing EaziCart seller profile.</p>
+          <p>
+            Campaigns stay connected to your existing EaziCart seller profile.
+          </p>
           <Link className={styles.primaryLink} href="/seller/dashboard">
             Open seller workspace
           </Link>
@@ -170,7 +174,9 @@ export default function CreateSellerCampaignPage() {
   const budget = Number(dailyBudget);
   const duration = Number(durationDays);
   const totalBudget =
-    Number.isFinite(budget) && Number.isFinite(duration) ? budget * duration : 0;
+    Number.isFinite(budget) && Number.isFinite(duration)
+      ? budget * duration
+      : 0;
 
   if (!activeProducts.length) {
     return (
@@ -269,10 +275,14 @@ export default function CreateSellerCampaignPage() {
                 name="name"
                 maxLength={160}
                 placeholder={
-                  selectedProduct ? `${selectedProduct.name} Campaign` : "Campaign name"
+                  selectedProduct
+                    ? `${selectedProduct.name} Campaign`
+                    : "Campaign name"
                 }
               />
-              <small>Optional. EaziCart can name the draft from the product.</small>
+              <small>
+                Optional. EaziCart can name the draft from the product.
+              </small>
             </label>
           </div>
 
@@ -352,7 +362,9 @@ export default function CreateSellerCampaignPage() {
                 defaultValue="Shopping interests"
                 placeholder="Shopping interests"
               />
-              <small>Optional planning note. This does not target anyone yet.</small>
+              <small>
+                Optional planning note. This does not target anyone yet.
+              </small>
             </label>
           </div>
 
