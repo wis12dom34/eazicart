@@ -2,6 +2,7 @@ import type { PrismaClient } from "@eazicart/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../errors.js";
+import { getSellerPaidSummary } from "../seller-finance/summary.js";
 import { protectedRoute, requireDatabase, userId } from "../shared.js";
 const body = z.object({
   displayName: z.string().trim().min(2).max(120),
@@ -93,6 +94,7 @@ export function registerSellerProfiles(
       fulfilledOrders,
       cancelledOrders,
       customers,
+      financeSummary,
     ] = await Promise.all([
       db().product.count({ where: { sellerId: seller.id } }),
       db().product.count({ where: { sellerId: seller.id, active: true } }),
@@ -121,6 +123,7 @@ export function registerSellerProfiles(
         select: { userId: true },
         distinct: ["userId"],
       }),
+      getSellerPaidSummary(db(), seller.id),
     ]);
 
     return {
@@ -141,7 +144,10 @@ export function registerSellerProfiles(
         },
         customers: { total: customers.length },
         analytics: {
-          revenue: null,
+          revenue: financeSummary.totals.map(({ currency, paidGross }) => ({
+            currency,
+            gross: paidGross,
+          })),
           productViews: null,
           impressions: null,
           profileVisits: null,
