@@ -96,7 +96,7 @@ export default function SellerCampaignsPage() {
     return (
       <main className={`app-shell ${styles.page}`}>
         <CampaignHeader />
-        <section className={styles.setupCard}>
+        <section className={styles.setupPrompt}>
           <p className={styles.eyebrow}>Seller account required</p>
           <h1>Create your store before creating campaigns</h1>
           <p>Campaign ownership stays tied to your existing seller profile.</p>
@@ -155,16 +155,7 @@ export default function SellerCampaignsPage() {
         </Link>
       </section>
 
-      <section className={styles.summaryGrid} aria-label="Campaign summary">
-        <SummaryCard label="Campaign drafts" value={items.length.toString()} />
-        <SummaryCard
-          label="Planned budget"
-          value={formatMoney(plannedBudget)}
-        />
-        <SummaryCard label="Delivery" value="Not live yet" />
-      </section>
-
-      <aside className={styles.deliveryNotice}>
+      <aside className={styles.notice}>
         <div className={styles.noticeIcon}>
           <Icon name="sparkle" size={20} />
         </div>
@@ -177,13 +168,22 @@ export default function SellerCampaignsPage() {
         </div>
       </aside>
 
+      <section className={styles.summaryGrid} aria-label="Campaign summary">
+        <SummaryCard label="Campaign drafts" value={items.length.toString()} />
+        <SummaryCard
+          label="Planned budget"
+          value={formatMoney(plannedBudget)}
+        />
+        <SummaryCard label="Delivery" value="Not live yet" />
+      </section>
+
       {actionError ? (
-        <p className={styles.actionError} role="alert">
+        <p className={styles.error} role="alert">
           {actionError}
         </p>
       ) : null}
 
-      <section className={styles.campaignSection}>
+      <section className={styles.listSection}>
         <div className={styles.sectionHeading}>
           <div>
             <p className={styles.eyebrow}>Saved campaigns</p>
@@ -193,7 +193,7 @@ export default function SellerCampaignsPage() {
         </div>
 
         {!items.length ? (
-          <div className={styles.emptyWrap}>
+          <div className={styles.emptyState}>
             <EmptyState message="No campaign drafts yet. Create one to plan your first promotion." />
             <Link className={styles.primaryLink} href="/seller/campaigns/create">
               Create campaign
@@ -252,65 +252,69 @@ function CampaignCard({
 }) {
   return (
     <article className={styles.campaignCard}>
-      <div className={styles.productThumb}>
-        {campaign.product.images[0] ? (
-          <img
-            src={campaign.product.images[0].url}
-            alt={campaign.product.images[0].altText || campaign.product.name}
-          />
-        ) : (
-          <Icon name="box" size={28} />
-        )}
-      </div>
-
-      <div className={styles.campaignBody}>
-        <div className={styles.cardTopline}>
-          <div>
-            <span className={styles.statusBadge}>{campaign.status}</span>
-            <h3>{campaign.name}</h3>
-            <p>{campaign.product.name}</p>
-          </div>
-          <button
-            type="button"
-            className={styles.deleteButton}
-            disabled={deleting || campaign.status !== "DRAFT"}
-            onClick={onDelete}
-          >
-            {deleting ? "Deleting…" : "Delete draft"}
-          </button>
+      <div className={styles.campaignMain}>
+        <div className={styles.productImage}>
+          {campaign.product.images[0] ? (
+            <img
+              src={campaign.product.images[0].url}
+              alt={campaign.product.images[0].altText || campaign.product.name}
+            />
+          ) : (
+            <Icon name="box" size={28} />
+          )}
         </div>
 
-        <dl className={styles.detailsGrid}>
-          <div>
-            <dt>Objective</dt>
-            <dd>{objectiveLabels[campaign.objective]}</dd>
+        <div className={styles.campaignInfo}>
+          <div className={styles.titleRow}>
+            <div>
+              <h3>{campaign.name}</h3>
+              <p>{campaign.product.name}</p>
+            </div>
+            <span className={styles.statusBadge}>{campaign.status}</span>
           </div>
-          <div>
-            <dt>Audience</dt>
-            <dd>
-              {campaign.audienceCountry} · Ages {campaign.audienceAgeMin}–
-              {campaign.audienceAgeMax}
-            </dd>
+
+          <div className={styles.metaGrid}>
+            <CampaignMeta
+              label="Objective"
+              value={objectiveLabels[campaign.objective]}
+            />
+            <CampaignMeta
+              label="Audience"
+              value={`${campaign.audienceCountry} · ${campaign.audienceAgeMin}–${campaign.audienceAgeMax}`}
+            />
+            <CampaignMeta
+              label="Daily budget"
+              value={formatMoney(Number(campaign.dailyBudget))}
+            />
+            <CampaignMeta label="Duration" value={`${campaign.durationDays} days`} />
           </div>
-          <div>
-            <dt>Daily budget</dt>
-            <dd>{formatMoney(Number(campaign.dailyBudget))}</dd>
-          </div>
-          <div>
-            <dt>Duration</dt>
-            <dd>{campaign.durationDays} days</dd>
-          </div>
-          <div>
-            <dt>Total budget</dt>
-            <dd>{formatMoney(Number(campaign.totalBudget))}</dd>
-          </div>
-          <div>
-            <dt>Performance</dt>
-            <dd>Not available yet</dd>
-          </div>
-        </dl>
+        </div>
+      </div>
+
+      <div className={styles.campaignActions}>
+        <span className={styles.secondaryLink}>
+          Total {formatMoney(Number(campaign.totalBudget))}
+        </span>
+        <span className={styles.secondaryLink}>Performance not available yet</span>
+        <button
+          type="button"
+          className={styles.deleteButton}
+          disabled={deleting || campaign.status !== "DRAFT"}
+          onClick={onDelete}
+        >
+          {deleting ? "Deleting…" : "Delete draft"}
+        </button>
       </div>
     </article>
+  );
+}
+
+function CampaignMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className={styles.metaItem}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 
