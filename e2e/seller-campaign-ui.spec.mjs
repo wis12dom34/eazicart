@@ -86,5 +86,7 @@ test("seller can create a real product-backed campaign draft from the workspace"
   });
   page.once("dialog", (dialog) => dialog.accept());
   await productCard.getByRole("button", { name: "Deactivate" }).click();
-  await expect(productCard.getByText("Inactive", { exact: true })).toBeVisible();
+  await expect(
+    productCard.getByText("Inactive", { exact: true }),
+  ).toBeVisible();
 });
