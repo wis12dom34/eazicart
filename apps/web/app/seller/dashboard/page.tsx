@@ -11,7 +11,10 @@ import { Icon } from "../../components/icon";
 import { useRequest } from "../../hooks/use-request";
 import { useAuth } from "../../providers/auth-provider";
 import { sellerDashboardApi } from "../../../lib/api/seller-dashboard";
-import type { SellerDashboard } from "../../../lib/api/types";
+import type {
+  SellerDashboard,
+  SellerDashboardRevenue,
+} from "../../../lib/api/types";
 import styles from "./seller-dashboard.module.css";
 
 export default function SellerDashboardPage() {
@@ -330,11 +333,12 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
           <Icon name="sparkle" size={22} />
         </div>
         <p className={styles.analyticsNote}>
-          Revenue and engagement analytics will appear after EaziCart has real
-          payment and event data. Nothing is estimated or fabricated here.
+          Verified gross sales come from successful payments. Engagement
+          analytics will appear after EaziCart has real event data. Nothing is
+          estimated or fabricated here.
         </p>
         <div className={styles.analyticsGrid}>
-          <UnavailableMetric label="Revenue" />
+          <VerifiedRevenueMetric revenue={dashboard.analytics.revenue} />
           <UnavailableMetric label="Product views" />
           <UnavailableMetric label="Impressions" />
           <UnavailableMetric label="Profile visits" />
@@ -373,6 +377,27 @@ function DataRow({ label, value }: { label: string; value: number }) {
   );
 }
 
+function VerifiedRevenueMetric({
+  revenue,
+}: {
+  revenue: SellerDashboardRevenue[];
+}) {
+  return (
+    <div className={styles.unavailableMetric}>
+      <span>Verified gross sales</span>
+      {revenue.length ? (
+        revenue.map((total) => (
+          <strong key={total.currency}>
+            {formatMoney(total.gross, total.currency)}
+          </strong>
+        ))
+      ) : (
+        <strong>No verified sales yet</strong>
+      )}
+    </div>
+  );
+}
+
 function UnavailableMetric({ label }: { label: string }) {
   return (
     <div className={styles.unavailableMetric}>
@@ -380,4 +405,17 @@ function UnavailableMetric({ label }: { label: string }) {
       <strong>Not available yet</strong>
     </div>
   );
+}
+
+function formatMoney(value: string, currency: string) {
+  const amount = Number(value);
+  try {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toLocaleString("en-NG")}`;
+  }
 }
