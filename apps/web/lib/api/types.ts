@@ -114,6 +114,54 @@ export type SellerSubscription = {
 export type SellerSubscriptionSummary = {
   subscription: SellerSubscription | null;
 };
+export type SellerCampaignObjective =
+  | "PRODUCT_VIEWS"
+  | "STORE_VISITS"
+  | "ORDERS"
+  | "FOLLOWERS";
+export type SellerCampaignStatus =
+  | "DRAFT"
+  | "SCHEDULED"
+  | "ACTIVE"
+  | "PAUSED"
+  | "COMPLETED"
+  | "CANCELLED";
+export type SellerCampaign = {
+  id: string;
+  name: string;
+  objective: SellerCampaignObjective;
+  status: SellerCampaignStatus;
+  audienceCountry: string;
+  audienceAgeMin: number;
+  audienceAgeMax: number;
+  audienceInterests?: string | null;
+  dailyBudget: Money;
+  totalBudget: Money;
+  durationDays: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  sellerId: string;
+  productId: string;
+  product: {
+    id: string;
+    name: string;
+    price: Money;
+    active: boolean;
+    images: Array<Pick<Image, "url" | "altText">>;
+  };
+  delivery: { enabled: false; reason: string };
+  metrics: {
+    spend: null;
+    revenue: null;
+    impressions: null;
+    productVisits: null;
+    orders: null;
+    conversionRate: null;
+    roas: null;
+  };
+  createdAt: string;
+  updatedAt: string;
+};
 export type SellerFinanceTotals = {
   currency: string;
   paidGross: Money;
