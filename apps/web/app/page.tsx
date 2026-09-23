@@ -407,7 +407,9 @@ export default function HomePage() {
                         <button
                           className="figma-home-add"
                           type="button"
-                          disabled={product.stock < 1 || busyCart === product.id}
+                          disabled={
+                            product.stock < 1 || busyCart === product.id
+                          }
                           onClick={() => void addToCart(product)}
                         >
                           {product.stock < 1 ? (
@@ -417,7 +419,7 @@ export default function HomePage() {
                           ) : (
                             <>
                               <Icon name="plus" size={16} />
-                              Add to cart
+                              Add to Cart
                             </>
                           )}
                         </button>
