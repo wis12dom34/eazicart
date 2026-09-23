@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
+import "./design-tokens.css";
 import "./styles.css";
 import { AuthProvider } from "./providers/auth-provider";
 

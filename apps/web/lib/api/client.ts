@@ -40,7 +40,8 @@ async function fetchWithTimeout(
   }, timeoutMs);
 
   if (externalSignal?.aborted) abortFromCaller();
-  else externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
+  else
+    externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
 
   try {
     return await fetch(input, { ...init, signal: controller.signal });
