@@ -231,6 +231,10 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
           Subscription
           <Icon name="chevron" size={18} />
         </Link>
+        <Link className={styles.storeLink} href="/seller/campaigns">
+          Campaigns
+          <Icon name="chevron" size={18} />
+        </Link>
         <Link className={styles.storeLink} href="/seller/finance">
           Finance
           <Icon name="chevron" size={18} />

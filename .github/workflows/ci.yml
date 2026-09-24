@@ -85,8 +85,16 @@ jobs:
       - name: Install browser
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Real customer flow against PostgreSQL
-        run: pnpm test:e2e
+      - name: Desktop customer flow against PostgreSQL
+        run: pnpm exec playwright test --project=chromium
+
+      - name: Reset test database for mobile flow
+        run: |
+          pnpm --filter @eazicart/database exec prisma migrate reset --force --skip-seed
+          pnpm --filter @eazicart/database seed:ci
+
+      - name: Mobile customer flow against PostgreSQL
+        run: pnpm exec playwright test --project=mobile-chromium
 
       - name: Formatting diagnostics on failure
         if: failure()
