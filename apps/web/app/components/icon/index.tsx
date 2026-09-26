@@ -24,6 +24,18 @@ const paths: Record<string, React.ReactNode> = {
       <path d="M9 9V6a3 3 0 0 1 6 0v3" />
     </>
   ),
+  cart: (
+    <>
+      <circle cx="9" cy="20" r="1.25" />
+      <circle cx="18" cy="20" r="1.25" />
+      <path d="M3 4h2l2.1 10.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 1.9-1.4L21 8H6" />
+    </>
+  ),
+  chat: (
+    <>
+      <path d="M21 11.5a8.4 8.4 0 0 1-9 8.3 9.4 9.4 0 0 1-3.7-.8L3 21l1.5-4.7A8.2 8.2 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.3 8.4 8.4 0 0 1 9 8.3Z" />
+    </>
+  ),
   user: (
     <>
       <circle cx="12" cy="8" r="4" />
@@ -53,14 +65,8 @@ const paths: Record<string, React.ReactNode> = {
   ),
   chevron: <path d="m9 18 6-6-6-6" />,
   back: <path d="m15 18-6-6 6-6" />,
-  filter: (
-    <>
-      <path d="M4 7h16M7 12h10M10 17h4" />
-    </>
-  ),
-  star: (
-    <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
-  ),
+  filter: <path d="M4 7h16M7 12h10M10 17h4" />,
+  star: <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />,
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
   check: <path d="m5 12 4 4L19 6" />,
@@ -90,9 +96,7 @@ const paths: Record<string, React.ReactNode> = {
     </>
   ),
   shirt: <path d="m8 4-5 4 3 4 2-1v10h8V11l2 1 3-4-5-4c-1 2-7 2-8 0Z" />,
-  sparkle: (
-    <path d="M12 2c1 6 4 9 10 10-6 1-9 4-10 10-1-6-4-9-10-10 6-1 9-4 10-10Z" />
-  ),
+  sparkle: <path d="M12 2c1 6 4 9 10 10-6 1-9 4-10 10-1-6-4-9-10-10 6-1 9-4 10-10Z" />,
 };
 export function Icon({ name, size = 24, className }: IconProps) {
   return (
