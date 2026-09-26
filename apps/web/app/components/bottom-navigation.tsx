@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "./icon";
+import "./bottom-navigation.css";
 
 const tabs = [
-  { href: "/", label: "Home", icon: "home", paths: ["/", "/cart"] },
+  { href: "/", label: "Home", icon: "home", paths: ["/"] },
   {
     href: "/explore",
     label: "Explore",
@@ -14,39 +15,34 @@ const tabs = [
   },
   { href: "/reels", label: "Reels", icon: "reels", paths: ["/reels"] },
   {
-    href: "/orders",
-    label: "Orders",
+    href: "/cart",
+    label: "Cart",
     icon: "bag",
-    paths: ["/orders", "/tracking"],
+    paths: ["/cart", "/checkout"],
   },
   {
-    href: "/profile",
-    label: "Profile",
-    icon: "user",
-    paths: [
-      "/profile",
-      "/saved",
-      "/following",
-      "/address-book",
-      "/payment-methods",
-      "/notifications",
-      "/edit-profile",
-      "/settings",
-      "/reviews",
-    ],
+    href: "/chat",
+    label: "Chat",
+    icon: "chat",
+    paths: ["/chat"],
   },
 ];
 
 export function BottomNavigation() {
   const path = usePathname();
+
   return (
-    <nav className="bottom-nav" aria-label="Customer navigation">
+    <nav
+      className="bottom-nav eazicart-bottom-nav"
+      aria-label="Customer navigation"
+    >
       {tabs.map((tab) => {
         const active = tab.paths.some((candidate) =>
           candidate === "/"
             ? path === "/"
             : path === candidate || path.startsWith(`${candidate}/`),
         );
+
         return (
           <Link
             key={tab.href}
@@ -54,7 +50,7 @@ export function BottomNavigation() {
             className={active ? "active" : ""}
             aria-current={active ? "page" : undefined}
           >
-            <Icon name={tab.icon} size={24} />
+            <Icon name={tab.icon} size={22} />
             <span>{tab.label}</span>
           </Link>
         );
