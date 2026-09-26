@@ -1,0 +1,85 @@
+.eazicart-chat-page {
+  max-width: 430px;
+}
+
+.eazicart-chat-header {
+  min-height: 104px;
+  padding: calc(24px + env(safe-area-inset-top)) 20px 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #eef0f2;
+}
+
+.eazicart-chat-header h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -0.03em;
+}
+
+.eazicart-chat-header p {
+  margin: 4px 0 0;
+  color: #717985;
+  font-size: 13px;
+}
+
+.eazicart-chat-header > a {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #111214;
+  background: #f5f6f8;
+  text-decoration: none;
+}
+
+.eazicart-chat-empty {
+  min-height: 480px;
+  padding: 80px 28px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.eazicart-chat-empty-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #111214;
+  background: #f2f3f5;
+}
+
+.eazicart-chat-empty h2 {
+  margin: 18px 0 0;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.eazicart-chat-empty p {
+  max-width: 310px;
+  margin: 7px 0 0;
+  color: #717985;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.eazicart-chat-empty > a {
+  min-height: 42px;
+  margin-top: 20px;
+  padding: 0 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #111214;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
