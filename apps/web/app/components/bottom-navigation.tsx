@@ -17,7 +17,7 @@ const tabs = [
   {
     href: "/cart",
     label: "Cart",
-    icon: "bag",
+    icon: "cart",
     paths: ["/cart", "/checkout"],
   },
   {
