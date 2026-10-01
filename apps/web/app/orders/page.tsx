@@ -18,14 +18,14 @@ import { useAuth } from "../providers/auth-provider";
 import { orderStatusLabel } from "./order-utils";
 import styles from "./orders.module.css";
 
-const filters = ["ALL", "PROCESSING", "FULFILLED", "CANCELLED"] as const;
+const filters = ["ALL", "PROCESSING", "SHIPPED", "FULFILLED"] as const;
 type OrderFilter = (typeof filters)[number];
 
 const filterLabels: Record<OrderFilter, string> = {
   ALL: "All",
   PROCESSING: "Processing",
+  SHIPPED: "Shipped",
   FULFILLED: "Delivered",
-  CANCELLED: "Cancelled",
 };
 
 export default function OrdersPage() {
@@ -48,100 +48,107 @@ export default function OrdersPage() {
         );
 
   return (
-    <main className={`app-shell with-nav ${styles.page}`}>
-      <header className={styles.heading}>
-        <h1>My Orders</h1>
-        <p>Track purchases and delivery</p>
-      </header>
+    <main
+      className={`app-shell with-nav ${styles.page}`}
+      data-figma-node="19:35"
+    >
+      <div className={styles.scrollViewport}>
+        <header className={styles.heading}>
+          <h1>My Orders</h1>
+          <p>Track purchases and delivery</p>
+        </header>
 
-      <div className={styles.filters} role="group" aria-label="Filter orders">
-        {filters.map((value) => (
-          <button
-            key={value}
-            type="button"
-            className={filter === value ? styles.activeFilter : styles.filter}
-            aria-pressed={filter === value}
-            onClick={() => setFilter(value)}
-          >
-            {filterLabels[value]}
-          </button>
-        ))}
-      </div>
+        <div className={styles.filters} role="group" aria-label="Filter orders">
+          {filters.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={filter === value ? styles.activeFilter : styles.filter}
+              aria-pressed={filter === value}
+              onClick={() => setFilter(value)}
+            >
+              {filterLabels[value]}
+            </button>
+          ))}
+        </div>
 
-      {auth.loading || result.loading ? (
-        <LoadingState label="Loading orders…" />
-      ) : !auth.isAuthenticated ? (
-        <SignInState message="Sign in to see your orders." />
-      ) : result.error ? (
-        <ErrorState message={result.error} retry={() => void result.reload()} />
-      ) : !orders.length ? (
-        <EmptyState
-          title="No orders yet"
-          message="Your purchases will appear here."
-          icon="bag"
-          action={{ href: "/explore", label: "Start shopping" }}
-        />
-      ) : !visibleOrders.length ? (
-        <section className={styles.filteredEmpty}>
-          <p>No {filterLabels[filter].toLowerCase()} orders.</p>
-        </section>
-      ) : (
-        <section className={styles.orderList} aria-label="Orders">
-          {visibleOrders.map((order) => {
-            const firstItem = order.items[0];
-            const image = firstItem?.product?.images?.[0];
-            const quantity = order.items.reduce(
-              (total, item) => total + item.quantity,
-              0,
-            );
-            return (
-              <Link
-                className={styles.orderCard}
-                href={`/orders/${order.id}`}
-                key={order.id}
-              >
-                <div className={styles.cardHeader}>
-                  <div>
-                    <strong>{firstItem?.productName ?? "Order"}</strong>
-                    <span>
-                      Order #{order.id.slice(-8)} ·{" "}
-                      {formatOrderDate(order.createdAt)}
-                    </span>
-                  </div>
-                  <span
-                    className={`${styles.status} ${statusClass(order.status)}`}
+        <div className={styles.results}>
+          {auth.loading || result.loading ? (
+            <LoadingState label="Loading orders…" />
+          ) : !auth.isAuthenticated ? (
+            <SignInState message="Sign in to see your orders." />
+          ) : result.error ? (
+            <ErrorState
+              message={result.error}
+              retry={() => void result.reload()}
+            />
+          ) : !orders.length ? (
+            <EmptyState
+              title="No orders yet"
+              message="Your purchases will appear here."
+              icon="bag"
+              action={{ href: "/explore", label: "Start shopping" }}
+            />
+          ) : !visibleOrders.length ? (
+            <section className={styles.filteredEmpty}>
+              <p>No {filterLabels[filter].toLowerCase()} orders.</p>
+            </section>
+          ) : (
+            <section className={styles.orderList} aria-label="Orders">
+              {visibleOrders.map((order) => {
+                const firstItem = order.items[0];
+                const image = firstItem?.product?.images?.[0];
+                const sellerName = firstItem?.product?.seller?.displayName;
+                const quantity = order.items.reduce(
+                  (total, item) => total + item.quantity,
+                  0,
+                );
+                const orderNumber = order.orderNumber ?? order.id;
+
+                return (
+                  <Link
+                    className={styles.orderCard}
+                    href={`/orders/${order.id}`}
+                    key={order.id}
                   >
-                    {orderStatusLabel(order.status)}
-                  </span>
-                </div>
+                    <div className={styles.thumb}>
+                      {image ? (
+                        <img
+                          src={image.url}
+                          alt={image.altText || firstItem?.productName || ""}
+                        />
+                      ) : (
+                        <Icon name="bag" size={24} />
+                      )}
+                    </div>
 
-                <div className={styles.cardBody}>
-                  <div className={styles.thumb}>
-                    {image ? (
-                      <img
-                        src={image.url}
-                        alt={image.altText || firstItem?.productName || ""}
-                      />
-                    ) : (
-                      <Icon name="bag" size={24} />
-                    )}
-                  </div>
-                  <div className={styles.orderMeta}>
-                    <strong>{money(order.total)}</strong>
-                    <span>
-                      {quantity} {quantity === 1 ? "item" : "items"}
-                      {order.items.length > 1
-                        ? ` · ${order.items.length} products`
-                        : ""}
+                    <strong className={styles.productName}>
+                      {firstItem?.productName ?? "Order"}
+                    </strong>
+                    {sellerName ? (
+                      <span className={styles.sellerName}>{sellerName}</span>
+                    ) : null}
+                    <span className={styles.orderReference}>
+                      Order #{orderNumber} · {formatOrderDate(order.createdAt)}
                     </span>
-                  </div>
-                  <span className={styles.viewOrder}>View order →</span>
-                </div>
-              </Link>
-            );
-          })}
-        </section>
-      )}
+                    <strong className={styles.price}>
+                      {money(order.total)}
+                    </strong>
+                    <span className={styles.quantity}>Qty {quantity}</span>
+                    <span
+                      className={`${styles.status} ${statusClass(order.status)}`}
+                    >
+                      {orderStatusLabel(order.status)}
+                    </span>
+                  </Link>
+                );
+              })}
+            </section>
+          )}
+        </div>
+
+        <div className={styles.bottomClearance} aria-hidden="true" />
+      </div>
 
       <BottomNavigation />
     </main>
@@ -149,15 +156,25 @@ export default function OrdersPage() {
 }
 
 function formatOrderDate(value: string) {
-  return new Intl.DateTimeFormat("en-NG", {
+  const date = new Date(value);
+  const today = new Date();
+  if (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  ) {
+    return "Today";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "short",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function statusClass(status: string) {
   if (status === "FULFILLED") return styles.success;
   if (status === "CANCELLED") return styles.cancelled;
-  if (status === "CONFIRMED") return styles.confirmed;
+  if (status === "SHIPPED" || status === "CONFIRMED") return styles.info;
   return styles.pending;
 }
