@@ -201,11 +201,11 @@
   bottom: 0;
   width: 100%;
   max-width: 440px;
+  height: calc(116px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(198, 198, 200, 0.35);
-  border-left: 0;
-  border-right: 0;
-  padding: 31px 16px calc(32px + env(safe-area-inset-bottom));
+  padding: 31px 15px calc(31px + env(safe-area-inset-bottom));
   z-index: 4;
 }
 .placeButton {
