@@ -1,9 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
-import { Icon } from "../components/icon";
 import { addressesApi, type AddressInput } from "../../lib/api/addresses";
 import type { Address } from "../../lib/api/types";
 import { useRequest } from "../hooks/use-request";
@@ -41,6 +41,7 @@ export function AddressBookContent({
   selectedId?: string;
 }) {
   const auth = useAuth();
+  const user = auth.user;
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -108,21 +109,21 @@ export function AddressBookContent({
     checkout &&
     !adding &&
     !editingId &&
-    auth.user &&
+    user &&
     !result.loading &&
     result.data
   )
     return (
       <AddressSelector
         addresses={result.data.data}
-        name={auth.user.name}
+        name={user.name}
         initialId={selectedId}
         onAdd={() => setAdding(true)}
       />
     );
 
   return (
-    <main className={`app-shell ${styles.page}`}>
+    <main className={`app-shell ${styles.page}`} data-figma-node="30:2">
       <header className={styles.header}>
         <div className={styles.titleRow}>
           <Link
@@ -130,7 +131,12 @@ export function AddressBookContent({
             href="/profile"
             aria-label="Back to profile"
           >
-            <Icon name="back" size={22} />
+            <img
+              src="/figma/address-select-back.svg"
+              width={10}
+              height={18}
+              alt=""
+            />
           </Link>
           <h1>Address Book</h1>
         </div>
@@ -148,7 +154,7 @@ export function AddressBookContent({
               setError("");
             }}
           >
-            +&nbsp; Add new address
+            +&nbsp;&nbsp;Add new address
           </button>
         ) : null}
 
@@ -170,7 +176,7 @@ export function AddressBookContent({
 
         {auth.loading || result.loading ? (
           <LoadingState />
-        ) : !auth.isAuthenticated ? (
+        ) : !user ? (
           <SignInState message="Sign in to manage delivery addresses." />
         ) : result.error ? (
           <ErrorState
@@ -188,7 +194,9 @@ export function AddressBookContent({
               <section className={styles.list} aria-label="Saved addresses">
                 {result.data.data.map((address) => (
                   <article
-                    className={`address-card ${styles.card}`}
+                    className={`${styles.card} ${
+                      address.isDefault ? styles.defaultCard : ""
+                    } ${editingId === address.id ? styles.editingCard : ""}`}
                     key={address.id}
                   >
                     <div className={styles.cardTop}>
@@ -200,7 +208,9 @@ export function AddressBookContent({
                         {address.label || "Address"}
                       </span>
                       <button
-                        className={styles.editButton}
+                        className={`${styles.editButton} ${
+                          address.isDefault ? "" : styles.secondaryEdit
+                        }`}
                         type="button"
                         onClick={() => {
                           setEditingId((value) =>
@@ -213,14 +223,15 @@ export function AddressBookContent({
                         Edit
                       </button>
                     </div>
-                    <h2>{address.line1}</h2>
-                    {address.line2 ? (
-                      <p className={styles.addressLine}>{address.line2}</p>
-                    ) : null}
+                    <h2>{user.name}</h2>
                     <p className={styles.addressLine}>
-                      {address.city}, {address.region} {address.postalCode}
+                      {address.line1}
+                      {address.line2 ? `, ${address.line2}` : ""}
                     </p>
-                    <p className={styles.metaLine}>{address.country}</p>
+                    <p className={styles.metaLine}>
+                      {formatAddressLocation(address)}
+                      {address.phone ? ` · ${address.phone}` : ""}
+                    </p>
                     {address.isDefault ? (
                       <span className={styles.defaultBadge}>Default</span>
                     ) : null}
@@ -262,7 +273,7 @@ export function AddressBookContent({
             <aside className={styles.tip}>
               <strong>Delivery tip</strong>
               <p>
-                Add landmarks and complete delivery details to help sellers
+                Add landmarks and a reachable phone number to help sellers
                 deliver faster.
               </p>
             </aside>
@@ -272,6 +283,15 @@ export function AddressBookContent({
       <BottomNavigation />
     </main>
   );
+}
+
+function formatAddressLocation(address: Address) {
+  const location = [
+    address.city,
+    address.region && address.region !== address.city ? address.region : null,
+    address.country,
+  ].filter(Boolean);
+  return location.join(", ");
 }
 
 function AddressForm({
