@@ -44,7 +44,7 @@
   width: 66px;
   height: 66px;
   border-radius: 50%;
-  background: #e9e9ee;
+  background: #e9eaee;
   display: grid;
   place-items: center;
   font-size: 20px;
@@ -120,14 +120,14 @@
   left: 24px;
   right: 24px;
   height: 1px;
-  background: #e9edf5;
+  background: #ebedf2;
 }
 .version {
   display: block;
-  margin: 95px 24px 0;
-  color: #98a0aa;
+  margin: 94px 24px 0;
+  color: #9499a3;
   font-size: 12px;
-  line-height: 17px;
+  line-height: 16px;
 }
 @media (max-height: 850px) {
   .version {

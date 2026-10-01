@@ -632,6 +632,12 @@ let server;
       content:
         'main.app-shell > :not([data-figma-node="560:3187"]) {visibility:hidden;} main.app-shell {background:white;}',
     });
+    // The focus-wrap assertions above intentionally leave the close control focused.
+    // Blur only for the neutral visual comparison; Escape still closes the dialog
+    // and the component cleanup restores focus to the avatar trigger.
+    await dialog.getByRole("button", { name: "Close menu" }).evaluate((el) =>
+      el.blur(),
+    );
     await page.screenshot({ path: evidence + "/drawer-isolated-app.png" });
     await isolationStyle.evaluate((el) => el.remove());
     await page.keyboard.press("Escape");
