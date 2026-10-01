@@ -310,8 +310,8 @@ export function ExploreContent() {
                     {name}
                     <img
                       src="/figma/verified.svg"
-                      width={16}
-                      height={16}
+                      width={14}
+                      height={14}
                       alt="Verified seller"
                     />
                   </strong>

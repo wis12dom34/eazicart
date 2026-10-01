@@ -40,7 +40,7 @@ export default function ProfilePage() {
         </Link>
         <h1>Profile</h1>
       </header>
-      <div className={styles.viewport}>
+      <div className={styles.viewport} data-figma-scroll="profile">
         {auth.loading ? (
           <LoadingState />
         ) : !auth.user ? (

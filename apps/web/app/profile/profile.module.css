@@ -59,14 +59,14 @@
   flex-shrink: 0;
   border: 0;
   border-radius: 50%;
-  background: #f0f2f4;
+  background: #f1f3f5;
   color: #0f1419;
   font-weight: 600;
   font-size: 20px;
   cursor: pointer;
 }
 .identityCopy {
-  flex: 1;
+  flex: 0 1 250px;
   min-width: 0;
   height: 60px;
   display: flex;
