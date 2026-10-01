@@ -165,7 +165,9 @@ export default function HomePage() {
               />
               <strong>{name}</strong>
               <small>
-                {rating} <b>★</b> · {sales} sales
+                <span>{rating}</span>
+                <b>★</b>
+                <span>· {sales} sales</span>
               </small>
             </div>
           ))}
