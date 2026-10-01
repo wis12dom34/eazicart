@@ -74,7 +74,7 @@
   display: block;
 }
 .itemCopy {
-  padding: 7px 15px 0 107px;
+  padding: 6px 15px 0 106px;
 }
 .itemCopy h2 {
   font-size: 16px;
@@ -97,8 +97,8 @@
 }
 .quantity {
   position: absolute;
-  right: 15px;
-  top: 55px;
+  right: 14px;
+  top: 54px;
   width: 96px;
   height: 36px;
   border: 1px solid #e5e7ed;
@@ -155,7 +155,7 @@
   opacity: 1;
 }
 .summary {
-  margin: 28px 4px 0;
+  margin: 28px 0 0 4px;
   padding: 0;
   border: 0;
   background: none;
@@ -174,11 +174,13 @@
   color: #6e6e73;
   margin: 0;
   min-height: 32px;
+  line-height: 17px;
 }
 .summary strong,
 .summary > div > span:last-child {
   font-size: 13px;
   font-weight: 500;
+  line-height: 16px;
   color: #141416;
 }
 .summary .total {
@@ -264,12 +266,19 @@
 }
 .summary > div {
   align-items: flex-start;
-  line-height: 20px;
+  line-height: 17px;
 }
 .summary .total {
-  margin: 4px -4px 0;
-  padding: 13px 4px 0;
-  line-height: 20px;
+  margin: 4px 0 0 -4px;
+  padding: 13px 0 0 4px;
+  line-height: 19px;
+}
+.summary .total > span:first-child {
+  position: relative;
+  top: 2px;
+}
+.summary .total strong {
+  line-height: 21px;
 }
 .statePage {
   padding-top: 56px;
