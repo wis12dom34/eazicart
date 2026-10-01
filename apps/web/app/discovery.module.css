@@ -301,3 +301,396 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Search Results 31:2 — scoped so Category and other discovery routes keep their existing layout. */
+.searchPage {
+  --search-safe-top-shift: max(0px, calc(env(safe-area-inset-top) - 38px));
+  width: 100%;
+  max-width: 430px;
+  height: 100svh;
+  min-height: 100svh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.searchHeader {
+  position: absolute;
+  top: calc(46px + var(--search-safe-top-shift));
+  left: 16px;
+  right: 16px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchBack {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  color: #0f1419;
+  text-decoration: none;
+}
+
+.searchBack > span {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.searchBack img {
+  display: block;
+}
+
+.searchHeader h1 {
+  min-width: 0;
+  margin: 0;
+  color: #0f1419;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+.searchField {
+  position: absolute;
+  top: calc(108px + var(--search-safe-top-shift));
+  left: 16px;
+  right: 16px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: #f2f2f7;
+  color: #0f1419;
+}
+
+.searchField > span {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.searchField img {
+  display: block;
+}
+
+.searchField input {
+  min-width: 0;
+  flex: 1;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #8e8e93;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.searchField input::placeholder {
+  color: #8e8e93;
+  opacity: 1;
+}
+
+.searchCount {
+  position: absolute;
+  top: calc(168px + var(--search-safe-top-shift));
+  left: 20px;
+  margin: 0;
+  color: #8e95a0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 17px;
+  white-space: nowrap;
+}
+
+.searchFilters {
+  position: absolute;
+  top: calc(184px + var(--search-safe-top-shift));
+  left: 16px;
+  right: 16px;
+  height: 44px;
+  display: flex;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.searchFilters > * {
+  position: relative;
+  min-width: 0;
+  height: 44px;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #656c78;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.searchFilters > span {
+  cursor: not-allowed;
+}
+
+.searchFilters > .searchFilterActive {
+  color: #0e0e0f;
+  font-weight: 600;
+}
+
+.searchFilterActive::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: calc(50% - 2px);
+  width: 28px;
+  height: 2px;
+  border-radius: 1px;
+  background: #0a66ff;
+  transform: translateX(-50%);
+}
+
+.searchResultsViewport {
+  position: absolute;
+  top: calc(238px + var(--search-safe-top-shift));
+  right: 0;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  left: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+
+.searchResultsViewport::-webkit-scrollbar {
+  display: none;
+}
+
+.searchSection {
+  margin: 0;
+  padding: 0 16px;
+}
+
+.searchSection h2 {
+  margin: 12px 4px 14px;
+  color: #0e0e0f;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 22px;
+}
+
+.searchMasonry {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+.searchMasonryColumn {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.searchProductCard {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e5e5eb;
+  border-radius: 16px;
+  background: #f6f7fa;
+}
+
+.searchCard318 {
+  height: 318px;
+}
+
+.searchCard356 {
+  height: 356px;
+}
+
+.searchCard350 {
+  height: 350px;
+}
+
+.searchCard300 {
+  height: 300px;
+}
+
+.searchProductOverlay {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.searchProductMedia {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  bottom: 111px;
+  left: -1px;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  background: #f7f7f8;
+}
+
+.searchProductMedia img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 16px 16px 0 0;
+}
+
+.searchProductSeller {
+  position: absolute;
+  z-index: 2;
+  bottom: 84px;
+  left: 9px;
+  max-width: calc(100% - 18px);
+  overflow: hidden;
+  color: #536471;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 17px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchProductName {
+  position: absolute;
+  z-index: 2;
+  right: 9px;
+  bottom: 80px;
+  left: 9px;
+  height: 38px;
+  overflow: hidden;
+  color: #0f1419;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 18px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  transform: translateY(100%);
+  white-space: nowrap;
+}
+
+.searchProductPrice {
+  position: absolute;
+  z-index: 2;
+  right: 9px;
+  bottom: 35px;
+  left: 9px;
+  height: 22px;
+  overflow: hidden;
+  color: #0f1419;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  transform: translateY(100%);
+  white-space: nowrap;
+}
+
+.searchProductViews {
+  position: absolute;
+  z-index: 2;
+  bottom: 119px;
+  left: 7px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border: 1px solid #e5e5ea;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #536471;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.searchFavorite {
+  position: absolute;
+  z-index: 3;
+  top: 7px;
+  right: 7px;
+  width: 44px;
+  height: 44px;
+  min-width: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0.906px solid #e5e5ea;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+}
+
+.searchFavorite:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.searchFavorite img {
+  display: block;
+}
+
+.searchSellerSection {
+  margin-top: 24px;
+  padding-bottom: 32px;
+}
+
+.searchSellerSection .sellers {
+  padding: 0 4px;
+}
+
+.searchState {
+  margin: 12px 16px 0;
+  padding: 24px 18px;
+  border-radius: 16px;
+  background: #f6f7f9;
+  color: #6b707a;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.searchState strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #121214;
+  font-size: 16px;
+}
+
+.searchSaveError {
+  margin: 18px 20px 32px;
+  color: #9b2c2c;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.searchProductPrice,
+.searchProductViews {
+  pointer-events: none;
+}
