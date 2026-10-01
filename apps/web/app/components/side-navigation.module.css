@@ -1,0 +1,136 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: 440px;
+  margin: auto;
+  z-index: 30;
+}
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.42);
+  width: 100%;
+  height: 100%;
+}
+.panel {
+  position: relative;
+  width: 80.47%;
+  height: 100%;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 0 24px 24px 0;
+  box-shadow: 8px 0 24px rgba(0, 0, 0, 0.08);
+  padding: 94px 0 28px;
+}
+.close {
+  position: absolute;
+  top: 42px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.identity {
+  margin: 0 24px;
+}
+.avatar {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: #e9e9ee;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #0e0e0f;
+}
+.identity h2 {
+  margin: 14px 0 4px;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 26px;
+  color: #0e0e0f;
+  overflow-wrap: anywhere;
+}
+.identity p {
+  margin: 0 0 4px;
+  color: #6b707a;
+  font-size: 14px;
+  line-height: 18px;
+}
+.usernameSpace {
+  height: 18px;
+}
+.identity small {
+  display: block;
+  color: #6b707a;
+  font-size: 13px;
+  line-height: 17px;
+}
+.panel nav {
+  margin-top: 9px;
+}
+.panel nav a,
+.unavailable {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 24px;
+  gap: 14px;
+  color: #0e0e0f;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 19px;
+}
+.panel nav img {
+  flex: none;
+  display: block;
+}
+.panel nav span:not(.unavailable) {
+  flex: 1;
+}
+.panel nav b {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #0866f5;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+}
+.afterDivider {
+  margin-top: 26px;
+  position: relative;
+}
+.afterDivider:before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  background: #e9edf5;
+}
+.version {
+  display: block;
+  margin: 95px 24px 0;
+  color: #98a0aa;
+  font-size: 12px;
+  line-height: 17px;
+}
+@media (max-height: 850px) {
+  .version {
+    margin-top: 40px;
+  }
+}

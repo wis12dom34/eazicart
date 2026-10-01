@@ -1,0 +1,152 @@
+.page {
+  max-width: 440px;
+  background: white;
+  padding: 0 16px calc(122px + env(safe-area-inset-bottom));
+}
+.header {
+  height: 142px;
+  position: relative;
+}
+.header a {
+  position: absolute;
+  left: -12px;
+  top: 44px;
+  height: 44px;
+  width: 44px;
+  display: grid;
+  place-items: center;
+}
+.header h1 {
+  position: absolute;
+  top: 52px;
+  left: 42px;
+  margin: 0;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+  color: #141416;
+}
+.header p {
+  position: absolute;
+  top: 94px;
+  left: 8px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 16px;
+  color: #6b7280;
+}
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.option {
+  position: relative;
+  width: 100%;
+  padding: 30px 26px 0;
+  min-height: 124px;
+  background: white;
+  border: 0;
+  border-radius: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+.option.selected {
+  background: #eef5ff;
+}
+.option small {
+  display: block;
+  font-size: 12px;
+  line-height: 15px;
+  font-weight: 600;
+  color: #6b707a;
+}
+.option strong {
+  display: block;
+  margin-top: 11px;
+  font-size: 16px;
+  line-height: 19px;
+  font-weight: 600;
+  color: #0a0a0d;
+}
+.option span {
+  display: block;
+  margin-top: 9px;
+  font-size: 14px;
+  line-height: 17px;
+  color: #0a0a0d;
+}
+.option p {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 16px;
+  color: #6b707a;
+}
+.option b {
+  position: absolute;
+  right: 49px;
+  top: 46px;
+  color: #0866f5;
+  font-size: 12px;
+  line-height: 15px;
+  font-weight: 500;
+}
+.laterOption {
+  padding-top: 48px;
+  min-height: 142px;
+}
+.laterOption:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 124px;
+  height: 1px;
+  background: #e5e7eb;
+  pointer-events: none;
+}
+.add {
+  display: block;
+  padding: 12px 8px 0;
+  transform: translateY(-8px);
+  min-height: 44px;
+  margin: 2px 0 0;
+  background: none;
+  border: 0;
+  color: #0866f5;
+  font-size: 14px;
+  line-height: 17px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.use {
+  width: max-content;
+  max-width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  margin: 26px auto 0;
+  transform: translateX(5.5px);
+  border: 0;
+  border-radius: 12px;
+  background: #0a0a0d;
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+@media (max-width: 390px) {
+  .option b {
+    right: 16px;
+    top: 12px;
+  }
+  .option p {
+    overflow-wrap: anywhere;
+  }
+  .header p {
+    right: 4px;
+  }
+}

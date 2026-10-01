@@ -1,0 +1,205 @@
+.page {
+  max-width: 440px;
+  padding: 8px 16px calc(32px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.page h1,
+.page h2,
+.page p {
+  margin: 0;
+}
+.islandHost {
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.islandHost > div {
+  height: 36px;
+  width: 124px;
+  background: #000;
+  border-radius: 999px;
+}
+.page h1 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 30px;
+  color: #0f1419;
+}
+.pending {
+  padding: 63px 15px 31px;
+  background: #eef5ff;
+  border: 1px solid rgba(207, 224, 255, 0.75);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pending h2 {
+  color: #0f1419;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 30px;
+}
+.pending p,
+.recovery p {
+  color: #6e6e73;
+  font-size: 14px;
+  line-height: 21px;
+}
+.summary {
+  padding: 15px;
+  background: #f2f2f7;
+  border: 1px solid rgba(198, 198, 200, 0.22);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 150px;
+}
+.summary h2 {
+  color: #71747b;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+.summary strong {
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 700;
+}
+.summary p {
+  font-size: 15px;
+  line-height: 21px;
+}
+.summary small {
+  color: #71747b;
+  font-size: 12px;
+  line-height: 17px;
+}
+.recovery {
+  padding: 14px 15px;
+  min-height: 96px;
+  border-radius: 16px;
+  border: 1px solid rgba(198, 198, 200, 0.18);
+  background: #f2f2f7;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.recovery h2 {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.actions {
+  padding-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.actions button {
+  align-self: flex-start;
+  height: 52px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 14px;
+  background: #0f1419;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  cursor: pointer;
+}
+.actions button:disabled {
+  opacity: 0.45;
+}
+.actions > a {
+  color: #1769e0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 21px;
+  text-align: center;
+  text-decoration: none;
+  min-height: 21px;
+}
+.support {
+  color: #71747b;
+  font-size: 12px;
+  line-height: 17px;
+  text-align: center;
+}
+.page hr {
+  margin: 0;
+  border: 0;
+  height: 1px;
+  background: rgba(198, 198, 200, 0.28);
+}
+.failed .pending {
+  background: #fff2f1;
+  border-color: rgba(255, 210, 207, 0.8);
+}
+.failedIsland {
+  width: 296px;
+  max-width: 100%;
+  height: 68px;
+  border-radius: 999px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: black;
+  color: white;
+  text-decoration: none;
+}
+.failedIsland span {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.failedIsland strong {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.failedIsland small {
+  font-size: 12px;
+  line-height: 18px;
+  color: #a1a1aa;
+}
+.failed .actions > .returnCheckout {
+  align-self: flex-start;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  color: white;
+  background: #0f1419;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.failed .actions button {
+  align-self: stretch;
+  height: 21px;
+  padding: 0;
+  color: #007aff;
+  background: none;
+  border-radius: 0;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 600;
+  position: relative;
+}
+.failed .actions button:after {
+  content: "";
+  position: absolute;
+  inset: -11.5px 0;
+}

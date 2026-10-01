@@ -1,8 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
+import { useCallback, useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
-import { Icon } from "../components/icon";
+import { SideNavigation } from "../components/side-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
 import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
@@ -13,166 +15,157 @@ import styles from "./profile.module.css";
 
 export default function ProfilePage() {
   const auth = useAuth();
+  const [menu, setMenu] = useState(false);
+  const closeMenu = useCallback(() => setMenu(false), []);
   const orders = useRequest(
-    async () => (auth.isAuthenticated ? ordersApi.list() : { data: [] }),
+    () =>
+      auth.isAuthenticated ? ordersApi.list() : Promise.resolve({ data: [] }),
     [auth.isAuthenticated],
   );
   const saved = useRequest(
-    async () => (auth.isAuthenticated ? savedApi.list() : { data: [] }),
+    () =>
+      auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }),
     [auth.isAuthenticated],
   );
   const following = useRequest(
-    async () => (auth.isAuthenticated ? followsApi.list() : { data: [] }),
+    () =>
+      auth.isAuthenticated ? followsApi.list() : Promise.resolve({ data: [] }),
     [auth.isAuthenticated],
   );
-
   return (
-    <main className={`app-shell ${styles.page}`}>
-      {auth.loading ? (
-        <LoadingState />
-      ) : !auth.user ? (
-        <SignInState message="Sign in to manage your EaziCart profile." />
-      ) : (
-        <>
-          <section className={styles.identityRow} aria-label="Customer profile">
-            <Link className={styles.identityLink} href="/edit-profile">
-              <div className={styles.avatar} aria-hidden="true">
-                {initials(auth.user.name)}
+    <main className={`app-shell ${styles.page}`} data-figma-node="19:120">
+      <header className={styles.header}>
+        <Link href="/" aria-label="Back to home">
+          ‹
+        </Link>
+        <h1>Profile</h1>
+      </header>
+      <div className={styles.viewport}>
+        {auth.loading ? (
+          <LoadingState />
+        ) : !auth.user ? (
+          <SignInState message="Sign in to manage your EaziCart profile." />
+        ) : (
+          <div className={styles.content}>
+            <section className={styles.identity} aria-label="Customer profile">
+              <div className={styles.identityRow}>
+                <button
+                  className={styles.avatar}
+                  onClick={() => setMenu(true)}
+                  aria-label="Open side navigation"
+                >
+                  {auth.user.name[0]?.toUpperCase() || "W"}
+                </button>
+                <div className={styles.identityCopy}>
+                  <h2>{auth.user.name}</h2>
+                  <p>
+                    {auth.user.username ? `@${auth.user.username}` : "\u00a0"}
+                  </p>
+                  <small>Personal account</small>
+                </div>
+                <Link
+                  href="/settings"
+                  className={styles.settings}
+                  aria-label="Account settings"
+                >
+                  <img
+                    src="/figma/profile-settings.svg"
+                    alt=""
+                    width={24}
+                    height={24}
+                  />
+                </Link>
               </div>
-              <div className={styles.identityCopy}>
-                <h1>{auth.user.name}</h1>
-                <p>{auth.user.email}</p>
-              </div>
-            </Link>
-            <Link
-              className={styles.settingsLink}
-              href="/settings"
-              aria-label="Account settings"
+              <Link className={styles.edit} href="/edit-profile">
+                Edit profile
+              </Link>
+            </section>
+            <section
+              className={styles.stats}
+              aria-label="Profile activity counts"
             >
-              <Icon name="settings" size={22} />
-            </Link>
-          </section>
-
-          <section
-            className={styles.stats}
-            aria-label="Profile activity counts"
-          >
-            <ProfileStat
-              href="/orders"
-              label="Orders"
-              value={metricValue(
-                orders.loading,
-                orders.error,
-                orders.data?.data.length,
-              )}
-              hasError={Boolean(orders.error)}
-            />
-            <ProfileStat
-              href="/saved"
-              label="Saved"
-              value={metricValue(
-                saved.loading,
-                saved.error,
-                saved.data?.data.length,
-              )}
-              hasError={Boolean(saved.error)}
-            />
-            <ProfileStat
-              href="/following"
-              label="Following"
-              value={metricValue(
-                following.loading,
-                following.error,
-                following.data?.data.length,
-              )}
-              hasError={Boolean(following.error)}
-            />
-          </section>
-
-          <section className={`${styles.section} ${styles.activitySection}`}>
-            <h2 className={styles.sectionTitle}>Your activity</h2>
-            <div className={styles.activityList}>
-              <ActivityLink
+              {[
+                { label: "Orders", href: "/orders", result: orders },
+                { label: "Saved", href: "/saved", result: saved },
+                { label: "Following", href: "/following", result: following },
+              ].map(({ label, href, result }) => {
+                return (
+                  <Link href={href} key={label}>
+                    <strong
+                      className={result.error ? styles.metricError : undefined}
+                    >
+                      {result.loading
+                        ? "…"
+                        : result.error
+                          ? "—"
+                          : (result.data?.data.length ?? 0)}
+                    </strong>
+                    <span>{label}</span>
+                  </Link>
+                );
+              })}
+            </section>
+            <nav className={styles.tabs} aria-label="Profile sections">
+              <span aria-current="page">Activity</span>
+              <Link href="/reviews">Reviews</Link>
+              <Link href="/seller/dashboard">Sell</Link>
+            </nav>
+            <section className={styles.activity} aria-label="Your activity">
+              <ProfileRow
                 href="/orders"
-                icon="bag"
+                icon="orders"
                 label="Orders"
                 detail="Track and manage purchases"
               />
-              <ActivityLink
+              <ProfileRow
                 href="/saved"
-                icon="heart"
+                icon="saved"
                 label="Saved"
                 detail="Products you want to revisit"
               />
-              <ActivityLink
+              <ProfileRow
                 href="/following"
-                icon="users"
+                icon="following"
                 label="Following"
                 detail="Sellers and stores you follow"
               />
-              <ActivityLink
+              <ProfileRow
                 href="/reviews"
-                icon="star"
+                icon="reviews"
                 label="Reviews"
                 detail="Your ratings and feedback"
               />
-            </div>
-          </section>
-
-          <section className={`${styles.section} ${styles.accountSection}`}>
-            <h2 className={styles.sectionTitle}>Account</h2>
-            <div className={styles.accountList}>
-              <AccountLink
-                href="/seller/dashboard"
-                label="Seller workspace"
-                detail="Manage your store, stock and orders"
-              />
-              <AccountLink
+            </section>
+            <section className={styles.account}>
+              <h2>Account</h2>
+              <ProfileRow
                 href="/address-book"
+                icon="address"
                 label="Address book"
                 detail="Manage delivery addresses"
               />
-              <AccountLink
+              <ProfileRow
                 href="/payment-methods"
+                icon="payment"
                 label="Payment methods"
                 detail="Wallet and cards"
               />
-              <AccountLink
+              <ProfileRow
                 href="/notifications"
+                icon="notifications"
                 label="Notifications"
                 detail="Orders, offers and activity"
               />
-            </div>
-          </section>
-        </>
-      )}
+            </section>
+          </div>
+        )}
+      </div>
       <BottomNavigation />
+      {menu ? <SideNavigation onClose={closeMenu} /> : null}
     </main>
   );
 }
-
-function ProfileStat({
-  href,
-  label,
-  value,
-  hasError,
-}: {
-  href: string;
-  label: string;
-  value: string;
-  hasError: boolean;
-}) {
-  return (
-    <Link className={styles.stat} href={href}>
-      <strong className={hasError ? styles.metricError : undefined}>
-        {value}
-      </strong>
-      <span>{label}</span>
-    </Link>
-  );
-}
-
-function ActivityLink({
+function ProfileRow({
   href,
   icon,
   label,
@@ -184,53 +177,13 @@ function ActivityLink({
   detail: string;
 }) {
   return (
-    <Link className={styles.activityItem} href={href}>
-      <span className={styles.activityIcon}>
-        <Icon name={icon} size={20} />
-      </span>
-      <span className={styles.activityCopy}>
+    <Link href={href} className={styles.row}>
+      <img src={`/figma/profile-${icon}.svg`} width={32} height={32} alt="" />
+      <span>
         <strong>{label}</strong>
-        <span>{detail}</span>
+        <small>{detail}</small>
       </span>
-      <Icon className={styles.chevron} name="chevron" size={20} />
+      <img src="/figma/profile-chevron.svg" width={24} height={44} alt="" />
     </Link>
-  );
-}
-
-function AccountLink({
-  href,
-  label,
-  detail,
-}: {
-  href: string;
-  label: string;
-  detail: string;
-}) {
-  return (
-    <Link className={styles.accountItem} href={href}>
-      <span className={styles.accountCopy}>
-        <strong>{label}</strong>
-        <span>{detail}</span>
-      </span>
-      <Icon className={styles.chevron} name="chevron" size={20} />
-    </Link>
-  );
-}
-
-function metricValue(loading: boolean, error: string, value?: number) {
-  if (loading) return "…";
-  if (error) return "—";
-  return String(value ?? 0);
-}
-
-function initials(name: string) {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase() || "U"
   );
 }

@@ -1,0 +1,63 @@
+<!doctype html><meta charset="utf-8" /><title>
+  EaziCart comparison evidence</title
+><style>
+  body {
+    font: 16px system-ui;
+    margin: 24px;
+    background: #eee;
+  }
+  select {
+    font: inherit;
+    padding: 8px;
+  }
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-top: 16px;
+  }
+  p {
+    max-width: 850px;
+  }
+</style>
+<h1>EaziCart comparison evidence</h1>
+<p>
+  Figma is on the left in side-by-side mode. Overlays blend both images equally.
+  Difference images amplify RGB differences four times. These captures use
+  sandbox data; see REPORT.md for exact production gaps.
+</p>
+<select id="screen">
+  <option value="home">Home — 1247:16174</option>
+  <option value="product">Nike detail — 8:54</option>
+  <option value="cart">Cart — 8:81</option>
+  <option value="checkout">Checkout — 154:2</option>
+  <option value="pending">Payment pending — 212:104</option>
+  <option value="success">Payment success — 156:2</option>
+  <option value="order">Order detail — 156:27</option>
+  <option value="tracking">Tracking — 156:71</option>
+  <option value="drawer">Side navigation — 560:3187</option>
+  <option value="explore">Explore — 8:2</option>
+  <option value="reels">Reels — 223:51</option>
+  <option value="profile">Profile — 19:120</option>
+  <option value="cart-empty">Empty cart — 228:50</option>
+  <option value="cart-remove">Remove item — 228:68</option>
+  <option value="cart-error">Cart update failed — 228:113</option>
+  <option value="cart-unavailable">Unavailable cart item — 228:91</option>
+  <option value="payment-failed">Payment failed — 212:122</option>
+  <option value="address-select">Delivery address — 228:214</option>
+</select>
+<select id="mode">
+  <option value="comparison">Side by side</option>
+  <option value="overlay">50% overlay</option>
+  <option value="diff">4× difference</option></select
+><img id="capture" alt="Selected comparison" />
+<script>
+  const screenSelect = document.getElementById("screen"),
+    modeSelect = document.getElementById("mode"),
+    captureImage = document.getElementById("capture");
+  function update() {
+    captureImage.src = `captures/${screenSelect.value}-${modeSelect.value}.png`;
+  }
+  screenSelect.onchange = modeSelect.onchange = update;
+  update();
+</script>

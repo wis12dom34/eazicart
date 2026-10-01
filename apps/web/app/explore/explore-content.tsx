@@ -2,174 +2,340 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-
+import { useSearchParams, useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
 import "./explore.css";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { SideNavigation } from "../components/side-navigation";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
 } from "../components/async-state";
-import { Icon } from "../components/icon";
 import { money } from "../data";
 import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
-import { categoriesApi } from "../../lib/api/categories";
 import { productsApi } from "../../lib/api/products";
 import { sellersApi } from "../../lib/api/sellers";
+import { notificationsApi } from "../../lib/api/notifications";
+import { savedApi } from "../../lib/api/saved";
 
+const cards = [
+  {
+    name: "AirPods Pro",
+    seller: "Jumia Nigeria",
+    label: "AirPods Pro",
+    image: "airpods-pro-2.jpg",
+  },
+  {
+    name: "Nike Air Max 90",
+    seller: "Nike Official",
+    label: "Nike Air Max",
+    image: "nike-air-max-90.jpg",
+  },
+];
+const reels = [
+  {
+    name: "Nike Air Max 90",
+    seller: "Nike Official",
+    label: "New arrivals",
+    image: "nike-air-max-90.jpg",
+    views: "12.4K",
+  },
+  {
+    name: "iPhone 15 Pro",
+    seller: "Jumia Nigeria",
+    label: "Top picks",
+    image: "iphone-15-pro.jpg",
+    views: "9.8K",
+  },
+  {
+    name: "Adidas Samba OG",
+    seller: "Adidas Official",
+    label: "For your day",
+    image: "adidas-samba-og.jpg",
+    views: "7.3K",
+  },
+];
 export function ExploreContent() {
   const auth = useAuth();
+  const router = useRouter();
   const params = useSearchParams();
   const search = params.get("search") ?? "";
   const category = params.get("category") ?? "";
   const products = useRequest(
-    () => productsApi.list({ search, category, limit: 8 }),
+    () => productsApi.list({ search, category, limit: 100 }),
     [search, category],
   );
-  const categories = useRequest(() => categoriesApi.list(), []);
   const sellers = useRequest(() => sellersApi.list(), []);
-  const error = products.error || categories.error || sellers.error;
-  const popularProducts = products.data?.data.slice(0, 2) ?? [];
-  const trendingCategories = categories.data?.data.slice(0, 4) ?? [];
-  const topSellers = sellers.data?.data.slice(0, 3) ?? [];
-
+  const notifications = useRequest(
+    () =>
+      auth.isAuthenticated
+        ? notificationsApi.list()
+        : Promise.resolve(undefined),
+    [auth.isAuthenticated],
+  );
+  const saved = useRequest(
+    () =>
+      auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }),
+    [auth.isAuthenticated],
+  );
+  const [menu, setMenu] = useState(false);
+  const closeMenu = useCallback(() => setMenu(false), []);
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const toggle = async (id: string, selected: boolean) => {
+    if (!auth.isAuthenticated) {
+      router.push("/login?next=%2Fexplore");
+      return;
+    }
+    setBusy(id);
+    setError("");
+    try {
+      if (selected) await savedApi.remove(id);
+      else await savedApi.save(id);
+      setOverrides((value) => ({ ...value, [id]: !selected }));
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Unable to save product",
+      );
+    } finally {
+      setBusy(null);
+    }
+  };
+  const available = cards.map((card) => ({
+    card,
+    product: products.data?.data.find(
+      (p) => p.name === card.name && p.seller.displayName === card.seller,
+    ),
+  }));
   return (
-    <main className="app-shell with-nav figma-explore">
-      <header className="figma-explore-header">
-        <Link
-          className="figma-explore-avatar"
-          href={auth.isAuthenticated ? "/profile" : "/login"}
-          aria-label="Profile"
-        >
-          {auth.user?.name?.slice(0, 1).toUpperCase() ?? ""}
-        </Link>
-        <Link
-          className="figma-explore-logo"
-          href="/"
-          aria-label="EaziCart home"
-        >
-          <span aria-hidden="true">↗</span>
-        </Link>
-        <div className="figma-explore-actions">
-          <Link href="/saved" aria-label="Saved products">
-            <Icon name="heart" size={22} />
-          </Link>
-          <Link href="/cart" aria-label="Cart">
-            <Icon name="bag" size={20} />
-          </Link>
-        </div>
-      </header>
-
-      <h1 className="figma-explore-title">Explore</h1>
-
-      <form className="figma-explore-search" action="/search">
-        <Icon name="search" size={16} />
-        <input
-          name="search"
-          defaultValue={search}
-          aria-label="Search products, brands and sellers"
-          placeholder="Search"
-        />
-      </form>
-
-      <nav className="figma-explore-browse" aria-label="Explore browse">
-        <strong>Browse</strong>
-        <div>
-          <Link href="#categories">Categories</Link>
+    <main className="app-shell figma-explore" data-figma-node="8:2">
+      <div className="figma-explore-viewport">
+        <header className="figma-explore-header">
           <button
-            type="button"
-            disabled
-            title="Brand browsing is not available yet."
+            className="figma-explore-avatar"
+            aria-label="Open side navigation"
+            onClick={() => setMenu(true)}
           >
-            Brands
+            <img
+              src="/figma/explore-profile.svg"
+              width={40}
+              height={40}
+              alt=""
+            />
           </button>
-          <Link href="#sellers">Sellers</Link>
+          <Link
+            className="figma-explore-logo"
+            href="/"
+            aria-label="EaziCart home"
+          >
+            <img src="/figma/explore-logo.svg" width={32} height={32} alt="" />
+          </Link>
+          <Link
+            className="figma-explore-notifications"
+            href="/notifications"
+            aria-label="Notifications"
+          >
+            <img src="/figma/explore-bell.svg" width={22} height={22} alt="" />
+            {notifications.data?.meta.unreadCount ? (
+              <b>{notifications.data.meta.unreadCount}</b>
+            ) : null}
+          </Link>
+        </header>
+        <h1 className="figma-explore-title">Explore</h1>
+        <div className="figma-explore-sticky">
+          <form className="figma-explore-search" action="/search">
+            <img
+              src="/figma/explore-search.svg"
+              width={20}
+              height={20}
+              alt=""
+            />
+            <input
+              name="search"
+              defaultValue={search}
+              aria-label="Search products, stores or brands"
+              placeholder="Search products, stores or brands"
+            />
+          </form>
+          <nav className="figma-explore-tabs" aria-label="Explore sections">
+            <span aria-current="page">For You</span>
+            {["Trending", "Categories", "Brands", "Sellers"].map((label) => (
+              <span
+                key={label}
+                aria-disabled="true"
+                title={`${label} destination is not connected`}
+              >
+                {label}
+              </span>
+            ))}
+          </nav>
         </div>
-      </nav>
-
-      {error && (
-        <ErrorState
-          message={error}
-          retry={() => {
-            void products.reload();
-            void categories.reload();
-            void sellers.reload();
-          }}
-        />
-      )}
-
-      <section className="figma-explore-section" id="categories">
-        <h2>Trending Now</h2>
-        <div
-          className="figma-explore-trending"
-          aria-label="Trending categories"
-        >
-          {trendingCategories.map((item) => (
-            <Link href={`/category/${item.slug}`} key={item.id}>
-              {item.name}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="figma-explore-section figma-explore-products">
-        <h2>Popular Products</h2>
-        {products.loading ? (
-          <LoadingState label="Loading products…" />
-        ) : popularProducts.length ? (
-          <div className="figma-explore-grid">
-            {popularProducts.map((product) => (
-              <article className="figma-explore-product" key={product.id}>
-                <Link
-                  className="figma-explore-product-media"
-                  href={`/product/${product.id}`}
-                  aria-label={`View ${product.name}`}
-                >
-                  {product.images[0] ? (
-                    <img
-                      src={product.images[0].url}
-                      alt={product.images[0].altText ?? product.name}
-                    />
-                  ) : null}
-                </Link>
-                <Link
-                  className="figma-explore-product-name"
-                  href={`/product/${product.id}`}
-                >
-                  {product.name}
-                </Link>
-                <strong>{money(product.price)}</strong>
-              </article>
+        <section className="figma-explore-trends">
+          <h2>Trending Now</h2>
+          <div>
+            {["iPhone 17", "Sneakers", "Home Deals", "Beauty"].map((label) => (
+              <Link
+                key={label}
+                href={`/search?search=${encodeURIComponent(label)}`}
+              >
+                {label}
+              </Link>
             ))}
           </div>
-        ) : (
-          <EmptyState message="No products match your search." />
-        )}
-      </section>
-
-      <section
-        className="figma-explore-section figma-explore-sellers"
-        id="sellers"
+        </section>
+        <section className="figma-explore-products">
+          <h2>Popular Products</h2>
+          {products.loading ? (
+            <LoadingState label="Loading products…" />
+          ) : products.error ? (
+            <ErrorState
+              message={products.error}
+              retry={() => void products.reload()}
+            />
+          ) : available.some((p) => p.product) ? (
+            <div className="figma-explore-grid">
+              {available.map(({ card, product }) => {
+                if (!product)
+                  return (
+                    <div
+                      className="figma-explore-missing"
+                      key={card.name}
+                      aria-label={`${card.label} is unavailable`}
+                    />
+                  );
+                const selected =
+                  overrides[product.id] ??
+                  saved.data?.data.some((p) => p.productId === product.id) ??
+                  false;
+                return (
+                  <article className="figma-explore-product" key={product.id}>
+                    <Link
+                      className="figma-explore-product-media"
+                      href={`/product/${product.id}`}
+                      aria-label={`View ${product.name}`}
+                    >
+                      <img src={`/figma/${card.image}`} alt={product.name} />
+                    </Link>
+                    <Link
+                      className="figma-explore-card-seller"
+                      href={`/seller/${product.seller.id}`}
+                    >
+                      {product.seller.displayName}
+                      <img
+                        src="/figma/verified.svg"
+                        width={16}
+                        height={16}
+                        alt="Verified seller"
+                      />
+                    </Link>
+                    <Link
+                      className="figma-explore-product-name"
+                      href={`/product/${product.id}`}
+                    >
+                      {card.label}
+                    </Link>
+                    <strong>{money(product.price)}</strong>
+                    <button
+                      className="figma-explore-favourite"
+                      aria-label={`${selected ? "Unsave" : "Save"} ${product.name}`}
+                      aria-pressed={selected}
+                      disabled={busy === product.id}
+                      onClick={() => void toggle(product.id, selected)}
+                    >
+                      <img
+                        src={
+                          selected
+                            ? "/figma/heart-saved.svg"
+                            : "/figma/heart.svg"
+                        }
+                        width={18}
+                        height={18}
+                        alt=""
+                      />
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState message="No products match your search." />
+          )}
+          {error ? <p role="alert">{error}</p> : null}
+        </section>
+        <section className="figma-explore-reels">
+          <div>
+            <h2>Reels</h2>
+            <Link href="/reels">View all ›</Link>
+          </div>
+          <div className="figma-explore-reel-strip">
+            {reels.map((reel) => {
+              const product = products.data?.data.find(
+                (p) =>
+                  p.name === reel.name && p.seller.displayName === reel.seller,
+              );
+              return product ? (
+                <Link
+                  className="figma-explore-reel"
+                  href={`/reels?productId=${encodeURIComponent(product.id)}`}
+                  key={reel.name}
+                >
+                  <img src={`/figma/${reel.image}`} alt="" />
+                  <i />
+                  <strong>{reel.label}</strong>
+                  <span>▶ {reel.views}</span>
+                  <b />
+                </Link>
+              ) : null;
+            })}
+          </div>
+        </section>
+        <section className="figma-explore-sellers">
+          <div>
+            <h2>Top Sellers</h2>
+            <span>All sellers</span>
+          </div>
+          <div className="figma-explore-seller-strip">
+            {["Nike Official", "Jumia Nigeria", "HomeStyle NG"].map((name) => {
+              const seller =
+                sellers.data?.data.find((s) => s.displayName === name) ??
+                products.data?.data.find((p) => p.seller.displayName === name)
+                  ?.seller;
+              return seller ? (
+                <Link href={`/seller/${seller.id}`} key={name}>
+                  <i />
+                  <strong>
+                    {name}
+                    <img
+                      src="/figma/verified.svg"
+                      width={16}
+                      height={16}
+                      alt="Verified seller"
+                    />
+                  </strong>
+                </Link>
+              ) : (
+                <div key={name}>
+                  <i />
+                  <strong>{name}</strong>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+      <button
+        className="figma-explore-map"
+        disabled
+        title="Live map service is not connected"
       >
-        <div className="figma-explore-section-heading">
-          <h2>Top Sellers</h2>
-          <a href="#sellers">All sellers</a>
-        </div>
-        <div className="figma-explore-seller-row">
-          {topSellers.map((seller) => (
-            <Link href={`/seller/${seller.id}`} key={seller.id}>
-              <span aria-hidden="true">
-                {seller.displayName.slice(0, 2).toUpperCase()}
-              </span>
-              <strong>{seller.displayName}</strong>
-            </Link>
-          ))}
-        </div>
-      </section>
-
+        <i />
+        Map
+      </button>
       <BottomNavigation />
+      {menu ? <SideNavigation onClose={closeMenu} /> : null}
     </main>
   );
 }

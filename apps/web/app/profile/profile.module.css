@@ -1,219 +1,230 @@
 .page {
-  min-height: 100svh;
-  padding-bottom: calc(122px + env(safe-area-inset-bottom));
+  height: 100svh;
+  max-width: 440px;
+  background: #fff;
 }
-
-.identityRow {
-  min-height: 142px;
-  padding: calc(56px + env(safe-area-inset-top)) 20px 10px;
+.header {
+  height: 64px;
+  position: relative;
+  background: rgba(255, 255, 255, 0.98);
+  border-bottom: 1px solid #e5e5eb;
+}
+.header a {
+  position: absolute;
+  top: 10px;
+  left: 4px;
+  height: 44px;
+  width: 44px;
+  display: grid;
+  place-items: center;
+  color: #0f0f0f;
+  text-decoration: none;
+  font-size: 30px;
+  line-height: 36px;
+}
+.header h1 {
+  margin: 0;
+  position: absolute;
+  left: 60px;
+  top: 21px;
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 700;
+  color: #0f0f0f;
+}
+.viewport {
+  height: calc(100svh - 152px - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.content {
+  min-height: 1010px;
+  padding: 20px 20px 166px;
+}
+.identity {
+  height: 106px;
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
+  flex-direction: column;
+  gap: 8px;
 }
-
-.identityLink {
-  min-width: 0;
-  flex: 1;
+.identityRow {
   display: flex;
   align-items: center;
-  gap: 16px;
-  color: var(--ink);
-  text-decoration: none;
+  gap: 8px;
+  height: 56px;
 }
-
 .avatar {
-  width: 76px;
-  height: 76px;
-  flex: 0 0 76px;
+  height: 60px;
+  width: 60px;
+  flex-shrink: 0;
+  border: 0;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #f4f5f7;
-  color: #5e626a;
-  font-size: 18px;
-  font-weight: 750;
-  letter-spacing: -0.03em;
+  background: #f0f2f4;
+  color: #0f1419;
+  font-weight: 600;
+  font-size: 20px;
+  cursor: pointer;
 }
-
 .identityCopy {
+  flex: 1;
   min-width: 0;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-
-.identityCopy h1 {
+.identityCopy h2 {
   margin: 0;
   font-size: 20px;
-  line-height: 1.2;
-  letter-spacing: -0.035em;
-  overflow-wrap: anywhere;
+  font-weight: 600;
+  line-height: 24px;
+  color: #0f1419;
 }
-
 .identityCopy p {
-  margin: 6px 0 0;
-  color: #6b707a;
-  font-size: 12px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
+  margin: 0;
+  color: #65717d;
+  font-size: 15px;
+  line-height: 18px;
 }
-
-.settingsLink {
+.identityCopy small {
+  font-size: 14px;
+  line-height: 17px;
+  color: #65717d;
+}
+.settings {
+  flex-shrink: 0;
   width: 44px;
   height: 44px;
-  flex: 0 0 44px;
-  margin: 8px -6px 0 0;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  color: var(--ink);
-  text-decoration: none;
+  border-radius: 12px;
 }
-
-.stats {
-  min-height: 82px;
-  margin: 12px 20px 0;
-  border: 1px solid #e8ebf0;
-  border-radius: 18px;
+.edit {
+  width: 120px;
+  min-height: 40px;
+  margin-left: auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  overflow: hidden;
+  place-items: center;
+  border-radius: 18px;
+  background: #f2f2f7;
+  color: #0f1419;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 18px;
 }
-
-.stat {
+.stats {
+  height: 64px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 16px;
+  display: flex;
+}
+.stats a {
+  flex: 1;
   min-width: 0;
-  padding: 15px 8px 12px;
+  height: 64px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  color: var(--ink);
+  justify-content: center;
+  gap: 4px;
   text-decoration: none;
 }
-
-.stat strong {
+.stats strong {
+  color: #0f1419;
   font-size: 18px;
   line-height: 22px;
-  letter-spacing: -0.025em;
+  font-weight: 600;
 }
-
-.stat span {
-  margin-top: 6px;
-  color: #6b707a;
-  font-size: 11px;
-  line-height: 13px;
+.stats span {
+  color: #65717d;
+  font-size: 14px;
+  line-height: 17px;
 }
-
-.section {
-  padding: 0 20px;
+.stats .metricError {
+  color: #a52b1b;
 }
-
-.activitySection {
-  margin-top: 36px;
+.tabs {
+  height: 44px;
+  margin-top: 12px;
+  display: flex;
 }
-
-.accountSection {
-  margin-top: 40px;
+.tabs > * {
+  flex: 1;
+  text-align: center;
+  padding-top: 10px;
+  color: #65717d;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 18px;
+  font-weight: 600;
+  position: relative;
 }
-
-.sectionTitle {
-  margin: 0 0 15px;
-  font-size: 17px;
-  line-height: 21px;
-  letter-spacing: -0.025em;
+.tabs [aria-current] {
+  color: #0f1419;
 }
-
-.activityList {
-  display: grid;
-  gap: 16px;
+.tabs [aria-current]:after {
+  content: "";
+  position: absolute;
+  width: 36px;
+  height: 3px;
+  bottom: 0;
+  left: calc(50% - 18px);
+  border-radius: 999px;
+  background: #0f1419;
 }
-
-.activityItem {
-  min-height: 62px;
-  padding: 10px 14px 10px 16px;
-  border: 1px solid #e8ebf0;
-  border-radius: 18px;
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 24px;
+.activity {
+  margin-top: 12px;
+}
+.row {
+  display: flex;
+  gap: 12px;
+  height: 74px;
   align-items: center;
-  gap: 16px;
-  color: var(--ink);
+  color: #0f1419;
   text-decoration: none;
 }
-
-.activityIcon {
-  display: grid;
-  place-items: center;
+.row > img {
+  flex-shrink: 0;
 }
-
-.activityCopy {
+.row > span {
+  flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-
-.activityCopy strong,
-.activityCopy span {
-  display: block;
+.row strong {
+  font-size: 16px;
+  line-height: 19px;
+  font-weight: 500;
 }
-
-.activityCopy strong {
-  font-size: 13px;
-  line-height: 16px;
-  font-weight: 650;
+.row small {
+  font-size: 14px;
+  line-height: 17px;
+  color: #65717d;
 }
-
-.activityCopy span {
-  margin-top: 5px;
-  color: #6b707a;
-  font-size: 11px;
-  line-height: 14px;
+.account {
+  margin-top: 20px;
 }
-
-.chevron {
-  color: #6b707a;
-  justify-self: end;
+.account h2 {
+  margin: 0 0 10px;
+  color: #0f1419;
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 600;
 }
-
-.accountList {
-  display: grid;
-}
-
-.accountItem {
-  min-height: 62px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 24px;
-  align-items: center;
-  color: var(--ink);
-  text-decoration: none;
-}
-
-.accountCopy strong,
-.accountCopy span {
-  display: block;
-}
-
-.accountCopy strong {
-  font-size: 13px;
-  line-height: 16px;
-  font-weight: 650;
-}
-
-.accountCopy span {
-  margin-top: 6px;
-  color: #6b707a;
-  font-size: 11px;
-  line-height: 13px;
-}
-
-.metricError {
-  color: #9b2c2c;
-}
-
-@media (max-width: 380px) {
-  .identityRow,
-  .section {
-    padding-left: 16px;
-    padding-right: 16px;
+@media (max-width: 390px) {
+  .identityCopy h2 {
+    font-size: 20px;
+    overflow-wrap: anywhere;
   }
-
-  .stats {
-    margin-left: 16px;
-    margin-right: 16px;
+  .row {
+    min-height: 74px;
+    height: auto;
+    padding: 14px 0;
+  }
+  .row > span {
+    overflow-wrap: anywhere;
   }
 }

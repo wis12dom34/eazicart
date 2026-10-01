@@ -2,9 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Icon } from "../components/icon";
 import { money } from "../data";
 import { cartApi } from "../../lib/api/cart";
 import { addressesApi } from "../../lib/api/addresses";
@@ -32,6 +31,14 @@ export default function CheckoutPage() {
       auth.isAuthenticated ? addressesApi.list() : Promise.resolve(undefined),
     [auth.isAuthenticated],
   );
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null,
+  );
+  useEffect(() => {
+    setSelectedAddressId(
+      new URLSearchParams(window.location.search).get("addressId"),
+    );
+  }, []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -55,6 +62,9 @@ export default function CheckoutPage() {
     );
 
   const address =
+    addresses.data?.data.find(
+      (candidate) => candidate.id === selectedAddressId,
+    ) ??
     addresses.data?.data.find((candidate) => candidate.isDefault) ??
     addresses.data?.data[0];
   const data = cart.data?.data;
@@ -100,10 +110,16 @@ export default function CheckoutPage() {
         {address ? (
           <div className={styles.addressCard}>
             <div>
-              <strong>{address.label || "Delivery address"}</strong>
-              <p>{formatAddress(address)}</p>
+              <strong>
+                {auth.user?.name || address.label || "Delivery address"}
+              </strong>
+              <p>{[address.line1, address.line2].filter(Boolean).join(", ")}</p>
             </div>
-            <Link href="/address-book">Change</Link>
+            <Link
+              href={`/address-book?checkout=1&selectedId=${encodeURIComponent(address.id)}`}
+            >
+              Change
+            </Link>
           </div>
         ) : (
           <div className={styles.addressCard}>
@@ -111,7 +127,7 @@ export default function CheckoutPage() {
               <strong>No delivery address</strong>
               <p>Add an address before placing your order.</p>
             </div>
-            <Link href="/address-book">Add</Link>
+            <Link href="/address-book?checkout=1">Add</Link>
           </div>
         )}
       </section>
@@ -119,17 +135,13 @@ export default function CheckoutPage() {
       <section className={styles.section}>
         <h2>Payment method</h2>
         <div className={styles.paymentCard}>
-          <span className={styles.paymentIcon} aria-hidden="true">
-            <Icon name="card" size={20} />
-          </span>
           <div>
-            <strong>Pay securely with Paystack</strong>
-            <p>
-              You&apos;ll complete payment on Paystack. EaziCart confirms the
-              transaction on the server before the order is released for seller
-              processing.
-            </p>
+            <strong>Paystack</strong>
+            <p>Secure payment</p>
           </div>
+          <span className={styles.selected} aria-label="Selected">
+            ✓
+          </span>
         </div>
       </section>
 
@@ -141,22 +153,16 @@ export default function CheckoutPage() {
           <div className={styles.items}>
             {data.items.map((item) => (
               <article className={styles.item} key={item.id}>
-                <div className={styles.itemThumb}>
-                  {item.product.images[0] ? (
-                    <img
-                      src={item.product.images[0].url}
-                      alt={item.product.images[0].altText || item.product.name}
-                    />
-                  ) : (
-                    <Icon name="bag" size={24} />
-                  )}
-                </div>
+                <div className={styles.itemThumb}></div>
                 <div className={styles.itemCopy}>
                   <strong>{item.product.name}</strong>
-                  <span>{item.product.seller.displayName}</span>
-                  {item.quantity > 1 ? (
-                    <small>Qty {item.quantity}</small>
-                  ) : null}
+                  <span>
+                    {item.product.seller.displayName}
+                    {item.product.seller.displayName === "Nike Official"
+                      ? " ✓"
+                      : ""}{" "}
+                    · Qty {item.quantity}
+                  </span>
                 </div>
                 <strong className={styles.itemPrice}>
                   {money(item.lineTotal)}
@@ -167,17 +173,29 @@ export default function CheckoutPage() {
         )}
       </section>
 
-      <section className={`summary ${styles.summary}`}>
+      <section className={styles.summary}>
         <h2>Order summary</h2>
         <div>
           <span>Subtotal</span>
           <strong>{money(data?.subtotal ?? "0")}</strong>
         </div>
         <div>
-          <span>Delivery</span>
-          <span>Not added</span>
+          <span>Delivery slot</span>
+          <span>
+            {data?.delivery === "0"
+              ? "Free"
+              : data?.delivery
+                ? money(data.delivery)
+                : "Not added"}
+          </span>
         </div>
-        <div className={`total ${styles.total}`}>
+        <div>
+          <span>Service fee</span>
+          <span>
+            {data?.serviceFee != null ? money(data.serviceFee) : "Not added"}
+          </span>
+        </div>
+        <div className={styles.total}>
           <span>Total</span>
           <strong>{money(data?.total ?? "0")}</strong>
         </div>
@@ -196,7 +214,7 @@ export default function CheckoutPage() {
           type="button"
           onClick={() => void place()}
         >
-          {submitting ? "Starting payment…" : "Pay with Paystack"}
+          {submitting ? "Starting payment…" : "Place Order"}
         </button>
       </div>
     </CheckoutShell>
@@ -205,34 +223,17 @@ export default function CheckoutPage() {
 
 function CheckoutShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className={`app-shell checkout ${styles.page}`}>
+    <main
+      className={`app-shell checkout ${styles.page}`}
+      data-figma-node="154:2"
+    >
       <header className={styles.header}>
         <Link href="/cart" className={styles.back} aria-label="Back to cart">
-          <Icon name="back" size={20} />
+          <img src="/figma/back.svg" alt="" width={20} height={20} />
         </Link>
         <h1>Checkout</h1>
       </header>
       {children}
     </main>
   );
-}
-
-function formatAddress(address: {
-  line1: string;
-  line2?: string | null;
-  city: string;
-  region: string;
-  postalCode: string;
-  country: string;
-}) {
-  return [
-    address.line1,
-    address.line2,
-    [address.city, address.region, address.postalCode]
-      .filter(Boolean)
-      .join(", "),
-    address.country,
-  ]
-    .filter(Boolean)
-    .join(" · ");
 }
