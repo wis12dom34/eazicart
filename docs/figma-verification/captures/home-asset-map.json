@@ -1,1 +1,98 @@
-[{"name": "Adidas Samba OG", "hash": "ca79779a7e9a0333c78ddb39baf0c5573692ecff", "bytes": 56318, "file": "adidas-samba-og.jpg"}, {"name": "MacBook Air M4", "hash": "e680e4c2612f662e44506c8a21cecc5a60ce2e6d", "bytes": 4422, "file": "macbook-air-m4.png"}, {"name": "PS5 Slim Console", "hash": "4d4ad8d619aa1ceea73681640773462252ba45d6", "bytes": 10010, "file": "ps5-slim-console.png"}, {"name": "Hisense 55\" 4K TV", "hash": "a8db37f0b6ceda92671488915dc9e42a68a46510", "bytes": 6164, "file": "hisense-55-4k-tv.png"}, {"name": "iPhone 15 Pro", "hash": "cd1bccfc2a3bf5b6fa1536de11bfe7fbe072577f", "bytes": 199496, "file": "iphone-15-pro.jpg"}, {"name": "AirPods Pro 2", "hash": "d718d536c0d000bf85cc19f568f782338c22cfcd", "bytes": 33943, "file": "airpods-pro-2.jpg"}, {"name": "Nike Air Max 90", "hash": "d28da9962399d3b7edd8f3819b51af387e0198f6", "bytes": 46788, "file": "nike-air-max-90.jpg"}, {"name": "Galaxy S25 Ultra", "hash": "7b0b9f40d807f071d99ea5189ce6fb9388082dbd", "bytes": 57643, "file": "galaxy-s25-ultra.jpg"}, {"name": "Nike Club Hoodie", "hash": "ac9d85aba9529a98b0eaa89a571cb305fde743b7", "bytes": 108067, "file": "nike-club-hoodie.jpg"}, {"name": "PowerBox 500", "hash": "7e711bd8984385a60bf674995b786d99b20b61d3", "bytes": 5315, "file": "powerbox-500.jpg"}, {"name": "Zara Linen Shirt", "hash": "58cf2c31939fe08769af54cdc7f5134fdcbc2ad4", "bytes": 6119, "file": "zara-linen-shirt.png"}, {"name": "JBL Flip 7", "hash": "dee7cfca9c48f657455cbdb296a70cc8786a2473", "bytes": 8939, "file": "jbl-flip-7.png"}, {"name": "Luxe 3-Seater Sofa", "hash": "6ea584ffd03e021d643e4c4c013eb2523db9fde7", "bytes": 8764, "file": "luxe-3-seater-sofa.png"}, {"name": "Vitamin C Skincare", "hash": "8b6ed888a78479ca797ef0a38067ba9f8c27726f", "bytes": 24602, "file": "vitamin-c-skincare.jpg"}, {"name": "Weekend Grocery", "hash": "32faa113973dde02ae480a0bc5e48e74b5d49417", "bytes": 8458, "file": "weekend-grocery.jpg"}, {"name": "Adjustable Dumbbell", "hash": "34b755ae6b24b166df8001ef7e6f193fdfab9bc1", "bytes": 6204, "file": "adjustable-dumbbell.jpg"}]
+[
+  {
+    "name": "Adidas Samba OG",
+    "hash": "ca79779a7e9a0333c78ddb39baf0c5573692ecff",
+    "bytes": 56318,
+    "file": "adidas-samba-og.jpg"
+  },
+  {
+    "name": "MacBook Air M4",
+    "hash": "e680e4c2612f662e44506c8a21cecc5a60ce2e6d",
+    "bytes": 4422,
+    "file": "macbook-air-m4.png"
+  },
+  {
+    "name": "PS5 Slim Console",
+    "hash": "4d4ad8d619aa1ceea73681640773462252ba45d6",
+    "bytes": 10010,
+    "file": "ps5-slim-console.png"
+  },
+  {
+    "name": "Hisense 55\" 4K TV",
+    "hash": "a8db37f0b6ceda92671488915dc9e42a68a46510",
+    "bytes": 6164,
+    "file": "hisense-55-4k-tv.png"
+  },
+  {
+    "name": "iPhone 15 Pro",
+    "hash": "cd1bccfc2a3bf5b6fa1536de11bfe7fbe072577f",
+    "bytes": 199496,
+    "file": "iphone-15-pro.jpg"
+  },
+  {
+    "name": "AirPods Pro 2",
+    "hash": "d718d536c0d000bf85cc19f568f782338c22cfcd",
+    "bytes": 33943,
+    "file": "airpods-pro-2.jpg"
+  },
+  {
+    "name": "Nike Air Max 90",
+    "hash": "d28da9962399d3b7edd8f3819b51af387e0198f6",
+    "bytes": 46788,
+    "file": "nike-air-max-90.jpg"
+  },
+  {
+    "name": "Galaxy S25 Ultra",
+    "hash": "7b0b9f40d807f071d99ea5189ce6fb9388082dbd",
+    "bytes": 57643,
+    "file": "galaxy-s25-ultra.jpg"
+  },
+  {
+    "name": "Nike Club Hoodie",
+    "hash": "ac9d85aba9529a98b0eaa89a571cb305fde743b7",
+    "bytes": 108067,
+    "file": "nike-club-hoodie.jpg"
+  },
+  {
+    "name": "PowerBox 500",
+    "hash": "7e711bd8984385a60bf674995b786d99b20b61d3",
+    "bytes": 5315,
+    "file": "powerbox-500.jpg"
+  },
+  {
+    "name": "Zara Linen Shirt",
+    "hash": "58cf2c31939fe08769af54cdc7f5134fdcbc2ad4",
+    "bytes": 6119,
+    "file": "zara-linen-shirt.png"
+  },
+  {
+    "name": "JBL Flip 7",
+    "hash": "dee7cfca9c48f657455cbdb296a70cc8786a2473",
+    "bytes": 8939,
+    "file": "jbl-flip-7.png"
+  },
+  {
+    "name": "Luxe 3-Seater Sofa",
+    "hash": "6ea584ffd03e021d643e4c4c013eb2523db9fde7",
+    "bytes": 8764,
+    "file": "luxe-3-seater-sofa.png"
+  },
+  {
+    "name": "Vitamin C Skincare",
+    "hash": "8b6ed888a78479ca797ef0a38067ba9f8c27726f",
+    "bytes": 24602,
+    "file": "vitamin-c-skincare.jpg"
+  },
+  {
+    "name": "Weekend Grocery",
+    "hash": "32faa113973dde02ae480a0bc5e48e74b5d49417",
+    "bytes": 8458,
+    "file": "weekend-grocery.jpg"
+  },
+  {
+    "name": "Adjustable Dumbbell",
+    "hash": "34b755ae6b24b166df8001ef7e6f193fdfab9bc1",
+    "bytes": 6204,
+    "file": "adjustable-dumbbell.jpg"
+  }
+]
