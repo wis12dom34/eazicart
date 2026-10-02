@@ -35,21 +35,20 @@ const routes = [
   },
 ];
 
-test("customer entry routes fit a narrow mobile viewport", async ({ page }) => {
-  await page.setViewportSize({ width: 360, height: 800 });
-
-  for (const route of routes) {
-    await page.goto(route.path);
-    await expect(route.ready(page)).toBeVisible();
-
-    const dimensions = await page.evaluate(() => ({
-      clientWidth: document.documentElement.clientWidth,
-      scrollWidth: document.documentElement.scrollWidth,
-    }));
-
-    expect(
-      dimensions.scrollWidth,
-      `${route.path} should not scroll horizontally`,
-    ).toBeLessThanOrEqual(dimensions.clientWidth);
+test("customer entry routes fit all five mobile widths", async ({ page }) => {
+  for (const width of [360, 375, 390, 430, 440]) {
+    await page.setViewportSize({ width, height: 932 });
+    for (const route of routes) {
+      await page.goto(route.path);
+      await expect(route.ready(page)).toBeVisible();
+      const dimensions = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(
+        dimensions.scrollWidth,
+        `${route.path} should not scroll horizontally at ${width}px`,
+      ).toBeLessThanOrEqual(dimensions.clientWidth);
+    }
   }
 });

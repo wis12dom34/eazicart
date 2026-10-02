@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -6,7 +7,10 @@ import { useRouter } from "next/navigation";
 import { paymentsApi } from "../../lib/api/payments";
 import type { Payment } from "../../lib/api/types";
 import { useAuth } from "../providers/auth-provider";
-import { Icon } from "../components/icon";
+import { ordersApi } from "../../lib/api/orders";
+import { useRequest } from "../hooks/use-request";
+import { money } from "../data";
+import styles from "./pending.module.css";
 
 export default function PaymentPending() {
   const auth = useAuth();
@@ -50,6 +54,14 @@ export default function PaymentPending() {
     // verify is intentionally run when the callback reference/auth state becomes available.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.loading, auth.isAuthenticated, reference]);
+
+  const order = useRequest(
+    () =>
+      payment?.orderId
+        ? ordersApi.get(payment.orderId)
+        : Promise.resolve(undefined),
+    [payment?.orderId],
+  );
 
   if (auth.loading || (checking && auth.isAuthenticated && reference))
     return (
@@ -97,46 +109,97 @@ export default function PaymentPending() {
       </StatusShell>
     );
 
-  if (payment?.status === "FAILED")
-    return (
-      <StatusShell icon="pending" title="Payment not completed">
-        <p>Your order has not been released to the seller.</p>
-        <Link className="dark-button" href={`/orders/${payment.orderId}`}>
-          View order
-        </Link>
-      </StatusShell>
-    );
-
+  const data = order.data?.data;
+  const failed = payment?.status === "FAILED";
   return (
-    <StatusShell icon="pending" title="Payment still processing">
-      <p>
-        Paystack has not confirmed this transaction yet. You can check again
-        without creating another order.
-      </p>
-      {error ? <p role="alert">{error}</p> : null}
-      <button
-        className="dark-button"
-        type="button"
-        disabled={checking}
-        onClick={() => void verify(reference)}
-      >
-        {checking ? "Checking…" : "Check again"}
-      </button>
-      {payment ? (
-        <Link className="text-button" href={`/orders/${payment.orderId}`}>
-          View order
-        </Link>
-      ) : (
-        <Link className="text-button" href="/orders">
-          View orders
-        </Link>
-      )}
-    </StatusShell>
+    <main
+      className={`app-shell ${styles.page} ${failed ? styles.failed : ""}`}
+      data-figma-node={failed ? "212:122" : "212:104"}
+    >
+      <div className={styles.islandHost}>
+        {failed ? (
+          <Link
+            className={styles.failedIsland}
+            href="/checkout"
+            aria-label="Payment failed. Tap to try again"
+          >
+            <img
+              src="/figma/payment-failed.svg"
+              width={20}
+              height={20}
+              alt=""
+            />
+            <span>
+              <strong>Payment failed</strong>
+              <small>Tap to try again</small>
+            </span>
+          </Link>
+        ) : (
+          <div aria-hidden="true" />
+        )}
+      </div>
+      <h1>Payment status</h1>
+      <section className={styles.pending} aria-live="polite">
+        <h2>
+          {failed ? "Payment wasn’t completed" : "Confirming your payment"}
+        </h2>
+        <p>
+          {failed
+            ? "We couldn’t complete this payment. Your items are still in your cart."
+            : "Your payment is still being checked. Your order will appear once payment is confirmed."}
+        </p>
+      </section>
+      <section className={styles.summary} aria-label="Payment summary">
+        <h2>
+          Checkout{data ? ` · #${data.orderNumber ?? data.id.slice(-8)}` : ""}
+        </h2>
+        <strong>{payment ? money(payment.amount) : "Checking…"}</strong>
+        <p>
+          {data
+            ? `${data.items.reduce((n, item) => n + item.quantity, 0)} items · `
+            : ""}
+          {payment?.methodLabel ?? "Paystack"}
+        </p>
+        {data ? (
+          <small>
+            Subtotal {money(data.subtotal ?? data.total)}
+            {data.serviceFee != null
+              ? ` · Service fee ${money(data.serviceFee)}`
+              : ""}
+          </small>
+        ) : null}
+      </section>
+      <section className={styles.recovery}>
+        <h2>{failed ? "Already debited?" : "No need to pay again"}</h2>
+        <p>
+          {failed
+            ? "Check your payment status before trying again. Contact support if you need help."
+            : "Check the status before starting another payment. You can return to your order later."}
+        </p>
+      </section>
+      <div className={styles.actions}>
+        {error ? <p role="alert">{error}</p> : null}
+        {failed ? (
+          <Link className={styles.returnCheckout} href="/checkout">
+            Return to checkout
+          </Link>
+        ) : null}
+        <button
+          type="button"
+          disabled={checking}
+          onClick={() => void verify(reference)}
+        >
+          {checking ? "Checking…" : "Check payment status"}
+        </button>
+        {!failed ? <Link href="/checkout">Return to checkout</Link> : null}
+        <span className={styles.support}>Need help? Contact support</span>
+      </div>
+      <hr />
+    </main>
   );
 }
 
 function StatusShell({
-  icon,
   title,
   children,
 }: {
@@ -145,13 +208,15 @@ function StatusShell({
   children: React.ReactNode;
 }) {
   return (
-    <main className="status-page">
-      <div className={`status-icon ${icon}`}>
-        <span className="spinner" />
-        <Icon name="card" />
+    <main className={`app-shell ${styles.page}`}>
+      <div className={styles.islandHost} aria-hidden="true">
+        <div />
       </div>
-      <h1>{title}</h1>
-      {children}
+      <h1>Payment status</h1>
+      <section className={styles.pending}>
+        <h2>{title}</h2>
+        {children}
+      </section>
     </main>
   );
 }

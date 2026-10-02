@@ -1,7 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
 import { useState } from "react";
+import { BottomNavigation } from "../components/bottom-navigation";
 import { Icon } from "../components/icon";
 import {
   ErrorState,
@@ -35,6 +37,7 @@ export default function Notifications() {
     [auth.isAuthenticated],
   );
   const notifications = result.data?.data ?? [];
+  const unreadCount = result.data?.meta.unreadCount ?? 0;
   const visible =
     filter === "ALL"
       ? notifications
@@ -69,123 +72,142 @@ export default function Notifications() {
   };
 
   return (
-    <main className={`app-shell ${styles.page}`}>
+    <main
+      className={`app-shell with-nav ${styles.page}`}
+      data-figma-node="32:2"
+    >
       <header className={styles.header}>
-        <div className={styles.titleRow}>
-          <Link
-            className={styles.back}
-            href="/profile"
-            aria-label="Back to profile"
-          >
-            <Icon name="back" size={22} />
-          </Link>
-          <h1>Notifications</h1>
-        </div>
-        <p>Orders, messages and updates</p>
+        <Link
+          className={styles.back}
+          href="/profile"
+          aria-label="Back to profile"
+        >
+          <img src="/figma/back.svg" width={20} height={20} alt="" />
+        </Link>
+        <h1>Notifications</h1>
+        <span className={styles.headerBell} aria-hidden="true">
+          <img src="/figma/explore-bell.svg" width={22} height={22} alt="" />
+          {unreadCount > 0 ? (
+            <span className={styles.unreadBadge}>
+              {badgeCount(unreadCount)}
+            </span>
+          ) : null}
+        </span>
       </header>
 
-      {auth.loading || result.loading ? (
-        <LoadingState />
-      ) : !auth.isAuthenticated ? (
-        <SignInState message="Sign in to view your notifications." />
-      ) : result.error ? (
-        <ErrorState message={result.error} retry={() => void result.reload()} />
-      ) : (
-        <div className={styles.content}>
-          <div className={styles.filters} aria-label="Notification filters">
-            {filters.map((item) => (
-              <button
-                key={item.key}
-                className={
-                  filter === item.key ? styles.filterActive : styles.filter
-                }
-                type="button"
-                aria-pressed={filter === item.key}
-                onClick={() => setFilter(item.key)}
-              >
-                {item.label}
-              </button>
-            ))}
+      <div className={styles.filters} aria-label="Notification filters">
+        {filters.map((item) => (
+          <button
+            key={item.key}
+            className={
+              filter === item.key ? styles.filterActive : styles.filter
+            }
+            type="button"
+            aria-pressed={filter === item.key}
+            onClick={() => setFilter(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <div className={styles.contentViewport}>
+        {auth.loading || result.loading ? (
+          <div className={styles.stateWrap}>
+            <LoadingState />
           </div>
+        ) : !auth.isAuthenticated ? (
+          <div className={styles.stateWrap}>
+            <SignInState message="Sign in to view your notifications." />
+          </div>
+        ) : result.error ? (
+          <div className={styles.stateWrap}>
+            <ErrorState
+              message={result.error}
+              retry={() => void result.reload()}
+            />
+          </div>
+        ) : (
+          <div className={styles.content}>
+            {actionError ? (
+              <p className={styles.error} role="alert">
+                {actionError}
+              </p>
+            ) : null}
 
-          {actionError ? (
-            <p className={styles.error} role="alert">
-              {actionError}
-            </p>
-          ) : null}
+            {!visible.length ? (
+              <section className={styles.empty} aria-label="No notifications">
+                <span className={styles.emptyIcon}>
+                  <Icon name="bell" size={22} />
+                </span>
+                <h2>{emptyTitle(filter)}</h2>
+                <p>
+                  New notifications will appear here when they are available.
+                </p>
+              </section>
+            ) : (
+              <section className={styles.list} aria-label="Notifications">
+                {visible.map((notification) => (
+                  <NotificationRow
+                    key={notification.id}
+                    notification={notification}
+                    onRead={() => void markRead(notification.id)}
+                  />
+                ))}
+              </section>
+            )}
 
-          {!visible.length ? (
-            <section className={styles.empty} aria-label="No notifications">
-              <span className={styles.emptyIcon}>
-                <Icon name="bell" size={22} />
-              </span>
-              <h2>{emptyTitle(filter)}</h2>
-              <p>New notifications will appear here when they are available.</p>
-            </section>
-          ) : (
-            <section className={styles.list} aria-label="Notifications">
-              {visible.map((notification) => (
-                <NotificationCard
-                  key={notification.id}
-                  notification={notification}
-                  onRead={() => void markRead(notification.id)}
-                />
-              ))}
-            </section>
-          )}
+            {unreadCount > 0 ? (
+              <button
+                className={styles.readAll}
+                type="button"
+                aria-label="Read all"
+                onClick={() => void markAllRead()}
+              >
+                Mark all as read
+              </button>
+            ) : null}
+          </div>
+        )}
+      </div>
 
-          {result.data?.meta.unreadCount ? (
-            <button
-              className={styles.readAll}
-              type="button"
-              aria-label="Read all"
-              onClick={() => void markAllRead()}
-            >
-              Mark all as read
-            </button>
-          ) : null}
-        </div>
-      )}
+      <BottomNavigation />
     </main>
   );
 }
 
-function NotificationCard({
+function NotificationRow({
   notification,
   onRead,
 }: {
   notification: Notification;
   onRead: () => void;
 }) {
-  const icon =
-    notification.type === "ORDER"
-      ? "bag"
-      : notification.type === "SOCIAL"
-        ? "users"
-        : "bell";
+  const unread = !notification.readAt;
 
   return (
     <button
-      className={`${styles.card} ${notification.readAt ? styles.read : styles.unread}`}
+      className={`${styles.row} ${unread ? styles.unread : styles.read}`}
       type="button"
-      disabled={Boolean(notification.readAt)}
+      disabled={!unread}
       onClick={onRead}
       aria-label={
-        notification.readAt
-          ? `${notification.title}, read`
-          : `Mark ${notification.title} as read`
+        unread
+          ? `Mark ${notification.title} as read`
+          : `${notification.title}, read`
       }
     >
-      <span className={styles.cardIcon} aria-hidden="true">
-        <Icon name={icon} size={20} />
-      </span>
-      <span className={styles.cardCopy}>
-        <strong>{notification.title}</strong>
-        <span>{notification.body}</span>
-      </span>
+      <span
+        className={`${styles.rowIcon} ${unread && notification.type === "ORDER" ? styles.rowIconActive : ""}`}
+        aria-hidden="true"
+      />
+      {unread ? <span className={styles.unreadDot} aria-hidden="true" /> : null}
+      <strong className={styles.rowTitle}>{notification.title}</strong>
+      <span className={styles.rowBody}>{notification.body}</span>
       <time className={styles.time} dateTime={notification.createdAt}>
         {relativeTime(notification.createdAt)}
       </time>
+      <span className={styles.divider} aria-hidden="true" />
     </button>
   );
 }
@@ -200,11 +222,16 @@ function emptyTitle(filter: Filter) {
 function relativeTime(value: string) {
   const timestamp = new Date(value).getTime();
   const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-  if (seconds < 60) return "Just now";
+  if (seconds < 60) return "Now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return new Date(value).toLocaleDateString(undefined, {
+  if (seconds < 172800) return "Yesterday";
+  return new Date(value).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
+}
+
+function badgeCount(value: number) {
+  return value > 99 ? "99+" : String(value);
 }

@@ -1,0 +1,105 @@
+{
+  "passed": true,
+  "tested": [
+    "Nike-only Home detail link",
+    "save/unsave persisted through reload",
+    "Buy Now cart mutation and checkout",
+    "delivery address selection and checkout round trip",
+    "create order with selected address",
+    "sandbox payment initialization for same order",
+    "Pending → verified Success",
+    "Success → same-order Tracking",
+    "Tracking → same-order detail → Tracking",
+    "rider telephone href only",
+    "unconfirmed success guard",
+    "failed payment",
+    "review required payment",
+    "missing tracking provider fallback",
+    "drawer focus wrap/restore and Escape",
+    "cart removal cancellation",
+    "failed cart quantity update retry",
+    "keep previous cart after failed update",
+    "out of stock removal",
+    "empty cart Explore navigation",
+    "eight-second reference rider motion",
+    "reduced-motion preference",
+    "search Enter submission at 375×520 reduced viewport",
+    "non-Nike detail guard",
+    "Reels selected product identity"
+  ],
+  "writes": [
+    {
+      "path": "/cart/items",
+      "method": "POST",
+      "body": {
+        "productId": "nike-air-max-90",
+        "quantity": 1
+      }
+    },
+    {
+      "path": "/cart/items/nike-item",
+      "method": "PATCH",
+      "body": {
+        "quantity": 2
+      }
+    },
+    {
+      "path": "/cart/items/nike-item",
+      "method": "PATCH",
+      "body": {
+        "quantity": 1
+      }
+    },
+    {
+      "path": "/cart/items/nike-item",
+      "method": "PATCH",
+      "body": {
+        "quantity": 2
+      }
+    },
+    {
+      "path": "/cart/items/nike-item",
+      "method": "PATCH",
+      "body": {
+        "quantity": 1
+      }
+    },
+    {
+      "path": "/cart/items/nike-item",
+      "method": "DELETE",
+      "body": null
+    },
+    {
+      "path": "/saved-products/nike-air-max-90",
+      "method": "POST",
+      "body": null
+    },
+    {
+      "path": "/saved-products/nike-air-max-90",
+      "method": "DELETE",
+      "body": null
+    },
+    {
+      "path": "/cart/items",
+      "method": "POST",
+      "body": {
+        "productId": "nike-air-max-90",
+        "quantity": 1
+      }
+    },
+    {
+      "path": "/orders",
+      "method": "POST",
+      "body": {
+        "addressId": "address"
+      }
+    },
+    {
+      "path": "/payments/initialize",
+      "method": "POST",
+      "body": {
+        "orderId": "design-order"
+      }
+    }
+  ]
+}

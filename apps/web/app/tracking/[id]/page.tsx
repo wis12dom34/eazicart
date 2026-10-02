@@ -14,6 +14,7 @@ import {
 } from "../../components/async-state";
 import { useAuth } from "../../providers/auth-provider";
 import { orderStatusCopy, orderStatusLabel } from "../../orders/order-utils";
+import { LiveTracking } from "./live-tracking";
 import styles from "./tracking.module.css";
 
 export default function TrackingPage({
@@ -52,6 +53,8 @@ export default function TrackingPage({
     );
 
   const order = result.data.data;
+  if (order.tracking?.map === "LEKKI_REFERENCE")
+    return <LiveTracking order={order} tracking={order.tracking} />;
   const quantity = order.items.reduce(
     (total, item) => total + item.quantity,
     0,

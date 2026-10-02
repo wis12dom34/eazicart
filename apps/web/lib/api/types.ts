@@ -1,5 +1,10 @@
 export type Money = string;
-export type User = { id: string; email: string; name: string };
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  username?: string;
+};
 export type Image = {
   id?: string;
   url: string;
@@ -22,6 +27,10 @@ export type Seller = {
   _count?: { products: number };
 };
 export type Product = {
+  reel?: { caption?: string; likesLabel?: string; commentsLabel?: string };
+  rating?: string;
+  soldLabel?: string;
+  viewsLabel?: string;
   id: string;
   name: string;
   description?: string | null;
@@ -33,6 +42,7 @@ export type Product = {
   seller: Seller & { user?: { id: string; name: string } };
 };
 export type CartItem = {
+  variantLabel?: string;
   id: string;
   quantity: number;
   unitPrice: Money;
@@ -44,6 +54,8 @@ export type Cart = {
   items: CartItem[];
   subtotal: Money;
   total: Money;
+  delivery?: Money | null;
+  serviceFee?: Money | null;
 };
 export type Address = {
   id: string;
@@ -55,16 +67,49 @@ export type Address = {
   postalCode: string;
   country: string;
   isDefault: boolean;
+  phone?: string | null;
 };
 export type OrderItem = {
   id: string;
   productName: string;
+  variantLabel?: string | null;
   quantity: number;
   unitPrice: Money;
   product?: Product;
 };
 export type Order = {
   id: string;
+  orderNumber?: string;
+  subtotal?: Money;
+  serviceFee?: Money | null;
+  delivery?: Money | null;
+  receiptSent?: boolean;
+  tracking?: {
+    map: "LEKKI_REFERENCE";
+    statusLabel: string;
+    etaLabel?: string;
+    distanceLabel?: string;
+    rider: {
+      name: string;
+      shortName: string;
+      vehicle: string;
+      phone?: string;
+      x: number;
+      y: number;
+    };
+    progress:
+      | "HEADING_TO_STORE"
+      | "PICKED_UP"
+      | "ON_THE_WAY"
+      | "ARRIVING_SOON"
+      | "DELIVERED"
+      | "DELAYED"
+      | "CANCELLED"
+      | "ERROR";
+    live: boolean;
+    /** Sandbox fixture animation; never enable this for provider positions. */
+    animateReference?: boolean;
+  };
   status: string;
   total: Money;
   createdAt: string;
@@ -81,6 +126,7 @@ export type Payment = {
   status: PaymentStatus;
   amount: Money;
   currency: string;
+  methodLabel?: string;
   authorizationUrl?: string | null;
   paidAt?: string | null;
   failureReason?: string | null;

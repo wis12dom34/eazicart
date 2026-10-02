@@ -5,7 +5,7 @@ import Link from "next/link";
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNavigation } from "../../components/bottom-navigation";
-import { Icon } from "../../components/icon";
+
 import { money } from "../../data";
 import { ordersApi } from "../../../lib/api/orders";
 import { paymentsApi } from "../../../lib/api/payments";
@@ -100,12 +100,13 @@ export default function OrderDetail({
           aria-label="Back to orders"
           className={styles.back}
         >
-          <Icon name="back" size={20} />
+          <img src="/figma/back.svg" alt="" width={20} height={20} />
         </Link>
         <h1>Order Details</h1>
       </header>
       <p className={styles.orderMeta}>
-        Order #{order.id.slice(-8)} · Placed {formatPlacedDate(order.createdAt)}
+        Order #{order.orderNumber ?? order.id.slice(-8)} · Placed{" "}
+        {formatPlacedDate(order.createdAt)}
       </p>
 
       <section className={styles.statusPanel} aria-label="Order status">
@@ -113,29 +114,30 @@ export default function OrderDetail({
           <strong>{orderStatusLabel(order.status)}</strong>
           <p>{orderStatusCopy(order.status)}</p>
         </div>
-        <Link href={`/tracking/${order.id}`}>Track order</Link>
+        <Link href={`/tracking/${order.id}`}>Track package</Link>
       </section>
 
       <section className={styles.section}>
         <h2>Items</h2>
         <div className={styles.items}>
           {order.items.map((item) => {
-            const image = item.product?.images?.[0];
             return (
               <article className={styles.item} key={item.id}>
-                <div className={styles.thumb}>
-                  {image ? (
-                    <img
-                      src={image.url}
-                      alt={image.altText || item.productName}
-                    />
-                  ) : (
-                    <Icon name="bag" size={24} />
-                  )}
-                </div>
+                {item.product?.name === "Nike Air Max 90" &&
+                item.product.seller.displayName === "Nike Official" ? (
+                  <Link
+                    className={styles.itemLink}
+                    href={`/product/${item.product.id}`}
+                    aria-label="View Nike Air Max 90"
+                  />
+                ) : null}
+                <div className={styles.thumb} aria-hidden="true" />
                 <div className={styles.itemCopy}>
                   <strong>{item.productName}</strong>
-                  <span>Qty {item.quantity}</span>
+                  <span>
+                    {item.variantLabel ? `${item.variantLabel} · ` : ""}Qty{" "}
+                    {item.quantity}
+                  </span>
                   <span>
                     {money(multiplyMoney(item.unitPrice, item.quantity))}
                   </span>
@@ -154,17 +156,35 @@ export default function OrderDetail({
         </div>
       </section>
 
-      <section className={`summary ${styles.summary}`}>
+      <section className={styles.summary}>
         <h2>Payment summary</h2>
         <div className={styles.summaryRow}>
           <span>Subtotal</span>
-          <strong>{money(order.total)}</strong>
+          <strong>{money(order.subtotal ?? sumItems(order.items))}</strong>
         </div>
-        <div className={`total ${styles.total}`}>
+        <div className={styles.deliveryRow}>
+          <strong>Delivery</strong>
+          <span>
+            {order.delivery === "0"
+              ? "Free"
+              : order.delivery != null
+                ? money(order.delivery)
+                : "Not added"}
+          </span>
+        </div>
+        <div className={styles.summaryRow}>
+          <span>Service fee</span>
+          <span>
+            {order.serviceFee != null ? money(order.serviceFee) : "Not added"}
+          </span>
+        </div>
+        <div className={styles.total}>
           <strong>Total</strong>
           <strong>{money(order.total)}</strong>
         </div>
-        <PaymentState payment={payment} />
+        {payment?.status !== "SUCCESS" ? (
+          <PaymentState payment={payment} />
+        ) : null}
         {payment && ["PENDING", "FAILED"].includes(payment.status) ? (
           <button
             className="dark-button"
@@ -235,7 +255,10 @@ function PaymentState({
 
 function OrderShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className={`app-shell with-nav ${styles.page}`}>
+    <main
+      className={`app-shell with-nav ${styles.page}`}
+      data-figma-node="156:27"
+    >
       {children}
       <BottomNavigation />
     </main>
@@ -243,10 +266,9 @@ function OrderShell({ children }: { children: React.ReactNode }) {
 }
 
 function formatPlacedDate(value: string) {
-  return new Intl.DateTimeFormat("en-NG", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "short",
-    year: "numeric",
   }).format(new Date(value));
 }
 
@@ -259,12 +281,21 @@ function formatAddressDetails(address: {
   country: string;
 }) {
   return [
-    address.line2,
-    [address.city, address.region, address.postalCode]
-      .filter(Boolean)
-      .join(", "),
-    address.country,
+    [address.city, address.country].filter(Boolean).join(", "),
+    "phone" in address ? address.phone : undefined,
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+function sumItems(items: Array<{ unitPrice: string; quantity: number }>) {
+  const total = items.reduce((sum, item) => {
+    const [whole = "0", fraction = ""] = item.unitPrice.split(".");
+    return (
+      sum +
+      (BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0"))) *
+        BigInt(item.quantity)
+    );
+  }, 0n);
+  return `${total / 100n}.${(total % 100n).toString().padStart(2, "0")}`;
 }

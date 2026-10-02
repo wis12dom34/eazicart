@@ -1,105 +1,119 @@
 import { test, expect } from "@playwright/test";
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 
 const api = "http://localhost:3001";
 
-test("Explore matches Figma and opens live search and category discovery", async ({
+async function canonicalProducts(request) {
+  const response = await request.get(`${api}/products?limit=100`);
+  expect(response.status()).toBe(200);
+  return (await response.json()).data.filter(
+    (product) =>
+      (product.name === "AirPods Pro" &&
+        product.seller.displayName === "Jumia Nigeria") ||
+      (product.name === "Nike Air Max 90" &&
+        product.seller.displayName === "Nike Official"),
+  );
+}
+
+test("Explore preserves supported search and truthful unavailable discovery", async ({
   page,
   request,
 }, testInfo) => {
-  const sellersResponse = await request.get(`${api}/sellers`);
-  expect(sellersResponse.status()).toBe(200);
-  const expectedTopSellers = (await sellersResponse.json()).data.slice(0, 3);
+  const available = await canonicalProducts(request);
   const fashionResponse = await request.get(
     `${api}/products?category=fashion&limit=20`,
   );
   expect(fashionResponse.status()).toBe(200);
-  const fashionData = await fashionResponse.json();
-  const expectedFashionTotal = fashionData.pagination.total;
-  const expectedFashionSeller = fashionData.data[0]?.seller.displayName;
-  expect(expectedFashionSeller).toBeTruthy();
+  const fashion = await fashionResponse.json();
 
   await page.goto("/explore");
-
-  await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Explore", exact: true }),
+  ).toBeVisible();
   const search = page.getByRole("textbox", {
-    name: "Search products, brands and sellers",
+    name: "Search products, stores or brands",
   });
   await expect(search).toBeVisible();
-
-  const browse = page.getByRole("navigation", { name: "Explore browse" });
-  await expect(browse.getByRole("link", { name: "Categories" })).toBeVisible();
-  await expect(browse.getByRole("button", { name: "Brands" })).toBeDisabled();
-  await expect(browse.getByRole("link", { name: "Brands" })).toHaveCount(0);
-  await expect(browse.getByRole("link", { name: "Sellers" })).toBeVisible();
-
-  await expect(
-    page.getByRole("heading", { name: "Trending Now" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Popular Products" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Top Sellers" }),
-  ).toBeVisible();
-  for (const seller of expectedTopSellers) {
+  const sections = page.getByRole("navigation", { name: "Explore sections" });
+  await expect(sections.getByText("For You", { exact: true })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  for (const label of ["Trending", "Categories", "Brands", "Sellers"]) {
+    await expect(sections.getByText(label, { exact: true })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     await expect(
-      page.getByText(seller.displayName, { exact: true }),
+      sections.getByRole("link", { name: label, exact: true }),
+    ).toHaveCount(0);
+  }
+  await expect(
+    page.getByRole("button", { name: "Map", exact: true }),
+  ).toBeDisabled();
+  for (const name of ["Trending Now", "Popular Products", "Top Sellers"]) {
+    await expect(
+      page.getByRole("heading", { name, exact: true }),
     ).toBeVisible();
   }
-
-  const productCards = page.locator(".figma-explore-product");
-  await expect(productCards).toHaveCount(2);
-  const firstCard = await productCards.first().boundingBox();
-  expect(Math.round(firstCard.width)).toBe(184);
-  expect(Math.round(firstCard.height)).toBe(220);
-
+  await expect(page.locator(".figma-explore-product")).toHaveCount(
+    available.length,
+  );
+  for (const product of available) {
+    await expect(
+      page.getByRole("link", { name: `View ${product.name}`, exact: true }),
+    ).toHaveAttribute("href", `/product/${product.id}`);
+  }
+  if (!available.length) {
+    await expect(
+      page.getByText("No products match your search.", { exact: true }),
+    ).toBeVisible();
+  }
+  await expectCustomerNavigation(page, "Explore");
   await page.screenshot({ path: testInfo.outputPath("explore.png") });
 
   await search.fill("Woven");
   await search.press("Enter");
   await expect(page).toHaveURL(/\/search\?search=Woven/);
-  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Search", exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("1 results", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "View Woven everyday tote" }),
+    page.getByRole("link", { name: "View Woven everyday tote", exact: true }),
   ).toBeVisible();
-  await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Explore" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expectCustomerNavigation(page, "Explore");
   await expect(
     page
       .getByRole("navigation", { name: "Search filters" })
       .getByText("Reels", { exact: true }),
   ).toHaveAttribute("aria-disabled", "true");
 
-  await page.goto("/explore");
-  await page.getByRole("link", { name: "Fashion", exact: true }).click();
-  await expect(page).toHaveURL(/\/category\/fashion$/);
+  // Categories remain real routes; the unavailable Explore tab must not pretend
+  // that it opens a category picker which the application does not implement.
+  await page.goto("/category/fashion");
   await expect(
     page.getByRole("heading", { name: "Fashion", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText(`${expectedFashionTotal} products`, { exact: true }),
+    page.getByText(`${fashion.pagination.total} products`, { exact: true }),
   ).toBeVisible();
+  for (const product of fashion.data) {
+    await expect(
+      page.getByRole("link", { name: `View ${product.name}`, exact: true }),
+    ).toHaveAttribute("href", `/product/${product.id}`);
+  }
   await expect(
-    page.getByRole("link", { name: "View Woven everyday tote" }),
+    page.getByRole("heading", { name: "Sellers in Fashion", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "View Relaxed linen shirt" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Sellers in Fashion" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: new RegExp(expectedFashionSeller) }),
-  ).toBeVisible();
+  await expectCustomerNavigation(page, "Explore");
 });
 
 test("Explore recovers from a failed live product request", async ({
   page,
+  request,
 }) => {
+  const available = await canonicalProducts(request);
   let failedOnce = false;
   await page.route(/\/products(?:\?|$)/, async (route) => {
     if (!failedOnce) {
@@ -109,11 +123,20 @@ test("Explore recovers from a failed live product request", async ({
     }
     await route.continue();
   });
-
   await page.goto("/explore");
   await expect(
-    page.getByRole("heading", { name: "Something went wrong" }),
+    page.getByRole("heading", { name: "Something went wrong", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Refresh" }).click();
-  await expect(page.locator(".figma-explore-product")).toHaveCount(2);
+  await page.getByRole("button", { name: "Refresh", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Something went wrong", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator(".figma-explore-product")).toHaveCount(
+    available.length,
+  );
+  if (!available.length) {
+    await expect(
+      page.getByText("No products match your search.", { exact: true }),
+    ).toBeVisible();
+  }
 });

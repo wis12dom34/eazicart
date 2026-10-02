@@ -1,0 +1,74 @@
+{
+  "address-select": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 2.1945811291878763
+  },
+  "cart-empty": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 1.2317238912732476
+  },
+  "cart-error": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 1.2964242938417008
+  },
+  "cart": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 2.2290140399906844
+  },
+  "cart-remove": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 1.3335903450111453
+  },
+  "cart-unavailable": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 1.4006762151911367
+  },
+  "checkout": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 3.9863966796420134
+  },
+  "drawer": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 2.6446410154040656
+  },
+  "explore": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 2.413347140433177
+  },
+  "home": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 4.5597963868649565
+  },
+  "order": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 4.006907708686828
+  },
+  "payment-failed": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 3.0594620221579
+  },
+  "pending": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 3.007273680007985
+  },
+  "product": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 1.6097498086968092
+  },
+  "profile": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 2.7552558472236086
+  },
+  "reels": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 1.5896238812922114
+  },
+  "success": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 2.6223666699936787
+  },
+  "tracking": {
+    "viewport": [430, 932],
+    "mean_absolute_rgb_difference": 1.3715174501779952
+  }
+}

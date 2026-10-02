@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@eazicart/ui": "workspace:*",
+    "@fontsource/inter": "4.5.15",
     "next": "^16.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

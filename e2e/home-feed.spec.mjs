@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 
-test("Home feed follow and cart actions persist through the real API", async ({
+test("Home saves and supported seller/cart actions persist through the real API", async ({
   page,
 }) => {
   const email = `home-${randomUUID()}@eazicart.invalid`;
   const password = randomUUID();
-
   await page.goto("/register");
   await page.getByLabel("Full name").fill("Home Feed Customer");
   await page.getByLabel("Email address").fill(email);
@@ -15,20 +15,38 @@ test("Home feed follow and cart actions persist through the real API", async ({
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL("http://localhost:3000/");
 
-  const seller = page.locator(".figma-home-seller").filter({
-    hasText: "Lagos Studio",
-  });
-  await expect(seller).toBeVisible();
-  await seller.getByRole("button", { name: "Follow", exact: true }).click();
-  await expect(
-    seller.getByRole("button", { name: "Following", exact: true }),
-  ).toBeVisible();
-
-  const product = seller.locator(".figma-home-product").filter({
-    hasText: "Woven everyday tote",
-  });
+  const product = page
+    .locator(".figma-home-product")
+    .filter({ hasText: "Woven everyday tote" });
   await expect(product).toBeVisible();
-  await product.getByRole("button", { name: "Add to Cart" }).click();
+  await product
+    .getByRole("button", { name: "Save Woven everyday tote", exact: true })
+    .click();
+  await expect(
+    product.getByRole("button", {
+      name: "Unsave Woven everyday tote",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(
+    product.getByRole("button", {
+      name: "Unsave Woven everyday tote",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await product
+    .getByRole("link", { name: "View Woven everyday tote", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/product\/demo-product-woven-tote$/);
+  await page.getByRole("button", { name: "Add to Cart", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Added to cart");
+  await page.getByRole("link", { name: /View .* seller profile/ }).click();
+  await expect(page).toHaveURL(/\/seller\/demo-seller-lagos-studio$/);
+  await page.getByRole("button", { name: "Follow", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Following", exact: true }),
+  ).toBeVisible();
 
   await page.goto("/following");
   await expect(
@@ -42,18 +60,21 @@ test("Home feed follow and cart actions persist through the real API", async ({
   ).toBeVisible();
   await expect(page.getByLabel("Search saved sellers")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Unfollow Lagos Studio" }),
+    page.getByRole("button", { name: "Unfollow Lagos Studio", exact: true }),
   ).toBeVisible();
+  await expectCustomerNavigation(page);
+  await page.reload();
   await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Profile" }),
-  ).toHaveAttribute("aria-current", "page");
+    page.getByRole("button", { name: "Unfollow Lagos Studio", exact: true }),
+  ).toBeVisible();
 
   await page.goto("/cart");
   await expect(
     page.getByText("Woven everyday tote", { exact: true }),
   ).toBeVisible();
   await expect(page.locator(".quantity span")).toHaveText("1");
-  await expect(page.locator(".summary .total")).toContainText("18,500");
+  await expect(
+    page.getByText("Total", { exact: true }).locator(".."),
+  ).toContainText("18,500");
+  await expectCustomerNavigation(page, "Cart");
 });
