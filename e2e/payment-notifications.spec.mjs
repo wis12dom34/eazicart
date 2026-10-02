@@ -1,3 +1,4 @@
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
@@ -27,18 +28,14 @@ test("payment settings stay honest and notifications use live account data", asy
     page.getByRole("button", { name: /Add payment method/ }),
   ).toBeDisabled();
   await expect(
-    page.getByText("Saved payment methods aren't available yet", {
+    page.getByText("Card storage is not available yet", {
       exact: true,
     }),
   ).toBeVisible();
   await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
   await expect(page.getByText(/Balance ₦86,400/)).toHaveCount(0);
   await expect(page.getByText(/Visa •••• 2048/)).toHaveCount(0);
-  await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Profile" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expectCustomerNavigation(page);
 
   const tokens = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("eazicart.auth.tokens")),

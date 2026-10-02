@@ -1,3 +1,4 @@
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
@@ -53,13 +54,11 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   ).toBeVisible();
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();
-  await expect(page.locator(".summary .total")).toContainText("18,500");
-  await expect(page.getByText("Not added", { exact: true })).toBeVisible();
   await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Home" }),
-  ).toHaveAttribute("aria-current", "page");
+    page.getByText("Total", { exact: true }).locator(".."),
+  ).toContainText("18,500");
+  await expect(page.getByText("Not added", { exact: true })).toBeVisible();
+  await expectCustomerNavigation(page, "Cart");
 
   await page.getByRole("link", { name: "Proceed to Checkout" }).click();
   await expect(page).toHaveURL("http://localhost:3000/checkout");
@@ -69,19 +68,21 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await expect(
     page.getByText("1 Checkout Street", { exact: false }),
   ).toBeVisible();
-  await expect(page.getByText("Pay securely with Paystack")).toBeVisible();
+  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
   await expect(
     page.getByText("Woven everyday tote", { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Wallet balance", { exact: true })).toHaveCount(
     0,
   );
-  await expect(page.getByText("Service fee", { exact: true })).toHaveCount(0);
-  await expect(page.locator(".summary .total")).toContainText("18,500");
+  await expect(
+    page.getByText("Service fee", { exact: true }).locator(".."),
+  ).toContainText("Not added");
+  await expect(
+    page.getByText("Total", { exact: true }).locator(".."),
+  ).toContainText("18,500");
   await expect(
     page.getByRole("button", { name: /Place order/i }),
   ).toBeEnabled();
-  await expect(
-    page.getByText("Pay with Paystack", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("Secure payment", { exact: true })).toBeVisible();
 });

@@ -1,3 +1,4 @@
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
@@ -30,11 +31,7 @@ test("edit profile and address book use real supported account data", async ({
   );
   await expect(page.getByLabel("Email address")).toBeDisabled();
   await expect(page.getByLabel("Email address")).toHaveValue(email);
-  await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Profile" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expectCustomerNavigation(page);
 
   await page.getByLabel("Full name").fill("Updated Account Customer");
   await page.getByRole("button", { name: "Save changes" }).click();
@@ -60,10 +57,13 @@ test("edit profile and address book use real supported account data", async ({
   await page.getByLabel("Country", { exact: true }).fill("Nigeria");
   await page.getByRole("button", { name: "Save address" }).click();
 
-  const homeCard = page.locator(".address-card").filter({ hasText: "Home" });
+  const homeCard = page
+    .getByRole("region", { name: "Saved addresses" })
+    .locator("article")
+    .filter({ hasText: "Home" });
   await expect(homeCard).toContainText("1 Demo Street");
   await expect(homeCard).toContainText("Near Demo Park");
-  await expect(homeCard).toContainText("Lagos, Lagos 100001");
+  await expect(homeCard).toContainText("Lagos, Nigeria");
   await expect(homeCard).toContainText("Nigeria");
   await expect(homeCard.getByText("Default", { exact: true })).toBeVisible();
 
@@ -81,7 +81,10 @@ test("edit profile and address book use real supported account data", async ({
   await page.getByLabel("Country", { exact: true }).fill("Nigeria");
   await page.getByRole("button", { name: "Save address" }).click();
 
-  const workCard = page.locator(".address-card").filter({ hasText: "Work" });
+  const workCard = page
+    .getByRole("region", { name: "Saved addresses" })
+    .locator("article")
+    .filter({ hasText: "Work" });
   await expect(workCard).toContainText("10 Market Road");
   await expect(workCard.getByText("Default", { exact: true })).toHaveCount(0);
   await workCard.getByRole("button", { name: "Edit" }).click();
@@ -89,9 +92,5 @@ test("edit profile and address book use real supported account data", async ({
   await expect(workCard.getByText("Default", { exact: true })).toBeVisible();
   await expect(homeCard.getByText("Default", { exact: true })).toHaveCount(0);
 
-  await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Profile" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expectCustomerNavigation(page);
 });

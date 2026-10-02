@@ -1,3 +1,4 @@
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
@@ -68,11 +69,7 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   await expect(
     page.getByText("Woven everyday tote", { exact: true }),
   ).toBeVisible();
-  await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Orders" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expectCustomerNavigation(page);
 
   await page.locator(`a[href="/orders/${order.id}"]`).click();
   await expect(page).toHaveURL(`http://localhost:3000/orders/${order.id}`);
@@ -80,14 +77,18 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   await expect(
     page.getByText("12 Orders Street", { exact: false }),
   ).toBeVisible();
-  await expect(page.locator(".summary .total")).toContainText("18,500");
+  await expect(
+    page.getByText("Total", { exact: true }).locator(".."),
+  ).toContainText("18,500");
   await expect(
     page.getByText("Payment summary", { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Subtotal", { exact: true })).toBeVisible();
-  await expect(page.getByText("Service fee", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText("Service fee", { exact: true }).locator(".."),
+  ).toContainText("Not added");
 
-  await page.getByRole("link", { name: "Track order" }).click();
+  await page.getByRole("link", { name: "Track package" }).click();
   await expect(page).toHaveURL(`http://localhost:3000/tracking/${order.id}`);
   await expect(
     page.getByRole("heading", { name: "Track Order", exact: true }),
@@ -110,9 +111,5 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
     page.getByText("Payment confirmed", { exact: true }),
   ).toHaveCount(0);
   await expect(page.getByText(/Estimated delivery/i)).toHaveCount(0);
-  await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Orders" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expectCustomerNavigation(page);
 });

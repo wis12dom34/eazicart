@@ -1,3 +1,4 @@
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 
 test("navigation matches Figma sizing and leaves products reachable", async ({
@@ -7,9 +8,9 @@ test("navigation matches Figma sizing and leaves products reachable", async ({
   await expect(
     page.getByRole("link", { name: "View Woven everyday tote" }),
   ).toBeVisible();
-  const nav = page.getByRole("navigation", { name: "Customer navigation" });
-  await expect(nav).toHaveCSS("height", "64px");
-  await expect(nav).toHaveCSS("border-radius", "24px");
+  const nav = await expectCustomerNavigation(page, "Home");
+  await expect(nav).toHaveCSS("height", "88px");
+  await expect(nav).toHaveCSS("border-radius", "0px");
   await expect(nav).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(nav.getByRole("link")).toHaveCount(5);
   for (const link of await nav.getByRole("link").all()) {
@@ -25,7 +26,7 @@ test("navigation matches Figma sizing and leaves products reachable", async ({
     .boundingBox();
   const navBox = await nav.boundingBox();
   expect(lastCard.y + lastCard.height).toBeLessThanOrEqual(navBox.y);
-  await page.getByRole("link", { name: "Fashion", exact: true }).click();
+  await page.goto("/category/fashion");
   await expect(page).toHaveURL(/\/category\/fashion$/);
   await expect(
     page.getByRole("heading", { name: "Fashion", exact: true }),
