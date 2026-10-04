@@ -413,3 +413,121 @@
     box-shadow: 0 0 0 1px rgba(10, 10, 13, 0.04);
   }
 }
+
+
+.editorPanel {
+  width: calc(min(393px, 100%) - 43.87px);
+  margin: 21.935px 0 28px 21.935px;
+  padding: 0;
+  border: 0;
+  background: #fff;
+}
+
+.editorHeader {
+  margin-bottom: 21.935px;
+}
+
+.editorHeader h2 {
+  margin: 0;
+  color: #111214;
+  font-size: 21.935px;
+  font-weight: 700;
+  line-height: 27.419px;
+}
+
+.editorHeader p {
+  margin: 7.312px 0 0;
+  color: #71747b;
+  font-size: 13.709px;
+  line-height: 19.193px;
+}
+
+.editorPanel .form {
+  gap: 14.623px;
+}
+
+.editorPanel .field {
+  gap: 7.312px;
+}
+
+.editorPanel .field > span {
+  color: #111214;
+  font-size: 11.88px;
+  font-weight: 600;
+  line-height: 16.451px;
+}
+
+.editorPanel .input {
+  min-height: 49.353px;
+  padding: 0 14.623px;
+  border: 0.914px solid #e5e5eb;
+  border-radius: 12.795px;
+  color: #111214;
+  font-size: 13.71px;
+  line-height: 19.193px;
+}
+
+.editorPanel .input::placeholder {
+  color: #71747b;
+  opacity: 1;
+}
+
+.editorPanel .input[readonly] {
+  background: #f8f9fa;
+  color: #71747b;
+}
+
+.compactFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.editorActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7.312px;
+  margin-top: 0;
+}
+
+.editorActions .primaryAction {
+  min-height: 40.214px;
+  padding: 0 16.451px;
+  border-radius: 10.967px;
+  font-size: 11.69px;
+  line-height: 16.706px;
+}
+
+.cancelAction {
+  min-height: 40.214px;
+  padding: 0 16.451px;
+  border: 0;
+  border-radius: 10.967px;
+  background: transparent;
+  color: #1769e0;
+  font-family: inherit;
+  font-size: 12.795px;
+  font-weight: 600;
+  line-height: 18.279px;
+}
+
+.editingCard .editorPanel {
+  width: auto;
+  margin: 145px 14px 14px;
+}
+
+.editingCard:not(.defaultCard) .editorPanel {
+  margin-top: 132px;
+}
+
+@media (max-width: 392px) {
+  .editorPanel {
+    width: calc(100% - 32px);
+    margin-left: 16px;
+  }
+
+  .compactFields {
+    grid-template-columns: 1fr;
+  }
+}
