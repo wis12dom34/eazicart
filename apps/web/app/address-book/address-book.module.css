@@ -414,7 +414,6 @@
   }
 }
 
-
 .editorPanel {
   width: calc(min(393px, 100%) - 43.87px);
   margin: 21.935px 0 28px 21.935px;
@@ -531,7 +530,6 @@
     grid-template-columns: 1fr;
   }
 }
-
 
 .checkoutEditorPage {
   width: 100%;
