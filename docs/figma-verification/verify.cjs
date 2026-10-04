@@ -505,6 +505,26 @@ let server;
       }
       await page.setViewportSize({ width: 430, height: 932 });
     };
+
+    const captureContinuation = async (name, ready) => {
+      await page.setViewportSize({ width: 430, height: 932 });
+      await ready.waitFor();
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({ path: evidence + `/${name}-app.png` });
+      for (const width of [360, 375, 390, 440]) {
+        await page.setViewportSize({ width, height: 932 });
+        await page.screenshot({
+          path: evidence + `/${name}-app-${width}.png`,
+        });
+        if (
+          await page.evaluate(
+            () => document.documentElement.scrollWidth > innerWidth,
+          )
+        )
+          throw Error(name + " overflow " + width);
+      }
+      await page.setViewportSize({ width: 430, height: 932 });
+    };
     await page
       .getByRole("button", { name: "Decrease quantity" })
       .first()
@@ -857,6 +877,115 @@ let server;
       )
         throw Error("Profile overflow");
     }
+    continuationFixture = true;
+
+    await page.goto("http://127.0.0.1:3100/saved");
+    await captureContinuation(
+      "saved",
+      page.getByRole("region", { name: "Saved products" }),
+    );
+
+    await page.goto("http://127.0.0.1:3100/following");
+    await captureContinuation(
+      "following",
+      page.getByLabel("Followed sellers"),
+    );
+
+    await page.goto("http://127.0.0.1:3100/reviews");
+    await captureContinuation(
+      "reviews-history",
+      page.getByRole("heading", {
+        name: "Reviews are not available yet",
+        exact: true,
+      }),
+    );
+
+    await page.goto("http://127.0.0.1:3100/category/fashion");
+    await page.locator('[data-figma-node="31:50"]').waitFor();
+    await page.getByText("Nike Air Max 90", { exact: true }).first().waitFor();
+    await captureState("category", "31:50");
+
+    await page.goto("http://127.0.0.1:3100/address-book");
+    await page
+      .getByRole("button", { name: /Add new address/ })
+      .click();
+    await captureContinuation(
+      "profile-address-add",
+      page.getByRole("heading", {
+        name: "Add delivery address",
+        exact: true,
+      }),
+    );
+    await page.getByRole("button", { name: "Cancel", exact: true }).click();
+    await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+    await captureContinuation(
+      "profile-address-edit",
+      page.getByRole("heading", {
+        name: "Edit delivery address",
+        exact: true,
+      }),
+    );
+
+    await page.goto(
+      "http://127.0.0.1:3100/address-book?checkout=1&selectedId=address",
+    );
+    await page.getByRole("button", { name: "+ Add new address" }).click();
+    await captureState("checkout-address-add", "212:36");
+    await page.getByRole("button", { name: "Cancel", exact: true }).click();
+    await page.getByRole("button", { name: "Edit Home", exact: true }).click();
+    await captureState("checkout-address-edit", "212:70");
+
+    await page.goto("http://127.0.0.1:3100/login");
+    await captureContinuation(
+      "login",
+      page.getByRole("heading", { name: "Welcome back", exact: true }),
+    );
+
+    authLoginMode = "invalid";
+    await page.getByLabel("Email address").fill("wrong@eazicart.invalid");
+    await page.getByLabel("Password", { exact: true }).fill("incorrect-password");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await page
+      .getByRole("alert")
+      .filter({ hasText: "Email or password is incorrect. Try again." })
+      .waitFor();
+    await captureContinuation(
+      "login-invalid",
+      page.getByRole("alert").filter({
+        hasText: "Email or password is incorrect. Try again.",
+      }),
+    );
+
+    authLoginMode = "slow";
+    await page.goto("http://127.0.0.1:3100/login");
+    await page.getByLabel("Email address").fill("qa@eazicart.invalid");
+    await page.getByLabel("Password", { exact: true }).fill("sandbox-pass");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await page
+      .getByRole("status")
+      .filter({ hasText: "Checking your details…" })
+      .waitFor();
+    await captureContinuation(
+      "login-loading",
+      page.getByRole("status").filter({ hasText: "Checking your details…" }),
+    );
+    await page.waitForURL("http://127.0.0.1:3100/");
+    authLoginMode = "success";
+
+    await page.goto("http://127.0.0.1:3100/register");
+    await captureContinuation(
+      "register",
+      page.getByRole("heading", { name: "Create account", exact: true }),
+    );
+    await page
+      .getByRole("button", { name: "Create account", exact: true })
+      .click();
+    await page.getByText("Enter your full name.", { exact: true }).waitFor();
+    await captureContinuation(
+      "register-validation",
+      page.getByText("Enter your full name.", { exact: true }),
+    );
+
     order.tracking.animateReference = true;
     await page.setViewportSize({ width: 430, height: 932 });
     await page.goto("http://127.0.0.1:3100/tracking/design-order");
@@ -938,6 +1067,14 @@ let server;
             "search Enter submission at 375×520 reduced viewport",
             "non-Nike detail guard",
             "Reels selected product identity",
+            "continuation Saved responsive capture",
+            "continuation Following responsive capture",
+            "continuation Reviews History responsive capture",
+            "continuation Category responsive capture",
+            "profile address add/edit responsive capture",
+            "checkout address add/edit responsive capture",
+            "Login invalid/loading responsive capture",
+            "Register validation responsive capture",
           ],
           writes,
         },
@@ -966,6 +1103,19 @@ let server;
           "cart-unavailable",
           "payment-failed",
           "address-select",
+          "saved",
+          "following",
+          "reviews-history",
+          "category",
+          "profile-address-add",
+          "profile-address-edit",
+          "checkout-address-add",
+          "checkout-address-edit",
+          "login",
+          "login-invalid",
+          "login-loading",
+          "register",
+          "register-validation",
         ],
         widths: [430, 360, 375, 390, 440],
         errors,
