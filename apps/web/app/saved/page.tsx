@@ -109,9 +109,8 @@ export default function SavedPage() {
                   const image = product.images[0];
                   const isRemoving = removing === productId;
                   const sizeClass =
-                    cardSizeClasses[
-                      originalIndex % cardSizeClasses.length
-                    ] ?? styles.card330;
+                    cardSizeClasses[originalIndex % cardSizeClasses.length] ??
+                    styles.card330;
 
                   return (
                     <article
@@ -126,10 +125,7 @@ export default function SavedPage() {
 
                       <div className={styles.productMedia} aria-hidden="true">
                         {image ? (
-                          <img
-                            src={image.url}
-                            alt=""
-                          />
+                          <img src={image.url} alt="" />
                         ) : (
                           <Icon name="bag" size={30} />
                         )}
