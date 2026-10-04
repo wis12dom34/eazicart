@@ -894,10 +894,7 @@ let server;
     );
 
     await page.goto("http://127.0.0.1:3100/following");
-    await captureContinuation(
-      "following",
-      page.getByLabel("Followed sellers"),
-    );
+    await captureContinuation("following", page.getByLabel("Followed sellers"));
 
     await page.goto("http://127.0.0.1:3100/reviews");
     await captureContinuation(
@@ -914,9 +911,7 @@ let server;
     await captureState("category", "31:50");
 
     await page.goto("http://127.0.0.1:3100/address-book");
-    await page
-      .getByRole("button", { name: /Add new address/ })
-      .click();
+    await page.getByRole("button", { name: /Add new address/ }).click();
     await captureContinuation(
       "profile-address-add",
       page.getByRole("heading", {
@@ -925,7 +920,10 @@ let server;
       }),
     );
     await page.getByRole("button", { name: "Cancel", exact: true }).click();
-    await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+    await page
+      .getByRole("button", { name: "Edit", exact: true })
+      .first()
+      .click();
     await captureContinuation(
       "profile-address-edit",
       page.getByRole("heading", {
@@ -951,7 +949,9 @@ let server;
 
     authLoginMode = "invalid";
     await page.getByLabel("Email address").fill("wrong@eazicart.invalid");
-    await page.getByLabel("Password", { exact: true }).fill("incorrect-password");
+    await page
+      .getByLabel("Password", { exact: true })
+      .fill("incorrect-password");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await page
       .getByRole("alert")
