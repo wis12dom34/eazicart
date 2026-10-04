@@ -105,7 +105,10 @@ export default function FollowingPage() {
         ) : !auth.isAuthenticated ? (
           <SignInState message="Sign in to view the sellers you follow." />
         ) : result.error ? (
-          <ErrorState message={result.error} retry={() => void result.reload()} />
+          <ErrorState
+            message={result.error}
+            retry={() => void result.reload()}
+          />
         ) : !result.data?.data.length ? (
           <EmptyState
             title="You’re not following any sellers"
