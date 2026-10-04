@@ -104,7 +104,9 @@ test("edit profile and address book use real supported account data", async ({
     .getByRole("region", { name: "Saved addresses" })
     .locator("article")
     .filter({ hasText: "10 Market Road" });
-  await expect(defaultWorkCard.getByText("Default", { exact: true })).toBeVisible();
+  await expect(
+    defaultWorkCard.getByText("Default", { exact: true }),
+  ).toBeVisible();
   await expect(
     updatedHomeCard.getByText("Default", { exact: true }),
   ).toHaveCount(0);
