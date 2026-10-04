@@ -230,11 +230,7 @@ export function AddressBookContent({
             <h1>
               {isEditing ? "Edit delivery address" : "Add delivery address"}
             </h1>
-            <p>
-              {isEditing
-                ? "Where should we deliver your order?"
-                : "Where should we deliver your order?"}
-            </p>
+            <p>Where should we deliver your order?</p>
           </div>
 
           <AddressForm
@@ -494,7 +490,11 @@ function AddressForm({
         name="postalCode"
         value={address?.postalCode || ""}
       />
-      <input type="hidden" name="country" value={address?.country || "Nigeria"} />
+      <input
+        type="hidden"
+        name="country"
+        value={address?.country || "Nigeria"}
+      />
       <input type="hidden" name="label" value={address?.label || ""} />
       <input
         type="hidden"
