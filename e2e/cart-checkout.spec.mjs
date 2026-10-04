@@ -111,9 +111,6 @@ test("cart and checkout match the customer flow without fake payment data", asyn
     .fill("10 Second Checkout Road");
   await page.getByLabel("State", { exact: true }).fill("Lagos");
   await page.getByLabel("City / Area", { exact: true }).fill("Ikeja");
-  await page.getByLabel("Postal code").fill("100002");
-  await page.getByLabel("Country", { exact: true }).fill("Nigeria");
-  await page.getByLabel("Label", { exact: true }).fill("Work");
   await page.getByRole("button", { name: "Save address" }).click();
 
   await expect(
@@ -121,10 +118,10 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   ).toBeVisible();
   await expect(page.getByText("10 Second Checkout Road")).toBeVisible();
 
-  const workAddress = page
+  const secondAddress = page
     .getByRole("radio")
     .filter({ hasText: "10 Second Checkout Road" });
-  await workAddress.click();
+  await secondAddress.click();
   await page.getByRole("link", { name: "Use selected address" }).click();
   await expect(page).toHaveURL(/\/checkout\?addressId=/);
   await expect(page.getByText("10 Second Checkout Road")).toBeVisible();
