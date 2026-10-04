@@ -36,14 +36,32 @@ function view(cart: {
     total: subtotal.toString(),
   };
 }
+
+async function cartForUser(db: PrismaClient, userId: string) {
+  try {
+    return await db.cart.upsert({
+      where: { userId },
+      create: { userId },
+      update: {},
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return db.cart.findUniqueOrThrow({ where: { userId } });
+    }
+    throw error;
+  }
+}
 export function registerCart(app: FastifyInstance, client?: PrismaClient) {
   const db = () => requireDatabase(client);
   const auth = protectedRoute(app);
   app.get("/cart", auth, async (request) => {
-    const cart = await db().cart.upsert({
-      where: { userId: userId(request) },
-      create: { userId: userId(request) },
-      update: {},
+    const user = userId(request);
+    await cartForUser(db(), user);
+    const cart = await db().cart.findUniqueOrThrow({
+      where: { userId: user },
       include: { items: { include: itemInclude } },
     });
     return { data: view(cart) };
@@ -60,11 +78,7 @@ export function registerCart(app: FastifyInstance, client?: PrismaClient) {
     });
     if (!product)
       throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found");
-    const cart = await db().cart.upsert({
-      where: { userId: userId(request) },
-      create: { userId: userId(request) },
-      update: {},
-    });
+    const cart = await cartForUser(db(), userId(request));
     const existing = await db().cartItem.findUnique({
       where: { cartId_productId: { cartId: cart.id, productId: product.id } },
     });
