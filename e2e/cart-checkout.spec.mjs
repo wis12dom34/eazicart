@@ -85,4 +85,47 @@ test("cart and checkout match the customer flow without fake payment data", asyn
     page.getByRole("button", { name: /Place order/i }),
   ).toBeEnabled();
   await expect(page.getByText("Secure payment", { exact: true })).toBeVisible();
+
+  await page.getByRole("link", { name: "Change" }).click();
+  await expect(page).toHaveURL(/\/address-book\?checkout=1/);
+  await expect(
+    page.getByRole("heading", { name: "Delivery address", exact: true }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Edit Home" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Edit delivery address", exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Street address", { exact: true }).fill(
+    "2 Checkout Street",
+  );
+  await page.getByRole("button", { name: "Save changes" }).click();
+
+  await page.getByRole("button", { name: "+ Add new address" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Add delivery address", exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Phone number").fill("+2348000000000");
+  await page.getByLabel("Street address", { exact: true }).fill(
+    "10 Second Checkout Road",
+  );
+  await page.getByLabel("State", { exact: true }).fill("Lagos");
+  await page.getByLabel("City / Area", { exact: true }).fill("Ikeja");
+  await page.getByLabel("Postal code").fill("100002");
+  await page.getByLabel("Country", { exact: true }).fill("Nigeria");
+  await page.getByLabel("Label", { exact: true }).fill("Work");
+  await page.getByRole("button", { name: "Save address" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Delivery address", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("10 Second Checkout Road")).toBeVisible();
+
+  const workAddress = page
+    .getByRole("radio")
+    .filter({ hasText: "10 Second Checkout Road" });
+  await workAddress.click();
+  await page.getByRole("link", { name: "Use selected address" }).click();
+  await expect(page).toHaveURL(/\/checkout\?addressId=/);
+  await expect(page.getByText("10 Second Checkout Road")).toBeVisible();
 });
