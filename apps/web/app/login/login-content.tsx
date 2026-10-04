@@ -52,7 +52,11 @@ export function LoginContent() {
         </p>
       )}
 
-      <form className={styles.form} onSubmit={(event) => void submit(event)}>
+      <form
+        className={`${styles.form} ${busy ? styles.busyForm : ""}`}
+        aria-busy={busy}
+        onSubmit={(event) => void submit(event)}
+      >
         <div className={styles.field}>
           <label htmlFor="login-email">Email address</label>
           <input

@@ -18,6 +18,13 @@ import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./saved.module.css";
 
+const cardSizeClasses = [
+  styles.card330,
+  styles.card372,
+  styles.card360,
+  styles.card312,
+];
+
 export default function SavedPage() {
   const auth = useAuth();
   const [removing, setRemoving] = useState<string>();
@@ -51,15 +58,23 @@ export default function SavedPage() {
     }
   };
 
+  const savedProducts = result.data?.data ?? [];
+  const columns = [
+    savedProducts.filter((_, index) => index % 2 === 0),
+    savedProducts.filter((_, index) => index % 2 === 1),
+  ];
+
   return (
     <main className={`app-shell with-nav ${styles.page}`}>
       <header className={styles.header}>
-        <div className={styles.titleRow}>
-          <Link href="/profile" aria-label="Back to profile">
-            <Icon name="back" size={22} />
-          </Link>
-          <h1>Saved</h1>
-        </div>
+        <Link
+          className={styles.backButton}
+          href="/profile"
+          aria-label="Back to profile"
+        >
+          <Icon name="back" size={22} />
+        </Link>
+        <h1>Saved</h1>
         <p>Products you want to come back to</p>
       </header>
 
@@ -68,13 +83,6 @@ export default function SavedPage() {
           Products
         </span>
         <Link href="/following">Sellers</Link>
-        <button
-          type="button"
-          disabled
-          title="Collections are not available yet."
-        >
-          Collections
-        </button>
       </nav>
 
       {actionError ? (
@@ -89,51 +97,86 @@ export default function SavedPage() {
         <SignInState message="Sign in to view your saved products." />
       ) : result.error ? (
         <ErrorState message={result.error} retry={() => void result.reload()} />
-      ) : result.data?.data.length ? (
-        <section className={styles.list} aria-label="Saved products">
-          {result.data.data.map(({ product, productId }) => {
-            const image = product.images[0];
-            const isRemoving = removing === productId;
-            return (
-              <article className={styles.productCard} key={productId}>
-                <Link
-                  className={styles.productMedia}
-                  href={`/product/${product.id}`}
-                  aria-label={`View ${product.name}`}
-                >
-                  {image ? (
-                    <img src={image.url} alt={image.altText ?? product.name} />
-                  ) : (
-                    <Icon name="bag" size={30} />
-                  )}
-                </Link>
-                <Link
-                  className={styles.productCopy}
-                  href={`/product/${product.id}`}
-                >
-                  <strong>{product.name}</strong>
-                  <span>{product.seller.displayName}</span>
-                  <b>{money(product.price)}</b>
-                </Link>
-                <button
-                  className={styles.removeButton}
-                  type="button"
-                  onClick={() => void remove(productId)}
-                  disabled={Boolean(removing)}
-                  aria-label={`Remove ${product.name} from saved products`}
-                  aria-busy={isRemoving}
-                >
-                  <Icon name="heart" size={20} />
-                </button>
-                <Link
-                  className={styles.viewLink}
-                  href={`/product/${product.id}`}
-                >
-                  View
-                </Link>
-              </article>
-            );
-          })}
+      ) : savedProducts.length ? (
+        <section className={styles.viewport} aria-label="Saved products">
+          <div className={styles.masonry}>
+            {columns.map((column, columnIndex) => (
+              <div className={styles.column} key={columnIndex}>
+                {column.map(({ product, productId }) => {
+                  const originalIndex = savedProducts.findIndex(
+                    (saved) => saved.productId === productId,
+                  );
+                  const image = product.images[0];
+                  const isRemoving = removing === productId;
+                  const sizeClass =
+                    cardSizeClasses[originalIndex % cardSizeClasses.length] ??
+                    styles.card330;
+
+                  return (
+                    <article
+                      className={`${styles.productCard} ${sizeClass}`}
+                      key={productId}
+                    >
+                      <Link
+                        className={styles.productOverlay}
+                        href={`/product/${product.id}`}
+                        aria-label={`View ${product.name}`}
+                      />
+
+                      <div className={styles.productMedia} aria-hidden="true">
+                        {image ? (
+                          <img src={image.url} alt="" />
+                        ) : (
+                          <Icon name="bag" size={30} />
+                        )}
+                      </div>
+
+                      {product.viewsLabel ? (
+                        <span className={styles.views}>
+                          {product.viewsLabel} views
+                        </span>
+                      ) : null}
+
+                      <Link
+                        className={styles.seller}
+                        href={`/seller/${product.seller.id}`}
+                      >
+                        {product.seller.displayName}
+                      </Link>
+
+                      <Link
+                        className={styles.productName}
+                        href={`/product/${product.id}`}
+                      >
+                        {product.name}
+                      </Link>
+
+                      <strong className={styles.price}>
+                        {money(product.price)}
+                      </strong>
+
+                      <button
+                        className={styles.removeButton}
+                        type="button"
+                        onClick={() => void remove(productId)}
+                        disabled={Boolean(removing)}
+                        aria-label={`Remove ${product.name} from saved products`}
+                        aria-busy={isRemoving}
+                        aria-pressed="true"
+                      >
+                        <img
+                          src="/figma/heart-saved.svg"
+                          width={18}
+                          height={18}
+                          alt=""
+                        />
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </section>
       ) : (
         <EmptyState

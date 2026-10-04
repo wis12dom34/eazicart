@@ -88,6 +88,14 @@ jobs:
       - name: Real customer flow against PostgreSQL
         run: pnpm test:e2e
 
+      - name: Generate Figma verification captures
+        run: node docs/figma-verification/verify.cjs
+
+      - name: Generate visual comparison inventory
+        run: |
+          python -m pip install --quiet pillow
+          python docs/figma-verification/compare.py
+
       - name: Formatting diagnostics on failure
         if: failure()
         run: |
@@ -100,5 +108,14 @@ jobs:
         with:
           name: browser-test-results
           path: test-results/
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload Figma verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: figma-verification-evidence
+          path: docs/figma-verification/
           retention-days: 3
           if-no-files-found: ignore

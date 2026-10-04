@@ -1,3 +1,4 @@
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
@@ -30,11 +31,7 @@ test("edit profile and address book use real supported account data", async ({
   );
   await expect(page.getByLabel("Email address")).toBeDisabled();
   await expect(page.getByLabel("Email address")).toHaveValue(email);
-  await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Profile" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expectCustomerNavigation(page);
 
   await page.getByLabel("Full name").fill("Updated Account Customer");
   await page.getByRole("button", { name: "Save changes" }).click();
@@ -51,47 +48,68 @@ test("edit profile and address book use real supported account data", async ({
     page.getByRole("heading", { name: "Address Book", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: /Add new address/ }).click();
-  await page.getByLabel("Label", { exact: true }).fill("Home");
-  await page.getByLabel("Address", { exact: true }).fill("1 Demo Street");
-  await page.getByLabel("Address line 2").fill("Near Demo Park");
-  await page.getByLabel("City", { exact: true }).fill("Lagos");
-  await page.getByLabel("State / region").fill("Lagos");
-  await page.getByLabel("Postal code").fill("100001");
-  await page.getByLabel("Country", { exact: true }).fill("Nigeria");
+  await expect(
+    page.getByRole("heading", { name: "Add delivery address", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("1 Demo Street");
+  await page.getByLabel("Landmark (optional)").fill("Near Demo Park");
+  await page.getByLabel("City / Area", { exact: true }).fill("Lagos");
+  await page.getByLabel("State", { exact: true }).fill("Lagos");
   await page.getByRole("button", { name: "Save address" }).click();
 
-  const homeCard = page.locator(".address-card").filter({ hasText: "Home" });
+  const homeCard = page
+    .getByRole("region", { name: "Saved addresses" })
+    .locator("article")
+    .filter({ hasText: "1 Demo Street" });
   await expect(homeCard).toContainText("1 Demo Street");
   await expect(homeCard).toContainText("Near Demo Park");
-  await expect(homeCard).toContainText("Lagos, Lagos 100001");
-  await expect(homeCard).toContainText("Nigeria");
+  await expect(homeCard).toContainText("Lagos, Nigeria");
   await expect(homeCard.getByText("Default", { exact: true })).toBeVisible();
 
   await homeCard.getByRole("button", { name: "Edit" }).click();
-  await homeCard.getByLabel("Address", { exact: true }).fill("2 Demo Street");
-  await homeCard.getByRole("button", { name: "Save changes" }).click();
-  await expect(homeCard).toContainText("2 Demo Street");
+  await expect(
+    page.getByRole("heading", { name: "Edit delivery address", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("2 Demo Street");
+  await page.getByRole("button", { name: "Save changes" }).click();
+
+  const updatedHomeCard = page
+    .getByRole("region", { name: "Saved addresses" })
+    .locator("article")
+    .filter({ hasText: "2 Demo Street" });
+  await expect(updatedHomeCard).toContainText("2 Demo Street");
 
   await page.getByRole("button", { name: /Add new address/ }).click();
-  await page.getByLabel("Label", { exact: true }).fill("Work");
-  await page.getByLabel("Address", { exact: true }).fill("10 Market Road");
-  await page.getByLabel("City", { exact: true }).fill("Lagos");
-  await page.getByLabel("State / region").fill("Lagos");
-  await page.getByLabel("Postal code").fill("100002");
-  await page.getByLabel("Country", { exact: true }).fill("Nigeria");
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("10 Market Road");
+  await page.getByLabel("City / Area", { exact: true }).fill("Lagos");
+  await page.getByLabel("State", { exact: true }).fill("Lagos");
   await page.getByRole("button", { name: "Save address" }).click();
 
-  const workCard = page.locator(".address-card").filter({ hasText: "Work" });
+  const workCard = page
+    .getByRole("region", { name: "Saved addresses" })
+    .locator("article")
+    .filter({ hasText: "10 Market Road" });
   await expect(workCard).toContainText("10 Market Road");
   await expect(workCard.getByText("Default", { exact: true })).toHaveCount(0);
   await workCard.getByRole("button", { name: "Edit" }).click();
-  await workCard.getByRole("button", { name: "Make default" }).click();
-  await expect(workCard.getByText("Default", { exact: true })).toBeVisible();
-  await expect(homeCard.getByText("Default", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Make default" }).click();
 
+  const defaultWorkCard = page
+    .getByRole("region", { name: "Saved addresses" })
+    .locator("article")
+    .filter({ hasText: "10 Market Road" });
   await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Profile" }),
-  ).toHaveAttribute("aria-current", "page");
+    defaultWorkCard.getByText("Default", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    updatedHomeCard.getByText("Default", { exact: true }),
+  ).toHaveCount(0);
+
+  await expectCustomerNavigation(page);
 });

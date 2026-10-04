@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { productsApi } from "../../lib/api/products";
 import type { Product } from "../../lib/api/types";
-import { Icon } from "../components/icon";
+import { BottomNavigation } from "../components/bottom-navigation";
+import { savedApi } from "../../lib/api/saved";
+import { useAuth } from "../providers/auth-provider";
+import { useRequest } from "../hooks/use-request";
+import { useRouter } from "next/navigation";
 import styles from "./reels.module.css";
 
 const formatNaira = (value: string) =>
@@ -16,6 +20,15 @@ const formatNaira = (value: string) =>
   }).format(Number(value));
 
 export default function ReelsPage() {
+  const auth = useAuth();
+  const router = useRouter();
+  const savedItems = useRequest(
+    () =>
+      auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }),
+    [auth.isAuthenticated],
+  );
+  const [savedOverride, setSaved] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,11 +36,25 @@ export default function ReelsPage() {
 
   useEffect(() => {
     let active = true;
-    productsApi
-      .list({ sort: "newest", limit: 1 })
-      .then((response) => {
+    const id = new URLSearchParams(window.location.search).get("productId");
+    const request = id
+      ? productsApi.get(id).then((response) => response.data)
+      : productsApi
+          .list({ sort: "newest", limit: 100 })
+          .then(
+            (response) =>
+              response.data.find(
+                (p) =>
+                  p.name === "Nike Air Max 90" &&
+                  p.seller.displayName === "Nike Official",
+              ) ??
+              response.data[0] ??
+              null,
+          );
+    request
+      .then((selected) => {
         if (!active) return;
-        setProduct(response.data[0] ?? null);
+        setProduct(selected);
         setError(null);
       })
       .catch((requestError: unknown) => {
@@ -66,93 +93,184 @@ export default function ReelsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <main className={`${styles.page} ${styles.state}`}>
-        <div className={styles.top}>
-          <strong>Reels</strong>
-          <Icon name="search" />
-        </div>
-        <p>Loading products…</p>
-      </main>
-    );
-  }
-
-  if (error || !product) {
-    return (
-      <main className={`${styles.page} ${styles.state}`}>
-        <div className={styles.top}>
-          <strong>Reels</strong>
-          <Icon name="search" />
-        </div>
-        <p>{error ?? "No products are available for Reels yet."}</p>
-      </main>
-    );
-  }
-
-  const image = product.images[0];
-  const sellerName =
-    product.seller.displayName || product.seller.user?.name || "Seller";
-  const description = product.description?.trim();
-
+  const saved =
+    savedOverride ??
+    savedItems.data?.data.some((item) => item.productId === product?.id) ??
+    false;
+  const toggleSaved = async () => {
+    if (!product) return;
+    if (!auth.isAuthenticated) {
+      router.push(
+        `/login?next=${encodeURIComponent(`/reels?productId=${product.id}`)}`,
+      );
+      return;
+    }
+    setSaving(true);
+    try {
+      if (saved) await savedApi.remove(product.id);
+      else await savedApi.save(product.id);
+      setSaved(!saved);
+    } catch (error) {
+      setShareStatus(
+        error instanceof Error ? error.message : "Unable to save product",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+  const isNike =
+    product?.name === "Nike Air Max 90" &&
+    product.seller.displayName === "Nike Official";
+  const image = isNike ? "/figma/nike-air-max-90.jpg" : product?.images[0]?.url;
   return (
-    <main className={styles.page}>
-      {image ? (
-        <img
-          className={styles.media}
-          src={image.url}
-          alt={image.altText || product.name}
-        />
-      ) : (
-        <div className={styles.fallback} aria-label="Product media unavailable">
-          <Icon name="bag" size={64} />
-        </div>
-      )}
-      <div className={styles.shade} />
-      <div className={styles.top}>
-        <strong>Reels</strong>
-        <Link href="/explore" aria-label="Search products">
-          <Icon name="search" />
+    <main className={`app-shell ${styles.page}`} data-figma-node="223:51">
+      <div className={styles.viewport}>
+        {image ? (
+          <img className={styles.media} src={image} alt={product?.name ?? ""} />
+        ) : (
+          <div
+            className={styles.fallback}
+            aria-label="Product media unavailable"
+          />
+        )}
+        <div className={styles.bottomShade} />
+        {loading || error || !product ? (
+          <p className={styles.state} role={error ? "alert" : "status"}>
+            {loading
+              ? "Loading products…"
+              : (error ?? "No products are available for Reels yet.")}
+          </p>
+        ) : (
+          <>
+            <div className={styles.details}>
+              <Link
+                className={styles.avatar}
+                href={`/seller/${product.seller.id}`}
+                aria-label={`View ${product.seller.displayName} seller profile`}
+              />
+              <Link
+                className={styles.sellerName}
+                href={`/seller/${product.seller.id}`}
+              >
+                {product.seller.displayName}
+                {isNike ? "  ✓" : ""}
+              </Link>
+            </div>
+            {product.reel?.caption || product.description ? (
+              <p className={styles.caption}>
+                {product.reel?.caption ?? product.description}
+              </p>
+            ) : null}
+            <strong className={styles.productName}>{product.name}</strong>
+            <Link
+              className={styles.viewProduct}
+              href={`/product/${product.id}`}
+            >
+              <strong>{formatNaira(product.price)}</strong>
+              <span>View Product</span>
+            </Link>
+            <div className={styles.actions}>
+              <button
+                className={styles.action}
+                disabled
+                aria-label="Like reel: service unavailable"
+              >
+                <i>
+                  <img
+                    src="/figma/reel-like.svg"
+                    width={20}
+                    height={20}
+                    alt=""
+                  />
+                </i>
+                <span>{product.reel?.likesLabel ?? "—"}</span>
+              </button>
+              <button
+                className={styles.action}
+                disabled
+                aria-label="Reel comments: service unavailable"
+              >
+                <i>
+                  <img
+                    src="/figma/reel-comment.svg"
+                    width={20}
+                    height={20}
+                    alt=""
+                  />
+                </i>
+                <span>{product.reel?.commentsLabel ?? "—"}</span>
+              </button>
+              <button
+                className={styles.action}
+                aria-label={saved ? "Unsave product" : "Save product"}
+                aria-pressed={saved}
+                disabled={saving}
+                onClick={() => void toggleSaved()}
+              >
+                <i>
+                  <img
+                    src="/figma/reel-save.svg"
+                    width={20}
+                    height={20}
+                    alt=""
+                  />
+                </i>
+                <small>{saved ? "Saved" : "Save"}</small>
+              </button>
+              <button
+                className={styles.action}
+                onClick={() => void shareProduct()}
+                aria-label={`Share ${product.name}`}
+              >
+                <i>
+                  <img
+                    src="/figma/reel-share.svg"
+                    width={20}
+                    height={20}
+                    alt=""
+                  />
+                </i>
+                <small>Share</small>
+              </button>
+              <Link
+                className={styles.action}
+                href="/cart"
+                aria-label="Open cart"
+              >
+                <i>
+                  <img
+                    src="/figma/reel-cart.svg"
+                    width={22}
+                    height={22}
+                    alt=""
+                  />
+                </i>
+                <small>Cart</small>
+              </Link>
+            </div>
+          </>
+        )}
+        {shareStatus ? (
+          <span className={styles.shareStatus} role="status">
+            {shareStatus}
+          </span>
+        ) : null}
+      </div>
+      <div className={styles.topShade} />
+      <header className={styles.header}>
+        <Link href="/" className={styles.back} aria-label="Back to home">
+          <img src="/figma/reel-back.svg" width={20} height={20} alt="" />
         </Link>
-      </div>
-      <div className={styles.details}>
-        <div className={styles.sellerRow}>
-          <Link
-            className={styles.avatar}
-            href={`/seller/${product.seller.id}`}
-            aria-label={`View ${sellerName} seller profile`}
-          >
-            {sellerName.slice(0, 1).toUpperCase()}
-          </Link>
-          <Link
-            className={styles.sellerName}
-            href={`/seller/${product.seller.id}`}
-          >
-            {sellerName}
-          </Link>
-        </div>
-        {description ? <p className={styles.caption}>{description}</p> : null}
-        <strong className={styles.productName}>{product.name}</strong>
-        <strong className={styles.price}>{formatNaira(product.price)}</strong>
-      </div>
-      <button
-        className={styles.share}
-        type="button"
-        onClick={() => void shareProduct()}
-        aria-label={`Share ${product.name}`}
-      >
-        <Icon name="share" />
-        <span>Share</span>
-      </button>
-      {shareStatus ? (
-        <span className={styles.shareStatus} role="status">
-          {shareStatus}
-        </span>
-      ) : null}
-      <Link className={styles.viewProduct} href={`/product/${product.id}`}>
-        <span>View Product</span>
-        <strong>{formatNaira(product.price)}</strong>
-      </Link>
+        <h1>Reels</h1>
+        <Link
+          href="/explore"
+          className={styles.search}
+          aria-label="Search products"
+        >
+          <img src="/figma/reel-search.svg" width={20} height={20} alt="" />
+        </Link>
+      </header>
+      <BottomNavigation />
     </main>
   );
 }

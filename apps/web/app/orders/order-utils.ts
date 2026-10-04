@@ -1,4 +1,5 @@
 export function orderStatusLabel(status: string) {
+  if (status === "SHIPPED") return "Shipped";
   if (status === "PENDING") return "Processing";
   if (status === "FULFILLED") return "Delivered";
   if (status === "CANCELLED") return "Cancelled";
@@ -7,6 +8,8 @@ export function orderStatusLabel(status: string) {
 }
 
 export function orderStatusCopy(status: string) {
+  if (status === "SHIPPED")
+    return "Your items are on the way. Track delivery below.";
   if (status === "CONFIRMED") return "Your order has been confirmed.";
   if (status === "FULFILLED") return "This order is marked as delivered.";
   if (status === "CANCELLED") return "This order has been cancelled.";

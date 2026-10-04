@@ -190,7 +190,7 @@ test("seller workspace lets an authenticated customer create a store without fak
   await expect(page).toHaveURL("http://localhost:3000/");
 
   await page.goto("/profile");
-  await page.getByRole("link", { name: /Seller workspace/ }).click();
+  await page.getByRole("link", { name: "Sell", exact: true }).click();
   await expect(page).toHaveURL("http://localhost:3000/seller/dashboard");
   await expect(
     page.getByRole("heading", { name: "Start selling on EaziCart" }),

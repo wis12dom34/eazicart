@@ -18,6 +18,7 @@ import {
 } from "../../components/async-state";
 import { useAuth } from "../../providers/auth-provider";
 import styles from "./product-detail.module.css";
+import { NikeProduct } from "./nike-product";
 
 export default function ProductPage({
   params,
@@ -105,6 +106,13 @@ export default function ProductPage({
       setMessage("Unable to share product");
     }
   };
+
+  if (
+    product.name === "Nike Air Max 90" &&
+    product.seller.displayName === "Nike Official"
+  ) {
+    return <NikeProduct product={product} />;
+  }
 
   return (
     <main className={`app-shell detail-page ${styles.page}`}>

@@ -1,50 +1,93 @@
 .page {
+  --settings-safe-top-shift: max(0px, calc(env(safe-area-inset-top) - 38px));
+  width: 100%;
+  max-width: 430px;
+  height: 100svh;
   min-height: 100svh;
-  padding: calc(44px + env(safe-area-inset-top)) 20px
-    calc(44px + env(safe-area-inset-bottom));
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
 }
 
-.titleRow {
-  min-height: 42px;
+.header {
+  position: absolute;
+  top: calc(46px + var(--settings-safe-top-shift));
+  left: 16px;
+  right: 16px;
+  height: 44px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 .back {
   width: 34px;
-  height: 42px;
-  margin-left: -10px;
-  display: grid;
-  place-items: center;
-  color: var(--ink);
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 4px;
+  color: #0a0a0d;
   text-decoration: none;
 }
+.back img {
+  display: block;
+}
 
-.titleRow h1 {
+.header h1 {
+  min-width: 0;
   margin: 0;
+  color: #0a0a0d;
   font-size: 22px;
-  line-height: 1.2;
-  letter-spacing: -0.035em;
+  font-weight: 700;
+  line-height: 26.4px;
+  letter-spacing: 0;
+  transform: translateY(2px);
 }
 
 .intro {
-  margin: 2px 0 14px;
+  position: absolute;
+  top: calc(94px + var(--settings-safe-top-shift));
+  left: 20px;
+  margin: 0;
   color: #6b707a;
   font-size: 13px;
-  line-height: 1.45;
+  font-weight: 400;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.viewport {
+  position: absolute;
+  top: calc(118px + var(--settings-safe-top-shift));
+  right: 0;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  left: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.content {
+  box-sizing: border-box;
+  min-height: 844px;
+  padding: 8px 16px 122px;
 }
 
 .identityCard {
-  min-height: 92px;
-  padding: 18px 26px 18px 17px;
+  height: 92px;
+  padding: 19px 0 19px 21px;
   border: 1px solid #e5e8ed;
   border-radius: 20px;
   background: #f6f7f9;
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) 63px;
   align-items: center;
-  gap: 18px;
+  column-gap: 18px;
 }
 
 .avatar {
@@ -52,192 +95,230 @@
   height: 52px;
   border-radius: 50%;
   background: #0a0a0d;
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  font-weight: 750;
 }
 
 .identityCopy {
   min-width: 0;
+  align-self: start;
+  margin-top: -2px;
 }
-
 .identityCopy strong,
 .identityCopy span {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .identityCopy strong {
+  color: #0a0a0d;
   font-size: 16px;
+  font-weight: 700;
   line-height: 20px;
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
 }
 
 .identityCopy span {
   margin-top: 6px;
   color: #6b707a;
   font-size: 12px;
+  font-weight: 400;
   line-height: 15px;
-  overflow-wrap: anywhere;
 }
 
 .editLink {
+  width: 63px;
+  height: 44px;
+  align-self: start;
+  margin-top: -3.5px;
+  display: flex;
+  align-items: center;
   color: #0d73f2;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
+  line-height: normal;
   text-decoration: none;
   white-space: nowrap;
 }
-
 .settingsList {
   margin-top: 20px;
   display: grid;
   gap: 12px;
 }
 
-.settingCard,
-.disabledCard {
-  min-height: 72px;
-  padding: 14px 16px 14px 17px;
+.settingCard {
+  height: 72px;
+  padding: 0 0 0 21px;
   border: 1px solid #e5e8ed;
   border-radius: 16px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 24px;
+  display: flex;
   align-items: center;
-  color: var(--ink);
+  justify-content: space-between;
+  color: #0a0a0d;
   text-decoration: none;
   background: #fff;
+}
+
+.settingCard > img {
+  display: block;
+  flex: none;
+  margin-right: 16px;
+}
+
+.settingCopy {
+  min-width: 0;
 }
 
 .settingCopy strong,
 .settingCopy span {
   display: block;
 }
-
 .settingCopy strong {
+  color: #0a0a0d;
   font-size: 15px;
+  font-weight: 600;
   line-height: 19px;
-  font-weight: 650;
 }
 
 .settingCopy span {
   margin-top: 6px;
   color: #6b707a;
   font-size: 12px;
+  font-weight: 400;
   line-height: 15px;
 }
 
-.chevron {
-  justify-self: end;
-  color: #6b707a;
-}
-
-.disabledCard {
-  color: #5d6169;
-  background: #fcfcfc;
-}
-
-.disabledCard .chevron {
-  opacity: 0.45;
-}
-
 .preferencesTitle {
-  margin: 28px 0 10px;
+  height: 16px;
+  margin: 28px 4px 10px;
   color: #6b707a;
   font-size: 13px;
+  font-weight: 600;
   line-height: 16px;
-  font-weight: 650;
 }
 
 .preferencesCard {
-  min-height: 136px;
-  padding: 7px 17px;
+  height: 112px;
   border: 1px solid #e5e8ed;
   border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
 }
 
-.preferenceLink,
-.preferenceDisabled {
-  min-height: 60px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+.preferenceRow {
+  height: 56px;
+  display: flex;
   align-items: center;
-  gap: 12px;
-  color: var(--ink);
+  justify-content: space-between;
+  padding-left: 21px;
+  color: #0a0a0d;
   text-decoration: none;
 }
-
-.preferenceDisabled {
-  color: #5d6169;
+.preferenceRow[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
-.preferenceCopy strong,
-.preferenceCopy span {
-  display: block;
-}
-
-.preferenceCopy strong {
+.preferenceRow strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #0a0a0d;
   font-size: 14px;
+  font-weight: 600;
   line-height: 18px;
-  font-weight: 650;
-}
-
-.preferenceCopy span {
-  margin-top: 4px;
-  color: #6b707a;
-  font-size: 11px;
-  line-height: 14px;
-}
-
-.manage {
-  color: #0d73f2;
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.unavailable {
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: #f2f3f5;
-  color: #7b7f87;
-  font-size: 10px;
-  font-weight: 650;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.logout {
-  width: 100%;
-  min-height: 58px;
-  margin-top: 32px;
-  padding: 0 17px;
-  border: 1px solid #e5e8ed;
-  border-radius: 16px;
-  background: #fff;
-  color: #db1f1f;
-  text-align: left;
-  font-size: 14px;
-  font-weight: 650;
+.switch {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  flex: none;
+  margin-right: 25px;
+  border-radius: 14px;
+  background: #0a0a0d;
 }
 
-@media (max-width: 380px) {
-  .page {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+}
+.helpRow {
+  height: 58px;
+  margin-top: 10px;
+  padding-left: 15px;
+  border: 1px solid #e5e8ed;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  cursor: not-allowed;
+}
 
+.helpRow > span {
+  min-width: 0;
+}
+
+.helpRow strong,
+.helpRow small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.helpRow strong {
+  color: #0a0a0d;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.helpRow small {
+  margin-top: 3px;
+  color: #737885;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: normal;
+}
+.helpRow > img {
+  display: block;
+  flex: none;
+  margin-right: 16px;
+}
+
+.logout {
+  width: max-content;
+  height: 44px;
+  margin: 0 auto;
+  padding: 0 18px;
+  border: 1px solid #e5e8ed;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2f2f7;
+  color: #db1f1f;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  transform: translateX(1.5px);
+}
+
+@media (max-width: 374px) {
   .identityCard {
-    grid-template-columns: 48px minmax(0, 1fr);
-    gap: 14px;
+    grid-template-columns: 52px minmax(0, 1fr) 63px;
   }
 
-  .avatar {
-    width: 48px;
-    height: 48px;
-  }
-
-  .editLink {
-    grid-column: 2;
+  .identityCopy span {
+    text-overflow: ellipsis;
   }
 }

@@ -2,14 +2,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
-import { Icon } from "../components/icon";
 import { money } from "../data";
+import type { CartItem } from "../../lib/api/types";
 import { cartApi } from "../../lib/api/cart";
 import { useRequest } from "../hooks/use-request";
 import {
-  EmptyState,
   ErrorState,
   LoadingState,
   SignInState,
@@ -20,6 +19,9 @@ import styles from "./cart.module.css";
 export default function CartPage() {
   const auth = useAuth();
   const [actionError, setActionError] = useState("");
+  const failedOperation = useRef<(() => Promise<unknown>) | null>(null);
+  const [removing, setRemoving] = useState<CartItem | null>(null);
+  const [mutating, setMutating] = useState(false);
   const cart = useRequest(
     async () =>
       auth.isAuthenticated ? cartApi.get() : Promise.resolve(undefined),
@@ -27,14 +29,19 @@ export default function CartPage() {
   );
 
   const mutate = async (operation: () => Promise<unknown>) => {
+    setMutating(true);
+    failedOperation.current = operation;
     try {
       setActionError("");
       await operation();
+      setRemoving(null);
       await cart.reload();
     } catch (error) {
       setActionError(
         error instanceof Error ? error.message : "Unable to update cart",
       );
+    } finally {
+      setMutating(false);
     }
   };
 
@@ -62,34 +69,136 @@ export default function CartPage() {
     );
 
   const data = cart.data?.data;
+  const itemCount =
+    data?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
   if (!data?.items.length)
     return (
-      <CartShell>
-        <CartHeader />
-        <section className={styles.emptyState}>
-          <EmptyState message="Your cart is empty." />
-          <Link className={styles.secondaryLink} href="/explore">
-            Browse products
-          </Link>
-        </section>
+      <CartShell cartCount={0} node="228:50">
+        <div className={styles.statePage}>
+          <h1>Cart</h1>
+          <section className={styles.emptyHero}>
+            <div className={styles.emptyIcon}>
+              <img src="/figma/cart-empty.svg" width={24} height={24} alt="" />
+            </div>
+            <h2>Your cart is empty</h2>
+            <p>Discover products from sellers you follow and trust.</p>
+            <Link className={styles.statePrimary} href="/explore">
+              Explore products
+            </Link>
+          </section>
+        </div>
+      </CartShell>
+    );
+  if (actionError)
+    return (
+      <CartShell cartCount={itemCount} node="228:113">
+        <div className={styles.statePage}>
+          <h1>Cart</h1>
+          <section className={styles.errorCard} role="alert">
+            <h2>Cart could not be updated</h2>
+            <p>Your quantity change was not saved.</p>
+            <p>Check your connection and try again.</p>
+            <span className={styles.errorDetail}>{actionError}</span>
+          </section>
+          <div className={styles.errorActions}>
+            <button
+              className={styles.statePrimary}
+              disabled={mutating}
+              onClick={() =>
+                failedOperation.current && void mutate(failedOperation.current)
+              }
+            >
+              Try again
+            </button>
+            <button
+              className={styles.stateSecondary}
+              onClick={() => {
+                setActionError("");
+                setRemoving(null);
+              }}
+            >
+              Keep previous cart
+            </button>
+          </div>
+        </div>
+      </CartShell>
+    );
+  const unavailable = data.items.find(
+    (item) => item.product.stock < item.quantity,
+  );
+  if (unavailable)
+    return (
+      <CartShell cartCount={itemCount} node="228:91">
+        <div className={styles.statePage}>
+          <h1>Cart</h1>
+          <section className={styles.unavailableCard}>
+            <h2>Item unavailable</h2>
+            <strong>
+              {unavailable.product.name}
+              {unavailable.variantLabel ? ` · ${unavailable.variantLabel}` : ""}
+            </strong>
+            <p>This option sold out before checkout.</p>
+            <p>Choose another size or remove the item to continue.</p>
+          </section>
+          <div className={styles.unavailableActions}>
+            <button
+              className={styles.statePrimary}
+              disabled
+              title="Product size inventory is not connected"
+            >
+              Choose another option
+            </button>
+            <button
+              className={styles.stateSecondary}
+              disabled={mutating}
+              onClick={() => void mutate(() => cartApi.remove(unavailable.id))}
+            >
+              Remove item
+            </button>
+          </div>
+        </div>
+      </CartShell>
+    );
+  if (removing)
+    return (
+      <CartShell cartCount={itemCount} node="228:68">
+        <div className={styles.statePage}>
+          <h1>Cart</h1>
+          <p className={styles.stateCount}>{itemCount} items</p>
+          <section className={styles.removeItem}>
+            <strong>{removing.product.name}</strong>
+            <p>
+              {removing.product.seller.displayName}
+              {removing.product.seller.displayName === "Nike Official"
+                ? " ✓"
+                : ""}{" "}
+              · {money(removing.lineTotal)}
+            </p>
+          </section>
+          <section className={styles.removeCard}>
+            <h2>Remove this item?</h2>
+            <p>{removing.product.name} will be removed from your cart.</p>
+            <button
+              className={styles.statePrimary}
+              disabled={mutating}
+              onClick={() => void mutate(() => cartApi.remove(removing.id))}
+            >
+              Remove item
+            </button>
+            <button
+              className={styles.keepItem}
+              onClick={() => setRemoving(null)}
+            >
+              Keep item
+            </button>
+          </section>
+        </div>
       </CartShell>
     );
 
-  const itemCount = data.items.reduce((sum, item) => sum + item.quantity, 0);
-
   return (
-    <CartShell>
-      <CartHeader
-        action={
-          <button
-            className={styles.clearButton}
-            type="button"
-            onClick={() => void mutate(() => cartApi.clear())}
-          >
-            Clear
-          </button>
-        }
-      />
+    <CartShell cartCount={itemCount}>
+      <CartHeader />
 
       <section className={styles.intro}>
         <h1>Cart</h1>
@@ -107,42 +216,55 @@ export default function CartPage() {
       <section className={styles.cartList} aria-label="Cart items">
         {data.items.map((item) => (
           <article className={styles.cartItem} key={item.id}>
+            {item.product.name === "Nike Air Max 90" &&
+              item.product.seller.displayName === "Nike Official" && (
+                <Link
+                  className={styles.productLink}
+                  href={`/product/${item.product.id}`}
+                  aria-label="View Nike Air Max 90"
+                />
+              )}
             <div className={styles.cartThumb}>
               {item.product.images[0] ? (
                 <img
                   src={item.product.images[0].url}
                   alt={item.product.images[0].altText || item.product.name}
                 />
-              ) : (
-                <Icon name="bag" size={28} />
-              )}
+              ) : null}
             </div>
             <div className={styles.itemCopy}>
               <h2>{item.product.name}</h2>
-              <p>{item.product.seller.displayName}</p>
+              <p>
+                {item.product.seller.displayName}
+                {item.product.seller.displayName === "Nike Official"
+                  ? " ✓"
+                  : ""}
+              </p>
               <strong>{money(item.lineTotal)}</strong>
             </div>
             <div className={`quantity ${styles.quantity}`}>
               <button
                 type="button"
                 aria-label="Decrease quantity"
+                disabled={mutating}
                 onClick={() =>
                   void (item.quantity === 1
-                    ? mutate(() => cartApi.remove(item.id))
+                    ? setRemoving(item)
                     : mutate(() => cartApi.update(item.id, item.quantity - 1)))
                 }
               >
-                <Icon name="minus" size={14} />
+                −
               </button>
               <span>{item.quantity}</span>
               <button
                 type="button"
                 aria-label="Increase quantity"
+                disabled={mutating}
                 onClick={() =>
                   void mutate(() => cartApi.update(item.id, item.quantity + 1))
                 }
               >
-                <Icon name="plus" size={14} />
+                +
               </button>
             </div>
           </article>
@@ -164,7 +286,13 @@ export default function CartPage() {
         </div>
         <div>
           <span>Delivery</span>
-          <span>Not added</span>
+          <span>
+            {data.delivery === "0"
+              ? "Free"
+              : data.delivery
+                ? money(data.delivery)
+                : "Not added"}
+          </span>
         </div>
         <div className={`total ${styles.total}`}>
           <span>Total</span>
@@ -181,25 +309,36 @@ export default function CartPage() {
   );
 }
 
-function CartShell({ children }: { children: React.ReactNode }) {
+function CartShell({
+  children,
+  cartCount,
+  node = "8:81",
+}: {
+  children: React.ReactNode;
+  cartCount?: number;
+  node?: string;
+}) {
   return (
-    <main className={`app-shell ${styles.page}`}>
+    <main className={`app-shell ${styles.page}`} data-figma-node={node}>
       {children}
-      <BottomNavigation />
+      <BottomNavigation cartCount={cartCount} />
     </main>
   );
 }
 
-function CartHeader({ action }: { action?: React.ReactNode }) {
+function CartHeader() {
   return (
     <header className={styles.header}>
       <Link className={styles.headerButton} href="/" aria-label="Back to home">
-        <Icon name="back" size={20} />
+        <img src="/figma/back.svg" alt="" />
       </Link>
-      <Link className={styles.brandMark} href="/" aria-label="EaziCart home">
-        ↗
+      <Link
+        className={styles.headerAction}
+        href="/saved"
+        aria-label="Saved products"
+      >
+        <img src="/figma/cart-heart.svg" alt="" />
       </Link>
-      <div className={styles.headerAction}>{action}</div>
     </header>
   );
 }

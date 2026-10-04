@@ -1,3 +1,4 @@
+import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
@@ -26,7 +27,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(
     page.getByRole("heading", { name: "Demo Customer", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText(email)).toBeVisible();
+  await page.goto("/edit-profile");
+  await expect(page.getByLabel("Email address")).toHaveValue(email);
+  await page.goto("/profile");
   const profileCounts = page.getByRole("region", {
     name: "Profile activity counts",
   });
@@ -65,9 +68,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
 
   await page.goto("/explore");
   await expect(
-    page.getByRole("link", { name: "Fashion", exact: true }),
+    page.getByRole("heading", { name: "Explore", exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Fashion", exact: true }).click();
+  await page.goto("/category/fashion");
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
   await page.goto(`/product/${productId}`);
   await expect(
@@ -93,22 +96,13 @@ test("customer journey persists in PostgreSQL without payment", async ({
       .getByRole("navigation", { name: "Saved sections" })
       .getByRole("link", { name: "Sellers" }),
   ).toHaveAttribute("href", "/following");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Saved sections" })
-      .getByRole("button", { name: "Collections" }),
-  ).toBeDisabled();
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
   await expect(
     page.getByRole("button", {
       name: "Remove Woven everyday tote from saved products",
     }),
   ).toBeVisible();
-  await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Profile" }),
-  ).toHaveAttribute("aria-current", "page");
+  await expectCustomerNavigation(page);
 
   await page.goto(`/product/${productId}`);
   await page.getByRole("link", { name: /View .* seller profile/ }).click();
@@ -142,6 +136,15 @@ test("customer journey persists in PostgreSQL without payment", async ({
   ).toBeVisible();
   await page.goto("/following");
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
+  const followingSections = page.getByRole("navigation", {
+    name: "Following sections",
+  });
+  await expect(
+    followingSections.getByText("Following", { exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    followingSections.getByRole("button", { name: "Recommended" }),
+  ).toBeDisabled();
 
   await page.goto(`/product/${productId}`);
   await page.getByRole("button", { name: "Add to Cart", exact: true }).click();
@@ -149,23 +152,24 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.goto("/cart");
   await page.getByRole("button", { name: "Increase quantity" }).click();
   await expect(page.locator(".quantity span")).toHaveText("2");
-  await expect(page.locator(".summary .total")).toContainText("37,000");
+  await expect(
+    page.getByText("Total", { exact: true }).locator(".."),
+  ).toContainText("37,000");
 
   await page.goto("/address-book");
-  await page.getByRole("button", { name: "Add new" }).click();
-  await page.getByLabel("Label", { exact: true }).fill("Home");
-  await page.getByLabel("Address", { exact: true }).fill("1 Demo Street");
-  await page.getByLabel("City", { exact: true }).fill("Lagos");
-  await page.getByLabel("State / region").fill("Lagos");
-  await page.getByLabel("Postal code").fill("100001");
-  await page.getByLabel("Country", { exact: true }).fill("Nigeria");
+  await page.getByRole("button", { name: /Add new address/ }).click();
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("1 Demo Street");
+  await page.getByLabel("City / Area", { exact: true }).fill("Lagos");
+  await page.getByLabel("State", { exact: true }).fill("Lagos");
   await page.getByRole("button", { name: "Save address" }).click();
-  await expect(page.locator(".address-card")).toContainText("1 Demo Street");
+  await expect(
+    page.getByRole("region", { name: "Saved addresses" }).locator("article"),
+  ).toContainText("1 Demo Street");
 
   await page.goto("/checkout");
-  await expect(
-    page.getByText("Pay with Paystack", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
   const accessToken = await page.evaluate(() => {
     const stored = localStorage.getItem("eazicart.auth.tokens");
     if (!stored) throw new Error("Missing auth tokens");
@@ -190,9 +194,13 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(page).toHaveURL(`http://localhost:3000/orders/${order.id}`);
   const orderUrl = page.url();
   await expect(page.getByText("Processing", { exact: true })).toBeVisible();
-  await expect(page.locator(".summary .total")).toContainText("37,000");
+  await expect(
+    page.getByText("Total", { exact: true }).locator(".."),
+  ).toContainText("37,000");
   await page.goto("/cart");
-  await expect(page.getByText("Your cart is empty.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your cart is empty", exact: true }),
+  ).toBeVisible();
   await page.goto("/orders");
   await page.locator(`a[href="${new URL(orderUrl).pathname}"]`).click();
   await expect(page).toHaveURL(orderUrl);
@@ -218,11 +226,17 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(
     page.getByRole("heading", { name: "Reviews are not available yet" }),
   ).toBeVisible();
+  const reviewFilters = page.getByLabel("Review filters");
   await expect(
-    page
-      .getByRole("navigation", { name: "Customer navigation" })
-      .getByRole("link", { name: "Profile" }),
-  ).toHaveAttribute("aria-current", "page");
+    reviewFilters.getByRole("button", { name: "All", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    reviewFilters.getByRole("button", { name: "Products", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    reviewFilters.getByRole("button", { name: "Sellers", exact: true }),
+  ).toBeDisabled();
+  await expectCustomerNavigation(page);
 
   await page.goto("/saved");
   await page

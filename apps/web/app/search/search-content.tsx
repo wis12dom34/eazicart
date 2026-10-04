@@ -1,14 +1,17 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 import { BottomNavigation } from "../components/bottom-navigation";
 import { DiscoveryProductCard } from "../components/discovery-product-card";
-import { Icon } from "../components/icon";
 import styles from "../discovery.module.css";
 import { useRequest } from "../hooks/use-request";
+import { useAuth } from "../providers/auth-provider";
 import { productsApi } from "../../lib/api/products";
+import { savedApi } from "../../lib/api/saved";
 import { sellersApi } from "../../lib/api/sellers";
 
 function filterHref(search: string, filter?: "products" | "sellers") {
@@ -20,6 +23,8 @@ function filterHref(search: string, filter?: "products" | "sellers") {
 }
 
 export function SearchContent() {
+  const auth = useAuth();
+  const router = useRouter();
   const params = useSearchParams();
   const search = params.get("search")?.trim() ?? "";
   const requestedFilter = params.get("filter");
@@ -33,6 +38,16 @@ export function SearchContent() {
     [search],
   );
   const sellers = useRequest(() => sellersApi.list(), []);
+  const saved = useRequest(
+    () =>
+      auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }),
+    [auth.isAuthenticated],
+  );
+  const [savedOverrides, setSavedOverrides] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState("");
 
   const normalizedSearch = search.toLowerCase();
   const sellerMatches = (sellers.data?.data ?? []).filter((seller) => {
@@ -42,7 +57,7 @@ export function SearchContent() {
       .some((value) => value?.toLowerCase().includes(normalizedSearch));
   });
   const productRows = products.data?.data ?? [];
-  const productTotal = products.data?.pagination.total ?? 0;
+  const productTotal = products.data?.pagination?.total ?? productRows.length;
   const resultCount =
     filter === "products"
       ? productTotal
@@ -57,25 +72,57 @@ export function SearchContent() {
     (showProducts && productRows.length > 0) ||
     (showSellers && sellerMatches.length > 0);
 
+  const productColumns = [0, 1].map((column) =>
+    productRows
+      .map((product, index) => ({ product, index }))
+      .filter(({ index }) => index % 2 === column),
+  );
+
+  const toggleSaved = async (productId: string, selected: boolean) => {
+    if (!auth.isAuthenticated) {
+      const next = filterHref(search, filter === "all" ? undefined : filter);
+      router.push(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
+    setSavingId(productId);
+    setSaveError("");
+    try {
+      if (selected) await savedApi.remove(productId);
+      else await savedApi.save(productId);
+      setSavedOverrides((current) => ({
+        ...current,
+        [productId]: !selected,
+      }));
+    } catch (saveFailure) {
+      setSaveError(
+        saveFailure instanceof Error
+          ? saveFailure.message
+          : "Unable to update saved products",
+      );
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   return (
-    <main className={`app-shell with-nav ${styles.page}`}>
-      <header className={styles.header}>
+    <main className={`app-shell ${styles.searchPage}`} data-figma-node="31:2">
+      <header className={styles.searchHeader}>
         <Link
-          className={styles.back}
+          className={styles.searchBack}
           href="/explore"
           aria-label="Back to Explore"
         >
-          <Icon name="back" size={22} />
+          <span aria-hidden="true">
+            <img src="/figma/back.svg" width={20} height={20} alt="" />
+          </span>
         </Link>
-        <h1 className={styles.title}>Search</h1>
+        <h1>Search</h1>
       </header>
 
-      <p className={styles.count} aria-live="polite">
-        {loading ? "Searching…" : `${resultCount} results`}
-      </p>
-
-      <form className={styles.search} action="/search">
-        <Icon name="search" size={17} />
+      <form className={styles.searchField} action="/search">
+        <span aria-hidden="true">
+          <img src="/figma/explore-search.svg" width={20} height={20} alt="" />
+        </span>
         <input
           key={search}
           name="search"
@@ -85,84 +132,123 @@ export function SearchContent() {
         />
       </form>
 
-      <p className={styles.sectionLabel}>Filters</p>
-      <nav className={styles.filters} aria-label="Search filters">
+      <p className={styles.searchCount} aria-live="polite">
+        {loading ? "Searching…" : `${resultCount} results`}
+      </p>
+
+      <nav className={styles.searchFilters} aria-label="Search filters">
         <Link
-          className={`${styles.filter} ${filter === "all" ? styles.filterActive : ""}`}
+          className={filter === "all" ? styles.searchFilterActive : undefined}
           href={filterHref(search)}
           aria-current={filter === "all" ? "page" : undefined}
         >
           All
         </Link>
         <Link
-          className={`${styles.filter} ${filter === "products" ? styles.filterActive : ""}`}
+          className={
+            filter === "products" ? styles.searchFilterActive : undefined
+          }
           href={filterHref(search, "products")}
           aria-current={filter === "products" ? "page" : undefined}
         >
           Products
         </Link>
         <Link
-          className={`${styles.filter} ${filter === "sellers" ? styles.filterActive : ""}`}
+          className={
+            filter === "sellers" ? styles.searchFilterActive : undefined
+          }
           href={filterHref(search, "sellers")}
           aria-current={filter === "sellers" ? "page" : undefined}
         >
           Sellers
         </Link>
-        <span
-          className={styles.disabledFilter}
-          aria-disabled="true"
-          title="Reel search is not available yet"
-        >
+        <span aria-disabled="true" title="Reel search is not available yet">
           Reels
         </span>
       </nav>
 
-      {error ? (
-        <div className={styles.state} role="alert">
-          <strong>Search is unavailable</strong>
-          {error}
-        </div>
-      ) : !loading && !hasVisibleResults ? (
-        <div className={styles.state}>
-          <strong>No results found</strong>
-          Try another product or seller name.
-        </div>
-      ) : null}
-
-      {!error && showProducts && productRows.length > 0 ? (
-        <section className={styles.section} aria-labelledby="product-results">
-          <h2 id="product-results">Top results</h2>
-          <div className={styles.grid}>
-            {productRows.map((product) => (
-              <DiscoveryProductCard product={product} key={product.id} />
-            ))}
+      <div className={styles.searchResultsViewport}>
+        {error ? (
+          <div className={styles.searchState} role="alert">
+            <strong>Search is unavailable</strong>
+            {error}
           </div>
-        </section>
-      ) : null}
-
-      {!error && showSellers && sellerMatches.length > 0 ? (
-        <section className={styles.section} aria-labelledby="seller-results">
-          <h2 id="seller-results">Sellers</h2>
-          <div className={styles.sellers}>
-            {sellerMatches.map((seller) => (
-              <Link
-                className={styles.sellerRow}
-                href={`/seller/${seller.id}`}
-                key={seller.id}
-              >
-                <span className={styles.sellerAvatar} aria-hidden="true">
-                  {seller.displayName.slice(0, 2).toUpperCase()}
-                </span>
-                <span className={styles.sellerText}>
-                  <strong>{seller.displayName}</strong>
-                  {seller.bio ? <small>{seller.bio}</small> : null}
-                </span>
-                <span className={styles.view}>View</span>
-              </Link>
-            ))}
+        ) : !loading && !hasVisibleResults ? (
+          <div className={styles.searchState}>
+            <strong>No results found</strong>
+            Try another product or seller name.
           </div>
-        </section>
-      ) : null}
+        ) : null}
+
+        {!error && showProducts && productRows.length > 0 ? (
+          <section
+            className={styles.searchSection}
+            aria-labelledby="product-results"
+          >
+            <h2 id="product-results">Top results</h2>
+            <div className={styles.searchMasonry}>
+              {productColumns.map((column, columnIndex) => (
+                <div className={styles.searchMasonryColumn} key={columnIndex}>
+                  {column.map(({ product, index }) => {
+                    const selected =
+                      savedOverrides[product.id] ??
+                      saved.data?.data.some(
+                        (entry) => entry.productId === product.id,
+                      ) ??
+                      false;
+                    return (
+                      <DiscoveryProductCard
+                        product={product}
+                        key={product.id}
+                        variant="search"
+                        searchPosition={index}
+                        saved={selected}
+                        saving={savingId === product.id}
+                        onToggleSaved={() =>
+                          void toggleSaved(product.id, selected)
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {!error && showSellers && sellerMatches.length > 0 ? (
+          <section
+            className={`${styles.searchSection} ${styles.searchSellerSection}`}
+            aria-labelledby="seller-results"
+          >
+            <h2 id="seller-results">Sellers</h2>
+            <div className={styles.sellers}>
+              {sellerMatches.map((seller) => (
+                <Link
+                  className={styles.sellerRow}
+                  href={`/seller/${seller.id}`}
+                  key={seller.id}
+                >
+                  <span className={styles.sellerAvatar} aria-hidden="true">
+                    {seller.displayName.slice(0, 2).toUpperCase()}
+                  </span>
+                  <span className={styles.sellerText}>
+                    <strong>{seller.displayName}</strong>
+                    {seller.bio ? <small>{seller.bio}</small> : null}
+                  </span>
+                  <span className={styles.view}>View</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {saveError ? (
+          <p className={styles.searchSaveError} role="alert">
+            {saveError}
+          </p>
+        ) : null}
+      </div>
 
       <BottomNavigation />
     </main>

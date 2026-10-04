@@ -1,56 +1,63 @@
 .page {
+  position: relative;
+  max-width: 430px;
   min-height: 100svh;
-  padding: calc(26px + env(safe-area-inset-top)) 24px
+  padding: calc(19px + env(safe-area-inset-top)) 22px
     calc(122px + env(safe-area-inset-bottom));
 }
 
 .back {
-  width: 40px;
-  height: 40px;
-  margin-left: -12px;
+  width: 44px;
+  height: 44px;
+  margin-left: -21px;
   display: grid;
   place-items: center;
-  color: var(--ink);
+  color: #0a0a0d;
   text-decoration: none;
 }
 
 .header {
-  margin-top: 7px;
+  margin-top: 6px;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 28px;
-  line-height: 1.15;
-  letter-spacing: -0.04em;
+  color: #0a0a0d;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 31px;
+  letter-spacing: -0.025em;
 }
 
 .header p {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   color: #6b707a;
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 15px;
 }
 
 .filters {
-  margin-top: 19px;
+  margin-top: 20px;
   display: flex;
-  gap: 8px;
+  gap: 7px;
 }
 
 .filter,
 .filterActive {
-  min-height: 34px;
-  padding: 0 14px;
+  min-height: 31px;
+  padding: 0 13px;
   border: 1px solid #e5e8ed;
-  border-radius: 17px;
+  border-radius: 16px;
   background: #f6f7f9;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 650;
+  color: #0a0a0d;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
 }
 
 .filterActive {
+  min-width: 48px;
   border-color: #0a0a0d;
   background: #0a0a0d;
   color: #fff;
@@ -58,48 +65,57 @@
 
 .filter:disabled,
 .filterActive:disabled {
+  cursor: default;
   opacity: 1;
 }
 
 .empty {
-  min-height: 190px;
-  margin-top: 24px;
-  padding: 34px 24px;
+  min-height: 220px;
+  margin-top: 12px;
+  padding: 36px 24px;
   border: 1px solid #e5e8ed;
-  border-radius: 18px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background: #fff;
   text-align: center;
 }
 
 .emptyIcon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 66px;
+  height: 66px;
+  border-radius: 13px;
   background: #f6f7f9;
   display: grid;
   place-items: center;
+  color: #6b707a;
 }
 
 .empty h2 {
   margin: 16px 0 0;
-  font-size: 16px;
-  letter-spacing: -0.02em;
+  color: #0a0a0d;
+  font-size: 15px;
+  line-height: 19px;
+  letter-spacing: -0.015em;
 }
 
 .empty p {
   max-width: 280px;
   margin: 7px 0 0;
   color: #6b707a;
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 11px;
+  line-height: 16px;
 }
 
 @media (max-width: 380px) {
   .page {
-    padding-left: 18px;
     padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .back {
+    margin-left: -17px;
   }
 }

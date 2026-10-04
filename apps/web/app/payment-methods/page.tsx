@@ -1,22 +1,26 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+
 import { BottomNavigation } from "../components/bottom-navigation";
-import { Icon } from "../components/icon";
 import styles from "./payment-methods.module.css";
 
 export default function PaymentMethods() {
   return (
-    <main className={`app-shell ${styles.page}`}>
+    <main className={`app-shell ${styles.page}`} data-figma-node="30:38">
       <header className={styles.header}>
-        <div className={styles.titleRow}>
-          <Link
-            className={styles.back}
-            href="/profile"
-            aria-label="Back to profile"
-          >
-            <Icon name="back" size={22} />
-          </Link>
-          <h1>Payment Methods</h1>
-        </div>
+        <Link
+          className={styles.back}
+          href="/profile"
+          aria-label="Back to profile"
+        >
+          <img
+            src="/figma/address-select-back.svg"
+            width={10}
+            height={18}
+            alt=""
+          />
+        </Link>
+        <h1>Payment Methods</h1>
         <p>Manage how you pay for orders on EaziCart.</p>
       </header>
 
@@ -27,45 +31,57 @@ export default function PaymentMethods() {
           disabled
           title="Saved payment methods are not supported yet"
         >
-          +&nbsp; Add payment method
+          +&nbsp;&nbsp;Add payment method
         </button>
 
-        <h2 className={styles.sectionTitle}>Saved methods</h2>
+        <h2 className={styles.savedTitle}>Saved methods</h2>
+
         <section
-          className={styles.unavailableCard}
-          aria-label="Saved payment methods unavailable"
+          className={styles.walletCard}
+          aria-label="EaziCart Wallet unavailable"
         >
-          <span className={styles.methodIcon} aria-hidden="true">
-            <Icon name="card" size={22} />
+          <span className={styles.walletIcon} aria-hidden="true">
+            ₦
           </span>
           <span className={styles.methodCopy}>
-            <strong>Saved payment methods aren&apos;t available yet</strong>
-            <span>
-              EaziCart does not store card or bank details in your account.
-            </span>
+            <strong>EaziCart Wallet</strong>
+            <span>Not available yet</span>
+          </span>
+          <span className={styles.unavailableBadge}>Unavailable</span>
+        </section>
+
+        <section
+          className={styles.cardMethod}
+          aria-label="Saved cards unavailable"
+        >
+          <span className={styles.cardIcon} aria-hidden="true">
+            ••
+          </span>
+          <span className={styles.methodCopy}>
+            <strong>Saved cards</strong>
+            <span>Card storage is not available yet</span>
           </span>
         </section>
 
         <h2 className={styles.otherTitle}>Checkout payment</h2>
-        <div className={styles.disabledMethod}>
-          <span className={styles.methodCopy}>
+        <section className={styles.checkoutMethod}>
+          <span className={styles.checkoutCopy}>
             <strong>Paystack</strong>
-            <span>
-              Paystack shows the payment options available for your transaction
-              when you check out.
-            </span>
+            <span>Payment options appear when you check out</span>
           </span>
-          <Icon className={styles.chevron} name="chevron" size={20} />
-        </div>
+        </section>
 
         <aside className={styles.securityCard}>
-          <strong>Payment safety</strong>
+          <strong>Secure payments</strong>
           <p>
-            Payment is completed with Paystack. EaziCart verifies the
-            transaction server-side and does not store your card details.
+            Paystack handles payment details. EaziCart verifies transactions
+            server-side and does not store your card details.
           </p>
         </aside>
+
+        <div className={styles.scrollClearance} aria-hidden="true" />
       </div>
+
       <BottomNavigation />
     </main>
   );
