@@ -96,9 +96,9 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await expect(
     page.getByRole("heading", { name: "Edit delivery address", exact: true }),
   ).toBeVisible();
-  await page.getByLabel("Street address", { exact: true }).fill(
-    "2 Checkout Street",
-  );
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("2 Checkout Street");
   await page.getByRole("button", { name: "Save changes" }).click();
 
   await page.getByRole("button", { name: "+ Add new address" }).click();
@@ -106,9 +106,9 @@ test("cart and checkout match the customer flow without fake payment data", asyn
     page.getByRole("heading", { name: "Add delivery address", exact: true }),
   ).toBeVisible();
   await page.getByLabel("Phone number").fill("+2348000000000");
-  await page.getByLabel("Street address", { exact: true }).fill(
-    "10 Second Checkout Road",
-  );
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("10 Second Checkout Road");
   await page.getByLabel("State", { exact: true }).fill("Lagos");
   await page.getByLabel("City / Area", { exact: true }).fill("Ikeja");
   await page.getByLabel("Postal code").fill("100002");
