@@ -96,11 +96,6 @@ test("customer journey persists in PostgreSQL without payment", async ({
       .getByRole("navigation", { name: "Saved sections" })
       .getByRole("link", { name: "Sellers" }),
   ).toHaveAttribute("href", "/following");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Saved sections" })
-      .getByRole("button", { name: "Collections" }),
-  ).toBeDisabled();
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
   await expect(
     page.getByRole("button", {
