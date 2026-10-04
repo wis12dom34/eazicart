@@ -488,7 +488,7 @@ function AddressForm({
       <input
         type="hidden"
         name="postalCode"
-        value={address?.postalCode || ""}
+        value={address?.postalCode || "N/A"}
       />
       <input
         type="hidden"
