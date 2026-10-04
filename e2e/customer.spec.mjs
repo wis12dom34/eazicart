@@ -158,14 +158,11 @@ test("customer journey persists in PostgreSQL without payment", async ({
 
   await page.goto("/address-book");
   await page.getByRole("button", { name: /Add new address/ }).click();
-  await page.getByLabel("Label", { exact: true }).fill("Home");
   await page
     .getByLabel("Street address", { exact: true })
     .fill("1 Demo Street");
   await page.getByLabel("City / Area", { exact: true }).fill("Lagos");
   await page.getByLabel("State", { exact: true }).fill("Lagos");
-  await page.getByLabel("Postal code").fill("100001");
-  await page.getByLabel("Country", { exact: true }).fill("Nigeria");
   await page.getByRole("button", { name: "Save address" }).click();
   await expect(
     page.getByRole("region", { name: "Saved addresses" }).locator("article"),
