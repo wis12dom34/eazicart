@@ -37,14 +37,18 @@ const addressPayload = (form: FormData): AddressInput => ({
 export function AddressBookContent({
   checkout,
   selectedId,
+  initialEditId,
 }: {
   checkout?: boolean;
   selectedId?: string;
+  initialEditId?: string;
 }) {
   const auth = useAuth();
   const user = auth.user;
   const [adding, setAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(
+    initialEditId ?? null,
+  );
   const [error, setError] = useState("");
   const result = useRequest(
     async () =>
@@ -120,8 +124,89 @@ export function AddressBookContent({
         name={user.name}
         initialId={selectedId}
         onAdd={() => setAdding(true)}
+        onEdit={(id) => {
+          setEditingId(id);
+          setAdding(false);
+          setError("");
+        }}
       />
     );
+
+  if (
+    checkout &&
+    (adding || editingId) &&
+    user &&
+    !result.loading &&
+    result.data
+  ) {
+    const editingAddress = editingId
+      ? result.data.data.find((address) => address.id === editingId)
+      : undefined;
+    const isEditing = Boolean(editingAddress);
+
+    return (
+      <main
+        className={`app-shell ${styles.checkoutEditorPage}`}
+        data-figma-node={isEditing ? "212:70" : "212:36"}
+      >
+        <div className={styles.checkoutEditor}>
+          <div className={styles.checkoutEditorHeader}>
+            <h1>
+              {isEditing ? "Edit delivery address" : "Add delivery address"}
+            </h1>
+            <p>
+              {isEditing
+                ? "Update your delivery details."
+                : "Where should we deliver your order?"}
+            </p>
+          </div>
+
+          <AddressForm
+            userName={user.name}
+            address={editingAddress}
+            submitLabel={isEditing ? "Save changes" : "Save address"}
+            onSubmit={(event) =>
+              isEditing && editingAddress
+                ? void updateAddress(event, editingAddress.id)
+                : void addAddress(event)
+            }
+            onCancel={() => {
+              setAdding(false);
+              setEditingId(null);
+              setError("");
+            }}
+          />
+
+          {error ? (
+            <p className={styles.checkoutEditorError} role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          {isEditing && editingAddress ? (
+            <div className={styles.checkoutEditorSecondaryActions}>
+              {!editingAddress.isDefault ? (
+                <button
+                  className={styles.secondaryAction}
+                  type="button"
+                  onClick={() => void makeDefault(editingAddress.id)}
+                >
+                  Make default
+                </button>
+              ) : null}
+              <button
+                className={styles.dangerAction}
+                type="button"
+                onClick={() => void remove(editingAddress.id)}
+              >
+                Delete address
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={`app-shell ${styles.page}`} data-figma-node="30:2">
