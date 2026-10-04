@@ -31,6 +31,7 @@ const addressPayload = (form: FormData): AddressInput => ({
   postalCode: formString(form, "postalCode"),
   country: formString(form, "country"),
   isDefault: form.get("isDefault") === "on",
+  phone: formString(form, "phone") || undefined,
 });
 
 export function AddressBookContent({
@@ -159,11 +160,19 @@ export function AddressBookContent({
         ) : null}
 
         {adding ? (
-          <div className={styles.formCard}>
-            <h2 className={styles.formTitle}>Add new address</h2>
+          <div className={styles.editorPanel}>
+            <div className={styles.editorHeader}>
+              <h2>Add delivery address</h2>
+              <p>Where should we deliver your order?</p>
+            </div>
             <AddressForm
+              userName={user?.name}
               submitLabel="Save address"
               onSubmit={(event) => void addAddress(event)}
+              onCancel={() => {
+                setAdding(false);
+                setError("");
+              }}
             />
           </div>
         ) : null}
@@ -237,13 +246,22 @@ export function AddressBookContent({
                     ) : null}
 
                     {editingId === address.id ? (
-                      <div className={styles.formCard}>
+                      <div className={styles.editorPanel}>
+                        <div className={styles.editorHeader}>
+                          <h2>Edit delivery address</h2>
+                          <p>Update your delivery details.</p>
+                        </div>
                         <AddressForm
+                          userName={user.name}
                           address={address}
                           submitLabel="Save changes"
                           onSubmit={(event) =>
                             void updateAddress(event, address.id)
                           }
+                          onCancel={() => {
+                            setEditingId(null);
+                            setError("");
+                          }}
                         />
                         <div className={styles.formActions}>
                           {!address.isDefault ? (
@@ -295,16 +313,99 @@ function formatAddressLocation(address: Address) {
 }
 
 function AddressForm({
+  userName,
   address,
   submitLabel,
   onSubmit,
+  onCancel,
 }: {
+  userName?: string;
   address?: Address;
   submitLabel: string;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onCancel?: () => void;
 }) {
   return (
     <form className={styles.form} onSubmit={onSubmit}>
+      <label className={styles.field}>
+        <span>Full name</span>
+        <input
+          className={styles.input}
+          value={userName ?? ""}
+          readOnly
+          aria-readonly="true"
+          placeholder="Your full name"
+        />
+      </label>
+      <label className={styles.field}>
+        <span>Phone number</span>
+        <input
+          className={styles.input}
+          name="phone"
+          type="tel"
+          placeholder="+234 · Phone number"
+          defaultValue={address?.phone || ""}
+        />
+      </label>
+      <label className={styles.field}>
+        <span>Street address</span>
+        <input
+          className={styles.input}
+          name="line1"
+          required
+          placeholder="House number and street"
+          defaultValue={address?.line1 || ""}
+        />
+      </label>
+      <label className={styles.field}>
+        <span>State</span>
+        <input
+          className={styles.input}
+          name="region"
+          required
+          placeholder="Enter state"
+          defaultValue={address?.region || ""}
+        />
+      </label>
+      <label className={styles.field}>
+        <span>City / Area</span>
+        <input
+          className={styles.input}
+          name="city"
+          required
+          placeholder="Enter city or area"
+          defaultValue={address?.city || ""}
+        />
+      </label>
+      <label className={styles.field}>
+        <span>Landmark (optional)</span>
+        <input
+          className={styles.input}
+          name="line2"
+          placeholder="A nearby place or delivery note"
+          defaultValue={address?.line2 || ""}
+        />
+      </label>
+      <div className={styles.compactFields}>
+        <label className={styles.field}>
+          <span>Postal code</span>
+          <input
+            className={styles.input}
+            name="postalCode"
+            required
+            defaultValue={address?.postalCode || ""}
+          />
+        </label>
+        <label className={styles.field}>
+          <span>Country</span>
+          <input
+            className={styles.input}
+            name="country"
+            required
+            defaultValue={address?.country || "Nigeria"}
+          />
+        </label>
+      </div>
       <label className={styles.field}>
         <span>Label</span>
         <input
@@ -312,59 +413,6 @@ function AddressForm({
           name="label"
           placeholder="Home"
           defaultValue={address?.label || ""}
-        />
-      </label>
-      <label className={styles.field}>
-        <span>Address</span>
-        <input
-          className={styles.input}
-          name="line1"
-          required
-          defaultValue={address?.line1 || ""}
-        />
-      </label>
-      <label className={styles.field}>
-        <span>Address line 2</span>
-        <input
-          className={styles.input}
-          name="line2"
-          defaultValue={address?.line2 || ""}
-        />
-      </label>
-      <label className={styles.field}>
-        <span>City</span>
-        <input
-          className={styles.input}
-          name="city"
-          required
-          defaultValue={address?.city || ""}
-        />
-      </label>
-      <label className={styles.field}>
-        <span>State / region</span>
-        <input
-          className={styles.input}
-          name="region"
-          required
-          defaultValue={address?.region || ""}
-        />
-      </label>
-      <label className={styles.field}>
-        <span>Postal code</span>
-        <input
-          className={styles.input}
-          name="postalCode"
-          required
-          defaultValue={address?.postalCode || ""}
-        />
-      </label>
-      <label className={styles.field}>
-        <span>Country</span>
-        <input
-          className={styles.input}
-          name="country"
-          required
-          defaultValue={address?.country || ""}
         />
       </label>
       <label className={styles.defaultField}>
@@ -375,9 +423,20 @@ function AddressForm({
         />
         <span>Make default</span>
       </label>
-      <button className={styles.primaryAction} type="submit">
-        {submitLabel}
-      </button>
+      <div className={styles.editorActions}>
+        <button className={styles.primaryAction} type="submit">
+          {submitLabel}
+        </button>
+        {onCancel ? (
+          <button
+            className={styles.cancelAction}
+            type="button"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }
