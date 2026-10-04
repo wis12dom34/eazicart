@@ -37,21 +37,21 @@ Inter 400/500/600/700 is locally packaged, pinned to @fontsource/inter 4.5.15 (I
 
 The following customer screens were completed after the original committed screenshot baseline. They are now covered by the real PostgreSQL browser suite and canonical Figma-node implementation work, but **new side-by-side/overlay/difference binaries have not yet been committed for these rows**. They should therefore be read as browser-validated implementation status, not as a fresh pixel-comparison claim.
 
-| Screen | Figma node | Current status | Browser/API coverage | Visual evidence status |
-| --- | --- | --- | --- | --- |
-| Saved | `28:2` | Implemented with canonical two-column masonry | Real save persistence, saved list, remove and empty state | Fresh binary comparison pending |
-| Following | `66:2` | Implemented with canonical Following/Recommended structure | Real follow persistence, followed seller list and unfollow; unsupported Recommended remains disabled | Fresh binary comparison pending |
-| Reviews History | `36:2` | Canonical shell implemented with truthful unavailable state | Route, unavailable heading and disabled filters covered | Fresh binary comparison pending |
-| Category | `31:50` | Existing `/category/[slug]` aligned to canonical layout | Real category filtering, product rendering, seller links and saved-product controls | Fresh binary comparison pending |
-| Profile Add Address | `373:1622` | Existing address CRUD form aligned | Real create API and canonical labels covered | Fresh binary comparison pending |
-| Profile Edit Address | `373:1637` | Existing address CRUD form aligned | Real update/default/delete behavior covered | Fresh binary comparison pending |
-| Checkout Add Address | `212:36` | Checkout-specific editor implemented on existing address flow | Add/save/select/return-to-checkout covered | Fresh binary comparison pending |
-| Checkout Edit Address | `212:70` | Checkout-specific editor implemented on existing address flow | Edit/save/cancel/default/delete covered | Fresh binary comparison pending |
-| Login | `34:13` | Canonical credential screen aligned | Supported sign-in path covered | Fresh binary comparison pending |
-| Register | `34:30` | Canonical registration screen aligned | Supported registration path covered | Fresh binary comparison pending |
-| Invalid Login | `222:50` | Canonical invalid state aligned | Invalid credentials state covered | Fresh binary comparison pending |
-| Loading Login | `222:68` | Canonical busy state aligned | Disabled/busy submit state covered | Fresh binary comparison pending |
-| Register Validation | `222:86` | Canonical validation presentation aligned | Required/invalid registration errors covered | Fresh binary comparison pending |
+| Screen                | Figma node | Current status                                                | Browser/API coverage                                                                                 | Visual evidence status          |
+| --------------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------- |
+| Saved                 | `28:2`     | Implemented with canonical two-column masonry                 | Real save persistence, saved list, remove and empty state                                            | Fresh binary comparison pending |
+| Following             | `66:2`     | Implemented with canonical Following/Recommended structure    | Real follow persistence, followed seller list and unfollow; unsupported Recommended remains disabled | Fresh binary comparison pending |
+| Reviews History       | `36:2`     | Canonical shell implemented with truthful unavailable state   | Route, unavailable heading and disabled filters covered                                              | Fresh binary comparison pending |
+| Category              | `31:50`    | Existing `/category/[slug]` aligned to canonical layout       | Real category filtering, product rendering, seller links and saved-product controls                  | Fresh binary comparison pending |
+| Profile Add Address   | `373:1622` | Existing address CRUD form aligned                            | Real create API and canonical labels covered                                                         | Fresh binary comparison pending |
+| Profile Edit Address  | `373:1637` | Existing address CRUD form aligned                            | Real update/default/delete behavior covered                                                          | Fresh binary comparison pending |
+| Checkout Add Address  | `212:36`   | Checkout-specific editor implemented on existing address flow | Add/save/select/return-to-checkout covered                                                           | Fresh binary comparison pending |
+| Checkout Edit Address | `212:70`   | Checkout-specific editor implemented on existing address flow | Edit/save/cancel/default/delete covered                                                              | Fresh binary comparison pending |
+| Login                 | `34:13`    | Canonical credential screen aligned                           | Supported sign-in path covered                                                                       | Fresh binary comparison pending |
+| Register              | `34:30`    | Canonical registration screen aligned                         | Supported registration path covered                                                                  | Fresh binary comparison pending |
+| Invalid Login         | `222:50`   | Canonical invalid state aligned                               | Invalid credentials state covered                                                                    | Fresh binary comparison pending |
+| Loading Login         | `222:68`   | Canonical busy state aligned                                  | Disabled/busy submit state covered                                                                   | Fresh binary comparison pending |
+| Register Validation   | `222:86`   | Canonical validation presentation aligned                     | Required/invalid registration errors covered                                                         | Fresh binary comparison pending |
 
 During this continuation, CI exposed a real concurrency defect unrelated to Figma styling: concurrent first-time `GET /cart` and `POST /cart/items` requests could both attempt to create the same per-user cart and trigger the unique `Cart_userId_key` constraint. The existing cart module now handles Prisma `P2002` by loading the cart created by the request that won the race. No duplicate cart system or schema was introduced.
 
