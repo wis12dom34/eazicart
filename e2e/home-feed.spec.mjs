@@ -50,15 +50,24 @@ test("Home saves and supported seller/cart actions persist through the real API"
 
   await page.goto("/following");
   await expect(
-    page.getByRole("heading", { name: "Saved Sellers", exact: true }),
+    page.getByRole("heading", { name: "Following", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
   await expect(
     page
-      .getByRole("region", { name: "Saved sellers" })
+      .getByRole("navigation", { name: "Following sections" })
+      .getByText("Following", { exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Following sections" })
+      .getByRole("button", { name: "Recommended" }),
+  ).toBeDisabled();
+  await expect(
+    page
+      .getByLabel("Followed sellers")
       .getByText(/^\d+ followers?$/),
   ).toBeVisible();
-  await expect(page.getByLabel("Search saved sellers")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Unfollow Lagos Studio", exact: true }),
   ).toBeVisible();
