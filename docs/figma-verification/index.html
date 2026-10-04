@@ -1,10 +1,12 @@
-<!doctype html><meta charset="utf-8" /><title>
-  EaziCart comparison evidence</title
-><style>
+<!doctype html>
+<meta charset="utf-8" />
+<title>EaziCart Figma comparison evidence</title>
+<style>
   body {
     font: 16px system-ui;
     margin: 24px;
     background: #eee;
+    color: #111;
   }
   select {
     font: inherit;
@@ -15,16 +17,30 @@
     max-width: 100%;
     height: auto;
     margin-top: 16px;
+    background: white;
   }
   p {
     max-width: 850px;
+    line-height: 1.5;
+  }
+  code {
+    background: #fff;
+    padding: 2px 5px;
+    border-radius: 4px;
   }
 </style>
-<h1>EaziCart comparison evidence</h1>
+<h1>EaziCart Figma comparison evidence</h1>
+<p>
+  Open this page from the downloaded <code>figma-verification-evidence</code>
+  GitHub Actions artifact. Generated app screenshots, side-by-side comparisons,
+  overlays and differences are intentionally not committed to the repository;
+  CI regenerates them on every validation run. Canonical Figma references remain
+  tracked in <code>captures/</code>.
+</p>
 <p>
   Figma is on the left in side-by-side mode. Overlays blend both images equally.
   Difference images amplify RGB differences four times. These captures use
-  sandbox data; see REPORT.md for exact production gaps.
+  deterministic sandbox data; see <code>REPORT.md</code> for exact production gaps.
 </p>
 <select id="screen">
   <option value="home">Home — 1247:16174</option>
@@ -45,16 +61,30 @@
   <option value="cart-unavailable">Unavailable cart item — 228:91</option>
   <option value="payment-failed">Payment failed — 212:122</option>
   <option value="address-select">Delivery address — 228:214</option>
+  <option value="saved">Saved — 28:2</option>
+  <option value="following">Following — 66:2</option>
+  <option value="reviews-history">Reviews History — 36:2</option>
+  <option value="category">Category — 31:50</option>
+  <option value="profile-address-add">Profile Add Address — 373:1622</option>
+  <option value="profile-address-edit">Profile Edit Address — 373:1637</option>
+  <option value="checkout-address-add">Checkout Add Address — 212:36</option>
+  <option value="checkout-address-edit">Checkout Edit Address — 212:70</option>
+  <option value="login">Login — 34:13</option>
+  <option value="login-invalid">Invalid Login — 222:50</option>
+  <option value="login-loading">Loading Login — 222:68</option>
+  <option value="register">Register — 34:30</option>
+  <option value="register-validation">Register Validation — 222:86</option>
 </select>
 <select id="mode">
   <option value="comparison">Side by side</option>
   <option value="overlay">50% overlay</option>
-  <option value="diff">4× difference</option></select
-><img id="capture" alt="Selected comparison" />
+  <option value="diff">4× difference</option>
+</select>
+<img id="capture" alt="Selected comparison" />
 <script>
-  const screenSelect = document.getElementById("screen"),
-    modeSelect = document.getElementById("mode"),
-    captureImage = document.getElementById("capture");
+  const screenSelect = document.getElementById("screen");
+  const modeSelect = document.getElementById("mode");
+  const captureImage = document.getElementById("capture");
   function update() {
     captureImage.src = `captures/${screenSelect.value}-${modeSelect.value}.png`;
   }
