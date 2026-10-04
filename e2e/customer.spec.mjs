@@ -141,6 +141,15 @@ test("customer journey persists in PostgreSQL without payment", async ({
   ).toBeVisible();
   await page.goto("/following");
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
+  const followingSections = page.getByRole("navigation", {
+    name: "Following sections",
+  });
+  await expect(
+    followingSections.getByText("Following", { exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    followingSections.getByRole("button", { name: "Recommended" }),
+  ).toBeDisabled();
 
   await page.goto(`/product/${productId}`);
   await page.getByRole("button", { name: "Add to Cart", exact: true }).click();
@@ -223,6 +232,16 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(
     page.getByRole("heading", { name: "Reviews are not available yet" }),
   ).toBeVisible();
+  const reviewFilters = page.getByLabel("Review filters");
+  await expect(
+    reviewFilters.getByRole("button", { name: "All", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    reviewFilters.getByRole("button", { name: "Products", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    reviewFilters.getByRole("button", { name: "Sellers", exact: true }),
+  ).toBeDisabled();
   await expectCustomerNavigation(page);
 
   await page.goto("/saved");
