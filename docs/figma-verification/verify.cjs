@@ -208,9 +208,43 @@ let server;
     const writes = [];
     let saved = false;
     let profileFixture = false;
+    let continuationFixture = false;
+    let authLoginMode = "success";
     let failCartUpdate = false;
-    await page.route("http://localhost:3001/**", (r) => {
+    await page.route("http://localhost:3001/**", async (r) => {
       const path = new URL(r.request().url()).pathname;
+
+      if (path === "/auth/login") {
+        if (authLoginMode === "slow")
+          await new Promise((resolve) => setTimeout(resolve, 1400));
+        if (authLoginMode === "invalid")
+          return r.fulfill({
+            status: 401,
+            contentType: "application/json",
+            body: JSON.stringify({
+              error: {
+                code: "INVALID_CREDENTIALS",
+                message: "Email or password is incorrect",
+              },
+            }),
+          });
+        return r.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            user: {
+              id: "wisdom",
+              name: "Wisdom Okereke",
+              email: "qa@eazicart.invalid",
+            },
+            tokens: {
+              accessToken: "sandbox",
+              refreshToken: "sandbox",
+              expiresAt: "2099-01-01T00:00:00.000Z",
+            },
+          }),
+        });
+      }
       if (
         failCartUpdate &&
         path.startsWith("/cart/items/") &&
@@ -251,17 +285,63 @@ let server;
               : { data: [] };
       if (path === "/notifications")
         data = { data: [], meta: { unreadCount: 2 } };
-      if (path === "/products") data = { data: allProducts };
+      if (path === "/products")
+        data = {
+          data: allProducts,
+          pagination: {
+            total: allProducts.length,
+            limit: 20,
+            offset: 0,
+          },
+        };
+      if (path === "/categories")
+        data = {
+          data: [
+            { id: "fashion", name: "Fashion", slug: "fashion" },
+            { id: "electronics", name: "Electronics", slug: "electronics" },
+            { id: "beauty", name: "Beauty", slug: "beauty" },
+            { id: "home", name: "Home", slug: "home" },
+            { id: "sports", name: "Sports", slug: "sports" },
+          ],
+        };
       if (path === "/orders")
         data = {
           data: Array.from({ length: profileFixture ? 12 : 3 }, () => order),
         };
       if (path === "/following")
         data = {
-          data: profileFixture
-            ? Array.from({ length: 14 }, () => ({ seller: product.seller }))
-            : [],
+          data:
+            profileFixture || continuationFixture
+              ? [
+                  {
+                    sellerId: "nike",
+                    seller: {
+                      id: "nike-user",
+                      name: "Nike Official",
+                      sellerProfile: {
+                        id: "nike",
+                        displayName: "Nike Official",
+                        bio: "Performance footwear and everyday essentials.",
+                      },
+                    },
+                  },
+                  {
+                    sellerId: "jumia",
+                    seller: {
+                      id: "jumia-user",
+                      name: "Jumia Nigeria",
+                      sellerProfile: {
+                        id: "jumia",
+                        displayName: "Jumia Nigeria",
+                        bio: "Popular technology and lifestyle products.",
+                      },
+                    },
+                  },
+                ]
+              : [],
         };
+      if (/^\/following\/[^/]+\/count$/.test(path))
+        data = { data: { count: path.includes("nike") ? 12840 : 8420 } };
       if (path === "/addresses") data = { data: [address, workAddress] };
       if (path.startsWith("/orders/")) data = { data: order };
       if (path.startsWith("/payments/")) data = { data: payment() };
@@ -296,14 +376,15 @@ let server;
         saved = r.request().method() === "POST";
       if (path === "/saved-products")
         data = {
-          data: profileFixture
-            ? Array.from({ length: 8 }, () => ({
-                productId: product.id,
-                product,
-              }))
-            : saved
-              ? [{ productId: product.id, product }]
-              : [],
+          data:
+            profileFixture || continuationFixture
+              ? allProducts.slice(0, 8).map((item) => ({
+                  productId: item.id,
+                  product: item,
+                }))
+              : saved
+                ? [{ productId: product.id, product }]
+                : [],
         };
       return r.fulfill({
         status: 200,
