@@ -695,7 +695,6 @@
   pointer-events: none;
 }
 
-
 /* Category 31:50 — canonical customer category screen. */
 .categoryPage {
   --category-safe-top-shift: max(0px, calc(env(safe-area-inset-top) - 38px));
