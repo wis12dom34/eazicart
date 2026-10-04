@@ -308,39 +308,47 @@ let server;
         data = {
           data: Array.from({ length: profileFixture ? 12 : 3 }, () => order),
         };
-      if (path === "/following")
+      if (path === "/following") {
+        const continuationFollows = [
+          {
+            followerId: "wisdom",
+            sellerId: "nike",
+            seller: {
+              id: "nike-user",
+              name: "Nike Official",
+              sellerProfile: {
+                id: "nike",
+                displayName: "Nike Official",
+                bio: "Performance footwear and everyday essentials.",
+              },
+            },
+          },
+          {
+            followerId: "wisdom",
+            sellerId: "jumia",
+            seller: {
+              id: "jumia-user",
+              name: "Jumia Nigeria",
+              sellerProfile: {
+                id: "jumia",
+                displayName: "Jumia Nigeria",
+                bio: "Popular technology and lifestyle products.",
+              },
+            },
+          },
+        ];
         data = {
-          data:
-            profileFixture || continuationFixture
-              ? [
-                  {
-                    sellerId: "nike",
-                    seller: {
-                      id: "nike-user",
-                      name: "Nike Official",
-                      sellerProfile: {
-                        id: "nike",
-                        displayName: "Nike Official",
-                        bio: "Performance footwear and everyday essentials.",
-                      },
-                    },
-                  },
-                  {
-                    sellerId: "jumia",
-                    seller: {
-                      id: "jumia-user",
-                      name: "Jumia Nigeria",
-                      sellerProfile: {
-                        id: "jumia",
-                        displayName: "Jumia Nigeria",
-                        bio: "Popular technology and lifestyle products.",
-                      },
-                    },
-                  },
-                ]
+          data: continuationFixture
+            ? continuationFollows
+            : profileFixture
+              ? Array.from({ length: 14 }, (_, index) => ({
+                  ...continuationFollows[index % continuationFollows.length],
+                  sellerId: `profile-follow-${index}`,
+                }))
               : [],
         };
-      if (/^\/following\/[^/]+\/count$/.test(path))
+      }
+      if (/^\/sellers\/[^/]+\/followers\/count$/.test(path))
         data = { data: { count: path.includes("nike") ? 12840 : 8420 } };
       if (path === "/addresses") data = { data: [address, workAddress] };
       if (path.startsWith("/orders/")) data = { data: order };
