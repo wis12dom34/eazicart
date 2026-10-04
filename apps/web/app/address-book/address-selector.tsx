@@ -11,11 +11,13 @@ export function AddressSelector({
   name,
   initialId,
   onAdd,
+  onEdit,
 }: {
   addresses: Address[];
   name: string;
   initialId?: string;
   onAdd: () => void;
+  onEdit: (id: string) => void;
 }) {
   const [selection, setSelection] = useState(initialId);
   const selected =
@@ -44,26 +46,38 @@ export function AddressSelector({
         aria-label="Delivery address"
       >
         {addresses.map((address, index) => (
-          <button
+          <div
             key={address.id}
-            type="button"
-            role="radio"
-            aria-checked={selected?.id === address.id}
-            className={`${styles.option} ${selected?.id === address.id ? styles.selected : ""} ${index > 0 ? styles.laterOption : ""}`}
-            onClick={() => setSelection(address.id)}
+            className={`${styles.optionWrap} ${index > 0 ? styles.laterOptionWrap : ""}`}
           >
-            <small>{address.label?.toUpperCase() ?? "ADDRESS"}</small>
-            <strong>{name}</strong>
-            <span>
-              {[address.line1, address.line2].filter(Boolean).join(", ")}
-            </span>
-            <p>
-              {[`${address.city}, ${address.country}`, address.phone]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            {address.isDefault ? <b>✓ Default</b> : null}
-          </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={selected?.id === address.id}
+              className={`${styles.option} ${selected?.id === address.id ? styles.selected : ""} ${index > 0 ? styles.laterOption : ""}`}
+              onClick={() => setSelection(address.id)}
+            >
+              <small>{address.label?.toUpperCase() ?? "ADDRESS"}</small>
+              <strong>{name}</strong>
+              <span>
+                {[address.line1, address.line2].filter(Boolean).join(", ")}
+              </span>
+              <p>
+                {[`${address.city}, ${address.country}`, address.phone]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              {address.isDefault ? <b>✓ Default</b> : null}
+            </button>
+            <button
+              type="button"
+              className={styles.edit}
+              onClick={() => onEdit(address.id)}
+              aria-label={`Edit ${address.label || "delivery address"}`}
+            >
+              Edit
+            </button>
+          </div>
         ))}
       </section>
       <button type="button" className={styles.add} onClick={onAdd}>
