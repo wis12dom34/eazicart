@@ -64,9 +64,7 @@ test("Home saves and supported seller/cart actions persist through the real API"
       .getByRole("button", { name: "Recommended" }),
   ).toBeDisabled();
   await expect(
-    page
-      .getByLabel("Followed sellers")
-      .getByText(/^\d+ followers?$/),
+    page.getByLabel("Followed sellers").getByText(/^\d+ followers?$/),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Unfollow Lagos Studio", exact: true }),
