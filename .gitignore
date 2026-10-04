@@ -37,7 +37,18 @@ Thumbs.db
 android/.gradle/
 ios/Pods/
 
-
 # Browser test artifacts
 playwright-report/
 test-results/
+
+# Generated Figma verification outputs (canonical references stay tracked)
+docs/figma-verification/captures/*-app.png
+docs/figma-verification/captures/*-app-*.png
+docs/figma-verification/captures/*-app-full.png
+docs/figma-verification/captures/*-comparison.png
+docs/figma-verification/captures/*-overlay.png
+docs/figma-verification/captures/*-diff.png
+docs/figma-verification/captures/comparison-metrics.json
+docs/figma-verification/captures/interaction-results.json
+docs/figma-verification/captures/home-asset-map.json
+docs/figma-verification/captures/continuation-evidence.json
