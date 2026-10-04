@@ -49,7 +49,9 @@ test("edit profile and address book use real supported account data", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: /Add new address/ }).click();
   await page.getByLabel("Label", { exact: true }).fill("Home");
-  await page.getByLabel("Street address", { exact: true }).fill("1 Demo Street");
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("1 Demo Street");
   await page.getByLabel("Landmark (optional)").fill("Near Demo Park");
   await page.getByLabel("City / Area", { exact: true }).fill("Lagos");
   await page.getByLabel("State", { exact: true }).fill("Lagos");
@@ -68,13 +70,17 @@ test("edit profile and address book use real supported account data", async ({
   await expect(homeCard.getByText("Default", { exact: true })).toBeVisible();
 
   await homeCard.getByRole("button", { name: "Edit" }).click();
-  await homeCard.getByLabel("Street address", { exact: true }).fill("2 Demo Street");
+  await homeCard
+    .getByLabel("Street address", { exact: true })
+    .fill("2 Demo Street");
   await homeCard.getByRole("button", { name: "Save changes" }).click();
   await expect(homeCard).toContainText("2 Demo Street");
 
   await page.getByRole("button", { name: /Add new address/ }).click();
   await page.getByLabel("Label", { exact: true }).fill("Work");
-  await page.getByLabel("Street address", { exact: true }).fill("10 Market Road");
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("10 Market Road");
   await page.getByLabel("City / Area", { exact: true }).fill("Lagos");
   await page.getByLabel("State", { exact: true }).fill("Lagos");
   await page.getByLabel("Postal code").fill("100002");
