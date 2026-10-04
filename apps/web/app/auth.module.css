@@ -3,38 +3,46 @@
   max-width: 430px;
   min-height: 100svh;
   margin: 0 auto;
-  padding: 64px 24px 48px;
+  padding: 58px 59px 48px 22px;
   background: #fff;
 }
 
 .loginPage {
-  padding-top: 72px;
+  padding-top: 66px;
+}
+
+.registerPage {
+  padding-top: 58px;
 }
 
 .heading {
   margin: 0;
   color: #0a0a0d;
-  font-size: 30px;
+  font-size: 27.419px;
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.035em;
+  line-height: normal;
+  letter-spacing: -0.025em;
 }
 
 .subtitle {
-  margin: 6px 0 0;
+  margin: 7px 0 0;
   color: #6b707a;
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 13.709px;
+  line-height: 19px;
 }
 
 .form {
   display: grid;
-  gap: 18px;
-  margin-top: 46px;
+  gap: 16px;
+  margin-top: 44px;
+}
+
+.loginPage .form {
+  margin-top: 43px;
 }
 
 .registerForm {
-  margin-top: 42px;
+  margin-top: 40px;
 }
 
 .field {
@@ -43,25 +51,28 @@
 }
 
 .field label {
-  color: #0a0a0d;
-  font-size: 13px;
+  color: #636366;
+  font-size: 11.881px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 16px;
 }
 
 .field input {
   width: 100%;
-  height: 54px;
-  border: 1px solid #e5e8ed;
-  border-radius: 14px;
+  height: 49.353px;
+  padding: 0 14.623px;
+  border: 1px solid transparent;
+  border-radius: 12px;
   outline: 0;
-  background: #fff;
+  background: #f2f2f7;
   color: #0a0a0d;
-  padding: 0 15px;
-  font-size: 15px;
+  font-family: inherit;
+  font-size: 13.709px;
+  line-height: 19px;
   transition:
     border-color 140ms ease,
-    box-shadow 140ms ease;
+    box-shadow 140ms ease,
+    background 140ms ease;
 }
 
 .field input::placeholder {
@@ -70,13 +81,14 @@
 }
 
 .field input:focus {
-  border-color: #aeb4bd;
-  box-shadow: 0 0 0 3px #0d73f214;
+  border-color: #c8cbd1;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(13 115 242 / 8%);
 }
 
 .field input[aria-invalid="true"] {
   border-color: #d92d20;
-  border-width: 1.5px;
+  background: #fff7f6;
   box-shadow: none;
 }
 
@@ -84,34 +96,36 @@
 .formError {
   margin: -2px 0 0;
   color: #d92d20;
-  font-size: 12px;
-  line-height: 1.3;
+  font-size: 11.881px;
+  line-height: 16px;
 }
 
 .formError {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .success {
-  margin: 20px 0 -24px;
+  margin: 18px 0 -22px;
+  padding: 12px 14px;
   border-radius: 12px;
   background: #eaf8ef;
   color: #18733b;
-  padding: 12px 14px;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 17px;
 }
 
 .primaryButton {
   width: 100%;
-  height: 56px;
-  margin-top: 24px;
+  height: 47.526px;
+  margin-top: 8px;
   border: 0;
-  border-radius: 16px;
-  background: #0a0a0d;
+  border-radius: 14.623px;
+  background: #0f1419;
   color: #fff;
-  font-size: 16px;
+  font-family: inherit;
+  font-size: 14.62px;
   font-weight: 600;
+  line-height: 20px;
   cursor: pointer;
 }
 
@@ -121,29 +135,30 @@
 }
 
 .busyNote {
-  margin: -10px 0 0;
+  margin: -8px 0 0;
   color: #6b707a;
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 11.881px;
+  line-height: 16px;
 }
 
 .terms {
-  margin: 2px 0 0;
+  margin: 0;
   color: #6b707a;
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: 11px;
+  line-height: 16px;
 }
 
 .switchLink {
-  margin: 32px 0 0;
+  margin: 34px 0 0;
   text-align: center;
   color: #0d73f2;
-  font-size: 14px;
+  font-size: 12.795px;
   font-weight: 600;
+  line-height: 18px;
 }
 
 .registerPage .switchLink {
-  margin-top: 40px;
+  margin-top: 30px;
 }
 
 .switchLink a {
@@ -158,11 +173,11 @@
 
 @media (max-width: 380px) {
   .page {
-    padding-left: 20px;
     padding-right: 20px;
+    padding-left: 20px;
   }
 
   .heading {
-    font-size: 28px;
+    font-size: 26px;
   }
 }
