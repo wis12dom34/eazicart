@@ -116,6 +116,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: figma-verification-evidence
-          path: docs/figma-verification/captures/
+          path: docs/figma-verification/
           retention-days: 3
           if-no-files-found: ignore
