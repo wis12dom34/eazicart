@@ -15,7 +15,9 @@ const reel = {
   _count: { likes: 12, saves: 4, views: 30, comments: 0 },
 };
 
-test("failed Like keeps state unchanged and can be retried", async ({ page }) => {
+test("failed Like keeps state unchanged and can be retried", async ({
+  page,
+}) => {
   let likeAttempts = 0;
 
   await page.addInitScript(() => {
