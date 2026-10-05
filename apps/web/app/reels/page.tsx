@@ -294,11 +294,30 @@ function ReelSlide({
 
   useEffect(() => {
     if (!active || !interactive || !authenticated || viewedRef.current) return;
-    const timeout = window.setTimeout(() => {
-      viewedRef.current = true;
-      void reelsApi.view(reel.id, 1500, false).catch(() => undefined);
-    }, 1500);
-    return () => window.clearTimeout(timeout);
+    let retryTimeout: number | null = null;
+    let cancelled = false;
+    let attempts = 0;
+
+    const recordView = () => {
+      if (cancelled || viewedRef.current) return;
+      attempts += 1;
+      void reelsApi
+        .view(reel.id, 1500, false)
+        .then(() => {
+          viewedRef.current = true;
+        })
+        .catch(() => {
+          if (cancelled || viewedRef.current || attempts >= 2) return;
+          retryTimeout = window.setTimeout(recordView, 1500);
+        });
+    };
+
+    const timeout = window.setTimeout(recordView, 1500);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      if (retryTimeout !== null) window.clearTimeout(retryTimeout);
+    };
   }, [active, authenticated, interactive, reel.id]);
 
   useEffect(() => {
