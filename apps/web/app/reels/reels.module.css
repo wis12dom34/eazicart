@@ -11,7 +11,23 @@
 .viewport {
   position: absolute;
   inset: 0 0 calc(88px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+.slide {
+  height: 100%;
+  min-height: 100%;
+  position: relative;
   overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  background: #09090b;
 }
 .media,
 .fallback {
@@ -37,6 +53,7 @@
 }
 .topShade {
   position: absolute;
+  z-index: 4;
   top: 0;
   left: 0;
   right: 0;
@@ -46,6 +63,7 @@
 }
 .header {
   position: absolute;
+  z-index: 5;
   top: 42px;
   left: 16px;
   right: 16px;
@@ -82,39 +100,52 @@
   gap: 10px;
 }
 .avatar {
-  display: block;
   width: 44px;
   height: 44px;
   border-radius: 50%;
   background: white;
+  color: #0e0e0f;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
 }
 .sellerName {
   transform: translateY(-3px);
-  width: 102px;
+  max-width: 170px;
   color: white;
   text-decoration: none;
   font-size: 15px;
   font-weight: 600;
   line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .caption {
   position: absolute;
   bottom: 141px;
   left: 16px;
-  right: 16px;
-  white-space: nowrap;
+  right: 80px;
   margin: 0;
   color: white;
   font-size: 13px;
   line-height: 17px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .productName {
   position: absolute;
   bottom: 109px;
   left: 16px;
+  right: 80px;
   font-size: 15px;
   line-height: 19px;
   font-weight: 600;
+  text-transform: none;
 }
 .viewProduct {
   position: absolute;
@@ -156,7 +187,7 @@
   flex-direction: column;
   gap: 8px;
   width: 52px;
-  height: 302px;
+  min-height: 302px;
 }
 .action {
   height: 54px;
@@ -217,15 +248,23 @@
   background: #0f1419;
   font-size: 12px;
 }
-@media (max-width: 375px) {
-  .caption {
-    right: 80px;
-    white-space: normal;
-  }
+.loadingMore {
+  min-height: 64px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: #09090b;
+  font-size: 12px;
+  scroll-snap-align: none;
 }
-
 .action:nth-child(-n + 2) {
   justify-content: flex-start;
   padding-top: 0.5px;
   gap: 1.5px;
+}
+@media (max-width: 375px) {
+  .caption,
+  .productName {
+    right: 80px;
+  }
 }
