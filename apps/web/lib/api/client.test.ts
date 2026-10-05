@@ -83,6 +83,27 @@ describe("API client", () => {
     expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain("reelId=reel-1");
   });
 
+  it("does not use legacy fallback for a mismatched shared Reel", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [{ id: "different-reel", product: null }],
+          pagination: { nextCursor: null, hasMore: false },
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      reelsApi.feed({ reelId: "reel-1", limit: 1 }),
+    ).resolves.toEqual({
+      data: [],
+      pagination: { nextCursor: null, hasMore: false },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("authenticates Reel like and save mutations with the stored access token", async () => {
     const tokens = JSON.stringify({
       accessToken: "reels-unit-access",
