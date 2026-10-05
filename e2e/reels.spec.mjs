@@ -123,6 +123,128 @@ test("authenticated Reel hydrates liked and saved state", async ({ page }) => {
   expect(interactionsAuthorization).toBe("Bearer reels-e2e-access");
 });
 
+test("authenticated Reel toggles like and save through existing routes", async ({
+  page,
+}) => {
+  const likeMethods = [];
+  const saveMethods = [];
+  const authorizationHeaders = [];
+
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "eazicart.auth.tokens",
+      JSON.stringify({
+        accessToken: "reels-e2e-access",
+        refreshToken: "reels-e2e-refresh",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+      }),
+    );
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "reels-e2e-user",
+        email: "reels@example.com",
+        name: "Reels Tester",
+      }),
+    });
+  });
+  await page.route(
+    /\/reels\/reel-share-test\/interactions(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: { liked: false, saved: false } }),
+      });
+    },
+  );
+  await page.route(/\/reels\/reel-share-test\/like(?:\?|$)/, async (route) => {
+    const method = route.request().method();
+    likeMethods.push(method);
+    authorizationHeaders.push(route.request().headers()["authorization"] ?? "");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: { liked: method === "POST", count: method === "POST" ? 13 : 12 },
+      }),
+    });
+  });
+  await page.route(/\/reels\/reel-share-test\/save(?:\?|$)/, async (route) => {
+    const method = route.request().method();
+    saveMethods.push(method);
+    authorizationHeaders.push(route.request().headers()["authorization"] ?? "");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: { saved: method === "POST", count: method === "POST" ? 5 : 4 },
+      }),
+    });
+  });
+  await page.route(/\/reels\/reel-share-test\/views(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          id: "view-e2e",
+          watchMs: 1500,
+          completed: false,
+          createdAt: "2026-10-05T12:00:00.000Z",
+        },
+      }),
+    });
+  });
+  await mockSharedReel(page);
+  await page.goto(`/reels?reel=${reel.id}`);
+
+  const likeButton = page.getByRole("button", {
+    name: "Like reel",
+    exact: true,
+  });
+  const saveButton = page.getByRole("button", {
+    name: "Save reel",
+    exact: true,
+  });
+  await expect(likeButton).toBeEnabled();
+  await expect(saveButton).toBeEnabled();
+
+  await likeButton.click();
+  const unlikeButton = page.getByRole("button", {
+    name: "Unlike reel",
+    exact: true,
+  });
+  await expect(unlikeButton).toHaveAttribute("aria-pressed", "true");
+  await expect(unlikeButton.locator("span")).toHaveText("13");
+  await unlikeButton.click();
+  await expect(likeButton).toHaveAttribute("aria-pressed", "false");
+  await expect(likeButton.locator("span")).toHaveText("12");
+
+  await saveButton.click();
+  const unsaveButton = page.getByRole("button", {
+    name: "Remove saved reel",
+    exact: true,
+  });
+  await expect(unsaveButton).toHaveAttribute("aria-pressed", "true");
+  await expect(unsaveButton.locator("small")).toHaveText("5");
+  await unsaveButton.click();
+  await expect(saveButton).toHaveAttribute("aria-pressed", "false");
+  await expect(saveButton.locator("small")).toHaveText("4");
+
+  expect(likeMethods).toEqual(["POST", "DELETE"]);
+  expect(saveMethods).toEqual(["POST", "DELETE"]);
+  expect(authorizationHeaders).toEqual([
+    "Bearer reels-e2e-access",
+    "Bearer reels-e2e-access",
+    "Bearer reels-e2e-access",
+    "Bearer reels-e2e-access",
+  ]);
+});
+
 test("missing shared Reel does not fall back to legacy products", async ({
   page,
 }) => {
