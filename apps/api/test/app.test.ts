@@ -265,6 +265,13 @@ describe("API foundation", () => {
     ["GET", "/following"],
     ["GET", "/orders"],
     ["GET", "/notifications"],
+    ["POST", "/reels"],
+    ["POST", "/reels/reel-1/like"],
+    ["DELETE", "/reels/reel-1/like"],
+    ["POST", "/reels/reel-1/save"],
+    ["DELETE", "/reels/reel-1/save"],
+    ["POST", "/reels/reel-1/comments"],
+    ["POST", "/reels/reel-1/views"],
   ] as const)("rejects unauthenticated %s %s access", async (method, url) => {
     const response = await makeApp().inject({ method, url });
     expect(response.statusCode).toBe(401);
