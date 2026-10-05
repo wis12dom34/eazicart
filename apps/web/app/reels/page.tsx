@@ -53,6 +53,10 @@ function CommentsSheet({
     if (!open) return;
 
     const previousOverflow = document.body.style.overflow;
+    const previouslyFocusedElement =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     document.body.style.overflow = "hidden";
     closeButtonRef.current?.focus();
 
@@ -64,6 +68,8 @@ function CommentsSheet({
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
+      if (previouslyFocusedElement?.isConnected)
+        previouslyFocusedElement.focus();
     };
   }, [onClose, open]);
 
