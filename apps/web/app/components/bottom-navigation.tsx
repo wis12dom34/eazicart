@@ -58,8 +58,14 @@ export function BottomNavigation({
               : active && ["Explore", "Reels"].includes(tab.label)
                 ? `${tab.icon}-active`
                 : tab.icon;
-        const content = (
-          <>
+        return (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            aria-label={tab.label}
+            className={`${styles.item} ${active ? styles.active : ""}`}
+            aria-current={active ? "page" : undefined}
+          >
             <span className={styles.icon}>
               <img src={`/figma/${icon}.svg`} alt="" />
               {tab.label === "Cart" && !!count && (
@@ -69,29 +75,6 @@ export function BottomNavigation({
               )}
             </span>
             <span>{tab.label}</span>
-          </>
-        );
-        // Chat has a validated design, but no existing route/service yet.
-        return tab.label === "Chat" ? (
-          <span
-            key={tab.href}
-            className={styles.item}
-            role="link"
-            aria-label={tab.label}
-            aria-disabled="true"
-            title="Chat is not available yet"
-          >
-            {content}
-          </span>
-        ) : (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            aria-label={tab.label}
-            className={`${styles.item} ${active ? styles.active : ""}`}
-            aria-current={active ? "page" : undefined}
-          >
-            {content}
           </Link>
         );
       })}
