@@ -177,6 +177,23 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
     return reply.code(201).send({ data: serializeReel(reel) });
   });
 
+  app.get("/reels/:reelId/interactions", auth, async (request) => {
+    const { reelId } = reelParams.parse(request.params);
+    await requirePublishedReel(reelId);
+    const uid = userId(request);
+    const [like, save] = await Promise.all([
+      db().reelLike.findUnique({
+        where: { userId_reelId: { userId: uid, reelId } },
+        select: { userId: true },
+      }),
+      db().reelSave.findUnique({
+        where: { userId_reelId: { userId: uid, reelId } },
+        select: { userId: true },
+      }),
+    ]);
+    return { data: { liked: Boolean(like), saved: Boolean(save) } };
+  });
+
   app.post("/reels/:reelId/like", auth, async (request, reply) => {
     const { reelId } = reelParams.parse(request.params);
     await requirePublishedReel(reelId);

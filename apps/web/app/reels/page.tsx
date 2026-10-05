@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { reelsApi, type Reel, type ReelComment } from "../../lib/api/reels";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { useAuth } from "../providers/auth-provider";
 import styles from "./reels.module.css";
 
 const formatNaira = (value: string) =>
@@ -164,9 +165,11 @@ function ReelSlide({
   reel,
   active,
   onCountChange,
+  authenticated,
 }: {
   reel: Reel;
   active: boolean;
+  authenticated: boolean;
   onCountChange: (
     reelId: string,
     key: keyof Reel["_count"],
@@ -183,6 +186,7 @@ function ReelSlide({
   const [saved, setSaved] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
+  const [interactionStateBusy, setInteractionStateBusy] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const product = reel.product;
   const interactive = !isLegacyReel(reel);
@@ -204,13 +208,39 @@ function ReelSlide({
   }, [active]);
 
   useEffect(() => {
-    if (!active || !interactive || viewedRef.current) return;
+    if (!active || !interactive || !authenticated || viewedRef.current) return;
     const timeout = window.setTimeout(() => {
       viewedRef.current = true;
       void reelsApi.view(reel.id, 1500, false).catch(() => undefined);
     }, 1500);
     return () => window.clearTimeout(timeout);
-  }, [active, interactive, reel.id]);
+  }, [active, authenticated, interactive, reel.id]);
+
+  useEffect(() => {
+    if (!active || !interactive || !authenticated) {
+      if (!authenticated) {
+        setLiked(false);
+        setSaved(false);
+      }
+      return;
+    }
+    let mounted = true;
+    setInteractionStateBusy(true);
+    reelsApi
+      .interactions(reel.id)
+      .then((response) => {
+        if (!mounted) return;
+        setLiked(response.data.liked);
+        setSaved(response.data.saved);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (mounted) setInteractionStateBusy(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [active, authenticated, interactive, reel.id]);
 
   useEffect(() => {
     if (!shareStatus && !interactionStatus) return;
@@ -352,7 +382,7 @@ function ReelSlide({
       <div className={styles.actions}>
         <button
           className={`${styles.action} ${liked ? styles.actionActive : ""}`}
-          disabled={!interactive || likeBusy}
+          disabled={!interactive || likeBusy || interactionStateBusy}
           aria-label={liked ? "Unlike reel" : "Like reel"}
           aria-pressed={liked}
           onClick={() => void toggleLike()}
@@ -375,7 +405,7 @@ function ReelSlide({
         </button>
         <button
           className={`${styles.action} ${saved ? styles.actionActive : ""}`}
-          disabled={!interactive || saveBusy}
+          disabled={!interactive || saveBusy || interactionStateBusy}
           aria-label={saved ? "Remove saved reel" : "Save reel"}
           aria-pressed={saved}
           onClick={() => void toggleSave()}
@@ -439,6 +469,7 @@ function ReelSlide({
 }
 
 export default function ReelsPage() {
+  const auth = useAuth();
   const feedRef = useRef<HTMLDivElement | null>(null);
   const loadingMoreRef = useRef(false);
   const [reels, setReels] = useState<Reel[]>([]);
@@ -548,6 +579,7 @@ export default function ReelsPage() {
               reel={reel}
               active={index === activeIndex}
               onCountChange={onCountChange}
+              authenticated={auth.isAuthenticated}
             />
           ))
         )}

@@ -107,6 +107,11 @@ export const reelsApi = {
       .then((result) => result.data);
     return legacyProductReels(products);
   },
+  interactions: (reelId: string) =>
+    apiRequest<{ data: { liked: boolean; saved: boolean } }>(
+      `/reels/${reelId}/interactions`,
+      { auth: true },
+    ),
   like: (reelId: string) =>
     apiRequest<{ data: { liked: true; count: number } }>(
       `/reels/${reelId}/like`,

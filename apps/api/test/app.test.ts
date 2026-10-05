@@ -266,6 +266,7 @@ describe("API foundation", () => {
     ["GET", "/orders"],
     ["GET", "/notifications"],
     ["POST", "/reels"],
+    ["GET", "/reels/reel-1/interactions"],
     ["POST", "/reels/reel-1/like"],
     ["DELETE", "/reels/reel-1/like"],
     ["POST", "/reels/reel-1/save"],
