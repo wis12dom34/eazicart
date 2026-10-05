@@ -214,7 +214,14 @@ export default function ReelsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = useCallback(async (cursor?: string) => {
-    const response = await reelsApi.feed({ cursor, limit: 8 });
+    const productId = new URLSearchParams(window.location.search).get(
+      "productId",
+    );
+    const response = await reelsApi.feed({
+      cursor,
+      limit: 8,
+      productId: productId ?? undefined,
+    });
     setReels((current) => {
       if (!cursor) return response.data;
       const known = new Set(current.map((reel) => reel.id));
