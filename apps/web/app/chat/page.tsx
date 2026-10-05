@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -19,13 +20,17 @@ export default function ChatPage() {
         </Link>
       </header>
 
-      <section className="eazicart-chat-empty" aria-labelledby="chat-empty-title">
+      <section
+        className="eazicart-chat-empty"
+        aria-labelledby="chat-empty-title"
+      >
         <span className="eazicart-chat-empty-icon" aria-hidden="true">
           <img src="/figma/nav-chat.svg" alt="" />
         </span>
         <h2 id="chat-empty-title">No conversations yet</h2>
         <p>
-          Open a seller store or product to start a conversation when messaging is available.
+          Open a seller store or product to start a conversation when messaging
+          is available.
         </p>
         <Link href="/explore#sellers">Explore sellers</Link>
       </section>
