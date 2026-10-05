@@ -354,7 +354,9 @@ test("Reel share copies the deep link when native share is unavailable", async (
     .toBe(`http://localhost:3000/reels?reel=${reel.id}`);
 });
 
-test("Reel share uses the EaziCart deep link", async ({ page }) => {
+test("Reel share keeps external-source Reels inside EaziCart", async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", {
       configurable: true,
@@ -363,7 +365,22 @@ test("Reel share uses the EaziCart deep link", async ({ page }) => {
       },
     });
   });
-  await mockSharedReel(page);
+  await page.route(/\/reels\/feed(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [
+          {
+            ...reel,
+            source: "TIKTOK",
+            externalUrl: "https://www.tiktok.com/@demo/video/123",
+          },
+        ],
+        pagination: { nextCursor: null, hasMore: false },
+      }),
+    });
+  });
   await page.goto(`/reels?reel=${reel.id}`);
 
   await page.getByRole("button", { name: "Share reel", exact: true }).click();
