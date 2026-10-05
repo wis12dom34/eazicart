@@ -489,6 +489,101 @@ test("authenticated Reel posts a comment and updates the count", async ({
   await expect(commentsButton.locator("span")).toHaveText("1");
 });
 
+test("failed comment post keeps the draft and count unchanged", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "eazicart.auth.tokens",
+      JSON.stringify({
+        accessToken: "reels-e2e-access",
+        refreshToken: "reels-e2e-refresh",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+      }),
+    );
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "reels-e2e-user",
+        email: "reels@example.com",
+        name: "Reels Tester",
+      }),
+    });
+  });
+  await page.route(
+    /\/reels\/reel-share-test\/interactions(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: { liked: false, saved: false } }),
+      });
+    },
+  );
+  await page.route(/\/reels\/reel-share-test\/views(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          id: "view-e2e",
+          watchMs: 1500,
+          completed: false,
+          createdAt: "2026-10-05T12:00:00.000Z",
+        },
+      }),
+    });
+  });
+  await mockSharedReel(page);
+  await page.route(
+    /\/reels\/reel-share-test\/comments(?:\?|$)/,
+    async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.fallback();
+        return;
+      }
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            code: "COMMENT_UNAVAILABLE",
+            message: "Unable to post comment right now",
+          },
+        }),
+      });
+    },
+  );
+
+  await page.goto(`/reels?reel=${reel.id}`);
+  const commentsButton = page.getByRole("button", {
+    name: "Open reel comments",
+    exact: true,
+  });
+  await commentsButton.click();
+  const commentInput = page.getByRole("textbox", {
+    name: "Comment",
+    exact: true,
+  });
+  await commentInput.fill("Keep this draft");
+  await page.getByRole("button", { name: "Post", exact: true }).click();
+
+  await expect(page.getByRole("alert")).toHaveText(
+    "Unable to post comment right now",
+  );
+  await expect(commentInput).toHaveValue("Keep this draft");
+  await expect(
+    page.getByRole("button", { name: "Post", exact: true }),
+  ).toBeEnabled();
+  await page
+    .getByRole("button", { name: "Close comments", exact: true })
+    .click();
+  await expect(commentsButton.locator("span")).toHaveText("0");
+});
+
 test("Reel share copies the deep link when native share is unavailable", async ({
   page,
 }) => {
