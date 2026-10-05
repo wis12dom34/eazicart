@@ -46,9 +46,10 @@ function CommentsSheet({
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const legacy = isLegacyReel(reel);
 
   useEffect(() => {
-    if (!open || isLegacyReel(reel)) return;
+    if (!open || legacy) return;
     let mounted = true;
     setLoading(true);
     setError(null);
@@ -71,7 +72,7 @@ function CommentsSheet({
     return () => {
       mounted = false;
     };
-  }, [open, reel]);
+  }, [legacy, open, reel.id]);
 
   if (!open) return null;
 
@@ -114,7 +115,7 @@ function CommentsSheet({
         </div>
 
         <div className={styles.commentList}>
-          {isLegacyReel(reel) ? (
+          {legacy ? (
             <p className={styles.sheetState}>
               Comments are available on published Reels.
             </p>
@@ -143,7 +144,7 @@ function CommentsSheet({
           </p>
         ) : null}
 
-        {!isLegacyReel(reel) ? (
+        {!legacy ? (
           authenticated ? (
             <form
               className={styles.commentComposer}
@@ -280,7 +281,8 @@ function ReelSlide({
 
   const shareReel = async () => {
     const url =
-      reel.externalUrl || `${window.location.origin}/reels?reel=${reel.id}`;
+      reel.externalUrl ||
+      `${window.location.origin}/reels?reel=${encodeURIComponent(reel.id)}`;
     try {
       if (navigator.share) {
         await navigator.share({
