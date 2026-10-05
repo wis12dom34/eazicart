@@ -54,13 +54,16 @@ export const reelsApi = {
   feed: async (
     params: { cursor?: string; limit?: number; source?: ReelSource } = {},
   ) => {
-    const response = await apiRequest<Partial<ReelsFeedResponse>>("/reels/feed", {
-      query: {
-        cursor: params.cursor,
-        limit: params.limit ?? 8,
-        source: params.source,
+    const response = await apiRequest<Partial<ReelsFeedResponse>>(
+      "/reels/feed",
+      {
+        query: {
+          cursor: params.cursor,
+          limit: params.limit ?? 8,
+          source: params.source,
+        },
       },
-    });
+    );
 
     if (response.pagination && Array.isArray(response.data)) {
       return response as ReelsFeedResponse;
