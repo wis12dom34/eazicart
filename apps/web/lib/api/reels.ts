@@ -31,7 +31,9 @@ export type ReelsFeedResponse = {
 };
 
 export const reelsApi = {
-  feed: (params: { cursor?: string; limit?: number; source?: ReelSource } = {}) =>
+  feed: (
+    params: { cursor?: string; limit?: number; source?: ReelSource } = {},
+  ) =>
     apiRequest<ReelsFeedResponse>("/reels/feed", {
       query: {
         cursor: params.cursor,
