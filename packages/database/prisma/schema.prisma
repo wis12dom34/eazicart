@@ -60,6 +60,17 @@ enum NotificationType {
   SYSTEM
   SOCIAL
 }
+enum ReelSource {
+  EAZICART
+  YOUTUBE
+  TIKTOK
+  PARTNER
+}
+enum ReelStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
 
 model User {
   id String @id @default(cuid())
@@ -78,6 +89,10 @@ model User {
   following Follow[] @relation("Follower")
   followers Follow[] @relation("SellerFollowers")
   notifications Notification[]
+  reelLikes ReelLike[]
+  reelSaves ReelSave[]
+  reelViews ReelView[]
+  reelComments ReelComment[]
 }
 
 model RefreshToken {
@@ -101,6 +116,7 @@ model SellerProfile {
   fulfillments SellerFulfillment[]
   subscriptions SellerSubscription[]
   campaigns Campaign[]
+  reels Reel[]
 }
 
 model Category {
@@ -126,6 +142,7 @@ model Product {
   orderItems OrderItem[]
   savedBy SavedProduct[]
   campaigns Campaign[]
+  reels Reel[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([active, createdAt])
@@ -320,4 +337,77 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   @@index([userId, createdAt])
+}
+
+model Reel {
+  id String @id @default(cuid())
+  source ReelSource @default(EAZICART)
+  status ReelStatus @default(PUBLISHED)
+  caption String?
+  videoUrl String?
+  thumbnailUrl String?
+  externalId String?
+  externalUrl String?
+  attribution String?
+  sellerId String?
+  productId String?
+  seller SellerProfile? @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  likes ReelLike[]
+  saves ReelSave[]
+  views ReelView[]
+  comments ReelComment[]
+  publishedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([source, externalId])
+  @@index([status, publishedAt])
+  @@index([source, publishedAt])
+  @@index([sellerId, publishedAt])
+  @@index([productId])
+}
+
+model ReelLike {
+  userId String
+  reelId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reel Reel @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([userId, reelId])
+  @@index([reelId, createdAt])
+}
+
+model ReelSave {
+  userId String
+  reelId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reel Reel @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([userId, reelId])
+  @@index([reelId, createdAt])
+}
+
+model ReelView {
+  id String @id @default(cuid())
+  reelId String
+  userId String?
+  watchMs Int @default(0)
+  completed Boolean @default(false)
+  reel Reel @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  @@index([reelId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model ReelComment {
+  id String @id @default(cuid())
+  body String
+  reelId String
+  userId String
+  reel Reel @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([reelId, createdAt])
 }
