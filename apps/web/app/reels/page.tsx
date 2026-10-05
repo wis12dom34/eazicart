@@ -342,9 +342,7 @@ function ReelSlide({
   };
 
   const shareReel = async () => {
-    const url =
-      reel.externalUrl ||
-      `${window.location.origin}/reels?reel=${encodeURIComponent(reel.id)}`;
+    const url = `${window.location.origin}/reels?reel=${encodeURIComponent(reel.id)}`;
     try {
       if (navigator.share) {
         await navigator.share({
