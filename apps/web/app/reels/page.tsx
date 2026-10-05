@@ -46,7 +46,26 @@ function CommentsSheet({
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const legacy = isLegacyReel(reel);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose, open]);
 
   useEffect(() => {
     if (!open || legacy) return;
@@ -109,7 +128,12 @@ function CommentsSheet({
         <div className={styles.sheetHandle} aria-hidden="true" />
         <div className={styles.sheetHeader}>
           <strong>Comments</strong>
-          <button type="button" onClick={onClose} aria-label="Close comments">
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Close comments"
+          >
             ×
           </button>
         </div>
@@ -211,6 +235,7 @@ function ReelSlide({
   const [saveBusy, setSaveBusy] = useState(false);
   const [interactionStateBusy, setInteractionStateBusy] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const closeComments = useCallback(() => setCommentsOpen(false), []);
   const product = reel.product;
   const interactive = !isLegacyReel(reel);
   const sellerName =
@@ -500,7 +525,7 @@ function ReelSlide({
       <CommentsSheet
         reel={reel}
         open={commentsOpen}
-        onClose={() => setCommentsOpen(false)}
+        onClose={closeComments}
         onCommentAdded={() =>
           onCountChange(reel.id, "comments", reel._count.comments + 1)
         }
