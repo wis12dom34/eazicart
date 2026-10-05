@@ -31,22 +31,22 @@ export type ReelsFeedResponse = {
   };
 };
 
+const legacyProductReel = (product: Product): Reel => ({
+  id: `legacy-product-${product.id}`,
+  source: "EAZICART",
+  caption: product.reel?.caption ?? null,
+  videoUrl: null,
+  thumbnailUrl: product.images[0]?.url ?? null,
+  externalUrl: null,
+  attribution: product.seller.displayName,
+  publishedAt: null,
+  seller: product.seller,
+  product,
+  _count: { likes: 0, saves: 0, views: 0, comments: 0 },
+});
+
 const legacyProductReels = (products: Product[]): ReelsFeedResponse => ({
-  data: products
-    .filter((product) => product.reel)
-    .map((product) => ({
-      id: `legacy-product-${product.id}`,
-      source: "EAZICART" as const,
-      caption: product.reel?.caption ?? null,
-      videoUrl: null,
-      thumbnailUrl: product.images[0]?.url ?? null,
-      externalUrl: null,
-      attribution: product.seller.displayName,
-      publishedAt: null,
-      seller: product.seller,
-      product,
-      _count: { likes: 0, saves: 0, views: 0, comments: 0 },
-    })),
+  data: products.filter((product) => product.reel).map(legacyProductReel),
   pagination: { nextCursor: null, hasMore: false },
 });
 
@@ -82,11 +82,19 @@ export const reelsApi = {
       return response as ReelsFeedResponse;
     }
 
-    const products = params.productId
-      ? [await productsApi.get(params.productId).then((result) => result.data)]
-      : await productsApi
-          .list({ limit: params.limit ?? 8 })
-          .then((result) => result.data);
+    if (params.productId) {
+      const product = await productsApi
+        .get(params.productId)
+        .then((result) => result.data);
+      return {
+        data: [legacyProductReel(product)],
+        pagination: { nextCursor: null, hasMore: false },
+      };
+    }
+
+    const products = await productsApi
+      .list({ limit: params.limit ?? 8 })
+      .then((result) => result.data);
     return legacyProductReels(products);
   },
 };
