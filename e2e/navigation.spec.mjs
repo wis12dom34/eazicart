@@ -35,3 +35,16 @@ test("navigation matches Figma sizing and leaves products reachable", async ({
     page.getByRole("link", { name: "View Woven everyday tote" }),
   ).toBeVisible();
 });
+
+test("Chat is the working fifth customer navigation destination", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Chat" }).click();
+  await expect(page).toHaveURL(/\/chat$/);
+  await expect(page.getByRole("heading", { name: "Chat", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No conversations yet" })).toBeVisible();
+  const nav = await expectCustomerNavigation(page, "Chat");
+  await expect(nav.getByRole("link", { name: "Chat" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+});
