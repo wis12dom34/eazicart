@@ -144,12 +144,7 @@ function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
           aria-label="Reel comments: interaction service unavailable"
         >
           <i>
-            <img
-              src="/figma/reel-comment.svg"
-              width={20}
-              height={20}
-              alt=""
-            />
+            <img src="/figma/reel-comment.svg" width={20} height={20} alt="" />
           </i>
           <span>{formatCount(reel._count.comments)}</span>
         </button>
