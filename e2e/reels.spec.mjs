@@ -77,6 +77,18 @@ test("Reel comments dialog opens accessibly and closes with Escape", async ({
   ).toBeFocused();
   await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
 
+  const signInButton = page.getByRole("button", {
+    name: "Sign in to comment",
+    exact: true,
+  });
+  await expect(signInButton).toBeEnabled();
+  await page.keyboard.press("Shift+Tab");
+  await expect(signInButton).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Close comments", exact: true }),
+  ).toBeFocused();
+
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
