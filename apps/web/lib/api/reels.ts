@@ -23,6 +23,16 @@ export type Reel = {
   };
 };
 
+export type ReelComment = {
+  id: string;
+  body: string;
+  reelId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; name: string };
+};
+
 export type ReelsFeedResponse = {
   data: Reel[];
   pagination: {
@@ -97,4 +107,45 @@ export const reelsApi = {
       .then((result) => result.data);
     return legacyProductReels(products);
   },
+  like: (reelId: string) =>
+    apiRequest<{ data: { liked: true; count: number } }>(
+      `/reels/${reelId}/like`,
+      { method: "POST", auth: true },
+    ),
+  unlike: (reelId: string) =>
+    apiRequest<{ data: { liked: false; count: number } }>(
+      `/reels/${reelId}/like`,
+      { method: "DELETE", auth: true },
+    ),
+  save: (reelId: string) =>
+    apiRequest<{ data: { saved: true; count: number } }>(
+      `/reels/${reelId}/save`,
+      { method: "POST", auth: true },
+    ),
+  unsave: (reelId: string) =>
+    apiRequest<{ data: { saved: false; count: number } }>(
+      `/reels/${reelId}/save`,
+      { method: "DELETE", auth: true },
+    ),
+  comments: (reelId: string) =>
+    apiRequest<{ data: ReelComment[] }>(`/reels/${reelId}/comments`),
+  comment: (reelId: string, body: string) =>
+    apiRequest<{ data: ReelComment }>(`/reels/${reelId}/comments`, {
+      method: "POST",
+      auth: true,
+      body: { body },
+    }),
+  view: (reelId: string, watchMs = 0, completed = false) =>
+    apiRequest<{
+      data: {
+        id: string;
+        watchMs: number;
+        completed: boolean;
+        createdAt: string;
+      };
+    }>(`/reels/${reelId}/views`, {
+      method: "POST",
+      auth: true,
+      body: { watchMs, completed },
+    }),
 };
