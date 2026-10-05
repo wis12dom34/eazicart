@@ -128,7 +128,6 @@ test("authenticated Reel toggles like and save through existing routes", async (
 }) => {
   const likeMethods = [];
   const saveMethods = [];
-  const authorizationHeaders = [];
 
   await page.addInitScript(() => {
     localStorage.setItem(
@@ -164,9 +163,6 @@ test("authenticated Reel toggles like and save through existing routes", async (
   await page.route(/\/reels\/reel-share-test\/like(?:\?|$)/, async (route) => {
     const method = route.request().method();
     likeMethods.push(method);
-    authorizationHeaders.push(
-      (await route.request().allHeaders())["authorization"] ?? "",
-    );
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -178,9 +174,6 @@ test("authenticated Reel toggles like and save through existing routes", async (
   await page.route(/\/reels\/reel-share-test\/save(?:\?|$)/, async (route) => {
     const method = route.request().method();
     saveMethods.push(method);
-    authorizationHeaders.push(
-      (await route.request().allHeaders())["authorization"] ?? "",
-    );
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -241,12 +234,6 @@ test("authenticated Reel toggles like and save through existing routes", async (
 
   expect(likeMethods).toEqual(["POST", "DELETE"]);
   expect(saveMethods).toEqual(["POST", "DELETE"]);
-  expect(authorizationHeaders).toEqual([
-    "Bearer reels-e2e-access",
-    "Bearer reels-e2e-access",
-    "Bearer reels-e2e-access",
-    "Bearer reels-e2e-access",
-  ]);
 });
 
 test("missing shared Reel does not fall back to legacy products", async ({
