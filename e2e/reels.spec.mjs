@@ -82,6 +82,24 @@ test("Reel comments dialog opens accessibly and closes with Escape", async ({
   await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
 });
 
+test("comments sign-in preserves the exact Reel return path", async ({
+  page,
+}) => {
+  await mockSharedReel(page);
+  await page.goto(`/reels?reel=${reel.id}`);
+
+  await page
+    .getByRole("button", { name: "Open reel comments", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Sign in to comment", exact: true })
+    .click();
+
+  await expect(page).toHaveURL(
+    new RegExp(`/login\\?next=${encodeURIComponent(`/reels?reel=${reel.id}`)}`),
+  );
+});
+
 test("Reel share uses the EaziCart deep link", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", {
