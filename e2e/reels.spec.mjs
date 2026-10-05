@@ -571,9 +571,11 @@ test("failed comment post keeps the draft and count unchanged", async ({
   await commentInput.fill("Keep this draft");
   await page.getByRole("button", { name: "Post", exact: true }).click();
 
-  await expect(page.getByRole("alert")).toHaveText(
-    "Unable to post comment right now",
-  );
+  await expect(
+    page
+      .getByRole("dialog", { name: "Reel comments" })
+      .getByRole("alert"),
+  ).toHaveText("Unable to post comment right now");
   await expect(commentInput).toHaveValue("Keep this draft");
   await expect(
     page.getByRole("button", { name: "Post", exact: true }),
