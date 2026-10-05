@@ -80,6 +80,9 @@ test("Reel comments dialog opens accessibly and closes with Escape", async ({
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
+  await expect(
+    page.getByRole("button", { name: "Open reel comments", exact: true }),
+  ).toBeFocused();
 });
 
 test("comments sign-in preserves the exact Reel return path", async ({
