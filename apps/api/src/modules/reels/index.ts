@@ -87,8 +87,7 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
       where: { id: reelId, status: "PUBLISHED" },
       select: { id: true },
     });
-    if (!reel)
-      throw new AppError(404, "REEL_NOT_FOUND", "Reel not found");
+    if (!reel) throw new AppError(404, "REEL_NOT_FOUND", "Reel not found");
     return reel;
   };
 
