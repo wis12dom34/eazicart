@@ -98,7 +98,7 @@ test("authenticated Reel hydrates liked and saved state", async ({ page }) => {
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
       interactionsAuthorization =
-        route.request().headers()["authorization"] ?? "";
+        (await route.request().allHeaders())["authorization"] ?? "";
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -164,7 +164,9 @@ test("authenticated Reel toggles like and save through existing routes", async (
   await page.route(/\/reels\/reel-share-test\/like(?:\?|$)/, async (route) => {
     const method = route.request().method();
     likeMethods.push(method);
-    authorizationHeaders.push(route.request().headers()["authorization"] ?? "");
+    authorizationHeaders.push(
+      (await route.request().allHeaders())["authorization"] ?? "",
+    );
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -176,7 +178,9 @@ test("authenticated Reel toggles like and save through existing routes", async (
   await page.route(/\/reels\/reel-share-test\/save(?:\?|$)/, async (route) => {
     const method = route.request().method();
     saveMethods.push(method);
-    authorizationHeaders.push(route.request().headers()["authorization"] ?? "");
+    authorizationHeaders.push(
+      (await route.request().allHeaders())["authorization"] ?? "",
+    );
     await route.fulfill({
       status: 200,
       contentType: "application/json",
