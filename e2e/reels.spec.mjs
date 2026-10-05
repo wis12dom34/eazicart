@@ -60,6 +60,41 @@ test("shared Reel loads the exact Reel and preserves it through sign-in", async 
   );
 });
 
+test("missing shared Reel does not fall back to legacy products", async ({
+  page,
+}) => {
+  let feedRequestUrl = "";
+  let legacyProductsRequested = false;
+  await page.route(/\/reels\/feed(?:\?|$)/, async (route) => {
+    feedRequestUrl = route.request().url();
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [],
+        pagination: { nextCursor: null, hasMore: false },
+      }),
+    });
+  });
+  await page.route(/\/products(?:\?|$)/, async (route) => {
+    legacyProductsRequested = true;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ data: [] }),
+    });
+  });
+
+  await page.goto("/reels?reel=missing-reel");
+
+  await expect(
+    page.getByText("No reels have been published yet.", { exact: true }),
+  ).toBeVisible();
+  expect(feedRequestUrl).toContain("reelId=missing-reel");
+  expect(feedRequestUrl).toContain("limit=1");
+  expect(legacyProductsRequested).toBe(false);
+});
+
 test("Reel comments dialog opens accessibly and closes with Escape", async ({
   page,
 }) => {
