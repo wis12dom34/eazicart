@@ -71,6 +71,58 @@ test("save sign-in preserves the exact Reel return path", async ({ page }) => {
   );
 });
 
+test("authenticated Reel hydrates liked and saved state", async ({ page }) => {
+  let interactionsAuthorization = "";
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "eazicart.auth.tokens",
+      JSON.stringify({
+        accessToken: "reels-e2e-access",
+        refreshToken: "reels-e2e-refresh",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+      }),
+    );
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "reels-e2e-user",
+        email: "reels@example.com",
+        name: "Reels Tester",
+      }),
+    });
+  });
+  await page.route(
+    /\/reels\/reel-share-test\/interactions(?:\?|$)/,
+    async (route) => {
+      interactionsAuthorization =
+        route.request().headers()["authorization"] ?? "";
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: { liked: true, saved: true } }),
+      });
+    },
+  );
+  await mockSharedReel(page);
+
+  await page.goto(`/reels?reel=${reel.id}`);
+
+  const unlikeButton = page.getByRole("button", {
+    name: "Unlike reel",
+    exact: true,
+  });
+  const unsaveButton = page.getByRole("button", {
+    name: "Remove saved reel",
+    exact: true,
+  });
+  await expect(unlikeButton).toHaveAttribute("aria-pressed", "true");
+  await expect(unsaveButton).toHaveAttribute("aria-pressed", "true");
+  expect(interactionsAuthorization).toBe("Bearer reels-e2e-access");
+});
+
 test("missing shared Reel does not fall back to legacy products", async ({
   page,
 }) => {
