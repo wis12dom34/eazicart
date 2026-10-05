@@ -52,7 +52,12 @@ const legacyProductReels = (products: Product[]): ReelsFeedResponse => ({
 
 export const reelsApi = {
   feed: async (
-    params: { cursor?: string; limit?: number; source?: ReelSource } = {},
+    params: {
+      cursor?: string;
+      limit?: number;
+      source?: ReelSource;
+      productId?: string;
+    } = {},
   ) => {
     const response = await apiRequest<Partial<ReelsFeedResponse>>(
       "/reels/feed",
@@ -61,15 +66,24 @@ export const reelsApi = {
           cursor: params.cursor,
           limit: params.limit ?? 8,
           source: params.source,
+          productId: params.productId,
         },
       },
     );
 
-    if (response.pagination && Array.isArray(response.data)) {
+    if (
+      response.pagination &&
+      Array.isArray(response.data) &&
+      (!params.productId || response.data.length > 0)
+    ) {
       return response as ReelsFeedResponse;
     }
 
-    const products = await productsApi.list({ limit: params.limit ?? 8 });
-    return legacyProductReels(products.data);
+    const products = params.productId
+      ? [await productsApi.get(params.productId).then((result) => result.data)]
+      : await productsApi
+          .list({ limit: params.limit ?? 8 })
+          .then((result) => result.data);
+    return legacyProductReels(products);
   },
 };
