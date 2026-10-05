@@ -236,6 +236,73 @@ test("authenticated Reel toggles like and save through existing routes", async (
   expect(saveMethods).toEqual(["POST", "DELETE"]);
 });
 
+test("authenticated Reel records a view after the watch threshold", async ({
+  page,
+}) => {
+  const viewRequests = [];
+
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "eazicart.auth.tokens",
+      JSON.stringify({
+        accessToken: "reels-e2e-access",
+        refreshToken: "reels-e2e-refresh",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+      }),
+    );
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "reels-e2e-user",
+        email: "reels@example.com",
+        name: "Reels Tester",
+      }),
+    });
+  });
+  await page.route(
+    /\/reels\/reel-share-test\/interactions(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: { liked: false, saved: false } }),
+      });
+    },
+  );
+  await page.route(/\/reels\/reel-share-test\/views(?:\?|$)/, async (route) => {
+    viewRequests.push({
+      method: route.request().method(),
+      body: route.request().postDataJSON(),
+    });
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          id: "view-e2e",
+          watchMs: 1500,
+          completed: false,
+          createdAt: "2026-10-05T12:00:00.000Z",
+        },
+      }),
+    });
+  });
+  await mockSharedReel(page);
+
+  await page.goto(`/reels?reel=${reel.id}`);
+
+  await expect.poll(() => viewRequests.length, { timeout: 4000 }).toBe(1);
+  expect(viewRequests[0]).toEqual({
+    method: "POST",
+    body: { watchMs: 1500, completed: false },
+  });
+  await page.waitForTimeout(250);
+  expect(viewRequests).toHaveLength(1);
+});
+
 test("missing shared Reel does not fall back to legacy products", async ({
   page,
 }) => {
