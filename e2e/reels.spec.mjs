@@ -150,6 +150,34 @@ test("comments sign-in preserves the exact Reel return path", async ({
   );
 });
 
+test("Reel share copies the deep link when native share is unavailable", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: undefined,
+    });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (value) => {
+          window.__eazicartCopiedReelUrl = value;
+        },
+      },
+    });
+  });
+  await mockSharedReel(page);
+  await page.goto(`/reels?reel=${reel.id}`);
+
+  await page.getByRole("button", { name: "Share reel", exact: true }).click();
+
+  await expect(page.getByRole("status")).toHaveText("Reel link copied");
+  await expect
+    .poll(() => page.evaluate(() => window.__eazicartCopiedReelUrl ?? null))
+    .toBe(`http://localhost:3000/reels?reel=${reel.id}`);
+});
+
 test("Reel share uses the EaziCart deep link", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", {
