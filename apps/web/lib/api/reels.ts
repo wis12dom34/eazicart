@@ -71,10 +71,13 @@ export const reelsApi = {
       },
     );
 
+    const scopedFeedMatches =
+      !params.productId ||
+      response.data?.some((reel) => reel.product?.id === params.productId);
     if (
       response.pagination &&
       Array.isArray(response.data) &&
-      (!params.productId || response.data.length > 0)
+      scopedFeedMatches
     ) {
       return response as ReelsFeedResponse;
     }
