@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { reelsApi, type Reel, type ReelComment } from "../../lib/api/reels";
 import { BottomNavigation } from "../components/bottom-navigation";
@@ -28,11 +29,17 @@ function CommentsSheet({
   open,
   onClose,
   onCommentAdded,
+  authenticated,
+  authLoading,
+  onRequireAuth,
 }: {
   reel: Reel;
   open: boolean;
   onClose: () => void;
   onCommentAdded: () => void;
+  authenticated: boolean;
+  authLoading: boolean;
+  onRequireAuth: () => void;
 }) {
   const [comments, setComments] = useState<ReelComment[]>([]);
   const [body, setBody] = useState("");
@@ -137,24 +144,36 @@ function CommentsSheet({
         ) : null}
 
         {!isLegacyReel(reel) ? (
-          <form
-            className={styles.commentComposer}
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submitComment();
-            }}
-          >
-            <input
-              value={body}
-              onChange={(event) => setBody(event.target.value)}
-              maxLength={1000}
-              placeholder="Add a comment…"
-              aria-label="Comment"
-            />
-            <button type="submit" disabled={!body.trim() || posting}>
-              {posting ? "…" : "Post"}
-            </button>
-          </form>
+          authenticated ? (
+            <form
+              className={styles.commentComposer}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submitComment();
+              }}
+            >
+              <input
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                maxLength={1000}
+                placeholder="Add a comment…"
+                aria-label="Comment"
+              />
+              <button type="submit" disabled={!body.trim() || posting}>
+                {posting ? "…" : "Post"}
+              </button>
+            </form>
+          ) : (
+            <div className={styles.commentSignIn}>
+              <button
+                type="button"
+                onClick={onRequireAuth}
+                disabled={authLoading}
+              >
+                {authLoading ? "Checking account…" : "Sign in to comment"}
+              </button>
+            </div>
+          )
         ) : null}
       </section>
     </div>
@@ -166,16 +185,19 @@ function ReelSlide({
   active,
   onCountChange,
   authenticated,
+  authLoading,
 }: {
   reel: Reel;
   active: boolean;
   authenticated: boolean;
+  authLoading: boolean;
   onCountChange: (
     reelId: string,
     key: keyof Reel["_count"],
     value: number,
   ) => void;
 }) {
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const viewedRef = useRef(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
@@ -251,6 +273,11 @@ function ReelSlide({
     return () => window.clearTimeout(timeout);
   }, [interactionStatus, shareStatus]);
 
+  const requireAuth = () => {
+    const next = `/reels?reel=${encodeURIComponent(reel.id)}`;
+    router.push(`/login?next=${encodeURIComponent(next)}`);
+  };
+
   const shareReel = async () => {
     const url =
       reel.externalUrl || `${window.location.origin}/reels?reel=${reel.id}`;
@@ -275,7 +302,11 @@ function ReelSlide({
   };
 
   const toggleLike = async () => {
-    if (!interactive || likeBusy) return;
+    if (!interactive || likeBusy || authLoading) return;
+    if (!authenticated) {
+      requireAuth();
+      return;
+    }
     setLikeBusy(true);
     setInteractionStatus(null);
     try {
@@ -296,7 +327,11 @@ function ReelSlide({
   };
 
   const toggleSave = async () => {
-    if (!interactive || saveBusy) return;
+    if (!interactive || saveBusy || authLoading) return;
+    if (!authenticated) {
+      requireAuth();
+      return;
+    }
     setSaveBusy(true);
     setInteractionStatus(null);
     try {
@@ -382,7 +417,9 @@ function ReelSlide({
       <div className={styles.actions}>
         <button
           className={`${styles.action} ${liked ? styles.actionActive : ""}`}
-          disabled={!interactive || likeBusy || interactionStateBusy}
+          disabled={
+            !interactive || likeBusy || interactionStateBusy || authLoading
+          }
           aria-label={liked ? "Unlike reel" : "Like reel"}
           aria-pressed={liked}
           onClick={() => void toggleLike()}
@@ -405,7 +442,9 @@ function ReelSlide({
         </button>
         <button
           className={`${styles.action} ${saved ? styles.actionActive : ""}`}
-          disabled={!interactive || saveBusy || interactionStateBusy}
+          disabled={
+            !interactive || saveBusy || interactionStateBusy || authLoading
+          }
           aria-label={saved ? "Remove saved reel" : "Save reel"}
           aria-pressed={saved}
           onClick={() => void toggleSave()}
@@ -463,6 +502,9 @@ function ReelSlide({
         onCommentAdded={() =>
           onCountChange(reel.id, "comments", reel._count.comments + 1)
         }
+        authenticated={authenticated}
+        authLoading={authLoading}
+        onRequireAuth={requireAuth}
       />
     </article>
   );
@@ -481,13 +523,14 @@ export default function ReelsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = useCallback(async (cursor?: string) => {
-    const productId = new URLSearchParams(window.location.search).get(
-      "productId",
-    );
+    const search = new URLSearchParams(window.location.search);
+    const productId = search.get("productId");
+    const reelId = search.get("reel");
     const response = await reelsApi.feed({
       cursor,
-      limit: 8,
-      productId: productId ?? undefined,
+      limit: reelId ? 1 : 8,
+      productId: reelId ? undefined : (productId ?? undefined),
+      reelId: reelId ?? undefined,
     });
     setReels((current) => {
       if (!cursor) return response.data;
@@ -580,6 +623,7 @@ export default function ReelsPage() {
               active={index === activeIndex}
               onCountChange={onCountChange}
               authenticated={auth.isAuthenticated}
+              authLoading={auth.loading}
             />
           ))
         )}

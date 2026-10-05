@@ -453,6 +453,32 @@
   cursor: default;
   opacity: 0.38;
 }
+.commentSignIn {
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid #edf0f2;
+  background: #fff;
+}
+.commentSignIn button {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 22px;
+  background: #0f1419;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease;
+}
+.commentSignIn button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.commentSignIn button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
 @media (max-width: 359px) {
   .header {
     left: 12px;

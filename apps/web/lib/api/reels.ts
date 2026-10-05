@@ -67,6 +67,7 @@ export const reelsApi = {
       limit?: number;
       source?: ReelSource;
       productId?: string;
+      reelId?: string;
     } = {},
   ) => {
     const response = await apiRequest<Partial<ReelsFeedResponse>>(
@@ -77,19 +78,31 @@ export const reelsApi = {
           limit: params.limit ?? 8,
           source: params.source,
           productId: params.productId,
+          reelId: params.reelId,
         },
       },
     );
 
-    const scopedFeedMatches =
+    const productScopeMatches =
       !params.productId ||
       response.data?.some((reel) => reel.product?.id === params.productId);
+    const reelScopeMatches =
+      !params.reelId ||
+      response.data?.some((reel) => reel.id === params.reelId);
+    const scopedFeedMatches = productScopeMatches && reelScopeMatches;
     if (
       response.pagination &&
       Array.isArray(response.data) &&
       scopedFeedMatches
     ) {
       return response as ReelsFeedResponse;
+    }
+
+    if (params.reelId) {
+      return {
+        data: [],
+        pagination: { nextCursor: null, hasMore: false },
+      };
     }
 
     if (params.productId) {

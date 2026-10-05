@@ -3,6 +3,7 @@ import { apiRequest } from "./client";
 import { cartApi } from "./cart";
 import { productsApi } from "./products";
 import { authApi } from "./auth";
+import { reelsApi } from "./reels";
 
 const requestUrl = (input: RequestInfo | URL) => {
   if (typeof input === "string") return input;
@@ -63,6 +64,23 @@ describe("API client", () => {
     expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain(
       "/products/a%2Fb",
     );
+  });
+
+  it("requests a shared Reel by id through the existing feed", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [{ id: "reel-1", product: null }],
+          pagination: { nextCursor: null, hasMore: false },
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await reelsApi.feed({ reelId: "reel-1", limit: 1 });
+
+    expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain("reelId=reel-1");
   });
 
   it("cart mutations submit identifiers and quantities, never prices", async () => {
