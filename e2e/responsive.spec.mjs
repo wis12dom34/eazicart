@@ -24,6 +24,10 @@ const routes = [
     ready: (page) => page.getByRole("heading", { name: "Woven everyday tote" }),
   },
   {
+    path: "/reels",
+    ready: (page) => page.getByRole("heading", { name: "Reels", exact: true }),
+  },
+  {
     path: "/login",
     ready: (page) =>
       page.getByRole("heading", { name: "Welcome back", exact: true }),
@@ -35,8 +39,10 @@ const routes = [
   },
 ];
 
-test("customer entry routes fit all five mobile widths", async ({ page }) => {
-  for (const width of [360, 375, 390, 430, 440]) {
+test("customer entry routes fit all supported mobile widths", async ({
+  page,
+}) => {
+  for (const width of [320, 360, 375, 390, 393, 412, 430, 440]) {
     await page.setViewportSize({ width, height: 932 });
     for (const route of routes) {
       await page.goto(route.path);

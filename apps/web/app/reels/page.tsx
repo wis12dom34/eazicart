@@ -2,9 +2,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { reelsApi, type Reel } from "../../lib/api/reels";
+import { reelsApi, type Reel, type ReelComment } from "../../lib/api/reels";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { useAuth } from "../providers/auth-provider";
 import styles from "./reels.module.css";
 
 const formatNaira = (value: string) =>
@@ -20,10 +22,259 @@ const formatCount = (value: number) =>
     maximumFractionDigits: 1,
   }).format(value);
 
-function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
+const isLegacyReel = (reel: Reel) => reel.id.startsWith("legacy-product-");
+
+function CommentsSheet({
+  reel,
+  open,
+  onClose,
+  onCommentAdded,
+  authenticated,
+  authLoading,
+  onRequireAuth,
+}: {
+  reel: Reel;
+  open: boolean;
+  onClose: () => void;
+  onCommentAdded: () => void;
+  authenticated: boolean;
+  authLoading: boolean;
+  onRequireAuth: () => void;
+}) {
+  const [comments, setComments] = useState<ReelComment[]>([]);
+  const [body, setBody] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const sheetRef = useRef<HTMLElement | null>(null);
+  const legacy = isLegacyReel(reel);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previouslyFocusedElement =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const sheet = sheetRef.current;
+      if (!sheet) return;
+      const focusableElements = Array.from(
+        sheet.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (!focusableElements.length) return;
+
+      const first = focusableElements[0]!;
+      const last = focusableElements[focusableElements.length - 1]!;
+      const activeElement = document.activeElement;
+      if (!sheet.contains(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+      if (event.shiftKey && activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previouslyFocusedElement?.isConnected)
+        previouslyFocusedElement.focus();
+    };
+  }, [onClose, open]);
+
+  useEffect(() => {
+    if (!open || legacy) return;
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+    reelsApi
+      .comments(reel.id)
+      .then((response) => {
+        if (mounted) setComments(response.data);
+      })
+      .catch((requestError: unknown) => {
+        if (!mounted) return;
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load comments",
+        );
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [legacy, open, reel.id]);
+
+  if (!open) return null;
+
+  const submitComment = async () => {
+    const message = body.trim();
+    if (!message || posting || isLegacyReel(reel)) return;
+    setPosting(true);
+    setError(null);
+    try {
+      const response = await reelsApi.comment(reel.id, message);
+      setComments((current) => [...current, response.data]);
+      setBody("");
+      onCommentAdded();
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to post comment",
+      );
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  return (
+    <div className={styles.sheetLayer} role="presentation" onClick={onClose}>
+      <section
+        ref={sheetRef}
+        className={styles.commentsSheet}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Reel comments"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className={styles.sheetHandle} aria-hidden="true" />
+        <div className={styles.sheetHeader}>
+          <strong>Comments</strong>
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Close comments"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className={styles.commentList}>
+          {legacy ? (
+            <p className={styles.sheetState}>
+              Comments are available on published Reels.
+            </p>
+          ) : loading ? (
+            <p className={styles.sheetState}>Loading comments…</p>
+          ) : comments.length === 0 ? (
+            <p className={styles.sheetState}>No comments yet. Be the first.</p>
+          ) : (
+            comments.map((comment) => (
+              <article key={comment.id} className={styles.comment}>
+                <span className={styles.commentAvatar} aria-hidden="true">
+                  {(comment.user.name || "U").slice(0, 1).toUpperCase()}
+                </span>
+                <div>
+                  <strong>{comment.user.name || "EaziCart user"}</strong>
+                  <p>{comment.body}</p>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        {error ? (
+          <p className={styles.sheetError} role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        {!legacy ? (
+          authenticated ? (
+            <form
+              className={styles.commentComposer}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submitComment();
+              }}
+            >
+              <input
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                maxLength={1000}
+                placeholder="Add a comment…"
+                aria-label="Comment"
+              />
+              <button type="submit" disabled={!body.trim() || posting}>
+                {posting ? "…" : "Post"}
+              </button>
+            </form>
+          ) : (
+            <div className={styles.commentSignIn}>
+              <button
+                type="button"
+                onClick={onRequireAuth}
+                disabled={authLoading}
+              >
+                {authLoading ? "Checking account…" : "Sign in to comment"}
+              </button>
+            </div>
+          )
+        ) : null}
+      </section>
+    </div>
+  );
+}
+
+function ReelSlide({
+  reel,
+  active,
+  onCountChange,
+  authenticated,
+  authLoading,
+}: {
+  reel: Reel;
+  active: boolean;
+  authenticated: boolean;
+  authLoading: boolean;
+  onCountChange: (
+    reelId: string,
+    key: keyof Reel["_count"],
+    value: number,
+  ) => void;
+}) {
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const viewedRef = useRef(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const [interactionStatus, setInteractionStatus] = useState<string | null>(
+    null,
+  );
+  const [liked, setLiked] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [likeBusy, setLikeBusy] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [interactionStateBusy, setInteractionStateBusy] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const closeComments = useCallback(() => setCommentsOpen(false), []);
   const product = reel.product;
+  const interactive = !isLegacyReel(reel);
   const sellerName =
     reel.seller?.displayName ||
     reel.seller?.user?.name ||
@@ -41,9 +292,76 @@ function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
     video.pause();
   }, [active]);
 
+  useEffect(() => {
+    if (!active || !interactive || !authenticated || viewedRef.current) return;
+    let retryTimeout: number | null = null;
+    let cancelled = false;
+    let attempts = 0;
+
+    const recordView = () => {
+      if (cancelled || viewedRef.current) return;
+      attempts += 1;
+      void reelsApi
+        .view(reel.id, 1500, false)
+        .then(() => {
+          viewedRef.current = true;
+        })
+        .catch(() => {
+          if (cancelled || viewedRef.current || attempts >= 2) return;
+          retryTimeout = window.setTimeout(recordView, 1500);
+        });
+    };
+
+    const timeout = window.setTimeout(recordView, 1500);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      if (retryTimeout !== null) window.clearTimeout(retryTimeout);
+    };
+  }, [active, authenticated, interactive, reel.id]);
+
+  useEffect(() => {
+    if (!active || !interactive || !authenticated) {
+      if (!authenticated) {
+        setLiked(false);
+        setSaved(false);
+      }
+      return;
+    }
+    let mounted = true;
+    setInteractionStateBusy(true);
+    reelsApi
+      .interactions(reel.id)
+      .then((response) => {
+        if (!mounted) return;
+        setLiked(response.data.liked);
+        setSaved(response.data.saved);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (mounted) setInteractionStateBusy(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [active, authenticated, interactive, reel.id]);
+
+  useEffect(() => {
+    if (!shareStatus && !interactionStatus) return;
+    const timeout = window.setTimeout(() => {
+      setShareStatus(null);
+      setInteractionStatus(null);
+    }, 2200);
+    return () => window.clearTimeout(timeout);
+  }, [interactionStatus, shareStatus]);
+
+  const requireAuth = () => {
+    const next = `/reels?reel=${encodeURIComponent(reel.id)}`;
+    router.push(`/login?next=${encodeURIComponent(next)}`);
+  };
+
   const shareReel = async () => {
-    const url =
-      reel.externalUrl || `${window.location.origin}/reels?reel=${reel.id}`;
+    const url = `${window.location.origin}/reels?reel=${encodeURIComponent(reel.id)}`;
     try {
       if (navigator.share) {
         await navigator.share({
@@ -61,6 +379,56 @@ function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
       )
         return;
       setShareStatus("Unable to share reel");
+    }
+  };
+
+  const toggleLike = async () => {
+    if (!interactive || likeBusy || authLoading) return;
+    if (!authenticated) {
+      requireAuth();
+      return;
+    }
+    setLikeBusy(true);
+    setInteractionStatus(null);
+    try {
+      const response = liked
+        ? await reelsApi.unlike(reel.id)
+        : await reelsApi.like(reel.id);
+      setLiked(response.data.liked);
+      onCountChange(reel.id, "likes", response.data.count);
+    } catch (requestError) {
+      setInteractionStatus(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to update like",
+      );
+    } finally {
+      setLikeBusy(false);
+    }
+  };
+
+  const toggleSave = async () => {
+    if (!interactive || saveBusy || authLoading) return;
+    if (!authenticated) {
+      requireAuth();
+      return;
+    }
+    setSaveBusy(true);
+    setInteractionStatus(null);
+    try {
+      const response = saved
+        ? await reelsApi.unsave(reel.id)
+        : await reelsApi.save(reel.id);
+      setSaved(response.data.saved);
+      onCountChange(reel.id, "saves", response.data.count);
+    } catch (requestError) {
+      setInteractionStatus(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to update save",
+      );
+    } finally {
+      setSaveBusy(false);
     }
   };
 
@@ -129,9 +497,13 @@ function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
 
       <div className={styles.actions}>
         <button
-          className={styles.action}
-          disabled
-          aria-label="Like reel: interaction service unavailable"
+          className={`${styles.action} ${liked ? styles.actionActive : ""}`}
+          disabled={
+            !interactive || likeBusy || interactionStateBusy || authLoading
+          }
+          aria-label={liked ? "Unlike reel" : "Like reel"}
+          aria-pressed={liked}
+          onClick={() => void toggleLike()}
         >
           <i>
             <img src="/figma/reel-like.svg" width={20} height={20} alt="" />
@@ -140,8 +512,9 @@ function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
         </button>
         <button
           className={styles.action}
-          disabled
-          aria-label="Reel comments: interaction service unavailable"
+          disabled={!interactive}
+          aria-label="Open reel comments"
+          onClick={() => setCommentsOpen(true)}
         >
           <i>
             <img src="/figma/reel-comment.svg" width={20} height={20} alt="" />
@@ -149,9 +522,13 @@ function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
           <span>{formatCount(reel._count.comments)}</span>
         </button>
         <button
-          className={styles.action}
-          disabled
-          aria-label="Save reel: interaction service unavailable"
+          className={`${styles.action} ${saved ? styles.actionActive : ""}`}
+          disabled={
+            !interactive || saveBusy || interactionStateBusy || authLoading
+          }
+          aria-label={saved ? "Remove saved reel" : "Save reel"}
+          aria-pressed={saved}
+          onClick={() => void toggleSave()}
         >
           <i>
             <img src="/figma/reel-save.svg" width={20} height={20} alt="" />
@@ -176,9 +553,9 @@ function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
         </Link>
       </div>
 
-      {shareStatus ? (
+      {shareStatus || interactionStatus ? (
         <span className={styles.shareStatus} role="status">
-          {shareStatus}
+          {shareStatus || interactionStatus}
         </span>
       ) : null}
 
@@ -198,11 +575,24 @@ function ReelSlide({ reel, active }: { reel: Reel; active: boolean }) {
           <span>View Reel</span>
         </a>
       ) : null}
+
+      <CommentsSheet
+        reel={reel}
+        open={commentsOpen}
+        onClose={closeComments}
+        onCommentAdded={() =>
+          onCountChange(reel.id, "comments", reel._count.comments + 1)
+        }
+        authenticated={authenticated}
+        authLoading={authLoading}
+        onRequireAuth={requireAuth}
+      />
     </article>
   );
 }
 
 export default function ReelsPage() {
+  const auth = useAuth();
   const feedRef = useRef<HTMLDivElement | null>(null);
   const loadingMoreRef = useRef(false);
   const [reels, setReels] = useState<Reel[]>([]);
@@ -214,13 +604,14 @@ export default function ReelsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = useCallback(async (cursor?: string) => {
-    const productId = new URLSearchParams(window.location.search).get(
-      "productId",
-    );
+    const search = new URLSearchParams(window.location.search);
+    const productId = search.get("productId");
+    const reelId = search.get("reel");
     const response = await reelsApi.feed({
       cursor,
-      limit: 8,
-      productId: productId ?? undefined,
+      limit: reelId ? 1 : 8,
+      productId: reelId ? undefined : (productId ?? undefined),
+      reelId: reelId ?? undefined,
     });
     setReels((current) => {
       if (!cursor) return response.data;
@@ -269,6 +660,19 @@ export default function ReelsPage() {
     }
   }, [hasMore, loadPage, nextCursor]);
 
+  const onCountChange = useCallback(
+    (reelId: string, key: keyof Reel["_count"], value: number) => {
+      setReels((current) =>
+        current.map((reel) =>
+          reel.id === reelId
+            ? { ...reel, _count: { ...reel._count, [key]: value } }
+            : reel,
+        ),
+      );
+    },
+    [],
+  );
+
   const onScroll = () => {
     const feed = feedRef.current;
     if (!feed) return;
@@ -298,6 +702,9 @@ export default function ReelsPage() {
               key={reel.id}
               reel={reel}
               active={index === activeIndex}
+              onCountChange={onCountChange}
+              authenticated={auth.isAuthenticated}
+              authLoading={auth.loading}
             />
           ))
         )}
