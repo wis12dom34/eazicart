@@ -3,11 +3,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  reelsApi,
-  type Reel,
-  type ReelComment,
-} from "../../lib/api/reels";
+import { reelsApi, type Reel, type ReelComment } from "../../lib/api/reels";
 import { BottomNavigation } from "../components/bottom-navigation";
 import styles from "./reels.module.css";
 
@@ -171,12 +167,18 @@ function ReelSlide({
 }: {
   reel: Reel;
   active: boolean;
-  onCountChange: (reelId: string, key: keyof Reel["_count"], value: number) => void;
+  onCountChange: (
+    reelId: string,
+    key: keyof Reel["_count"],
+    value: number,
+  ) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const viewedRef = useRef(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
-  const [interactionStatus, setInteractionStatus] = useState<string | null>(null);
+  const [interactionStatus, setInteractionStatus] = useState<string | null>(
+    null,
+  );
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
