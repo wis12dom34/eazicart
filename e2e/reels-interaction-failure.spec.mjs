@@ -128,3 +128,93 @@ test("failed Like keeps state unchanged and can be retried", async ({
   await expect(unlikeButton.locator("span")).toHaveText("13");
   expect(likeAttempts).toBe(2);
 });
+
+test("failed Reel view recording retries once", async ({ page }) => {
+  const viewRequests = [];
+
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "eazicart.auth.tokens",
+      JSON.stringify({
+        accessToken: "reels-e2e-access",
+        refreshToken: "reels-e2e-refresh",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+      }),
+    );
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "reels-e2e-user",
+        email: "reels@example.com",
+        name: "Reels Tester",
+      }),
+    });
+  });
+  await page.route(/\/reels\/feed(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [reel],
+        pagination: { nextCursor: null, hasMore: false },
+      }),
+    });
+  });
+  await page.route(
+    /\/reels\/reel-like-failure-test\/interactions(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: { liked: false, saved: false } }),
+      });
+    },
+  );
+  await page.route(
+    /\/reels\/reel-like-failure-test\/views(?:\?|$)/,
+    async (route) => {
+      viewRequests.push({
+        method: route.request().method(),
+        body: route.request().postDataJSON(),
+      });
+      if (viewRequests.length === 1) {
+        await route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: {
+              code: "VIEW_UNAVAILABLE",
+              message: "Unable to record view right now",
+            },
+          }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            id: "view-e2e-retry",
+            watchMs: 1500,
+            completed: false,
+            createdAt: "2026-10-06T12:00:00.000Z",
+          },
+        }),
+      });
+    },
+  );
+
+  await page.goto(`/reels?reel=${reel.id}`);
+
+  await expect.poll(() => viewRequests.length, { timeout: 5000 }).toBe(2);
+  expect(viewRequests).toEqual([
+    { method: "POST", body: { watchMs: 1500, completed: false } },
+    { method: "POST", body: { watchMs: 1500, completed: false } },
+  ]);
+  await page.waitForTimeout(250);
+  expect(viewRequests).toHaveLength(2);
+});
