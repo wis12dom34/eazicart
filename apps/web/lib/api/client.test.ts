@@ -83,6 +83,43 @@ describe("API client", () => {
     expect(requestUrl(fetchMock.mock.calls[0]![0])).toContain("reelId=reel-1");
   });
 
+  it("authenticates Reel like and save mutations with the stored access token", async () => {
+    const tokens = JSON.stringify({
+      accessToken: "reels-unit-access",
+      refreshToken: "reels-unit-refresh",
+      expiresAt: "2099-01-01T00:00:00.000Z",
+    });
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(() => tokens),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation((input) => {
+      const isSave = requestUrl(input).includes("/save");
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: isSave
+              ? { saved: true, count: 5 }
+              : { liked: true, count: 13 },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await reelsApi.like("reel-1");
+    await reelsApi.save("reel-1");
+
+    for (const call of fetchMock.mock.calls) {
+      expect(new Headers(call[1]?.headers).get("Authorization")).toBe(
+        "Bearer reels-unit-access",
+      );
+    }
+  });
+
   it("cart mutations submit identifiers and quantities, never prices", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
