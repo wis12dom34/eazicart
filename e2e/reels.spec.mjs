@@ -60,6 +60,17 @@ test("shared Reel loads the exact Reel and preserves it through sign-in", async 
   );
 });
 
+test("save sign-in preserves the exact Reel return path", async ({ page }) => {
+  await mockSharedReel(page);
+  await page.goto(`/reels?reel=${reel.id}`);
+
+  await page.getByRole("button", { name: "Save reel", exact: true }).click();
+
+  await expect(page).toHaveURL(
+    new RegExp(`/login\\?next=${encodeURIComponent(`/reels?reel=${reel.id}`)}`),
+  );
+});
+
 test("missing shared Reel does not fall back to legacy products", async ({
   page,
 }) => {
