@@ -601,6 +601,7 @@ export default function ReelsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = useCallback(async (cursor?: string) => {
@@ -652,8 +653,15 @@ export default function ReelsPage() {
     if (!hasMore || !nextCursor || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
     setLoadingMore(true);
+    setLoadMoreError(null);
     try {
       await loadPage(nextCursor);
+    } catch (requestError: unknown) {
+      setLoadMoreError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to load more reels",
+      );
     } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
@@ -682,7 +690,7 @@ export default function ReelsPage() {
       Math.min(reels.length - 1, Math.round(feed.scrollTop / height)),
     );
     setActiveIndex(index);
-    if (index >= reels.length - 3) void loadMore();
+    if (!loadMoreError && index >= reels.length - 3) void loadMore();
   };
 
   return (
@@ -710,6 +718,14 @@ export default function ReelsPage() {
         )}
         {loadingMore ? (
           <div className={styles.loadingMore}>Loading more reels…</div>
+        ) : loadMoreError ? (
+          <button
+            type="button"
+            className={styles.loadingMore}
+            onClick={() => void loadMore()}
+          >
+            {loadMoreError}. Tap to retry.
+          </button>
         ) : null}
       </div>
 
