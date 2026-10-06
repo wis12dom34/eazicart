@@ -379,6 +379,8 @@ function ReelSlide({
   };
 
   const shareReel = async () => {
+    setShareStatus(null);
+    setInteractionStatus(null);
     const url = `${window.location.origin}/reels?reel=${encodeURIComponent(reel.id)}`;
     try {
       if (navigator.share) {
@@ -407,6 +409,7 @@ function ReelSlide({
       return;
     }
     setLikeBusy(true);
+    setShareStatus(null);
     setInteractionStatus(null);
     try {
       const response = liked
@@ -432,6 +435,7 @@ function ReelSlide({
       return;
     }
     setSaveBusy(true);
+    setShareStatus(null);
     setInteractionStatus(null);
     try {
       const response = saved
