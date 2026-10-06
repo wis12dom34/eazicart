@@ -218,3 +218,81 @@ test("failed Reel view recording retries once", async ({ page }) => {
   await page.waitForTimeout(250);
   expect(viewRequests).toHaveLength(2);
 });
+
+test("failed Reel pagination can be retried without a request loop", async ({
+  page,
+}) => {
+  let paginationAttempts = 0;
+  const pageOne = [1, 2, 3].map((number) => ({
+    ...reel,
+    id: `reel-pagination-${number}`,
+    caption: `Pagination Reel ${number}`,
+  }));
+  const pageTwo = {
+    ...reel,
+    id: "reel-pagination-4",
+    caption: "Pagination Reel 4",
+  };
+
+  await page.route(/\/reels\/feed(?:\?|$)/, async (route) => {
+    const cursor = new URL(route.request().url()).searchParams.get("cursor");
+    if (!cursor) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: pageOne,
+          pagination: { nextCursor: "page-2", hasMore: true },
+        }),
+      });
+      return;
+    }
+
+    paginationAttempts += 1;
+    if (paginationAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            code: "FEED_UNAVAILABLE",
+            message: "Unable to load more reels right now",
+          },
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [pageTwo],
+        pagination: { nextCursor: null, hasMore: false },
+      }),
+    });
+  });
+
+  await page.goto("/reels");
+  await expect(
+    page.getByRole("article", { name: "Pagination Reel 1" }),
+  ).toBeVisible();
+  await page
+    .getByRole("article", { name: "Pagination Reel 3" })
+    .scrollIntoViewIfNeeded();
+
+  const retryButton = page.getByRole("button", {
+    name: "Unable to load more reels right now. Tap to retry.",
+  });
+  await expect(retryButton).toBeVisible();
+  expect(paginationAttempts).toBe(1);
+  await page.waitForTimeout(250);
+  expect(paginationAttempts).toBe(1);
+
+  await retryButton.click();
+  await expect(
+    page.getByRole("article", { name: "Pagination Reel 4" }),
+  ).toHaveCount(1);
+  await expect(retryButton).toHaveCount(0);
+  expect(paginationAttempts).toBe(2);
+});
