@@ -620,6 +620,7 @@ export default function ReelsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+  const [reloadFeedKey, setReloadFeedKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = useCallback(async (cursor?: string) => {
@@ -647,6 +648,7 @@ export default function ReelsPage() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
+    setError(null);
     loadPage()
       .then(() => {
         if (mounted) setError(null);
@@ -665,7 +667,7 @@ export default function ReelsPage() {
     return () => {
       mounted = false;
     };
-  }, [loadPage]);
+  }, [loadPage, reloadFeedKey]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || !nextCursor || loadingMoreRef.current) return;
@@ -718,9 +720,31 @@ export default function ReelsPage() {
           <p className={styles.state} role="status">
             Loading reels…
           </p>
-        ) : error || reels.length === 0 ? (
-          <p className={styles.state} role={error ? "alert" : "status"}>
-            {error ?? "No reels have been published yet."}
+        ) : error ? (
+          <div className={styles.state} role="alert">
+            <p>{error}</p>
+            <button
+              type="button"
+              style={{
+                minHeight: 44,
+                marginTop: 12,
+                border: 0,
+                borderRadius: 22,
+                padding: "10px 18px",
+                background: "#fff",
+                color: "#0f1419",
+                font: "inherit",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+              onClick={() => setReloadFeedKey((value) => value + 1)}
+            >
+              Retry loading reels
+            </button>
+          </div>
+        ) : reels.length === 0 ? (
+          <p className={styles.state} role="status">
+            No reels have been published yet.
           </p>
         ) : (
           reels.map((reel, index) => (
