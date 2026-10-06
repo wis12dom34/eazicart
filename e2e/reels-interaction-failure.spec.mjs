@@ -243,6 +243,106 @@ test("failed Save keeps state unchanged and can be retried", async ({
   expect(saveAttempts).toBe(2);
 });
 
+test("failed Like replaces an earlier Share status", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "eazicart.auth.tokens",
+      JSON.stringify({
+        accessToken: "reels-e2e-access",
+        refreshToken: "reels-e2e-refresh",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+      }),
+    );
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: undefined,
+    });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: async () => undefined },
+    });
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "reels-e2e-user",
+        email: "reels@example.com",
+        name: "Reels Tester",
+      }),
+    });
+  });
+  await page.route(/\/reels\/feed(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [reel],
+        pagination: { nextCursor: null, hasMore: false },
+      }),
+    });
+  });
+  await page.route(
+    /\/reels\/reel-like-failure-test\/interactions(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: { liked: false, saved: false } }),
+      });
+    },
+  );
+  await page.route(
+    /\/reels\/reel-like-failure-test\/like(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            code: "LIKE_UNAVAILABLE",
+            message: "Unable to update like right now",
+          },
+        }),
+      });
+    },
+  );
+  await page.route(
+    /\/reels\/reel-like-failure-test\/views(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            id: "view-e2e",
+            watchMs: 1500,
+            completed: false,
+            createdAt: "2026-10-06T12:00:00.000Z",
+          },
+        }),
+      });
+    },
+  );
+
+  await page.goto(`/reels?reel=${reel.id}`);
+  await page.getByRole("button", { name: "Share reel", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Reel link copied");
+
+  const likeButton = page.getByRole("button", {
+    name: "Like reel",
+    exact: true,
+  });
+  await likeButton.click();
+
+  await expect(page.getByRole("status")).toHaveText(
+    "Unable to update like right now",
+  );
+  await expect(likeButton).toHaveAttribute("aria-pressed", "false");
+  await expect(likeButton.locator("span")).toHaveText("12");
+});
+
 test("failed Reel view recording retries once", async ({ page }) => {
   const viewRequests = [];
 
