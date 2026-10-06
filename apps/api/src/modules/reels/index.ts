@@ -57,12 +57,22 @@ function encodeCursor(cursor: Cursor) {
 
 function decodeCursor(value: string): Cursor {
   try {
-    const parsed = JSON.parse(
+    const parsed: unknown = JSON.parse(
       Buffer.from(value, "base64url").toString("utf8"),
-    ) as Cursor;
-    if (!parsed.id || Number.isNaN(new Date(parsed.publishedAt).getTime()))
+    );
+    if (typeof parsed !== "object" || parsed === null)
       throw new Error("invalid cursor");
-    return parsed;
+
+    const { id, publishedAt } = parsed as Record<string, unknown>;
+    if (
+      typeof id !== "string" ||
+      id.length === 0 ||
+      typeof publishedAt !== "string" ||
+      Number.isNaN(new Date(publishedAt).getTime())
+    )
+      throw new Error("invalid cursor");
+
+    return { id, publishedAt };
   } catch {
     throw new AppError(400, "INVALID_CURSOR", "The reels cursor is invalid");
   }
