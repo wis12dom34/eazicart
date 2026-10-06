@@ -331,7 +331,7 @@ test("missing shared Reel does not fall back to legacy products", async ({
   await page.goto("/reels?reel=missing-reel");
 
   await expect(
-    page.getByText("No reels have been published yet.", { exact: true }),
+    page.getByText("This Reel is unavailable.", { exact: true }),
   ).toBeVisible();
   expect(feedRequestUrl).toContain("reelId=missing-reel");
   expect(feedRequestUrl).toContain("limit=1");
