@@ -356,6 +356,10 @@ function ReelSlide({
   const [likeBusy, setLikeBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
   const [interactionStateBusy, setInteractionStateBusy] = useState(false);
+  const [interactionStateError, setInteractionStateError] = useState<
+    string | null
+  >(null);
+  const [interactionStateRetryKey, setInteractionStateRetryKey] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const closeComments = useCallback(() => setCommentsOpen(false), []);
   const product = reel.product;
@@ -407,6 +411,8 @@ function ReelSlide({
 
   useEffect(() => {
     if (!active || !interactive || !authenticated) {
+      setInteractionStateBusy(false);
+      setInteractionStateError(null);
       if (!authenticated) {
         setLiked(false);
         setSaved(false);
@@ -415,6 +421,7 @@ function ReelSlide({
     }
     let mounted = true;
     setInteractionStateBusy(true);
+    setInteractionStateError(null);
     reelsApi
       .interactions(reel.id)
       .then((response) => {
@@ -422,14 +429,21 @@ function ReelSlide({
         setLiked(response.data.liked);
         setSaved(response.data.saved);
       })
-      .catch(() => undefined)
+      .catch((requestError: unknown) => {
+        if (!mounted) return;
+        setInteractionStateError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load Reel actions",
+        );
+      })
       .finally(() => {
         if (mounted) setInteractionStateBusy(false);
       });
     return () => {
       mounted = false;
     };
-  }, [active, authenticated, interactive, reel.id]);
+  }, [active, authenticated, interactionStateRetryKey, interactive, reel.id]);
 
   useEffect(() => {
     if (!shareStatus && !interactionStatus) return;
@@ -470,7 +484,14 @@ function ReelSlide({
   };
 
   const toggleLike = async () => {
-    if (!interactive || likeBusy || authLoading) return;
+    if (
+      !interactive ||
+      likeBusy ||
+      interactionStateBusy ||
+      interactionStateError ||
+      authLoading
+    )
+      return;
     if (!authenticated) {
       requireAuth();
       return;
@@ -496,7 +517,14 @@ function ReelSlide({
   };
 
   const toggleSave = async () => {
-    if (!interactive || saveBusy || authLoading) return;
+    if (
+      !interactive ||
+      saveBusy ||
+      interactionStateBusy ||
+      interactionStateError ||
+      authLoading
+    )
+      return;
     if (!authenticated) {
       requireAuth();
       return;
@@ -588,7 +616,11 @@ function ReelSlide({
         <button
           className={`${styles.action} ${liked ? styles.actionActive : ""}`}
           disabled={
-            !interactive || likeBusy || interactionStateBusy || authLoading
+            !interactive ||
+            likeBusy ||
+            interactionStateBusy ||
+            Boolean(interactionStateError) ||
+            authLoading
           }
           aria-label={liked ? "Unlike reel" : "Like reel"}
           aria-pressed={liked}
@@ -613,7 +645,11 @@ function ReelSlide({
         <button
           className={`${styles.action} ${saved ? styles.actionActive : ""}`}
           disabled={
-            !interactive || saveBusy || interactionStateBusy || authLoading
+            !interactive ||
+            saveBusy ||
+            interactionStateBusy ||
+            Boolean(interactionStateError) ||
+            authLoading
           }
           aria-label={saved ? "Remove saved reel" : "Save reel"}
           aria-pressed={saved}
@@ -642,7 +678,16 @@ function ReelSlide({
         </Link>
       </div>
 
-      {shareStatus || interactionStatus ? (
+      {interactionStateError ? (
+        <button
+          type="button"
+          className={`${styles.shareStatus} ${styles.statusRetry}`}
+          aria-label="Retry Reel actions"
+          onClick={() => setInteractionStateRetryKey((current) => current + 1)}
+        >
+          {interactionStateError}. Tap to retry.
+        </button>
+      ) : shareStatus || interactionStatus ? (
         <span className={styles.shareStatus} role="status">
           {shareStatus || interactionStatus}
         </span>
