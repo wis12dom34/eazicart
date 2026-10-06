@@ -621,12 +621,22 @@ export default function ReelsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [reloadFeedKey, setReloadFeedKey] = useState(0);
+  const [emptyStateMessage, setEmptyStateMessage] = useState(
+    "No reels have been published yet.",
+  );
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = useCallback(async (cursor?: string) => {
     const search = new URLSearchParams(window.location.search);
     const productId = search.get("productId");
     const reelId = search.get("reel");
+    if (!cursor) {
+      setEmptyStateMessage(
+        reelId
+          ? "This Reel is unavailable."
+          : "No reels have been published yet.",
+      );
+    }
     const response = await reelsApi.feed({
       cursor,
       limit: reelId ? 1 : 8,
@@ -744,7 +754,7 @@ export default function ReelsPage() {
           </div>
         ) : reels.length === 0 ? (
           <p className={styles.state} role="status">
-            No reels have been published yet.
+            {emptyStateMessage}
           </p>
         ) : (
           reels.map((reel, index) => (
