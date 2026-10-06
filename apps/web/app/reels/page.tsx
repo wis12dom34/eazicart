@@ -45,7 +45,18 @@ function CommentsSheet({
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadCommentsKey, setReloadCommentsKey] = useState(0);
+  const [nextCommentsCursor, setNextCommentsCursor] = useState<string | null>(
+    null,
+  );
+  const [hasOlderComments, setHasOlderComments] = useState(false);
+  const [loadingOlderComments, setLoadingOlderComments] = useState(false);
+  const [olderCommentsError, setOlderCommentsError] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
+  const commentsRequestVersionRef = useRef(0);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const sheetRef = useRef<HTMLElement | null>(null);
   const legacy = isLegacyReel(reel);
@@ -106,16 +117,25 @@ function CommentsSheet({
   useEffect(() => {
     if (!open || legacy) return;
     let mounted = true;
+    commentsRequestVersionRef.current += 1;
     setLoading(true);
+    setLoadError(null);
     setError(null);
+    setNextCommentsCursor(null);
+    setHasOlderComments(false);
+    setLoadingOlderComments(false);
+    setOlderCommentsError(null);
     reelsApi
       .comments(reel.id)
       .then((response) => {
-        if (mounted) setComments(response.data);
+        if (!mounted) return;
+        setComments(response.data);
+        setNextCommentsCursor(response.pagination.nextCursor);
+        setHasOlderComments(response.pagination.hasMore);
       })
       .catch((requestError: unknown) => {
         if (!mounted) return;
-        setError(
+        setLoadError(
           requestError instanceof Error
             ? requestError.message
             : "Unable to load comments",
@@ -126,14 +146,43 @@ function CommentsSheet({
       });
     return () => {
       mounted = false;
+      commentsRequestVersionRef.current += 1;
     };
-  }, [legacy, open, reel.id]);
+  }, [legacy, open, reel.id, reloadCommentsKey]);
 
   if (!open) return null;
 
+  const loadOlderComments = async () => {
+    if (!nextCommentsCursor || !hasOlderComments || loadingOlderComments)
+      return;
+    const requestVersion = commentsRequestVersionRef.current;
+    setLoadingOlderComments(true);
+    setOlderCommentsError(null);
+    try {
+      const response = await reelsApi.comments(reel.id, {
+        cursor: nextCommentsCursor,
+      });
+      if (commentsRequestVersionRef.current !== requestVersion) return;
+      setComments((current) => [...response.data, ...current]);
+      setNextCommentsCursor(response.pagination.nextCursor);
+      setHasOlderComments(response.pagination.hasMore);
+    } catch (requestError) {
+      if (commentsRequestVersionRef.current !== requestVersion) return;
+      setOlderCommentsError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to load older comments",
+      );
+    } finally {
+      if (commentsRequestVersionRef.current === requestVersion)
+        setLoadingOlderComments(false);
+    }
+  };
+
   const submitComment = async () => {
     const message = body.trim();
-    if (!message || posting || isLegacyReel(reel)) return;
+    if (!message || posting || loading || loadError || isLegacyReel(reel))
+      return;
     setPosting(true);
     setError(null);
     try {
@@ -182,20 +231,56 @@ function CommentsSheet({
             </p>
           ) : loading ? (
             <p className={styles.sheetState}>Loading comments…</p>
+          ) : loadError ? (
+            <div>
+              <p className={styles.sheetError} role="alert">
+                {loadError}
+              </p>
+              <div className={styles.commentSignIn}>
+                <button
+                  type="button"
+                  onClick={() => setReloadCommentsKey((value) => value + 1)}
+                >
+                  Retry loading comments
+                </button>
+              </div>
+            </div>
           ) : comments.length === 0 ? (
             <p className={styles.sheetState}>No comments yet. Be the first.</p>
           ) : (
-            comments.map((comment) => (
-              <article key={comment.id} className={styles.comment}>
-                <span className={styles.commentAvatar} aria-hidden="true">
-                  {(comment.user.name || "U").slice(0, 1).toUpperCase()}
-                </span>
-                <div>
-                  <strong>{comment.user.name || "EaziCart user"}</strong>
-                  <p>{comment.body}</p>
+            <>
+              {hasOlderComments ? (
+                <div className={styles.commentHistory}>
+                  {olderCommentsError ? (
+                    <p className={styles.commentHistoryError} role="alert">
+                      {olderCommentsError}
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={loadingOlderComments}
+                    onClick={() => void loadOlderComments()}
+                  >
+                    {loadingOlderComments
+                      ? "Loading older comments…"
+                      : olderCommentsError
+                        ? "Retry older comments"
+                        : "Load older comments"}
+                  </button>
                 </div>
-              </article>
-            ))
+              ) : null}
+              {comments.map((comment) => (
+                <article key={comment.id} className={styles.comment}>
+                  <span className={styles.commentAvatar} aria-hidden="true">
+                    {(comment.user.name || "U").slice(0, 1).toUpperCase()}
+                  </span>
+                  <div>
+                    <strong>{comment.user.name || "EaziCart user"}</strong>
+                    <p>{comment.body}</p>
+                  </div>
+                </article>
+              ))}
+            </>
           )}
         </div>
 
@@ -205,7 +290,7 @@ function CommentsSheet({
           </p>
         ) : null}
 
-        {!legacy ? (
+        {!legacy && !loading && !loadError ? (
           authenticated ? (
             <form
               className={styles.commentComposer}
@@ -271,6 +356,10 @@ function ReelSlide({
   const [likeBusy, setLikeBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
   const [interactionStateBusy, setInteractionStateBusy] = useState(false);
+  const [interactionStateError, setInteractionStateError] = useState<
+    string | null
+  >(null);
+  const [interactionStateRetryKey, setInteractionStateRetryKey] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const closeComments = useCallback(() => setCommentsOpen(false), []);
   const product = reel.product;
@@ -322,6 +411,8 @@ function ReelSlide({
 
   useEffect(() => {
     if (!active || !interactive || !authenticated) {
+      setInteractionStateBusy(false);
+      setInteractionStateError(null);
       if (!authenticated) {
         setLiked(false);
         setSaved(false);
@@ -330,6 +421,7 @@ function ReelSlide({
     }
     let mounted = true;
     setInteractionStateBusy(true);
+    setInteractionStateError(null);
     reelsApi
       .interactions(reel.id)
       .then((response) => {
@@ -337,14 +429,21 @@ function ReelSlide({
         setLiked(response.data.liked);
         setSaved(response.data.saved);
       })
-      .catch(() => undefined)
+      .catch((requestError: unknown) => {
+        if (!mounted) return;
+        setInteractionStateError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Unable to load Reel actions",
+        );
+      })
       .finally(() => {
         if (mounted) setInteractionStateBusy(false);
       });
     return () => {
       mounted = false;
     };
-  }, [active, authenticated, interactive, reel.id]);
+  }, [active, authenticated, interactionStateRetryKey, interactive, reel.id]);
 
   useEffect(() => {
     if (!shareStatus && !interactionStatus) return;
@@ -361,6 +460,8 @@ function ReelSlide({
   };
 
   const shareReel = async () => {
+    setShareStatus(null);
+    setInteractionStatus(null);
     const url = `${window.location.origin}/reels?reel=${encodeURIComponent(reel.id)}`;
     try {
       if (navigator.share) {
@@ -383,12 +484,20 @@ function ReelSlide({
   };
 
   const toggleLike = async () => {
-    if (!interactive || likeBusy || authLoading) return;
+    if (
+      !interactive ||
+      likeBusy ||
+      interactionStateBusy ||
+      interactionStateError ||
+      authLoading
+    )
+      return;
     if (!authenticated) {
       requireAuth();
       return;
     }
     setLikeBusy(true);
+    setShareStatus(null);
     setInteractionStatus(null);
     try {
       const response = liked
@@ -408,12 +517,20 @@ function ReelSlide({
   };
 
   const toggleSave = async () => {
-    if (!interactive || saveBusy || authLoading) return;
+    if (
+      !interactive ||
+      saveBusy ||
+      interactionStateBusy ||
+      interactionStateError ||
+      authLoading
+    )
+      return;
     if (!authenticated) {
       requireAuth();
       return;
     }
     setSaveBusy(true);
+    setShareStatus(null);
     setInteractionStatus(null);
     try {
       const response = saved
@@ -499,7 +616,11 @@ function ReelSlide({
         <button
           className={`${styles.action} ${liked ? styles.actionActive : ""}`}
           disabled={
-            !interactive || likeBusy || interactionStateBusy || authLoading
+            !interactive ||
+            likeBusy ||
+            interactionStateBusy ||
+            Boolean(interactionStateError) ||
+            authLoading
           }
           aria-label={liked ? "Unlike reel" : "Like reel"}
           aria-pressed={liked}
@@ -524,7 +645,11 @@ function ReelSlide({
         <button
           className={`${styles.action} ${saved ? styles.actionActive : ""}`}
           disabled={
-            !interactive || saveBusy || interactionStateBusy || authLoading
+            !interactive ||
+            saveBusy ||
+            interactionStateBusy ||
+            Boolean(interactionStateError) ||
+            authLoading
           }
           aria-label={saved ? "Remove saved reel" : "Save reel"}
           aria-pressed={saved}
@@ -553,7 +678,16 @@ function ReelSlide({
         </Link>
       </div>
 
-      {shareStatus || interactionStatus ? (
+      {interactionStateError ? (
+        <button
+          type="button"
+          className={`${styles.shareStatus} ${styles.statusRetry}`}
+          aria-label="Retry Reel actions"
+          onClick={() => setInteractionStateRetryKey((current) => current + 1)}
+        >
+          {interactionStateError}. Tap to retry.
+        </button>
+      ) : shareStatus || interactionStatus ? (
         <span className={styles.shareStatus} role="status">
           {shareStatus || interactionStatus}
         </span>
@@ -601,12 +735,24 @@ export default function ReelsPage() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+  const [reloadFeedKey, setReloadFeedKey] = useState(0);
+  const [emptyStateMessage, setEmptyStateMessage] = useState(
+    "No reels have been published yet.",
+  );
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = useCallback(async (cursor?: string) => {
     const search = new URLSearchParams(window.location.search);
     const productId = search.get("productId");
     const reelId = search.get("reel");
+    if (!cursor) {
+      setEmptyStateMessage(
+        reelId
+          ? "This Reel is unavailable."
+          : "No reels have been published yet.",
+      );
+    }
     const response = await reelsApi.feed({
       cursor,
       limit: reelId ? 1 : 8,
@@ -628,6 +774,7 @@ export default function ReelsPage() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
+    setError(null);
     loadPage()
       .then(() => {
         if (mounted) setError(null);
@@ -646,14 +793,21 @@ export default function ReelsPage() {
     return () => {
       mounted = false;
     };
-  }, [loadPage]);
+  }, [loadPage, reloadFeedKey]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || !nextCursor || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
     setLoadingMore(true);
+    setLoadMoreError(null);
     try {
       await loadPage(nextCursor);
+    } catch (requestError: unknown) {
+      setLoadMoreError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to load more reels",
+      );
     } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
@@ -682,7 +836,7 @@ export default function ReelsPage() {
       Math.min(reels.length - 1, Math.round(feed.scrollTop / height)),
     );
     setActiveIndex(index);
-    if (index >= reels.length - 3) void loadMore();
+    if (!loadMoreError && index >= reels.length - 3) void loadMore();
   };
 
   return (
@@ -692,9 +846,31 @@ export default function ReelsPage() {
           <p className={styles.state} role="status">
             Loading reels…
           </p>
-        ) : error || reels.length === 0 ? (
-          <p className={styles.state} role={error ? "alert" : "status"}>
-            {error ?? "No reels have been published yet."}
+        ) : error ? (
+          <div className={styles.state} role="alert">
+            <p>{error}</p>
+            <button
+              type="button"
+              style={{
+                minHeight: 44,
+                marginTop: 12,
+                border: 0,
+                borderRadius: 22,
+                padding: "10px 18px",
+                background: "#fff",
+                color: "#0f1419",
+                font: "inherit",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+              onClick={() => setReloadFeedKey((value) => value + 1)}
+            >
+              Retry loading reels
+            </button>
+          </div>
+        ) : reels.length === 0 ? (
+          <p className={styles.state} role="status">
+            {emptyStateMessage}
           </p>
         ) : (
           reels.map((reel, index) => (
@@ -710,6 +886,14 @@ export default function ReelsPage() {
         )}
         {loadingMore ? (
           <div className={styles.loadingMore}>Loading more reels…</div>
+        ) : loadMoreError ? (
+          <button
+            type="button"
+            className={styles.loadingMore}
+            onClick={() => void loadMore()}
+          >
+            {loadMoreError}. Tap to retry.
+          </button>
         ) : null}
       </div>
 

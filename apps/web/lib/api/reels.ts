@@ -41,6 +41,14 @@ export type ReelsFeedResponse = {
   };
 };
 
+export type ReelCommentsResponse = {
+  data: ReelComment[];
+  pagination: {
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+};
+
 const legacyProductReel = (product: Product): Reel => ({
   id: `legacy-product-${product.id}`,
   source: "EAZICART",
@@ -89,7 +97,8 @@ export const reelsApi = {
     const reelScopeMatches =
       !params.reelId ||
       response.data?.some((reel) => reel.id === params.reelId);
-    const scopedFeedMatches = productScopeMatches && reelScopeMatches;
+    const scopedFeedMatches =
+      response.data?.length === 0 || (productScopeMatches && reelScopeMatches);
     if (
       response.pagination &&
       Array.isArray(response.data) &&
@@ -110,7 +119,7 @@ export const reelsApi = {
         .get(params.productId)
         .then((result) => result.data);
       return {
-        data: [legacyProductReel(product)],
+        data: product.reel ? [legacyProductReel(product)] : [],
         pagination: { nextCursor: null, hasMore: false },
       };
     }
@@ -145,8 +154,21 @@ export const reelsApi = {
       `/reels/${reelId}/save`,
       { method: "DELETE", auth: true },
     ),
-  comments: (reelId: string) =>
-    apiRequest<{ data: ReelComment[] }>(`/reels/${reelId}/comments`),
+  comments: async (
+    reelId: string,
+    params: { cursor?: string; limit?: number } = {},
+  ): Promise<ReelCommentsResponse> => {
+    const response = await apiRequest<Partial<ReelCommentsResponse>>(
+      `/reels/${reelId}/comments`,
+      {
+        query: { cursor: params.cursor, limit: params.limit ?? 30 },
+      },
+    );
+    return {
+      data: response.data ?? [],
+      pagination: response.pagination ?? { nextCursor: null, hasMore: false },
+    };
+  },
   comment: (reelId: string, body: string) =>
     apiRequest<{ data: ReelComment }>(`/reels/${reelId}/comments`, {
       method: "POST",

@@ -431,9 +431,10 @@ describe("API foundation", () => {
     );
   });
 
-  it("rejects interactions for Reels that are not published", async () => {
+  it("rejects every interaction route for Reels that are not published", async () => {
+    const findPublishedReel = vi.fn().mockResolvedValue(null);
     const database = {
-      reel: { findFirst: vi.fn().mockResolvedValue(null) },
+      reel: { findFirst: findPublishedReel },
     } as unknown as PrismaClient;
     const app = buildApp(config, { database });
     apps.push(app);
@@ -447,25 +448,47 @@ describe("API foundation", () => {
       },
     });
     const token = registered.json<AuthResponse>().tokens.accessToken;
+    const authHeaders = { authorization: `Bearer ${token}` };
+    const requests = [
+      { method: "GET", url: "/reels/draft-reel/interactions", auth: true },
+      { method: "POST", url: "/reels/draft-reel/like", auth: true },
+      { method: "DELETE", url: "/reels/draft-reel/like", auth: true },
+      { method: "POST", url: "/reels/draft-reel/save", auth: true },
+      { method: "DELETE", url: "/reels/draft-reel/save", auth: true },
+      { method: "GET", url: "/reels/draft-reel/comments", auth: false },
+      {
+        method: "POST",
+        url: "/reels/draft-reel/comments",
+        auth: true,
+        payload: { body: "Blocked comment" },
+      },
+      {
+        method: "POST",
+        url: "/reels/draft-reel/views",
+        auth: true,
+        payload: { watchMs: 1500, completed: false },
+      },
+    ] as const;
 
-    const like = await app.inject({
-      method: "POST",
-      url: "/reels/draft-reel/like",
-      headers: { authorization: `Bearer ${token}` },
-    });
-    expect(like.statusCode).toBe(404);
-    expect(like.json<{ error: { code: string } }>().error.code).toBe(
-      "REEL_NOT_FOUND",
-    );
+    for (const request of requests) {
+      const response = await app.inject({
+        method: request.method,
+        url: request.url,
+        headers: request.auth ? authHeaders : undefined,
+        payload: "payload" in request ? request.payload : undefined,
+      });
+      expect(response.statusCode, `${request.method} ${request.url}`).toBe(404);
+      expect(
+        response.json<{ error: { code: string } }>().error.code,
+        `${request.method} ${request.url}`,
+      ).toBe("REEL_NOT_FOUND");
+    }
 
-    const comments = await app.inject({
-      method: "GET",
-      url: "/reels/draft-reel/comments",
+    expect(findPublishedReel).toHaveBeenCalledTimes(requests.length);
+    expect(findPublishedReel).toHaveBeenCalledWith({
+      where: { id: "draft-reel", status: "PUBLISHED" },
+      select: { id: true },
     });
-    expect(comments.statusCode).toBe(404);
-    expect(comments.json<{ error: { code: string } }>().error.code).toBe(
-      "REEL_NOT_FOUND",
-    );
   });
 
   it.each([

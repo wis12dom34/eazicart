@@ -331,7 +331,7 @@ test("missing shared Reel does not fall back to legacy products", async ({
   await page.goto("/reels?reel=missing-reel");
 
   await expect(
-    page.getByText("No reels have been published yet.", { exact: true }),
+    page.getByText("This Reel is unavailable.", { exact: true }),
   ).toBeVisible();
   expect(feedRequestUrl).toContain("reelId=missing-reel");
   expect(feedRequestUrl).toContain("limit=1");
@@ -607,9 +607,10 @@ test("Reel share copies the deep link when native share is unavailable", async (
   await page.getByRole("button", { name: "Share reel", exact: true }).click();
 
   await expect(page.getByRole("status")).toHaveText("Reel link copied");
+  const origin = await page.evaluate(() => window.location.origin);
   await expect
     .poll(() => page.evaluate(() => window.__eazicartCopiedReelUrl ?? null))
-    .toBe(`http://localhost:3000/reels?reel=${reel.id}`);
+    .toBe(`${origin}/reels?reel=${reel.id}`);
 });
 
 test("Reel share keeps external-source Reels inside EaziCart", async ({
@@ -643,9 +644,10 @@ test("Reel share keeps external-source Reels inside EaziCart", async ({
 
   await page.getByRole("button", { name: "Share reel", exact: true }).click();
 
+  const origin = await page.evaluate(() => window.location.origin);
   await expect
     .poll(() =>
       page.evaluate(() => window.__eazicartSharedPayload?.url ?? null),
     )
-    .toBe(`http://localhost:3000/reels?reel=${reel.id}`);
+    .toBe(`${origin}/reels?reel=${reel.id}`);
 });

@@ -12,6 +12,11 @@ const feedQuery = z.object({
   reelId: z.string().min(1).optional(),
 });
 
+const commentsQuery = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+});
+
 const createBody = z
   .object({
     caption: z.string().trim().max(2200).nullable().optional(),
@@ -50,6 +55,7 @@ const include = {
 };
 
 type Cursor = { publishedAt: string; id: string };
+type CommentCursor = { createdAt: string; id: string };
 
 function encodeCursor(cursor: Cursor) {
   return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
@@ -57,14 +63,51 @@ function encodeCursor(cursor: Cursor) {
 
 function decodeCursor(value: string): Cursor {
   try {
-    const parsed = JSON.parse(
+    const parsed: unknown = JSON.parse(
       Buffer.from(value, "base64url").toString("utf8"),
-    ) as Cursor;
-    if (!parsed.id || Number.isNaN(new Date(parsed.publishedAt).getTime()))
+    );
+    if (typeof parsed !== "object" || parsed === null)
       throw new Error("invalid cursor");
-    return parsed;
+
+    const { id, publishedAt } = parsed as Record<string, unknown>;
+    if (
+      typeof id !== "string" ||
+      id.length === 0 ||
+      typeof publishedAt !== "string" ||
+      Number.isNaN(new Date(publishedAt).getTime())
+    )
+      throw new Error("invalid cursor");
+
+    return { id, publishedAt };
   } catch {
     throw new AppError(400, "INVALID_CURSOR", "The reels cursor is invalid");
+  }
+}
+
+function encodeCommentCursor(cursor: CommentCursor) {
+  return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
+}
+
+function decodeCommentCursor(value: string): CommentCursor {
+  try {
+    const parsed: unknown = JSON.parse(
+      Buffer.from(value, "base64url").toString("utf8"),
+    );
+    if (typeof parsed !== "object" || parsed === null)
+      throw new Error("invalid cursor");
+
+    const { id, createdAt } = parsed as Record<string, unknown>;
+    if (
+      typeof id !== "string" ||
+      id.length === 0 ||
+      typeof createdAt !== "string" ||
+      Number.isNaN(new Date(createdAt).getTime())
+    )
+      throw new Error("invalid cursor");
+
+    return { id, createdAt };
+  } catch {
+    throw new AppError(400, "INVALID_CURSOR", "The comments cursor is invalid");
   }
 }
 
@@ -244,13 +287,44 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
 
   app.get("/reels/:reelId/comments", async (request) => {
     const { reelId } = reelParams.parse(request.params);
+    const query = commentsQuery.parse(request.query);
+    const cursor = query.cursor ? decodeCommentCursor(query.cursor) : null;
     await requirePublishedReel(reelId);
+
+    const rows = await db().reelComment.findMany({
+      where: {
+        reelId,
+        OR: cursor
+          ? [
+              { createdAt: { lt: new Date(cursor.createdAt) } },
+              {
+                createdAt: new Date(cursor.createdAt),
+                id: { lt: cursor.id },
+              },
+            ]
+          : undefined,
+      },
+      include: { user: { select: { id: true, name: true } } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: query.limit + 1,
+    });
+
+    const hasMore = rows.length > query.limit;
+    const page = hasMore ? rows.slice(0, query.limit) : rows;
+    const last = page.at(-1);
+
     return {
-      data: await db().reelComment.findMany({
-        where: { reelId },
-        include: { user: { select: { id: true, name: true } } },
-        orderBy: { createdAt: "asc" },
-      }),
+      data: [...page].reverse(),
+      pagination: {
+        nextCursor:
+          hasMore && last
+            ? encodeCommentCursor({
+                createdAt: last.createdAt.toISOString(),
+                id: last.id,
+              })
+            : null,
+        hasMore,
+      },
     };
   });
 
