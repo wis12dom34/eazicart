@@ -129,6 +129,120 @@ test("failed Like keeps state unchanged and can be retried", async ({
   expect(likeAttempts).toBe(2);
 });
 
+test("failed Save keeps state unchanged and can be retried", async ({
+  page,
+}) => {
+  let saveAttempts = 0;
+
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "eazicart.auth.tokens",
+      JSON.stringify({
+        accessToken: "reels-e2e-access",
+        refreshToken: "reels-e2e-refresh",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+      }),
+    );
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "reels-e2e-user",
+        email: "reels@example.com",
+        name: "Reels Tester",
+      }),
+    });
+  });
+  await page.route(/\/reels\/feed(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [reel],
+        pagination: { nextCursor: null, hasMore: false },
+      }),
+    });
+  });
+  await page.route(
+    /\/reels\/reel-like-failure-test\/interactions(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: { liked: false, saved: false } }),
+      });
+    },
+  );
+  await page.route(
+    /\/reels\/reel-like-failure-test\/save(?:\?|$)/,
+    async (route) => {
+      saveAttempts += 1;
+      if (saveAttempts === 1) {
+        await route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: {
+              code: "SAVE_UNAVAILABLE",
+              message: "Unable to update save right now",
+            },
+          }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: { saved: true, count: 5 } }),
+      });
+    },
+  );
+  await page.route(
+    /\/reels\/reel-like-failure-test\/views(?:\?|$)/,
+    async (route) => {
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            id: "view-e2e",
+            watchMs: 1500,
+            completed: false,
+            createdAt: "2026-10-06T12:00:00.000Z",
+          },
+        }),
+      });
+    },
+  );
+
+  await page.goto(`/reels?reel=${reel.id}`);
+
+  const saveButton = page.getByRole("button", {
+    name: "Save reel",
+    exact: true,
+  });
+  await expect(saveButton).toBeEnabled();
+  await saveButton.click();
+
+  await expect(page.getByRole("status")).toHaveText(
+    "Unable to update save right now",
+  );
+  await expect(saveButton).toHaveAttribute("aria-pressed", "false");
+  await expect(saveButton.locator("small")).toHaveText("4");
+  await expect(saveButton).toBeEnabled();
+
+  await saveButton.click();
+  const unsaveButton = page.getByRole("button", {
+    name: "Remove saved reel",
+    exact: true,
+  });
+  await expect(unsaveButton).toHaveAttribute("aria-pressed", "true");
+  await expect(unsaveButton.locator("small")).toHaveText("5");
+  expect(saveAttempts).toBe(2);
+});
+
 test("failed Reel view recording retries once", async ({ page }) => {
   const viewRequests = [];
 
