@@ -47,7 +47,16 @@ function CommentsSheet({
   const [posting, setPosting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadCommentsKey, setReloadCommentsKey] = useState(0);
+  const [nextCommentsCursor, setNextCommentsCursor] = useState<string | null>(
+    null,
+  );
+  const [hasOlderComments, setHasOlderComments] = useState(false);
+  const [loadingOlderComments, setLoadingOlderComments] = useState(false);
+  const [olderCommentsError, setOlderCommentsError] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
+  const commentsRequestVersionRef = useRef(0);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const sheetRef = useRef<HTMLElement | null>(null);
   const legacy = isLegacyReel(reel);
@@ -108,13 +117,21 @@ function CommentsSheet({
   useEffect(() => {
     if (!open || legacy) return;
     let mounted = true;
+    commentsRequestVersionRef.current += 1;
     setLoading(true);
     setLoadError(null);
     setError(null);
+    setNextCommentsCursor(null);
+    setHasOlderComments(false);
+    setLoadingOlderComments(false);
+    setOlderCommentsError(null);
     reelsApi
       .comments(reel.id)
       .then((response) => {
-        if (mounted) setComments(response.data);
+        if (!mounted) return;
+        setComments(response.data);
+        setNextCommentsCursor(response.pagination.nextCursor);
+        setHasOlderComments(response.pagination.hasMore);
       })
       .catch((requestError: unknown) => {
         if (!mounted) return;
@@ -129,10 +146,38 @@ function CommentsSheet({
       });
     return () => {
       mounted = false;
+      commentsRequestVersionRef.current += 1;
     };
   }, [legacy, open, reel.id, reloadCommentsKey]);
 
   if (!open) return null;
+
+  const loadOlderComments = async () => {
+    if (!nextCommentsCursor || !hasOlderComments || loadingOlderComments)
+      return;
+    const requestVersion = commentsRequestVersionRef.current;
+    setLoadingOlderComments(true);
+    setOlderCommentsError(null);
+    try {
+      const response = await reelsApi.comments(reel.id, {
+        cursor: nextCommentsCursor,
+      });
+      if (commentsRequestVersionRef.current !== requestVersion) return;
+      setComments((current) => [...response.data, ...current]);
+      setNextCommentsCursor(response.pagination.nextCursor);
+      setHasOlderComments(response.pagination.hasMore);
+    } catch (requestError) {
+      if (commentsRequestVersionRef.current !== requestVersion) return;
+      setOlderCommentsError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to load older comments",
+      );
+    } finally {
+      if (commentsRequestVersionRef.current === requestVersion)
+        setLoadingOlderComments(false);
+    }
+  };
 
   const submitComment = async () => {
     const message = body.trim();
@@ -203,17 +248,39 @@ function CommentsSheet({
           ) : comments.length === 0 ? (
             <p className={styles.sheetState}>No comments yet. Be the first.</p>
           ) : (
-            comments.map((comment) => (
-              <article key={comment.id} className={styles.comment}>
-                <span className={styles.commentAvatar} aria-hidden="true">
-                  {(comment.user.name || "U").slice(0, 1).toUpperCase()}
-                </span>
-                <div>
-                  <strong>{comment.user.name || "EaziCart user"}</strong>
-                  <p>{comment.body}</p>
+            <>
+              {hasOlderComments ? (
+                <div className={styles.commentHistory}>
+                  {olderCommentsError ? (
+                    <p className={styles.commentHistoryError} role="alert">
+                      {olderCommentsError}
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={loadingOlderComments}
+                    onClick={() => void loadOlderComments()}
+                  >
+                    {loadingOlderComments
+                      ? "Loading older comments…"
+                      : olderCommentsError
+                        ? "Retry older comments"
+                        : "Load older comments"}
+                  </button>
                 </div>
-              </article>
-            ))
+              ) : null}
+              {comments.map((comment) => (
+                <article key={comment.id} className={styles.comment}>
+                  <span className={styles.commentAvatar} aria-hidden="true">
+                    {(comment.user.name || "U").slice(0, 1).toUpperCase()}
+                  </span>
+                  <div>
+                    <strong>{comment.user.name || "EaziCart user"}</strong>
+                    <p>{comment.body}</p>
+                  </div>
+                </article>
+              ))}
+            </>
           )}
         </div>
 
