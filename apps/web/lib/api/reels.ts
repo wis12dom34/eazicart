@@ -97,7 +97,8 @@ export const reelsApi = {
     const reelScopeMatches =
       !params.reelId ||
       response.data?.some((reel) => reel.id === params.reelId);
-    const scopedFeedMatches = productScopeMatches && reelScopeMatches;
+    const scopedFeedMatches =
+      response.data?.length === 0 || (productScopeMatches && reelScopeMatches);
     if (
       response.pagination &&
       Array.isArray(response.data) &&
