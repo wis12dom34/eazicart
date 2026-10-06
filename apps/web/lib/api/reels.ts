@@ -119,7 +119,7 @@ export const reelsApi = {
         .get(params.productId)
         .then((result) => result.data);
       return {
-        data: [legacyProductReel(product)],
+        data: product.reel ? [legacyProductReel(product)] : [],
         pagination: { nextCursor: null, hasMore: false },
       };
     }
