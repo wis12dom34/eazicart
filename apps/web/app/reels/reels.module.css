@@ -265,6 +265,29 @@
   font-size: 12px;
   scroll-snap-align: none;
 }
+button.loadingMore {
+  position: fixed;
+  z-index: 31;
+  left: 50%;
+  bottom: calc(100px + env(safe-area-inset-bottom));
+  width: min(calc(100% - 32px), 408px);
+  min-height: 44px;
+  border: 0;
+  border-radius: 22px;
+  padding: 10px 16px;
+  transform: translateX(-50%);
+  background: rgba(15, 20, 25, 0.94);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+button.loadingMore:active {
+  transform: translateX(-50%) scale(0.98);
+}
 .action:nth-child(-n + 2) {
   justify-content: flex-start;
   padding-top: 0.5px;
