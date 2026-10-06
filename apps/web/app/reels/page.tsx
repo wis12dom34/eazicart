@@ -45,6 +45,8 @@ function CommentsSheet({
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadCommentsKey, setReloadCommentsKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const sheetRef = useRef<HTMLElement | null>(null);
@@ -107,6 +109,7 @@ function CommentsSheet({
     if (!open || legacy) return;
     let mounted = true;
     setLoading(true);
+    setLoadError(null);
     setError(null);
     reelsApi
       .comments(reel.id)
@@ -115,7 +118,7 @@ function CommentsSheet({
       })
       .catch((requestError: unknown) => {
         if (!mounted) return;
-        setError(
+        setLoadError(
           requestError instanceof Error
             ? requestError.message
             : "Unable to load comments",
@@ -127,7 +130,7 @@ function CommentsSheet({
     return () => {
       mounted = false;
     };
-  }, [legacy, open, reel.id]);
+  }, [legacy, open, reel.id, reloadCommentsKey]);
 
   if (!open) return null;
 
@@ -182,6 +185,20 @@ function CommentsSheet({
             </p>
           ) : loading ? (
             <p className={styles.sheetState}>Loading comments…</p>
+          ) : loadError ? (
+            <div>
+              <p className={styles.sheetError} role="alert">
+                {loadError}
+              </p>
+              <div className={styles.commentSignIn}>
+                <button
+                  type="button"
+                  onClick={() => setReloadCommentsKey((value) => value + 1)}
+                >
+                  Retry loading comments
+                </button>
+              </div>
+            </div>
           ) : comments.length === 0 ? (
             <p className={styles.sheetState}>No comments yet. Be the first.</p>
           ) : (
