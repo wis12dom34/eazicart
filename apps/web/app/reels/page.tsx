@@ -136,7 +136,8 @@ function CommentsSheet({
 
   const submitComment = async () => {
     const message = body.trim();
-    if (!message || posting || isLegacyReel(reel)) return;
+    if (!message || posting || loading || loadError || isLegacyReel(reel))
+      return;
     setPosting(true);
     setError(null);
     try {
@@ -222,7 +223,7 @@ function CommentsSheet({
           </p>
         ) : null}
 
-        {!legacy ? (
+        {!legacy && !loading && !loadError ? (
           authenticated ? (
             <form
               className={styles.commentComposer}
