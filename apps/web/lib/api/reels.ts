@@ -86,6 +86,7 @@ export const reelsApi = {
       timeoutMs: 120_000,
     }),
   publish: (input: {
+    idempotencyKey?: string;
     videoUrl: string;
     caption?: string;
     productId?: string;
@@ -94,6 +95,7 @@ export const reelsApi = {
       method: "POST",
       auth: true,
       body: input,
+      timeoutMs: 60_000,
     }),
   feed: async (
     params: {

@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@eazicart/database";
+import { Prisma, type PrismaClient } from "@eazicart/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../errors.js";
@@ -19,6 +19,7 @@ const commentsQuery = z.object({
 
 const createBody = z
   .object({
+    idempotencyKey: z.uuid().optional(),
     caption: z.string().trim().max(2200).nullable().optional(),
     videoUrl: z.url().optional(),
     thumbnailUrl: z.url().optional(),
@@ -193,6 +194,30 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
         "Create a seller profile before publishing reels",
       );
 
+    // A lost response must not turn a retry into another public Reel.
+    const previousPublication = async () => {
+      if (!input.idempotencyKey) return null;
+      const previous = await db().reel.findUnique({
+        where: { id: input.idempotencyKey },
+        include,
+      });
+      if (
+        previous &&
+        (previous.sellerId !== seller.id ||
+          previous.videoUrl !== input.videoUrl ||
+          previous.status !== "PUBLISHED")
+      )
+        throw new AppError(
+          409,
+          "PUBLISH_CONFLICT",
+          "This publication key is already in use",
+        );
+      return previous;
+    };
+    const previous = await previousPublication();
+    if (previous)
+      return reply.code(200).send({ data: serializeReel(previous) });
+
     if (input.productId) {
       const product = await db().product.findFirst({
         where: { id: input.productId, sellerId: seller.id, active: true },
@@ -206,20 +231,34 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
         );
     }
 
-    const reel = await db().reel.create({
-      data: {
-        source: "EAZICART",
-        status: "PUBLISHED",
-        caption: input.caption,
-        videoUrl: input.videoUrl,
-        thumbnailUrl: input.thumbnailUrl,
-        sellerId: seller.id,
-        productId: input.productId,
-      },
-      include,
-    });
+    try {
+      const reel = await db().reel.create({
+        data: {
+          ...(input.idempotencyKey ? { id: input.idempotencyKey } : {}),
+          source: "EAZICART",
+          status: "PUBLISHED",
+          caption: input.caption,
+          videoUrl: input.videoUrl,
+          thumbnailUrl: input.thumbnailUrl,
+          sellerId: seller.id,
+          productId: input.productId,
+        },
+        include,
+      });
 
-    return reply.code(201).send({ data: serializeReel(reel) });
+      return reply.code(201).send({ data: serializeReel(reel) });
+    } catch (error) {
+      if (
+        input.idempotencyKey &&
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const winner = await previousPublication();
+        if (winner)
+          return reply.code(200).send({ data: serializeReel(winner) });
+      }
+      throw error;
+    }
   });
 
   app.get("/reels/:reelId/interactions", auth, async (request) => {

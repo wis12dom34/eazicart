@@ -10,6 +10,7 @@ import {
 } from "../../components/async-state";
 import { useRequest } from "../../hooks/use-request";
 import { useAuth } from "../../providers/auth-provider";
+import { ApiError } from "../../../lib/api/client";
 import { productsApi } from "../../../lib/api/products";
 import { reelsApi } from "../../../lib/api/reels";
 import { sellerDashboardApi } from "../../../lib/api/seller-dashboard";
@@ -42,6 +43,7 @@ export default function PublishReelPage() {
   );
   const [publishedId, setPublishedId] = useState("");
   const locked = useRef(false);
+  const publicationKey = useRef<string | null>(null);
   useEffect(() => {
     if (!file) {
       setPreview("");
@@ -56,8 +58,9 @@ export default function PublishReelPage() {
     if (!file || locked.current) return;
     locked.current = true;
     setError("");
+    let uploaded = videoUrl;
     try {
-      let uploaded = videoUrl;
+      publicationKey.current ??= crypto.randomUUID();
       if (!uploaded) {
         setPhase("uploading");
         uploaded = (await reelsApi.upload(file)).data.videoUrl;
@@ -65,6 +68,7 @@ export default function PublishReelPage() {
       }
       setPhase("publishing");
       const response = await reelsApi.publish({
+        idempotencyKey: publicationKey.current,
         videoUrl: uploaded,
         caption: caption.trim() || undefined,
         productId: productId || undefined,
@@ -72,9 +76,13 @@ export default function PublishReelPage() {
       setPublishedId(response.data.id);
     } catch (value) {
       setError(
-        value instanceof Error
-          ? value.message
-          : "Unable to publish your Reel. Please try again.",
+        uploaded &&
+          value instanceof ApiError &&
+          (value.code === "REQUEST_TIMEOUT" || value.code === "NETWORK_ERROR")
+          ? "Your video is uploaded, but publishing was not confirmed. Tap Publish Reel to try again safely."
+          : value instanceof Error
+            ? value.message
+            : "Unable to publish your Reel. Please try again.",
       );
     } finally {
       locked.current = false;
@@ -141,6 +149,7 @@ export default function PublishReelPage() {
               setPublishedId("");
               setFile(null);
               setVideoUrl("");
+              publicationKey.current = null;
               setCaption("");
               setProductId("");
             }}
@@ -169,6 +178,7 @@ export default function PublishReelPage() {
                 const next = event.target.files?.[0];
                 setError("");
                 setVideoUrl("");
+                publicationKey.current = null;
                 setFile(null);
                 if (!next) return;
                 if (next.size === 0 || next.size > 50 * 1024 * 1024) {

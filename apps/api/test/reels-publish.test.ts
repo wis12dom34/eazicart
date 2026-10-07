@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@eazicart/database";
+import { Prisma, type PrismaClient } from "@eazicart/database";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildApp } from "../src/app.js";
 import type { AppConfig } from "../src/config.js";
@@ -164,5 +164,107 @@ describe("Reel publishing", () => {
     ).toEqual(
       expect.objectContaining({ id: "reel-created", caption: "New drop" }),
     );
+  });
+  it.each([false, true])(
+    "returns the original Reel after a lost response or concurrent retry (race: %s)",
+    async (race) => {
+      const key = "27a1825e-614f-4c74-a967-1d573097b329";
+      const existing = {
+        id: key,
+        sellerId: "seller-1",
+        status: "PUBLISHED",
+        source: "EAZICART",
+        videoUrl: "https://example.com/reel.mp4",
+        caption: "First caption",
+        seller: null,
+        product: null,
+        publishedAt: new Date(),
+        _count: { likes: 0, saves: 0, views: 0, comments: 0 },
+      };
+      const findUnique = vi.fn().mockResolvedValue(existing);
+      const create = vi.fn().mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError("Duplicate id", {
+          code: "P2002",
+          clientVersion: "test",
+        }),
+      );
+      if (race) findUnique.mockResolvedValueOnce(null);
+      const database = {
+        sellerProfile: {
+          findUnique: vi.fn().mockResolvedValue({ id: "seller-1" }),
+        },
+        reel: { findUnique, create },
+      } as unknown as PrismaClient;
+      const app = buildApp(config, { database });
+      apps.push(app);
+      const token = await register(app, `reels-retry-${race}@example.com`);
+      const response = await app.inject({
+        method: "POST",
+        url: "/reels",
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          idempotencyKey: key,
+          videoUrl: existing.videoUrl,
+          caption: "Edited during retry",
+        },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(
+        response.json<{ data: { id: string; caption: string } }>().data,
+      ).toMatchObject({
+        id: key,
+        caption: "First caption",
+      });
+      expect(create).toHaveBeenCalledTimes(race ? 1 : 0);
+      if (race)
+        expect(create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              id: key,
+              sellerId: "seller-1",
+            }) as unknown,
+          }),
+        );
+    },
+  );
+
+  it.each([
+    {
+      sellerId: "another-seller",
+      videoUrl: "https://example.com/reel.mp4",
+      status: "PUBLISHED",
+    },
+    {
+      sellerId: "seller-1",
+      videoUrl: "https://example.com/another.mp4",
+      status: "PUBLISHED",
+    },
+    {
+      sellerId: "seller-1",
+      videoUrl: "https://example.com/reel.mp4",
+      status: "HIDDEN",
+    },
+  ])("rejects a conflicting publication key: %j", async (previous) => {
+    const create = vi.fn();
+    const database = {
+      sellerProfile: {
+        findUnique: vi.fn().mockResolvedValue({ id: "seller-1" }),
+      },
+      reel: { findUnique: vi.fn().mockResolvedValue(previous), create },
+    } as unknown as PrismaClient;
+    const app = buildApp(config, { database });
+    apps.push(app);
+    const token = await register(app, "reels-conflict@example.com");
+    const response = await app.inject({
+      method: "POST",
+      url: "/reels",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        idempotencyKey: "27a1825e-614f-4c74-a967-1d573097b329",
+        videoUrl: "https://example.com/reel.mp4",
+      },
+    });
+    expect(response.statusCode).toBe(409);
+    expect(create).not.toHaveBeenCalled();
   });
 });

@@ -63,6 +63,7 @@ test("seller publishes a phone video and can open its Reel", async ({
     if (route.request().method() !== "POST") return route.continue();
     publishes++;
     expect(route.request().postDataJSON()).toEqual({
+      idempotencyKey: expect.stringMatching(/^[0-9a-f-]{36}$/),
       videoUrl: "https://media.example.com/video.mp4",
       caption: "New bag",
       productId: "product-1",
@@ -105,6 +106,7 @@ test("publishing failure retains the uploaded video for retry", async ({
   await seller(page);
   let uploads = 0,
     publishes = 0;
+  const publicationKeys = [];
   await page.route(/\/seller\/reels\/media$/, (route) => {
     uploads++;
     return route.fulfill({
@@ -115,6 +117,7 @@ test("publishing failure retains the uploaded video for retry", async ({
   await page.route(/\/reels$/, (route) => {
     if (route.request().method() !== "POST") return route.continue();
     publishes++;
+    publicationKeys.push(route.request().postDataJSON().idempotencyKey);
     return route.fulfill(
       publishes === 1
         ? {
@@ -138,6 +141,8 @@ test("publishing failure retains the uploaded video for retry", async ({
   ).toBeVisible();
   expect(uploads).toBe(1);
   expect(publishes).toBe(2);
+  expect(publicationKeys[0]).toMatch(/^[0-9a-f-]{36}$/);
+  expect(publicationKeys[1]).toBe(publicationKeys[0]);
 });
 test("guests cannot reach the video publishing form", async ({ page }) => {
   await page.goto("/seller/reels");
@@ -145,4 +150,33 @@ test("guests cannot reach the video publishing form", async ({ page }) => {
     page.getByText("Sign in to publish a Reel.", { exact: true }),
   ).toBeVisible();
   await expect(page.getByLabel("Choose a video")).toHaveCount(0);
+});
+
+test("publishing tolerates a response beyond the previous 15 second limit", async ({
+  page,
+}) => {
+  await seller(page);
+  await page.route(/\/seller\/reels\/media$/, (route) =>
+    route.fulfill({
+      status: 201,
+      json: { data: { videoUrl: "https://media.example.com/video.mp4" } },
+    }),
+  );
+  await page.route(/\/reels$/, async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await new Promise((resolve) => setTimeout(resolve, 16000));
+    await route.fulfill({
+      status: 201,
+      json: { data: { id: "slow-published-reel" } },
+    });
+  });
+  await page.goto("/seller/reels");
+  await page
+    .getByLabel("Choose a video")
+    .setInputFiles({ name: "phone.mp4", mimeType: "video/mp4", buffer: video });
+  await page.getByRole("button", { name: "Publish Reel", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Your Reel is live" }),
+  ).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('p[role="alert"]')).toHaveCount(0);
 });
