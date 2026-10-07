@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { safeNextPath } from "../../lib/api/navigation";
 import { useAuth } from "../providers/auth-provider";
@@ -13,6 +13,9 @@ export function LoginContent() {
   const params = useSearchParams();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => setReady(true), []);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -88,7 +91,7 @@ export function LoginContent() {
           )}
         </div>
 
-        <button className={styles.primaryButton} disabled={busy}>
+        <button className={styles.primaryButton} disabled={!ready || busy}>
           {busy ? "Signing in…" : "Sign in"}
         </button>
         {busy && (

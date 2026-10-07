@@ -347,6 +347,7 @@ function ReelSlide({
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const viewedRef = useRef(false);
+  const [muted, setMuted] = useState(true);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [interactionStatus, setInteractionStatus] = useState<string | null>(
     null,
@@ -560,7 +561,7 @@ function ReelSlide({
           className={styles.media}
           src={reel.videoUrl}
           poster={poster}
-          muted
+          muted={muted}
           loop
           playsInline
           preload={active ? "auto" : "metadata"}
@@ -574,6 +575,47 @@ function ReelSlide({
       ) : (
         <div className={styles.fallback} aria-label="Reel media unavailable" />
       )}
+
+      {reel.videoUrl ? (
+        <button
+          type="button"
+          className={styles.soundToggle}
+          aria-label={muted ? "Turn Reel sound on" : "Turn Reel sound off"}
+          aria-pressed={!muted}
+          onClick={() => {
+            const video = videoRef.current;
+            if (!video) return;
+            const nextMuted = !video.muted;
+            // Apply inside the tap so Safari can authorize audible playback.
+            video.muted = nextMuted;
+            setMuted(nextMuted);
+            if (active)
+              void video.play().catch(() => {
+                video.muted = true;
+                setMuted(true);
+                setInteractionStatus("Unable to play. Tap sound to try again.");
+              });
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+            {muted ? (
+              <path d="m16 9 6 6m0-6-6 6" />
+            ) : (
+              <path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" />
+            )}
+          </svg>
+          <span>{muted ? "Sound off" : "Sound on"}</span>
+        </button>
+      ) : null}
 
       <div className={styles.bottomShade} />
 
@@ -614,7 +656,7 @@ function ReelSlide({
 
       <div className={styles.actions}>
         <button
-          className={`${styles.action} ${liked ? styles.actionActive : ""}`}
+          className={`${styles.action} ${liked ? styles.likeActive : ""}`}
           disabled={
             !interactive ||
             likeBusy ||
@@ -627,7 +669,19 @@ function ReelSlide({
           onClick={() => void toggleLike()}
         >
           <i>
-            <img src="/figma/reel-like.svg" width={20} height={20} alt="" />
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill={liked ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+            </svg>
           </i>
           <span>{formatCount(reel._count.likes)}</span>
         </button>

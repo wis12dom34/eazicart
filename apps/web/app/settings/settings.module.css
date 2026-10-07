@@ -322,3 +322,7 @@
     text-overflow: ellipsis;
   }
 }
+.back {
+  min-width: 44px;
+  width: 44px;
+}

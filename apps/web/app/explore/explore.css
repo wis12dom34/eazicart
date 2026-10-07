@@ -415,3 +415,50 @@
   background: #16a34a;
   border-radius: 50%;
 }
+
+.figma-explore-tabs a {
+  position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 14px;
+  color: #8e8e93;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.figma-explore-tabs a[aria-current="page"] {
+  color: #f97316;
+  font-weight: 700;
+}
+.figma-explore-tabs a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  bottom: 0;
+  left: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: #f97316;
+}
+.figma-explore-product-media > span {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: #f4f5f6;
+  color: #71747b;
+  font-size: 32px;
+  font-weight: 700;
+}
+.figma-explore-card-seller,
+.figma-explore-product-name,
+.figma-explore-seller-strip > * {
+  min-height: 44px;
+}
+.figma-explore-trends a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}

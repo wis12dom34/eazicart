@@ -75,7 +75,6 @@ export function LiveTracking({
           </div>
         </div>
       </div>
-      <div className={styles.island} aria-hidden="true" />
       <header className={styles.header}>
         <Link
           className={styles.back}
@@ -131,11 +130,7 @@ export function LiveTracking({
         <div className={styles.actions}>
           {tracking.rider.phone ? (
             <a href={`tel:${tracking.rider.phone}`}>Call</a>
-          ) : (
-            <button disabled title="Rider phone number unavailable">
-              Call
-            </button>
-          )}
+          ) : null}
           <Link href={`/orders/${order.id}`}>Order Details</Link>
         </div>
       </section>

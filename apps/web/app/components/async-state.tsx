@@ -23,7 +23,7 @@ export function ErrorState({
       <p>{message}</p>
       {retry && (
         <button className="error-retry" type="button" onClick={retry}>
-          Refresh
+          Try again
         </button>
       )}
     </section>

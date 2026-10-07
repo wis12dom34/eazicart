@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers/auth-provider";
 import styles from "../auth.module.css";
@@ -16,6 +16,9 @@ export default function Register() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => setReady(true), []);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -99,7 +102,7 @@ export default function Register() {
           </p>
         )}
 
-        <button className={styles.primaryButton} disabled={busy}>
+        <button className={styles.primaryButton} disabled={!ready || busy}>
           {busy ? "Creating account…" : "Create account"}
         </button>
         <p className={styles.terms}>

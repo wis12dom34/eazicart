@@ -18,6 +18,7 @@ export class ApiError extends Error {
 
 type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
+  rawBody?: Blob;
   query?: Record<string, string | number | undefined>;
   auth?: boolean;
   retry?: boolean;
@@ -126,6 +127,7 @@ export async function apiRequest<T>(
   const {
     query,
     body,
+    rawBody,
     auth = false,
     retry = true,
     timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
@@ -149,7 +151,7 @@ export async function apiRequest<T>(
     {
       ...init,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: rawBody ?? (body === undefined ? undefined : JSON.stringify(body)),
     },
     timeoutMs,
   );

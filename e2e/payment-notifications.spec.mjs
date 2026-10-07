@@ -2,7 +2,8 @@ import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-const api = "http://localhost:3001";
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
+const api = process.env.E2E_API_BASE_URL ?? "http://localhost:3001";
 const productId = "demo-product-woven-tote";
 
 test("payment settings stay honest and notifications use live account data", async ({
@@ -18,7 +19,7 @@ test("payment settings stay honest and notifications use live account data", asy
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 
   await page.goto("/payment-methods");
   await expect(
@@ -26,7 +27,7 @@ test("payment settings stay honest and notifications use live account data", asy
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /Add payment method/ }),
-  ).toBeDisabled();
+  ).toHaveCount(0);
   await expect(
     page.getByText("Card storage is not available yet", {
       exact: true,

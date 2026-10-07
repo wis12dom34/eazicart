@@ -18,7 +18,6 @@ import {
 } from "../../components/async-state";
 import { useAuth } from "../../providers/auth-provider";
 import styles from "./product-detail.module.css";
-import { NikeProduct } from "./nike-product";
 
 export default function ProductPage({
   params,
@@ -31,9 +30,24 @@ export default function ProductPage({
   const result = useRequest(() => productsApi.get(id), [id]);
   const [message, setMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(0);
+  const [busyAction, setBusyAction] = useState<"save" | "cart" | "buy" | null>(
+    null,
+  );
+  const savedItems = useRequest(
+    () =>
+      auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }),
+    [auth.isAuthenticated],
+  );
+  const [savedOverride, setSavedOverride] = useState<boolean | null>(null);
   const product = result.data?.data;
+  const saved = product
+    ? (savedOverride ??
+      savedItems.data?.data.some((item) => item.productId === product.id) ??
+      false)
+    : false;
 
   const protectedAction = async (
+    kind: "save" | "cart" | "buy",
     action: () => Promise<unknown>,
     success: string,
   ) => {
@@ -42,12 +56,16 @@ export default function ProductPage({
       return;
     }
 
+    if (busyAction) return;
+    setBusyAction(kind);
     setMessage("");
     try {
       await action();
       setMessage(success);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Action failed");
+    } finally {
+      setBusyAction(null);
     }
   };
 
@@ -107,13 +125,6 @@ export default function ProductPage({
     }
   };
 
-  if (
-    product.name === "Nike Air Max 90" &&
-    product.seller.displayName === "Nike Official"
-  ) {
-    return <NikeProduct product={product} />;
-  }
-
   return (
     <main className={`app-shell detail-page ${styles.page}`}>
       <Header
@@ -123,9 +134,19 @@ export default function ProductPage({
           <div className={styles.headerActions}>
             <button
               className={`icon-button ${styles.headerIconButton}`}
-              aria-label="Save product"
+              aria-label={saved ? "Unsave product" : "Save product"}
+              aria-pressed={saved}
+              disabled={busyAction === "save"}
               onClick={() =>
-                void protectedAction(() => savedApi.save(id), "Saved")
+                void protectedAction(
+                  "save",
+                  async () => {
+                    if (saved) await savedApi.remove(id);
+                    else await savedApi.save(id);
+                    setSavedOverride(!saved);
+                  },
+                  saved ? "Removed from saved items" : "Saved",
+                )
               }
             >
               <Icon name="heart" />
@@ -230,25 +251,33 @@ export default function ProductPage({
         aria-label="Product actions"
       >
         <button
-          disabled={!inStock}
+          disabled={!inStock || busyAction !== null}
           className={`secondary-button ${styles.actionButton}`}
           onClick={() =>
-            void protectedAction(() => cartApi.add(id, 1), "Added to cart")
+            void protectedAction(
+              "cart",
+              () => cartApi.add(id, 1),
+              "Added to cart",
+            )
           }
         >
-          Add to Cart
+          {busyAction === "cart" ? "Adding…" : "Add to Cart"}
         </button>
         <button
-          disabled={!inStock}
+          disabled={!inStock || busyAction !== null}
           className={`dark-button ${styles.actionButton}`}
           onClick={() =>
-            void protectedAction(async () => {
-              await cartApi.add(id, 1);
-              router.push("/checkout");
-            }, "")
+            void protectedAction(
+              "buy",
+              async () => {
+                await cartApi.add(id, 1);
+                router.push("/checkout");
+              },
+              "",
+            )
           }
         >
-          Buy Now
+          {busyAction === "buy" ? "Preparing…" : "Buy Now"}
         </button>
       </div>
     </main>

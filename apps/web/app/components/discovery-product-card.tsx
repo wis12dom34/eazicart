@@ -44,11 +44,6 @@ export function DiscoveryProductCard({
         <div className={styles.searchProductMedia} aria-hidden="true">
           {image ? <img src={image.url} alt="" /> : null}
         </div>
-        {product.viewsLabel ? (
-          <span className={styles.searchProductViews}>
-            {product.viewsLabel} views
-          </span>
-        ) : null}
         <Link
           className={styles.searchProductSeller}
           href={`/seller/${product.seller.id}`}
@@ -98,7 +93,12 @@ export function DiscoveryProductCard({
           <Icon name="bag" size={30} />
         )}
       </Link>
-      <p className={styles.productSeller}>{product.seller.displayName}</p>
+      <Link
+        className={styles.productSeller}
+        href={`/seller/${product.seller.id}`}
+      >
+        {product.seller.displayName}
+      </Link>
       <Link className={styles.productName} href={`/product/${product.id}`}>
         {product.name}
       </Link>
