@@ -606,3 +606,33 @@ button.loadingMore:active {
   outline: 2px solid white;
   outline-offset: 3px;
 }
+
+.likeActive {
+  color: #ef4444;
+}
+.likeActive i {
+  background: rgba(239, 68, 68, 0.16);
+}
+.likeActive svg {
+  animation: reelHeartPop 320ms ease-out;
+  transform-origin: center;
+}
+@keyframes reelHeartPop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .likeActive svg {
+    animation: none;
+  }
+}
