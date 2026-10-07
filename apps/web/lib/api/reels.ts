@@ -69,6 +69,32 @@ const legacyProductReels = (products: Product[]): ReelsFeedResponse => ({
 });
 
 export const reelsApi = {
+  upload: (file: File) =>
+    apiRequest<{ data: { videoUrl: string } }>("/seller/reels/media", {
+      method: "POST",
+      auth: true,
+      rawBody: file,
+      headers: {
+        "Content-Type":
+          file.type ||
+          (/\.mov$/i.test(file.name)
+            ? "video/quicktime"
+            : /\.webm$/i.test(file.name)
+              ? "video/webm"
+              : "video/mp4"),
+      },
+      timeoutMs: 120_000,
+    }),
+  publish: (input: {
+    videoUrl: string;
+    caption?: string;
+    productId?: string;
+  }) =>
+    apiRequest<{ data: Reel }>("/reels", {
+      method: "POST",
+      auth: true,
+      body: input,
+    }),
   feed: async (
     params: {
       cursor?: string;

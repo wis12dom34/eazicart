@@ -13,6 +13,8 @@ const environmentSchema = z.object({
   WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
   PAYSTACK_BASE_URL: z.string().url().optional(),
+  REEL_MEDIA_DIRECTORY: z.string().min(1).optional(),
+  REEL_MEDIA_BASE_URL: z.url().optional(),
 });
 
 export type AppConfig = z.infer<typeof environmentSchema>;
