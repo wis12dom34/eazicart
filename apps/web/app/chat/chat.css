@@ -28,6 +28,7 @@
 .eazicart-chat-header > a {
   width: 44px;
   height: 44px;
+  flex: 0 0 44px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -87,4 +88,7 @@
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
+}
+.eazicart-chat-header > a {
+  flex: 0 0 44px;
 }

@@ -91,9 +91,7 @@ export function AddressSelector({
           Use selected address
         </Link>
       ) : (
-        <button className={styles.use} disabled>
-          Use selected address
-        </button>
+        <span className={styles.use}>Add an address to continue</span>
       )}
       <BottomNavigation activeHref="/cart" />
     </main>

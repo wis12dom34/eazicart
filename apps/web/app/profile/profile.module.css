@@ -228,3 +228,15 @@
     overflow-wrap: anywhere;
   }
 }
+.edit {
+  min-height: 44px;
+}
+.tabs > * {
+  min-height: 44px;
+}
+.tabs [aria-current] {
+  color: #f97316;
+}
+.tabs [aria-current]:after {
+  background: #f97316;
+}

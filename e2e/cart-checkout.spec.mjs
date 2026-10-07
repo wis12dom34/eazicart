@@ -2,7 +2,9 @@ import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-const api = "http://localhost:3001";
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
+
+const api = process.env.E2E_API_BASE_URL ?? "http://localhost:3001";
 const productId = "demo-product-woven-tote";
 
 test("cart and checkout match the customer flow without fake payment data", async ({
@@ -18,7 +20,7 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 
   const tokens = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("eazicart.auth.tokens")),
@@ -53,7 +55,10 @@ test("cart and checkout match the customer flow without fake payment data", asyn
     page.getByText("Woven everyday tote", { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();
+  await expect(
+    page.getByText("Promo codes are not available yet.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Apply" })).toHaveCount(0);
   await expect(
     page.getByText("Total", { exact: true }).locator(".."),
   ).toContainText("18,500");
@@ -61,7 +66,7 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await expectCustomerNavigation(page, "Cart");
 
   await page.getByRole("link", { name: "Proceed to Checkout" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/checkout");
+  await expect(page).toHaveURL(`${web}/checkout`);
   await expect(
     page.getByRole("heading", { name: "Checkout", exact: true }),
   ).toBeVisible();

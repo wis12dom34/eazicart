@@ -84,13 +84,6 @@ export default function FollowingPage() {
         <span className={styles.activeTab} aria-current="page">
           Following
         </span>
-        <button
-          type="button"
-          disabled
-          title="Seller recommendations are not available yet."
-        >
-          Recommended
-        </button>
       </nav>
 
       {actionError ? (

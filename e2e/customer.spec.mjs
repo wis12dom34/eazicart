@@ -2,7 +2,9 @@ import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-const api = "http://localhost:3001";
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
+
+const api = process.env.E2E_API_BASE_URL ?? "http://localhost:3001";
 const productId = "demo-product-woven-tote";
 const sellerId = "demo-seller-lagos-studio";
 
@@ -20,7 +22,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
 
   await page.goto("/profile");
@@ -54,17 +56,17 @@ test("customer journey persists in PostgreSQL without payment", async ({
   ).toHaveAttribute("href", "/explore");
   await page.goto("/profile");
   await page.getByRole("link", { name: "Account settings" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/settings");
+  await expect(page).toHaveURL(`${web}/settings`);
   await expect(
     page.getByRole("heading", { name: "Account Settings", exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Edit profile" })).toBeVisible();
   await page.getByRole("button", { name: "Log out" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/login");
+  await expect(page).toHaveURL(`${web}/login`);
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 
   await page.goto("/explore");
   await expect(
@@ -106,7 +108,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
 
   await page.goto(`/product/${productId}`);
   await page.getByRole("link", { name: /View .* seller profile/ }).click();
-  await expect(page).toHaveURL(`http://localhost:3000/seller/${sellerId}`);
+  await expect(page).toHaveURL(`${web}/seller/${sellerId}`);
   await expect(
     page.getByRole("heading", { name: "Lagos Studio", exact: true }).first(),
   ).toBeVisible();
@@ -115,6 +117,9 @@ test("customer journey persists in PostgreSQL without payment", async ({
     "true",
   );
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Reels" })).toBeVisible();
+  await page.getByRole("tab", { name: "Reels" }).click();
+  await expect(page.getByText("No Reels yet", { exact: true })).toBeVisible();
   await page.getByRole("tab", { name: "About" }).click();
   await expect(
     page
@@ -143,8 +148,8 @@ test("customer journey persists in PostgreSQL without payment", async ({
     followingSections.getByText("Following", { exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await expect(
-    followingSections.getByRole("button", { name: "Recommended" }),
-  ).toBeDisabled();
+    followingSections.getByText("Recommended", { exact: true }),
+  ).toHaveCount(0);
 
   await page.goto(`/product/${productId}`);
   await page.getByRole("button", { name: "Add to Cart", exact: true }).click();
@@ -191,7 +196,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
   expect(createdOrder.status()).toBe(201);
   const order = (await createdOrder.json()).data;
   await page.goto(`/orders/${order.id}`);
-  await expect(page).toHaveURL(`http://localhost:3000/orders/${order.id}`);
+  await expect(page).toHaveURL(`${web}/orders/${order.id}`);
   const orderUrl = page.url();
   await expect(page.getByText("Processing", { exact: true })).toBeVisible();
   await expect(
@@ -222,20 +227,11 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page
     .getByRole("link", { name: /Reviews Your ratings and feedback/ })
     .click();
-  await expect(page).toHaveURL("http://localhost:3000/reviews");
+  await expect(page).toHaveURL(`${web}/reviews`);
   await expect(
     page.getByRole("heading", { name: "Reviews are not available yet" }),
   ).toBeVisible();
-  const reviewFilters = page.getByLabel("Review filters");
-  await expect(
-    reviewFilters.getByRole("button", { name: "All", exact: true }),
-  ).toBeDisabled();
-  await expect(
-    reviewFilters.getByRole("button", { name: "Products", exact: true }),
-  ).toBeDisabled();
-  await expect(
-    reviewFilters.getByRole("button", { name: "Sellers", exact: true }),
-  ).toBeDisabled();
+  await expect(page.getByLabel("Review filters")).toHaveCount(0);
   await expectCustomerNavigation(page);
 
   await page.goto("/saved");
@@ -287,11 +283,11 @@ test("customer journey persists in PostgreSQL without payment", async ({
   ).toBeVisible();
   await page.getByRole("link", { name: "Account settings" }).click();
   await page.getByRole("button", { name: "Log out" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/login");
+  await expect(page).toHaveURL(`${web}/login`);
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
   await page.goto(orderUrl);
   await expect(page.getByText("Woven everyday tote")).toBeVisible();
 
@@ -349,13 +345,13 @@ test("API trusts database prices and enforces CORS and ownership", async ({
     data: { addressId: (await address.json()).data.id },
   });
   expect(empty.status()).toBe(400);
-  for (const origin of ["http://localhost:3000", "https://untrusted.invalid"]) {
+  for (const origin of [web, "https://untrusted.invalid"]) {
     const preflight = await request.fetch(`${api}/cart`, {
       method: "OPTIONS",
       headers: { Origin: origin, "Access-Control-Request-Method": "PATCH" },
     });
     expect(preflight.headers()["access-control-allow-origin"]).toBe(
-      origin === "http://localhost:3000" ? origin : undefined,
+      origin === web ? origin : undefined,
     );
   }
 });

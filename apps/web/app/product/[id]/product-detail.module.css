@@ -240,3 +240,8 @@
     transition: none;
   }
 }
+.galleryDot {
+  width: 44px;
+  height: 44px;
+  margin-inline: -7px;
+}

@@ -779,3 +779,60 @@
 .figma-home-product {
   min-height: 318.275px;
 }
+
+.figma-home-story {
+  color: #111214;
+  text-decoration: none;
+  min-height: 106px;
+}
+.figma-home-story-avatar {
+  width: 66px;
+  height: 66px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 2px solid #f97316;
+  border-radius: 50%;
+  background: #f7f8f8;
+  color: #0f1419;
+  font-size: 15px;
+  font-weight: 700;
+}
+.figma-home-brand {
+  color: #111214;
+  text-decoration: none;
+  min-height: 96px;
+}
+.figma-home-tabs .active {
+  color: #f97316;
+}
+.figma-home-tabs .active:after {
+  background: #f97316;
+}
+.figma-home-section-header > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: #f97316;
+}
+.figma-home-logo {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin: -8px;
+}
+.figma-home-tabs > * {
+  min-height: 44px;
+}
+.figma-home-section-header > a {
+  min-width: 44px;
+  justify-content: flex-end;
+}
+.figma-home-product-title,
+.figma-home-product-seller {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}

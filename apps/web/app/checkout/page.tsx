@@ -57,7 +57,13 @@ export default function CheckoutPage() {
   if (cart.error || addresses.error)
     return (
       <CheckoutShell>
-        <ErrorState message={cart.error || addresses.error} />
+        <ErrorState
+          message={cart.error || addresses.error}
+          retry={() => {
+            void cart.reload();
+            void addresses.reload();
+          }}
+        />
       </CheckoutShell>
     );
 
@@ -153,15 +159,18 @@ export default function CheckoutPage() {
           <div className={styles.items}>
             {data.items.map((item) => (
               <article className={styles.item} key={item.id}>
-                <div className={styles.itemThumb}></div>
+                <div className={styles.itemThumb}>
+                  {item.product.images[0] ? (
+                    <img
+                      src={item.product.images[0].url}
+                      alt={item.product.images[0].altText ?? item.product.name}
+                    />
+                  ) : null}
+                </div>
                 <div className={styles.itemCopy}>
                   <strong>{item.product.name}</strong>
                   <span>
-                    {item.product.seller.displayName}
-                    {item.product.seller.displayName === "Nike Official"
-                      ? " ✓"
-                      : ""}{" "}
-                    · Qty {item.quantity}
+                    {item.product.seller.displayName} · Qty {item.quantity}
                   </span>
                 </div>
                 <strong className={styles.itemPrice}>

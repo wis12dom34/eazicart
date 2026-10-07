@@ -49,17 +49,10 @@ export default function PaymentSuccess() {
         </Link>
       </>
     );
-  if (state)
-    return (
-      <main className={`app-shell ${styles.page}`}>
-        <div className={styles.island} aria-hidden="true" />
-        {state}
-      </main>
-    );
+  if (state) return <main className={`app-shell ${styles.page}`}>{state}</main>;
   if (!data || !payment) return null;
   return (
     <main className={`app-shell ${styles.page}`} data-figma-node="156:2">
-      <div className={styles.island} aria-hidden="true" />
       <img
         className={styles.illustration}
         src="/figma/success.svg"

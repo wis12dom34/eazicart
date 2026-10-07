@@ -10,14 +10,12 @@ const entries = [
   ["Profile", "/profile", "profile"],
   ["Order History", "/orders", "orders"],
   ["Saved Items", "/saved", "saved"],
-  ["Wallet", "", "wallet"],
   ["Payment Methods", "/payment-methods", "payment"],
   ["Delivery Addresses", "/address-book", "address"],
   ["My Store", "/seller/store", "store"],
   ["Business Insights", "/seller/dashboard", "insights"],
   ["Settings", "/settings", "settings"],
-  ["Help & Support", "", "help"],
-];
+] as const;
 export function SideNavigation({ onClose }: { onClose: () => void }) {
   const auth = useAuth();
   const panel = useRef<HTMLDivElement>(null);
@@ -118,23 +116,12 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
             );
             return (
               <div
-                className={index === 8 ? styles.afterDivider : undefined}
+                className={index === 6 ? styles.afterDivider : undefined}
                 key={label}
               >
-                {href ? (
-                  <Link href={href} onClick={onClose}>
-                    {content}
-                  </Link>
-                ) : (
-                  <span
-                    className={styles.unavailable}
-                    role="link"
-                    aria-disabled="true"
-                    title={`${label} is not connected yet`}
-                  >
-                    {content}
-                  </span>
-                )}
+                <Link href={href} onClick={onClose}>
+                  {content}
+                </Link>
               </div>
             );
           })}

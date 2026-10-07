@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-const api = "http://localhost:3001";
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
+const api = process.env.E2E_API_BASE_URL ?? "http://localhost:3001";
 
 test("auth screens use supported credentials flows and honest validation states", async ({
   page,
@@ -24,7 +25,7 @@ test("auth screens use supported credentials flows and honest validation states"
   await page.getByLabel("Confirm password").fill("password-two");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByText("Passwords do not match.")).toBeVisible();
-  await expect(page).toHaveURL("http://localhost:3000/register");
+  await expect(page).toHaveURL(`${web}/register`);
 
   const email = `auth-${randomUUID()}@eazicart.invalid`;
   const password = randomUUID();
@@ -57,5 +58,5 @@ test("auth screens use supported credentials flows and honest validation states"
 
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 });

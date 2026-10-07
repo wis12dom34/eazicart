@@ -25,15 +25,6 @@ export default function PaymentMethods() {
       </header>
 
       <div className={styles.content}>
-        <button
-          className={styles.addButton}
-          type="button"
-          disabled
-          title="Saved payment methods are not supported yet"
-        >
-          +&nbsp;&nbsp;Add payment method
-        </button>
-
         <h2 className={styles.savedTitle}>Saved methods</h2>
 
         <section

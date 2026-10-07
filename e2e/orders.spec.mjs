@@ -2,7 +2,8 @@ import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-const api = "http://localhost:3001";
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
+const api = process.env.E2E_API_BASE_URL ?? "http://localhost:3001";
 const productId = "demo-product-woven-tote";
 
 test("orders and tracking use real PostgreSQL order state without shipment fixtures", async ({
@@ -18,7 +19,7 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 
   const tokens = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("eazicart.auth.tokens")),
@@ -72,7 +73,7 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   await expectCustomerNavigation(page);
 
   await page.locator(`a[href="/orders/${order.id}"]`).click();
-  await expect(page).toHaveURL(`http://localhost:3000/orders/${order.id}`);
+  await expect(page).toHaveURL(`${web}/orders/${order.id}`);
   await expect(page.getByText("Processing", { exact: true })).toBeVisible();
   await expect(
     page.getByText("12 Orders Street", { exact: false }),
@@ -89,7 +90,7 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   ).toContainText("Not added");
 
   await page.getByRole("link", { name: "Track package" }).click();
-  await expect(page).toHaveURL(`http://localhost:3000/tracking/${order.id}`);
+  await expect(page).toHaveURL(`${web}/tracking/${order.id}`);
   await expect(
     page.getByRole("heading", { name: "Track Order", exact: true }),
   ).toBeVisible();

@@ -141,13 +141,12 @@ export default function CartPage() {
             <p>Choose another size or remove the item to continue.</p>
           </section>
           <div className={styles.unavailableActions}>
-            <button
+            <Link
               className={styles.statePrimary}
-              disabled
-              title="Product size inventory is not connected"
+              href={`/product/${unavailable.product.id}`}
             >
-              Choose another option
-            </button>
+              View product
+            </Link>
             <button
               className={styles.stateSecondary}
               disabled={mutating}
@@ -169,10 +168,8 @@ export default function CartPage() {
             <strong>{removing.product.name}</strong>
             <p>
               {removing.product.seller.displayName}
-              {removing.product.seller.displayName === "Nike Official"
-                ? " ✓"
-                : ""}{" "}
-              · {money(removing.lineTotal)}
+              {" · "}
+              {money(removing.lineTotal)}
             </p>
           </section>
           <section className={styles.removeCard}>
@@ -216,14 +213,11 @@ export default function CartPage() {
       <section className={styles.cartList} aria-label="Cart items">
         {data.items.map((item) => (
           <article className={styles.cartItem} key={item.id}>
-            {item.product.name === "Nike Air Max 90" &&
-              item.product.seller.displayName === "Nike Official" && (
-                <Link
-                  className={styles.productLink}
-                  href={`/product/${item.product.id}`}
-                  aria-label="View Nike Air Max 90"
-                />
-              )}
+            <Link
+              className={styles.productLink}
+              href={`/product/${item.product.id}`}
+              aria-label={`View ${item.product.name}`}
+            />
             <div className={styles.cartThumb}>
               {item.product.images[0] ? (
                 <img
@@ -234,12 +228,7 @@ export default function CartPage() {
             </div>
             <div className={styles.itemCopy}>
               <h2>{item.product.name}</h2>
-              <p>
-                {item.product.seller.displayName}
-                {item.product.seller.displayName === "Nike Official"
-                  ? " ✓"
-                  : ""}
-              </p>
+              <p>{item.product.seller.displayName}</p>
               <strong>{money(item.lineTotal)}</strong>
             </div>
             <div className={`quantity ${styles.quantity}`}>
@@ -271,11 +260,8 @@ export default function CartPage() {
         ))}
       </section>
 
-      <div className={styles.promo} aria-label="Promo codes unavailable">
-        <span>Promo code</span>
-        <button type="button" disabled>
-          Apply
-        </button>
+      <div className={styles.promo} aria-label="Promo code status">
+        <span>Promo codes are not available yet.</span>
       </div>
 
       <section className={`summary ${styles.summary}`}>
