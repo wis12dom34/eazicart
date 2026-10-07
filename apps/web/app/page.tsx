@@ -69,6 +69,22 @@ export default function HomePage() {
       );
     return (index(a) < 0 ? 100 : index(a)) - (index(b) < 0 ? 100 : index(b));
   });
+  const popularItems = [
+    ...popular.flatMap((name) => {
+      const design = homeDesignProducts.find((item) => item.name === name);
+      const product = sorted.find(
+        (item) =>
+          item.name === name && item.seller.displayName === design?.seller,
+      );
+      return product ? [product] : [];
+    }),
+    ...sorted,
+  ]
+    .filter(
+      (product, index, all) =>
+        all.findIndex((item) => item.id === product.id) === index,
+    )
+    .slice(0, 4);
   const isSaved = (id: string) =>
     localSaved[id] ??
     saved.data?.data.some((item) => item.productId === id) ??
@@ -100,7 +116,6 @@ export default function HomePage() {
     >
       <header className="figma-home-sticky">
         <div className="figma-home-header">
-          <div className="figma-home-island" aria-hidden="true" />
           <button
             className="figma-home-avatar"
             aria-label="Open side navigation"
@@ -174,34 +189,44 @@ export default function HomePage() {
         </div>
       </section>
       <div className="figma-home-divider" />
-      <section className="figma-home-popular">
-        <SectionHeader title="Popular products" />
-        <div className="figma-home-popular-strip">
-          {popular.map((name) => {
-            const design = homeDesignProducts.find((d) => d.name === name);
-            const product = items.find(
-              (p) => p.name === name && p.seller.displayName === design?.seller,
-            );
-            return product && design ? (
-              <Link
-                className="figma-home-popular-card"
-                href={`/product/${product.id}`}
-                key={name}
-              >
-                <div style={{ background: design.background }}>
-                  <img src={`/figma/${design.image}`} alt={name} />
-                </div>
-                <strong>{name}</strong>
-                <b>{money(product.price)}</b>
-                <small>
-                  {product.viewsLabel ? `${product.viewsLabel} views` : ""}
-                </small>
-              </Link>
-            ) : null;
-          })}
-        </div>
-      </section>
-      <div className="figma-home-divider" />
+      {popularItems.length ? (
+        <section className="figma-home-popular">
+          <SectionHeader title="Popular products" />
+          <div className="figma-home-popular-strip">
+            {popularItems.map((product) => {
+              const design = homeDesignProducts.find(
+                (d) =>
+                  d.name === product.name &&
+                  d.seller === product.seller.displayName,
+              );
+              return (
+                <Link
+                  className="figma-home-popular-card"
+                  href={`/product/${product.id}`}
+                  key={product.id}
+                >
+                  <div style={{ background: design?.background }}>
+                    {design ? (
+                      <img src={`/figma/${design.image}`} alt={product.name} />
+                    ) : product.images[0] ? (
+                      <img
+                        src={product.images[0].url}
+                        alt={product.images[0].altText ?? product.name}
+                      />
+                    ) : null}
+                  </div>
+                  <strong>{product.name}</strong>
+                  <b>{money(product.price)}</b>
+                  <small>
+                    {product.viewsLabel ? `${product.viewsLabel} views` : ""}
+                  </small>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+      {popularItems.length ? <div className="figma-home-divider" /> : null}
       <section className="figma-home-for-you">
         <SectionHeader title="For you" />
         {products.loading ? (

@@ -6,25 +6,15 @@
   position: sticky;
   top: 0;
   z-index: 5;
-  height: 222.76px;
   background: #fff;
 }
 .figma-home-header {
-  height: 113.984px;
+  height: 64px;
   position: relative;
-}
-.figma-home-island {
-  position: absolute;
-  width: 124px;
-  height: 36px;
-  border-radius: 999px;
-  background: #000;
-  top: 29px;
-  left: calc(50% - 62px);
 }
 .figma-home-avatar {
   position: absolute;
-  top: 60px;
+  top: 10px;
   left: 20px;
   width: 44px;
   height: 44px;
@@ -37,14 +27,14 @@
 }
 .figma-home-logo {
   position: absolute;
-  top: 68.49px;
+  top: 18.5px;
   left: calc(50% - 13.43px);
   width: 27px;
   height: 27px;
 }
 .figma-home-bell {
   position: absolute;
-  top: 60px;
+  top: 10px;
   right: 19.85px;
   width: 44px;
   height: 44px;
