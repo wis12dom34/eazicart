@@ -45,7 +45,10 @@ export default function SellerFinancePage() {
   if (!auth.user) {
     return (
       <PageState>
-        <SignInState message="Sign in to view your seller finance data." />
+        <SignInState
+          message="Sign in to view your seller finance data."
+          next="/seller/finance"
+        />
       </PageState>
     );
   }
