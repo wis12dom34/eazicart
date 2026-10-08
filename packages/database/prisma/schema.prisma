@@ -93,6 +93,8 @@ model User {
   reelSaves ReelSave[]
   reelViews ReelView[]
   reelComments ReelComment[]
+  buyerConversations Conversation[] @relation("ConversationBuyer")
+  sentMessages Message[] @relation("MessageSender")
 }
 
 model RefreshToken {
@@ -117,6 +119,7 @@ model SellerProfile {
   subscriptions SellerSubscription[]
   campaigns Campaign[]
   reels Reel[]
+  conversations Conversation[]
 }
 
 model Category {
@@ -337,6 +340,32 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   @@index([userId, createdAt])
+}
+
+model Conversation {
+  id String @id @default(cuid())
+  buyerId String
+  sellerId String
+  buyer User @relation("ConversationBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  messages Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([buyerId, sellerId])
+  @@index([buyerId, updatedAt])
+  @@index([sellerId, updatedAt])
+}
+
+model Message {
+  id String @id @default(cuid())
+  body String
+  conversationId String
+  senderId String
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
 }
 
 model Reel {
