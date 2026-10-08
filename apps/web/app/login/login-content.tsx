@@ -17,6 +17,11 @@ export function LoginContent() {
 
   useEffect(() => setReady(true), []);
 
+  const requestedNext = params.get("next");
+  const registerHref = requestedNext
+    ? `/register?next=${encodeURIComponent(safeNextPath(requestedNext))}`
+    : "/register";
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -102,7 +107,7 @@ export function LoginContent() {
       </form>
 
       <p className={styles.switchLink}>
-        Don’t have an account? <Link href="/register">Create one</Link>
+        Don’t have an account? <Link href={registerHref}>Create one</Link>
       </p>
     </main>
   );
