@@ -136,7 +136,7 @@ export default function ProfilePage() {
                 href="/reviews"
                 icon="reviews"
                 label="Reviews"
-                detail="Your ratings and feedback"
+                detail="Review history is coming soon"
               />
             </section>
             <section className={styles.account}>
@@ -151,7 +151,7 @@ export default function ProfilePage() {
                 href="/payment-methods"
                 icon="payment"
                 label="Payment methods"
-                detail="Wallet and cards"
+                detail="Pay securely with Paystack at checkout"
               />
               <ProfileRow
                 href="/notifications"
