@@ -44,7 +44,10 @@ export default function ProfilePage() {
         {auth.loading ? (
           <LoadingState />
         ) : !auth.user ? (
-          <SignInState message="Sign in to manage your EaziCart profile." />
+          <SignInState
+            message="Sign in to manage your EaziCart profile."
+            next="/profile"
+          />
         ) : (
           <div className={styles.content}>
             <section className={styles.identity} aria-label="Customer profile">
