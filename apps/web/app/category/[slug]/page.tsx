@@ -60,8 +60,14 @@ export default function CategoryPage() {
     ).values(),
   ).slice(0, 4);
   const loading = categories.loading || products.loading;
-  const error = categories.error || products.error;
-  const categoryMissing = !categories.loading && !categories.error && !category;
+  const loadError = categories.error || products.error;
+  const categoryMissing =
+    !categories.loading && !categories.error && !category;
+
+  const retryLoad = () => {
+    setSaveError("");
+    void Promise.all([categories.reload(), products.reload()]);
+  };
 
   const toggleSaved = async (productId: string, selected: boolean) => {
     if (!auth.isAuthenticated) {
@@ -106,7 +112,10 @@ export default function CategoryPage() {
           </header>
           <div className={styles.categoryState}>
             <strong>Category not found</strong>
-            Browse the current categories in Explore.
+            <p>Browse the current categories in Explore.</p>
+            <Link className="state-action" href="/explore">
+              Browse categories
+            </Link>
           </div>
         </div>
         <BottomNavigation />
@@ -119,7 +128,7 @@ export default function CategoryPage() {
       className={`app-shell ${styles.categoryPage}`}
       data-figma-node="31:50"
     >
-      <div className={styles.categoryViewport}>
+      <div className={styles.categoryViewport} aria-busy={loading}>
         <header className={styles.categoryHeader}>
           <Link
             className={styles.categoryBack}
@@ -134,7 +143,9 @@ export default function CategoryPage() {
         <p className={styles.categoryCount} aria-live="polite">
           {loading
             ? "Loading products…"
-            : `${products.data?.pagination.total ?? 0} products`}
+            : loadError
+              ? "Products unavailable"
+              : `${products.data?.pagination.total ?? 0} products`}
         </p>
 
         <form
@@ -151,14 +162,22 @@ export default function CategoryPage() {
           />
         </form>
 
-        {error ? (
+        {loading ? (
+          <div className={styles.categoryState} role="status">
+            <strong>Loading {categoryName}</strong>
+            Getting the latest products and sellers…
+          </div>
+        ) : loadError ? (
           <div className={styles.categoryState} role="alert">
             <strong>Category is unavailable</strong>
-            {error}
+            <p>We could not load this category. Check your connection and try again.</p>
+            <button className="error-retry" type="button" onClick={retryLoad}>
+              Try again
+            </button>
           </div>
         ) : null}
 
-        {!error && relatedCategories.length > 0 ? (
+        {!loading && !loadError && relatedCategories.length > 0 ? (
           <section
             className={styles.categorySection}
             aria-labelledby="browse-categories"
@@ -178,7 +197,7 @@ export default function CategoryPage() {
           </section>
         ) : null}
 
-        {!error && !loading ? (
+        {!loadError && !loading ? (
           <section
             className={`${styles.categorySection} ${styles.categoryProducts}`}
             aria-labelledby="category-products"
@@ -222,15 +241,29 @@ export default function CategoryPage() {
             ) : (
               <div className={styles.categoryState}>
                 <strong>No products found</strong>
-                {search
-                  ? `No products in ${categoryName} match “${search}”.`
-                  : `There are no products in ${categoryName} yet.`}
+                <p>
+                  {search
+                    ? `No products in ${categoryName} match “${search}”.`
+                    : `There are no products in ${categoryName} yet.`}
+                </p>
+                {search ? (
+                  <Link
+                    className="state-action"
+                    href={`/category/${encodeURIComponent(slug)}`}
+                  >
+                    Clear search
+                  </Link>
+                ) : (
+                  <Link className="state-action" href="/explore">
+                    Explore products
+                  </Link>
+                )}
               </div>
             )}
           </section>
         ) : null}
 
-        {!error && sellerRows.length > 0 ? (
+        {!loadError && !loading && sellerRows.length > 0 ? (
           <section
             className={`${styles.categorySection} ${styles.categorySellerSection}`}
             aria-labelledby="category-sellers"
