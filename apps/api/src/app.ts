@@ -7,6 +7,7 @@ import { MemoryAuthStore, type AuthStore } from "./modules/auth/store.js";
 import { registerAddresses } from "./modules/addresses/index.js";
 import { registerCart } from "./modules/cart/index.js";
 import { registerCategories } from "./modules/categories/index.js";
+import { registerConversations } from "./modules/conversations/index.js";
 import { registerFollows } from "./modules/follows/index.js";
 import { registerNotifications } from "./modules/notifications/index.js";
 import { registerOrders } from "./modules/orders/index.js";
@@ -88,5 +89,6 @@ export function buildApp(
   registerSavedProducts(app, dependencies.database);
   registerFollows(app, dependencies.database);
   registerNotifications(app, dependencies.database);
+  registerConversations(app, dependencies.database);
   return app;
 }
