@@ -55,6 +55,13 @@ export function AddressBookContent({
       auth.isAuthenticated ? addressesApi.list() : Promise.resolve(undefined),
     [auth.isAuthenticated],
   );
+  const signInParams = new URLSearchParams();
+  if (checkout) signInParams.set("checkout", "1");
+  if (selectedId) signInParams.set("selectedId", selectedId);
+  if (initialEditId) signInParams.set("editId", initialEditId);
+  const signInNext = signInParams.size
+    ? `/address-book?${signInParams.toString()}`
+    : "/address-book";
 
   const addAddress = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -326,7 +333,10 @@ export function AddressBookContent({
         {auth.loading || result.loading ? (
           <LoadingState />
         ) : !user ? (
-          <SignInState message="Sign in to manage delivery addresses." />
+          <SignInState
+            message="Sign in to manage delivery addresses."
+            next={signInNext}
+          />
         ) : result.error ? (
           <ErrorState
             message={result.error}
