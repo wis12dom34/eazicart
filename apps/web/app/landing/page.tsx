@@ -364,8 +364,8 @@ export default function EaziCartLandingPage() {
               <p>Reach distributors, retailers and businesses looking for your products.</p>
             </div>
             <div className={styles.catalogue}>
-              <ProductCard {...products[0]} />
-              <ProductCard {...products[1]} />
+              <ProductCard {...products[0]!} />
+              <ProductCard {...products[1]!} />
             </div>
           </div>
         </div>
