@@ -70,7 +70,10 @@ export default function SellerOrderDetailPage() {
   if (!auth.user) {
     return (
       <DetailShell>
-        <SignInState message="Sign in to view seller orders." />
+        <SignInState
+          message="Sign in to view seller orders."
+          next={`/seller/orders/${params.id}`}
+        />
       </DetailShell>
     );
   }
