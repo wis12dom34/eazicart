@@ -25,9 +25,9 @@ afterEach(async () => Promise.all(apps.splice(0).map((app) => app.close())));
 describe("Reel feed seller scope", () => {
   it("filters the database query by seller without loading unrelated reels", async () => {
     let receivedQuery: ReelFindManyQuery | undefined;
-    const findMany = vi.fn(async (query: ReelFindManyQuery) => {
+    const findMany = vi.fn((query: ReelFindManyQuery) => {
       receivedQuery = query;
-      return [];
+      return Promise.resolve([]);
     });
     const database = { reel: { findMany } } as unknown as PrismaClient;
     const app = buildApp(config, { database });
