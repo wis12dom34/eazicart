@@ -125,7 +125,10 @@ function formatConversationTime(value: string) {
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate();
 
-  return new Intl.DateTimeFormat("en-NG", sameDay
-    ? { hour: "numeric", minute: "2-digit" }
-    : { day: "numeric", month: "short" }).format(date);
+  return new Intl.DateTimeFormat(
+    "en-NG",
+    sameDay
+      ? { hour: "numeric", minute: "2-digit" }
+      : { day: "numeric", month: "short" },
+  ).format(date);
 }
