@@ -59,13 +59,17 @@ export function EmptyState({
 }
 export function SignInState({
   message = "Sign in to view this page.",
+  next,
 }: {
   message?: string;
+  next?: string;
 }) {
+  const href = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
+
   return (
     <section className="state-card">
       <p>{message}</p>
-      <Link className="dark-button compact" href="/login">
+      <Link className="dark-button compact" href={href}>
         Sign in
       </Link>
     </section>
