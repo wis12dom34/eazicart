@@ -49,7 +49,10 @@ export default function SellerSubscriptionPage() {
   if (!auth.user) {
     return (
       <PageState>
-        <SignInState message="Sign in to manage your seller subscription." />
+        <SignInState
+          message="Sign in to manage your seller subscription."
+          next="/seller/subscription"
+        />
       </PageState>
     );
   }
