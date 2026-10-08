@@ -45,7 +45,9 @@ test("customer and seller can exchange messages in one protected conversation", 
 
   await page.getByLabel("Message Chat Store").fill("Hi, is this available?");
   await page.getByRole("button", { name: "Send", exact: true }).click();
-  await expect(page.getByText("Hi, is this available?", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Hi, is this available?", { exact: true }),
+  ).toBeVisible();
 
   const conversationId = new URL(page.url()).pathname.split("/").at(-1);
   expect(conversationId).toBeTruthy();
@@ -70,7 +72,9 @@ test("customer and seller can exchange messages in one protected conversation", 
   expect(reply.status()).toBe(201);
 
   await page.reload();
-  await expect(page.getByText("Yes, it is available.", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Yes, it is available.", { exact: true }),
+  ).toBeVisible();
 
   const stranger = await register(request, "Chat Stranger");
   const blocked = await request.get(
