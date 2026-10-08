@@ -44,10 +44,14 @@ export default function ConversationPage({
   useEffect(() => {
     if (!auth.isAuthenticated) return;
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void messages.reload();
+      if (document.visibilityState !== "visible") return;
+      void conversationsApi
+        .messages(id)
+        .then((response) => messages.setData(response))
+        .catch(() => undefined);
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [auth.isAuthenticated, messages.reload]);
+  }, [auth.isAuthenticated, id, messages.setData]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -157,7 +161,10 @@ export default function ConversationPage({
         <div ref={bottomRef} aria-hidden="true" />
       </section>
 
-      <form className="eazicart-thread-composer" onSubmit={(event) => void send(event)}>
+      <form
+        className="eazicart-thread-composer"
+        onSubmit={(event) => void send(event)}
+      >
         {sendError ? (
           <p className="eazicart-thread-error" role="alert">
             {sendError}
