@@ -11,6 +11,7 @@ import { ordersApi } from "../../lib/api/orders";
 import { paymentsApi } from "../../lib/api/payments";
 import { useRequest } from "../hooks/use-request";
 import {
+  EmptyState,
   ErrorState,
   LoadingState,
   SignInState,
@@ -51,7 +52,10 @@ export default function CheckoutPage() {
   if (!auth.isAuthenticated)
     return (
       <CheckoutShell>
-        <SignInState message="Sign in to continue to checkout." />
+        <SignInState
+          message="Sign in to continue to checkout."
+          next="/checkout"
+        />
       </CheckoutShell>
     );
   if (cart.error || addresses.error)
@@ -75,13 +79,22 @@ export default function CheckoutPage() {
     addresses.data?.data[0];
   const data = cart.data?.data;
 
+  if (!data?.items.length) {
+    return (
+      <CheckoutShell>
+        <EmptyState
+          title="Your cart is empty"
+          message="Add something you like before continuing to checkout."
+          icon="bag"
+          action={{ href: "/explore", label: "Explore products" }}
+        />
+      </CheckoutShell>
+    );
+  }
+
   const place = async () => {
     if (!address) {
       setError("Add a delivery address before ordering.");
-      return;
-    }
-    if (!data?.items.length) {
-      setError("Your cart is empty.");
       return;
     }
 
@@ -153,47 +166,43 @@ export default function CheckoutPage() {
 
       <section className={styles.section}>
         <h2>Items</h2>
-        {!data?.items.length ? (
-          <p className={styles.emptyCopy}>Your cart is empty.</p>
-        ) : (
-          <div className={styles.items}>
-            {data.items.map((item) => (
-              <article className={styles.item} key={item.id}>
-                <div className={styles.itemThumb}>
-                  {item.product.images[0] ? (
-                    <img
-                      src={item.product.images[0].url}
-                      alt={item.product.images[0].altText ?? item.product.name}
-                    />
-                  ) : null}
-                </div>
-                <div className={styles.itemCopy}>
-                  <strong>{item.product.name}</strong>
-                  <span>
-                    {item.product.seller.displayName} · Qty {item.quantity}
-                  </span>
-                </div>
-                <strong className={styles.itemPrice}>
-                  {money(item.lineTotal)}
-                </strong>
-              </article>
-            ))}
-          </div>
-        )}
+        <div className={styles.items}>
+          {data.items.map((item) => (
+            <article className={styles.item} key={item.id}>
+              <div className={styles.itemThumb}>
+                {item.product.images[0] ? (
+                  <img
+                    src={item.product.images[0].url}
+                    alt={item.product.images[0].altText ?? item.product.name}
+                  />
+                ) : null}
+              </div>
+              <div className={styles.itemCopy}>
+                <strong>{item.product.name}</strong>
+                <span>
+                  {item.product.seller.displayName} · Qty {item.quantity}
+                </span>
+              </div>
+              <strong className={styles.itemPrice}>
+                {money(item.lineTotal)}
+              </strong>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className={styles.summary}>
         <h2>Order summary</h2>
         <div>
           <span>Subtotal</span>
-          <strong>{money(data?.subtotal ?? "0")}</strong>
+          <strong>{money(data.subtotal)}</strong>
         </div>
         <div>
           <span>Delivery slot</span>
           <span>
-            {data?.delivery === "0"
+            {data.delivery === "0"
               ? "Free"
-              : data?.delivery
+              : data.delivery
                 ? money(data.delivery)
                 : "Not added"}
           </span>
@@ -201,12 +210,12 @@ export default function CheckoutPage() {
         <div>
           <span>Service fee</span>
           <span>
-            {data?.serviceFee != null ? money(data.serviceFee) : "Not added"}
+            {data.serviceFee != null ? money(data.serviceFee) : "Not added"}
           </span>
         </div>
         <div className={styles.total}>
           <span>Total</span>
-          <strong>{money(data?.total ?? "0")}</strong>
+          <strong>{money(data.total)}</strong>
         </div>
       </section>
 
@@ -218,7 +227,7 @@ export default function CheckoutPage() {
         ) : null}
         <button
           aria-label="Place order"
-          disabled={submitting || !data?.items.length}
+          disabled={submitting}
           className={styles.placeButton}
           type="button"
           onClick={() => void place()}
