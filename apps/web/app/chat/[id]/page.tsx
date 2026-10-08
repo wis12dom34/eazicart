@@ -40,6 +40,7 @@ export default function ConversationPage({
         : Promise.resolve({ data: [] }),
     [auth.isAuthenticated, id],
   );
+  const setMessageData = messages.setData;
 
   useEffect(() => {
     if (!auth.isAuthenticated) return;
@@ -47,11 +48,11 @@ export default function ConversationPage({
       if (document.visibilityState !== "visible") return;
       void conversationsApi
         .messages(id)
-        .then((response) => messages.setData(response))
+        .then((response) => setMessageData(response))
         .catch(() => undefined);
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [auth.isAuthenticated, id, messages.setData]);
+  }, [auth.isAuthenticated, id, setMessageData]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
