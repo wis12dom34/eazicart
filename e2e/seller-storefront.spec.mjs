@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-const api = "http://localhost:3001";
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
+const api = process.env.E2E_API_BASE_URL ?? "http://localhost:3001";
 
 async function register(request, name) {
   const response = await request.post(`${api}/auth/register`, {
@@ -126,7 +127,7 @@ test("seller can edit storefront details from the workspace and see them publicl
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 
   await page.goto("/seller/dashboard");
   await expect(
@@ -140,7 +141,7 @@ test("seller can edit storefront details from the workspace and see them publicl
     page.getByRole("heading", { name: "Storefront UI Store", exact: true }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Manage store" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/seller/store");
+  await expect(page).toHaveURL(`${web}/seller/store`);
   await expect(
     page.getByRole("heading", { name: "Manage your storefront" }),
   ).toBeVisible();
@@ -161,7 +162,9 @@ test("seller can edit storefront details from the workspace and see them publicl
   ).toBeVisible();
 
   await page.getByRole("link", { name: "View public store" }).click();
-  await expect(page).toHaveURL(/http:\/\/localhost:3000\/seller\/.+/);
+  await expect(page).toHaveURL(
+    new RegExp(`^${web.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/seller/.+`),
+  );
   await expect(
     page
       .getByRole("heading", { name: "Storefront UI Updated", exact: true })
