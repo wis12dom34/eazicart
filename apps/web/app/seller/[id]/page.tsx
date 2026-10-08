@@ -48,7 +48,7 @@ export default function SellerPage({
     return (
       <main className={`app-shell ${styles.page}`}>
         <SellerBackLink />
-        <LoadingState />
+        <LoadingState label="Loading seller…" />
       </main>
     );
   }
@@ -57,7 +57,10 @@ export default function SellerPage({
     return (
       <main className={`app-shell ${styles.page}`}>
         <SellerBackLink />
-        <ErrorState message={seller.error || "Seller not found"} />
+        <ErrorState
+          message={seller.error || "Seller not found"}
+          retry={() => void seller.reload()}
+        />
       </main>
     );
   }
@@ -88,8 +91,7 @@ export default function SellerPage({
       setMessage("");
       if (following) await followsApi.unfollow(currentSeller.userId);
       else await followsApi.follow(currentSeller.userId);
-      await follows.reload();
-      await count.reload();
+      await Promise.all([follows.reload(), count.reload()]);
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Unable to update follow",
@@ -116,11 +118,15 @@ export default function SellerPage({
             <button
               className={`${styles.followButton} ${following ? styles.following : ""}`}
               type="button"
-              disabled={auth.loading || follows.loading}
+              disabled={auth.loading || follows.loading || count.loading}
               aria-pressed={following}
               onClick={() => void follow()}
             >
-              {following ? "Following" : "Follow"}
+              {follows.loading || count.loading
+                ? "Updating…"
+                : following
+                  ? "Following"
+                  : "Follow"}
             </button>
           </div>
           <p className={styles.metrics}>
@@ -134,7 +140,7 @@ export default function SellerPage({
       </section>
 
       {message ? (
-        <p className={styles.alert} role="alert">
+        <p className={styles.alert} role="alert" aria-live="polite">
           {message}
         </p>
       ) : null}
