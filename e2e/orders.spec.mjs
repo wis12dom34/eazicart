@@ -89,7 +89,7 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
     page.getByText("Service fee", { exact: true }).locator(".."),
   ).toContainText("Not added");
 
-  await page.getByRole("link", { name: "Track package" }).click();
+  await page.getByRole("link", { name: "View order status" }).click();
   await expect(page).toHaveURL(`${web}/tracking/${order.id}`);
   await expect(
     page.getByRole("heading", { name: "Track Order", exact: true }),
