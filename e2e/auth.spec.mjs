@@ -88,11 +88,15 @@ test("new customers keep the protected destination through login and registratio
   ).toBeVisible();
 });
 
-test("tracking keeps its protected destination through sign in", async ({ page }) => {
+test("tracking keeps its protected destination through sign in", async ({
+  page,
+}) => {
   const orderId = "order-for-auth-return";
 
   await page.goto(`/tracking/${orderId}`);
-  await expect(page.getByText("Sign in to view this order status.")).toBeVisible();
+  await expect(
+    page.getByText("Sign in to view this order status."),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute(
     "href",
     `/login?next=${encodeURIComponent(`/tracking/${orderId}`)}`,
