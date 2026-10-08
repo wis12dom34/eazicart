@@ -206,10 +206,10 @@
 
 .preferenceRow {
   height: 56px;
+  padding: 0 21px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 21px;
   color: #0a0a0d;
   text-decoration: none;
 }
@@ -228,26 +228,13 @@
   white-space: nowrap;
 }
 
-.switch {
-  position: relative;
-  width: 46px;
-  height: 28px;
+.preferenceAction {
   flex: none;
-  margin-right: 25px;
-  border-radius: 14px;
-  background: #0a0a0d;
+  color: #6b707a;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.switch::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #fff;
-}
 .helpRow {
   height: 58px;
   margin-top: 10px;
