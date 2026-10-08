@@ -44,7 +44,10 @@ export default function SellerCustomersPage() {
   if (!auth.user) {
     return (
       <SellerCustomersShell>
-        <SignInState message="Sign in to manage seller customers." />
+        <SignInState
+          message="Sign in to manage seller customers."
+          next="/seller/customers"
+        />
       </SellerCustomersShell>
     );
   }
