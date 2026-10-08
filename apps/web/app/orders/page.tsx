@@ -76,7 +76,7 @@ export default function OrdersPage() {
           {auth.loading || result.loading ? (
             <LoadingState label="Loading orders…" />
           ) : !auth.isAuthenticated ? (
-            <SignInState message="Sign in to see your orders." />
+            <SignInState message="Sign in to see your orders." next="/orders" />
           ) : result.error ? (
             <ErrorState
               message={result.error}
@@ -92,6 +92,9 @@ export default function OrdersPage() {
           ) : !visibleOrders.length ? (
             <section className={styles.filteredEmpty}>
               <p>No {filterLabels[filter].toLowerCase()} orders.</p>
+              <button type="button" onClick={() => setFilter("ALL")}>
+                View all orders
+              </button>
             </section>
           ) : (
             <section className={styles.orderList} aria-label="Orders">
