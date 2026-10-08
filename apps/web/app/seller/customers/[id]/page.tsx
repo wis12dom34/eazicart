@@ -45,7 +45,10 @@ export default function SellerCustomerDetailPage() {
   if (!auth.user) {
     return (
       <DetailShell>
-        <SignInState message="Sign in to view seller customers." />
+        <SignInState
+          message="Sign in to view seller customers."
+          next={`/seller/customers/${params.id}`}
+        />
       </DetailShell>
     );
   }
