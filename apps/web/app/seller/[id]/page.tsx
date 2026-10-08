@@ -30,7 +30,10 @@ export default function SellerPage({
     [auth.isAuthenticated],
   );
   const products = useRequest(() => sellersApi.products(id), [id]);
-  const reels = useRequest(() => reelsApi.feed({ limit: 20 }), [id]);
+  const reels = useRequest(
+    () => reelsApi.feed({ sellerId: id, limit: 20 }),
+    [id],
+  );
   const count = useRequest(
     () => followsApi.count(seller.data?.data.userId ?? id),
     [seller.data?.data.userId, id],
@@ -68,9 +71,7 @@ export default function SellerPage({
   const currentSeller = seller.data.data;
   const productCount =
     currentSeller._count?.products ?? products.data?.data.length ?? 0;
-  const sellerReels = (reels.data?.data ?? []).filter(
-    (reel) => reel.seller?.id === id || reel.product?.seller.id === id,
-  );
+  const sellerReels = reels.data?.data ?? [];
   const followerCount =
     count.data?.data.count ?? currentSeller.followerCount ?? 0;
   const initials = currentSeller.displayName
