@@ -117,7 +117,16 @@ export function registerConversations(
   app.get("/conversations/:id/messages", auth, async (request) => {
     const uid = userId(request);
     const { id } = conversationParams.parse(request.params);
-    await requireConversation(id, uid);
+    const conversation = await requireConversation(id, uid);
+
+    await db().conversation.update({
+      where: { id },
+      data:
+        conversation.buyerId === uid
+          ? { buyerUnreadCount: 0 }
+          : { sellerUnreadCount: 0 },
+    });
+
     const rows = await db().message.findMany({
       where: { conversationId: id },
       include: { sender: { select: { id: true, name: true } } },
@@ -131,7 +140,11 @@ export function registerConversations(
     const uid = userId(request);
     const { id } = conversationParams.parse(request.params);
     const input = sendMessageBody.parse(request.body);
-    await requireConversation(id, uid);
+    const conversation = await requireConversation(id, uid);
+    const unreadUpdate =
+      conversation.buyerId === uid
+        ? { sellerUnreadCount: { increment: 1 } }
+        : { buyerUnreadCount: { increment: 1 } };
 
     const [data] = await db().$transaction([
       db().message.create({
@@ -140,7 +153,7 @@ export function registerConversations(
       }),
       db().conversation.update({
         where: { id },
-        data: { updatedAt: new Date() },
+        data: { updatedAt: new Date(), ...unreadUpdate },
       }),
     ]);
 
