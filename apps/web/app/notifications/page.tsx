@@ -118,7 +118,10 @@ export default function Notifications() {
           </div>
         ) : !auth.isAuthenticated ? (
           <div className={styles.stateWrap}>
-            <SignInState message="Sign in to view your notifications." />
+            <SignInState
+              message="Sign in to view your notifications."
+              next="/notifications"
+            />
           </div>
         ) : result.error ? (
           <div className={styles.stateWrap}>
