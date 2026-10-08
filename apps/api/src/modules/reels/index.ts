@@ -9,6 +9,7 @@ const feedQuery = z.object({
   limit: z.coerce.number().int().min(1).max(20).default(8),
   source: z.enum(["EAZICART", "YOUTUBE", "TIKTOK", "PARTNER"]).optional(),
   productId: z.string().min(1).optional(),
+  sellerId: z.string().min(1).optional(),
   reelId: z.string().min(1).optional(),
 });
 
@@ -143,6 +144,7 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
       status: "PUBLISHED",
       source: query.source,
       productId: query.productId,
+      sellerId: query.sellerId,
       id: query.reelId,
       OR: cursor
         ? [
