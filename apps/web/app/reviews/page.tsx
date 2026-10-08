@@ -27,20 +27,18 @@ export default function ReviewsPage() {
       {auth.loading ? (
         <LoadingState />
       ) : !auth.user ? (
-        <SignInState message="Sign in to view your reviews." />
+        <SignInState message="Sign in to view your reviews." next="/reviews" />
       ) : (
-        <>
-          <section className={styles.empty} aria-label="Reviews unavailable">
-            <span className={styles.emptyIcon}>
-              <Icon name="star" size={22} />
-            </span>
-            <h2>Reviews are not available yet</h2>
-            <p>
-              Your review history will appear here when customer reviews are
-              available in EaziCart.
-            </p>
-          </section>
-        </>
+        <section className={styles.empty} aria-label="Reviews unavailable">
+          <span className={styles.emptyIcon}>
+            <Icon name="star" size={22} />
+          </span>
+          <h2>Reviews are not available yet</h2>
+          <p>
+            Your review history will appear here when customer reviews are
+            available in EaziCart.
+          </p>
+        </section>
       )}
       <BottomNavigation />
     </main>
