@@ -14,12 +14,21 @@ const config: AppConfig = {
   WEB_ORIGIN: "http://localhost:3000",
 };
 
+type ReelFindManyQuery = {
+  where?: { status?: string; sellerId?: string };
+  take?: number;
+};
+
 const apps: ReturnType<typeof buildApp>[] = [];
 afterEach(async () => Promise.all(apps.splice(0).map((app) => app.close())));
 
 describe("Reel feed seller scope", () => {
   it("filters the database query by seller without loading unrelated reels", async () => {
-    const findMany = vi.fn().mockResolvedValue([]);
+    let receivedQuery: ReelFindManyQuery | undefined;
+    const findMany = vi.fn(async (query: ReelFindManyQuery) => {
+      receivedQuery = query;
+      return [];
+    });
     const database = { reel: { findMany } } as unknown as PrismaClient;
     const app = buildApp(config, { database });
     apps.push(app);
@@ -35,14 +44,8 @@ describe("Reel feed seller scope", () => {
       pagination: { nextCursor: null, hasMore: false },
     });
     expect(findMany).toHaveBeenCalledTimes(1);
-    expect(findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          status: "PUBLISHED",
-          sellerId: "seller-123",
-        }),
-        take: 21,
-      }),
-    );
+    expect(receivedQuery?.where?.status).toBe("PUBLISHED");
+    expect(receivedQuery?.where?.sellerId).toBe("seller-123");
+    expect(receivedQuery?.take).toBe(21);
   });
 });
