@@ -176,14 +176,29 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
   expect(sellerTwoCleanup.status()).toBe(204);
 });
 
-test("seller workspace keeps its protected destination through sign in", async ({
+test("seller workspace keeps protected destinations through sign in", async ({
   page,
 }) => {
-  await page.goto("/seller/dashboard");
-  await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute(
-    "href",
-    "/login?next=%2Fseller%2Fdashboard",
-  );
+  const routes = [
+    "/seller/dashboard",
+    "/seller/products",
+    "/seller/orders",
+    "/seller/orders/order-auth-return",
+    "/seller/customers",
+    "/seller/customers/customer-auth-return",
+    "/seller/finance",
+    "/seller/store",
+    "/seller/subscription",
+    "/seller/reels",
+  ];
+
+  for (const route of routes) {
+    await page.goto(route);
+    await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      `/login?next=${encodeURIComponent(route)}`,
+    );
+  }
 });
 
 test("seller workspace lets an authenticated customer create a store without fake analytics", async ({
