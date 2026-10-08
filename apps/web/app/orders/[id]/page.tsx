@@ -117,7 +117,9 @@ export default function OrderDetail({
           <strong>{orderStatusLabel(order.status)}</strong>
           <p>{orderStatusCopy(order.status)}</p>
         </div>
-        <Link href={`/tracking/${order.id}`}>Track package</Link>
+        <Link href={`/tracking/${order.id}`}>
+          {order.tracking ? "Track package" : "View order status"}
+        </Link>
       </section>
 
       <section className={styles.section}>
