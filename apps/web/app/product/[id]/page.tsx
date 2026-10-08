@@ -52,7 +52,7 @@ export default function ProductPage({
     success: string,
   ) => {
     if (!auth.isAuthenticated) {
-      router.push(`/login?next=/product/${id}`);
+      router.push(`/login?next=${encodeURIComponent(`/product/${id}`)}`);
       return;
     }
 
@@ -72,7 +72,7 @@ export default function ProductPage({
   if (result.loading) {
     return (
       <main className="app-shell">
-        <Header title="Product" back="/" />
+        <Header title="Product" back="/explore" />
         <LoadingState label="Loading product…" />
       </main>
     );
@@ -81,7 +81,7 @@ export default function ProductPage({
   if (result.error) {
     return (
       <main className="app-shell">
-        <Header title="Product" back="/" />
+        <Header title="Product" back="/explore" />
         <ErrorState message={result.error} retry={() => void result.reload()} />
       </main>
     );
@@ -90,8 +90,13 @@ export default function ProductPage({
   if (!product) {
     return (
       <main className="app-shell">
-        <Header title="Product" back="/" />
-        <EmptyState message="Product not found." />
+        <Header title="Product" back="/explore" />
+        <EmptyState
+          title="Product unavailable"
+          message="This product may have been removed or is no longer available."
+          icon="bag"
+          action={{ href: "/explore", label: "Explore products" }}
+        />
       </main>
     );
   }
@@ -129,7 +134,7 @@ export default function ProductPage({
     <main className={`app-shell detail-page ${styles.page}`}>
       <Header
         title="Product"
-        back="/"
+        back="/explore"
         action={
           <div className={styles.headerActions}>
             <button
@@ -213,6 +218,15 @@ export default function ProductPage({
           {inStock ? `${product.stock} in stock` : "Out of stock"}
         </p>
 
+        {!inStock ? (
+          <div className={styles.stockRecovery} role="status">
+            <p>This item is unavailable right now.</p>
+            <Link href={`/category/${product.category.slug}`}>
+              See similar products
+            </Link>
+          </div>
+        ) : null}
+
         <Link
           href={`/seller/${product.seller.id}`}
           className={`seller-line ${styles.sellerCard}`}
@@ -261,7 +275,11 @@ export default function ProductPage({
             )
           }
         >
-          {busyAction === "cart" ? "Adding…" : "Add to Cart"}
+          {busyAction === "cart"
+            ? "Adding…"
+            : inStock
+              ? "Add to Cart"
+              : "Out of Stock"}
         </button>
         <button
           disabled={!inStock || busyAction !== null}
@@ -277,7 +295,11 @@ export default function ProductPage({
             )
           }
         >
-          {busyAction === "buy" ? "Preparing…" : "Buy Now"}
+          {busyAction === "buy"
+            ? "Preparing…"
+            : inStock
+              ? "Buy Now"
+              : "Unavailable"}
         </button>
       </div>
     </main>
