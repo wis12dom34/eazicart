@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
 import { cartApi } from "../../lib/api/cart";
+import { conversationsApi } from "../../lib/api/conversations";
 import styles from "./bottom-navigation.module.css";
 
 const tabs = [
@@ -23,9 +24,11 @@ const tabs = [
 
 export function BottomNavigation({
   cartCount,
+  chatCount,
   activeHref,
 }: {
   cartCount?: number;
+  chatCount?: number;
   activeHref?: string;
 }) {
   const path = usePathname();
@@ -37,9 +40,27 @@ export function BottomNavigation({
         : Promise.resolve(undefined),
     [cartCount, auth.isAuthenticated],
   );
+  const conversations = useRequest(
+    () =>
+      chatCount === undefined && auth.isAuthenticated
+        ? conversationsApi.list()
+        : Promise.resolve(undefined),
+    [chatCount, auth.isAuthenticated],
+  );
   const count =
     cartCount ??
     cart.data?.data.items.reduce((total, item) => total + item.quantity, 0);
+  const unreadCount =
+    chatCount ??
+    conversations.data?.data.reduce(
+      (total, conversation) =>
+        total +
+        (conversation.buyer.id === auth.user?.id
+          ? conversation.buyerUnreadCount
+          : conversation.sellerUnreadCount),
+      0,
+    );
+
   return (
     <nav className={styles.nav} aria-label="Customer navigation">
       {tabs.map((tab) => {
@@ -58,6 +79,13 @@ export function BottomNavigation({
               : active && ["Explore", "Reels"].includes(tab.label)
                 ? `${tab.icon}-active`
                 : tab.icon;
+        const badgeCount =
+          tab.label === "Cart"
+            ? count
+            : tab.label === "Chat"
+              ? unreadCount
+              : undefined;
+
         return (
           <Link
             key={tab.href}
@@ -68,9 +96,12 @@ export function BottomNavigation({
           >
             <span className={styles.icon}>
               <img src={`/figma/${icon}.svg`} alt="" />
-              {tab.label === "Cart" && !!count && (
-                <b className={styles.badge}>
-                  {(count ?? 0) > 99 ? "99+" : count}
+              {!!badgeCount && (
+                <b
+                  className={styles.badge}
+                  aria-label={`${badgeCount} ${tab.label === "Chat" ? "unread messages" : "items"}`}
+                >
+                  {(badgeCount ?? 0) > 99 ? "99+" : badgeCount}
                 </b>
               )}
             </span>
