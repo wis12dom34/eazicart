@@ -24,6 +24,14 @@ export default function ChatPage() {
         : Promise.resolve({ data: [] }),
     [auth.isAuthenticated],
   );
+  const totalUnread = conversations.data?.data.reduce(
+    (total, conversation) =>
+      total +
+      (conversation.buyer.id === auth.user?.id
+        ? conversation.buyerUnreadCount
+        : conversation.sellerUnreadCount),
+    0,
+  );
 
   return (
     <main className="app-shell with-nav eazicart-chat-page">
@@ -116,7 +124,7 @@ export default function ChatPage() {
         </section>
       )}
 
-      <BottomNavigation activeHref="/chat" />
+      <BottomNavigation activeHref="/chat" chatCount={totalUnread} />
     </main>
   );
 }
