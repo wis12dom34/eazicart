@@ -39,7 +39,10 @@ export default function TrackingPage({
   if (!auth.isAuthenticated)
     return (
       <TrackingShell>
-        <SignInState message="Sign in to view this order status." />
+        <SignInState
+          message="Sign in to view this order status."
+          next={`/tracking/${id}`}
+        />
       </TrackingShell>
     );
   if (result.error || !result.data)
