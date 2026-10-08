@@ -89,10 +89,15 @@
   padding: 0 10px;
   border: 0;
   border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   color: var(--blue);
   font-size: 14px;
   font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .followButton:disabled {
