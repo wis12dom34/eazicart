@@ -13,6 +13,8 @@ export type Conversation = {
   id: string;
   buyerId: string;
   sellerId: string;
+  buyerUnreadCount: number;
+  sellerUnreadCount: number;
   buyer: { id: string; name: string };
   seller: {
     id: string;
