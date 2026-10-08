@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ProductGrid } from "../../components/product-card";
 import { ErrorState, LoadingState } from "../../components/async-state";
 import { Icon } from "../../components/icon";
+import { conversationsApi } from "../../../lib/api/conversations";
 import { sellersApi } from "../../../lib/api/sellers";
 import { followsApi } from "../../../lib/api/follows";
 import { reelsApi } from "../../../lib/api/reels";
@@ -39,6 +40,7 @@ export default function SellerPage({
     [seller.data?.data.userId, id],
   );
   const [message, setMessage] = useState("");
+  const [openingChat, setOpeningChat] = useState(false);
   const [activeTab, setActiveTab] = useState<SellerTab>("products");
 
   const following = Boolean(
@@ -69,6 +71,7 @@ export default function SellerPage({
   }
 
   const currentSeller = seller.data.data;
+  const ownStore = auth.user?.id === currentSeller.userId;
   const productCount =
     currentSeller._count?.products ?? products.data?.data.length ?? 0;
   const sellerReels = reels.data?.data ?? [];
@@ -84,7 +87,7 @@ export default function SellerPage({
 
   const follow = async () => {
     if (!auth.isAuthenticated) {
-      router.push(`/login?next=/seller/${id}`);
+      router.push(`/login?next=${encodeURIComponent(`/seller/${id}`)}`);
       return;
     }
 
@@ -97,6 +100,26 @@ export default function SellerPage({
       setMessage(
         error instanceof Error ? error.message : "Unable to update follow",
       );
+    }
+  };
+
+  const openChat = async () => {
+    if (!auth.isAuthenticated) {
+      router.push(`/login?next=${encodeURIComponent(`/seller/${id}`)}`);
+      return;
+    }
+    if (ownStore || openingChat) return;
+
+    setOpeningChat(true);
+    setMessage("");
+    try {
+      const conversation = await conversationsApi.start(id);
+      router.push(`/chat/${conversation.data.id}`);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Unable to open conversation",
+      );
+      setOpeningChat(false);
     }
   };
 
@@ -137,6 +160,18 @@ export default function SellerPage({
           {currentSeller.bio ? (
             <p className={styles.bio}>{currentSeller.bio}</p>
           ) : null}
+          <button
+            className={styles.messageButton}
+            type="button"
+            disabled={ownStore || openingChat}
+            onClick={() => void openChat()}
+          >
+            {ownStore
+              ? "Your store"
+              : openingChat
+                ? "Opening chat…"
+                : "Message"}
+          </button>
         </div>
       </section>
 
