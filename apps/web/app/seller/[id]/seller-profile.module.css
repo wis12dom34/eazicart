@@ -117,6 +117,23 @@
   line-height: 1.45;
 }
 
+.messageButton {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  border: 1px solid #d9dce1;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.messageButton:disabled {
+  background: #eceef1;
+  color: #8a9098;
+}
+
 .alert {
   margin: 12px 24px 0;
   color: #9b2c2c;
@@ -127,7 +144,7 @@
   margin: 28px 24px 0;
   border-bottom: 1px solid var(--border);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .tab {
