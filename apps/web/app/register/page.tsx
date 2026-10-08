@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { safeNextPath } from "../../lib/api/navigation";
 import { useAuth } from "../providers/auth-provider";
 import styles from "../auth.module.css";
 
@@ -19,6 +20,14 @@ export default function Register() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => setReady(true), []);
+
+  const requestedNext = ready
+    ? new URLSearchParams(window.location.search).get("next")
+    : null;
+  const safeNext = requestedNext ? safeNextPath(requestedNext) : null;
+  const loginHref = safeNext
+    ? `/login?next=${encodeURIComponent(safeNext)}`
+    : "/login";
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,7 +52,8 @@ export default function Register() {
     setBusy(true);
     try {
       await auth.register(name, email, password);
-      router.replace("/");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(safeNextPath(next));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to register");
       setBusy(false);
@@ -111,7 +121,7 @@ export default function Register() {
       </form>
 
       <p className={styles.switchLink}>
-        Already have an account? <Link href="/login">Sign in</Link>
+        Already have an account? <Link href={loginHref}>Sign in</Link>
       </p>
     </main>
   );
