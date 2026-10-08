@@ -2,7 +2,8 @@ import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { markOrderPaid } from "./helpers/paid-order.mjs";
 
-const api = "http://localhost:3001";
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
+const api = process.env.E2E_API_BASE_URL ?? "http://localhost:3001";
 
 async function register(request, name) {
   const response = await request.post(`${api}/auth/register`, {
@@ -175,6 +176,16 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
   expect(sellerTwoCleanup.status()).toBe(204);
 });
 
+test("seller workspace keeps its protected destination through sign in", async ({
+  page,
+}) => {
+  await page.goto("/seller/dashboard");
+  await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+    "href",
+    "/login?next=%2Fseller%2Fdashboard",
+  );
+});
+
 test("seller workspace lets an authenticated customer create a store without fake analytics", async ({
   page,
 }) => {
@@ -187,11 +198,11 @@ test("seller workspace lets an authenticated customer create a store without fak
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 
   await page.goto("/profile");
   await page.getByRole("link", { name: "Sell", exact: true }).click();
-  await expect(page).toHaveURL("http://localhost:3000/seller/dashboard");
+  await expect(page).toHaveURL(`${web}/seller/dashboard`);
   await expect(
     page.getByRole("heading", { name: "Start selling on EaziCart" }),
   ).toBeVisible();
@@ -216,4 +227,7 @@ test("seller workspace lets an authenticated customer create a store without fak
     "href",
     /^\/seller\//,
   );
+  await expect(
+    page.getByRole("link", { name: "Messages", exact: true }),
+  ).toHaveAttribute("href", "/chat");
 });
