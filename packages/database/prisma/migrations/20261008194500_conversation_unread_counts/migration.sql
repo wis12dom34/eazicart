@@ -1,0 +1,3 @@
+ALTER TABLE "Conversation"
+ADD COLUMN "buyerUnreadCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN "sellerUnreadCount" INTEGER NOT NULL DEFAULT 0;
