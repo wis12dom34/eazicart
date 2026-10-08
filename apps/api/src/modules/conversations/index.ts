@@ -1,0 +1,128 @@
+import type { PrismaClient } from "@eazicart/database";
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
+import { AppError } from "../../errors.js";
+import { protectedRoute, requireDatabase, userId } from "../shared.js";
+
+const conversationParams = z.object({ id: z.string().min(1) });
+const startConversationBody = z.object({ sellerId: z.string().min(1) });
+const sendMessageBody = z.object({
+  body: z.string().trim().min(1).max(2000),
+});
+
+const conversationInclude = {
+  buyer: { select: { id: true, name: true } },
+  seller: {
+    select: {
+      id: true,
+      displayName: true,
+      user: { select: { id: true, name: true } },
+    },
+  },
+  messages: {
+    orderBy: { createdAt: "desc" as const },
+    take: 1,
+    include: { sender: { select: { id: true, name: true } } },
+  },
+};
+
+export function registerConversations(
+  app: FastifyInstance,
+  client?: PrismaClient,
+) {
+  const db = () => requireDatabase(client);
+  const auth = protectedRoute(app);
+
+  const participantWhere = (uid: string) => ({
+    OR: [{ buyerId: uid }, { seller: { is: { userId: uid } } }],
+  });
+
+  const requireConversation = async (id: string, uid: string) => {
+    const conversation = await db().conversation.findFirst({
+      where: { id, ...participantWhere(uid) },
+      include: conversationInclude,
+    });
+    if (!conversation)
+      throw new AppError(
+        404,
+        "CONVERSATION_NOT_FOUND",
+        "Conversation not found",
+      );
+    return conversation;
+  };
+
+  app.get("/conversations", auth, async (request) => {
+    const uid = userId(request);
+    const data = await db().conversation.findMany({
+      where: participantWhere(uid),
+      include: conversationInclude,
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+    });
+    return { data };
+  });
+
+  app.post("/conversations", auth, async (request, reply) => {
+    const uid = userId(request);
+    const input = startConversationBody.parse(request.body);
+    const seller = await db().sellerProfile.findUnique({
+      where: { id: input.sellerId },
+      select: { id: true, userId: true },
+    });
+    if (!seller)
+      throw new AppError(404, "SELLER_NOT_FOUND", "Seller not found");
+    if (seller.userId === uid)
+      throw new AppError(
+        400,
+        "SELF_CONVERSATION",
+        "You cannot message your own store",
+      );
+
+    const existing = await db().conversation.findUnique({
+      where: {
+        buyerId_sellerId: { buyerId: uid, sellerId: seller.id },
+      },
+      include: conversationInclude,
+    });
+    if (existing) return reply.send({ data: existing });
+
+    const data = await db().conversation.create({
+      data: { buyerId: uid, sellerId: seller.id },
+      include: conversationInclude,
+    });
+    return reply.code(201).send({ data });
+  });
+
+  app.get("/conversations/:id/messages", auth, async (request) => {
+    const uid = userId(request);
+    const { id } = conversationParams.parse(request.params);
+    await requireConversation(id, uid);
+    const rows = await db().message.findMany({
+      where: { conversationId: id },
+      include: { sender: { select: { id: true, name: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+    return { data: rows.reverse() };
+  });
+
+  app.post("/conversations/:id/messages", auth, async (request, reply) => {
+    const uid = userId(request);
+    const { id } = conversationParams.parse(request.params);
+    const input = sendMessageBody.parse(request.body);
+    await requireConversation(id, uid);
+
+    const [data] = await db().$transaction([
+      db().message.create({
+        data: { conversationId: id, senderId: uid, body: input.body },
+        include: { sender: { select: { id: true, name: true } } },
+      }),
+      db().conversation.update({
+        where: { id },
+        data: { updatedAt: new Date() },
+      }),
+    ]);
+
+    return reply.code(201).send({ data });
+  });
+}
