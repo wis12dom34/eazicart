@@ -168,4 +168,13 @@ test("seller can edit storefront details from the workspace and see them publicl
       .first(),
   ).toBeVisible();
   await expect(page.getByText("Updated UI public bio").first()).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Manage store", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Follow", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Message", exact: true }),
+  ).toHaveCount(0);
 });
