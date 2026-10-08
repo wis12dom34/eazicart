@@ -61,8 +61,7 @@ export default function CategoryPage() {
   ).slice(0, 4);
   const loading = categories.loading || products.loading;
   const loadError = categories.error || products.error;
-  const categoryMissing =
-    !categories.loading && !categories.error && !category;
+  const categoryMissing = !categories.loading && !categories.error && !category;
 
   const retryLoad = () => {
     setSaveError("");
@@ -170,7 +169,10 @@ export default function CategoryPage() {
         ) : loadError ? (
           <div className={styles.categoryState} role="alert">
             <strong>Category is unavailable</strong>
-            <p>We could not load this category. Check your connection and try again.</p>
+            <p>
+              We could not load this category. Check your connection and try
+              again.
+            </p>
             <button className="error-retry" type="button" onClick={retryLoad}>
               Try again
             </button>
