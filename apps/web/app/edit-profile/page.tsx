@@ -64,7 +64,10 @@ export default function EditProfile() {
           {auth.loading ? (
             <LoadingState />
           ) : !auth.user ? (
-            <SignInState message="Sign in to edit your profile." />
+            <SignInState
+              message="Sign in to edit your profile."
+              next="/edit-profile"
+            />
           ) : (
             <>
               <div className={styles.avatarBlock}>
