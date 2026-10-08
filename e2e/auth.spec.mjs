@@ -83,5 +83,7 @@ test("new customers keep the protected destination through login and registratio
   await expect(
     page.getByRole("heading", { name: "Cart", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Your cart is empty", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Your cart is empty", { exact: true }),
+  ).toBeVisible();
 });
