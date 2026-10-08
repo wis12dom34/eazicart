@@ -98,7 +98,7 @@ export default function SettingsPage() {
               >
                 <Link className={styles.preferenceRow} href="/notifications">
                   <strong>Notifications</strong>
-                  <span>Manage</span>
+                  <span className={styles.preferenceAction}>Manage</span>
                 </Link>
               </section>
 
