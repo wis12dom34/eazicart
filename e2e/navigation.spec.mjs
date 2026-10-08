@@ -45,9 +45,10 @@ test("Chat is the working fifth customer navigation destination", async ({
   await expect(
     page.getByRole("heading", { name: "Chat", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "No conversations yet" }),
-  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+    "href",
+    "/login?next=%2Fchat",
+  );
   const nav = await expectCustomerNavigation(page, "Chat");
   await expect(nav.getByRole("link", { name: "Chat" })).toHaveAttribute(
     "aria-current",
