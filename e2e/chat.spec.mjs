@@ -54,7 +54,9 @@ test("customer and seller can exchange messages in one protected conversation", 
       data: { sellerId: seller.id },
     }),
   ]);
-  expect(starts.map((response) => response.status()).sort()).toEqual([200, 201]);
+  expect(starts.map((response) => response.status()).sort()).toEqual([
+    200, 201,
+  ]);
   const started = await Promise.all(starts.map((response) => response.json()));
   const conversationId = started[0].data.id;
   expect(started[1].data.id).toBe(conversationId);
