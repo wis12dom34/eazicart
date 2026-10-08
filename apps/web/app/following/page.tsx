@@ -96,7 +96,10 @@ export default function FollowingPage() {
         {auth.loading || result.loading ? (
           <LoadingState label="Loading followed sellers…" />
         ) : !auth.isAuthenticated ? (
-          <SignInState message="Sign in to view the sellers you follow." />
+          <SignInState
+            message="Sign in to view the sellers you follow."
+            next="/following"
+          />
         ) : result.error ? (
           <ErrorState
             message={result.error}
@@ -155,7 +158,7 @@ export default function FollowingPage() {
                       aria-label={`Unfollow ${displayName}`}
                       aria-busy={isRemoving}
                     >
-                      Following
+                      {isRemoving ? "Updating…" : "Following"}
                     </button>
                   </div>
                 </article>
