@@ -39,18 +39,35 @@ test("customer and seller can exchange messages in one protected conversation", 
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(`${web}/`);
 
+  const buyerToken = await page.evaluate(() => {
+    const stored = localStorage.getItem("eazicart.auth.tokens");
+    if (!stored) throw new Error("Missing buyer auth tokens");
+    return JSON.parse(stored).accessToken;
+  });
+  const starts = await Promise.all([
+    request.post(`${api}/conversations`, {
+      headers: headers(buyerToken),
+      data: { sellerId: seller.id },
+    }),
+    request.post(`${api}/conversations`, {
+      headers: headers(buyerToken),
+      data: { sellerId: seller.id },
+    }),
+  ]);
+  expect(starts.map((response) => response.status()).sort()).toEqual([200, 201]);
+  const started = await Promise.all(starts.map((response) => response.json()));
+  const conversationId = started[0].data.id;
+  expect(started[1].data.id).toBe(conversationId);
+
   await page.goto(`/seller/${seller.id}`);
   await page.getByRole("button", { name: "Message", exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`${web}/chat/.+`));
+  await expect(page).toHaveURL(`${web}/chat/${conversationId}`);
 
   await page.getByLabel("Message Chat Store").fill("Hi, is this available?");
   await page.getByRole("button", { name: "Send", exact: true }).click();
   await expect(
     page.getByText("Hi, is this available?", { exact: true }),
   ).toBeVisible();
-
-  const conversationId = new URL(page.url()).pathname.split("/").at(-1);
-  expect(conversationId).toBeTruthy();
 
   const sellerConversations = await request.get(`${api}/conversations`, {
     headers: headers(sellerAccount.token),
