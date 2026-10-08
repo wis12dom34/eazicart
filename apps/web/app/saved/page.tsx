@@ -94,7 +94,10 @@ export default function SavedPage() {
       {auth.loading || result.loading ? (
         <LoadingState label="Loading saved products…" />
       ) : !auth.isAuthenticated ? (
-        <SignInState message="Sign in to view your saved products." />
+        <SignInState
+          message="Sign in to view your saved products."
+          next="/saved"
+        />
       ) : result.error ? (
         <ErrorState message={result.error} retry={() => void result.reload()} />
       ) : savedProducts.length ? (
