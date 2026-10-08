@@ -204,7 +204,13 @@ function ConversationShell({
   );
 }
 
-function ThreadHeader({ title, sellerId }: { title: string; sellerId?: string }) {
+function ThreadHeader({
+  title,
+  sellerId,
+}: {
+  title: string;
+  sellerId?: string;
+}) {
   return (
     <header className="eazicart-thread-header">
       <Link href="/chat" aria-label="Back to conversations">
