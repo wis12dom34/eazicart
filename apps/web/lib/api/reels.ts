@@ -103,6 +103,7 @@ export const reelsApi = {
       limit?: number;
       source?: ReelSource;
       productId?: string;
+      sellerId?: string;
       reelId?: string;
     } = {},
   ) => {
@@ -114,6 +115,7 @@ export const reelsApi = {
           limit: params.limit ?? 8,
           source: params.source,
           productId: params.productId,
+          sellerId: params.sellerId,
           reelId: params.reelId,
         },
       },
@@ -122,11 +124,19 @@ export const reelsApi = {
     const productScopeMatches =
       !params.productId ||
       response.data?.some((reel) => reel.product?.id === params.productId);
+    const sellerScopeMatches =
+      !params.sellerId ||
+      response.data?.every(
+        (reel) =>
+          reel.seller?.id === params.sellerId ||
+          reel.product?.seller.id === params.sellerId,
+      );
     const reelScopeMatches =
       !params.reelId ||
       response.data?.some((reel) => reel.id === params.reelId);
     const scopedFeedMatches =
-      response.data?.length === 0 || (productScopeMatches && reelScopeMatches);
+      response.data?.length === 0 ||
+      (productScopeMatches && sellerScopeMatches && reelScopeMatches);
     if (
       response.pagination &&
       Array.isArray(response.data) &&
@@ -138,6 +148,17 @@ export const reelsApi = {
     if (params.reelId) {
       return {
         data: [],
+        pagination: { nextCursor: null, hasMore: false },
+      };
+    }
+
+    if (params.sellerId && Array.isArray(response.data)) {
+      return {
+        data: response.data.filter(
+          (reel) =>
+            reel.seller?.id === params.sellerId ||
+            reel.product?.seller.id === params.sellerId,
+        ),
         pagination: { nextCursor: null, hasMore: false },
       };
     }
