@@ -37,7 +37,10 @@ export default function SellerStorePage() {
     return (
       <main className={`app-shell ${styles.page}`}>
         <StoreHeader />
-        <SignInState message="Sign in to manage your storefront." />
+        <SignInState
+          message="Sign in to manage your storefront."
+          next="/seller/store"
+        />
       </main>
     );
   }
