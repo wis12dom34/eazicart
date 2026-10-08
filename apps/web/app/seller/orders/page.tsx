@@ -61,7 +61,10 @@ export default function SellerOrdersPage() {
   if (!auth.user) {
     return (
       <SellerOrdersShell>
-        <SignInState message="Sign in to manage seller orders." />
+        <SignInState
+          message="Sign in to manage seller orders."
+          next="/seller/orders"
+        />
       </SellerOrdersShell>
     );
   }
