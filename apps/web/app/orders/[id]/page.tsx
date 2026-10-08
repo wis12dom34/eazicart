@@ -55,7 +55,10 @@ export default function OrderDetail({
   if (!auth.isAuthenticated)
     return (
       <OrderShell>
-        <SignInState message="Sign in to view this order." />
+        <SignInState
+          message="Sign in to view this order."
+          next={`/orders/${id}`}
+        />
       </OrderShell>
     );
   if (result.error || !result.data)
