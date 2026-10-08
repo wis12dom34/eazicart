@@ -106,7 +106,10 @@ export default function PublishReelPage() {
     return (
       <main className={`app-shell ${styles.page}`}>
         {header}
-        <SignInState message="Sign in to publish a Reel." />
+        <SignInState
+          message="Sign in to publish a Reel."
+          next="/seller/reels"
+        />
       </main>
     );
   if (profile.error)
