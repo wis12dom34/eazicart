@@ -158,7 +158,10 @@ export default function SellerProductsPage() {
     return (
       <main className={`app-shell ${styles.page}`}>
         <SellerProductsHeader />
-        <SignInState message="Sign in to manage your seller products." />
+        <SignInState
+          message="Sign in to manage your seller products."
+          next="/seller/products"
+        />
       </main>
     );
   }
