@@ -30,17 +30,6 @@ export default function ReviewsPage() {
         <SignInState message="Sign in to view your reviews." />
       ) : (
         <>
-          <div className={styles.filters} aria-label="Review filters">
-            <button className={styles.filterActive} type="button" disabled>
-              All
-            </button>
-            <button className={styles.filter} type="button" disabled>
-              Products
-            </button>
-            <button className={styles.filter} type="button" disabled>
-              Sellers
-            </button>
-          </div>
           <section className={styles.empty} aria-label="Reviews unavailable">
             <span className={styles.emptyIcon}>
               <Icon name="star" size={22} />

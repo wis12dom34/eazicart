@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@eazicart/database";
+import { Prisma, type PrismaClient } from "@eazicart/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { AppError } from "../../errors.js";
@@ -9,10 +9,17 @@ const feedQuery = z.object({
   limit: z.coerce.number().int().min(1).max(20).default(8),
   source: z.enum(["EAZICART", "YOUTUBE", "TIKTOK", "PARTNER"]).optional(),
   productId: z.string().min(1).optional(),
+  reelId: z.string().min(1).optional(),
+});
+
+const commentsQuery = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
 });
 
 const createBody = z
   .object({
+    idempotencyKey: z.uuid().optional(),
     caption: z.string().trim().max(2200).nullable().optional(),
     videoUrl: z.url().optional(),
     thumbnailUrl: z.url().optional(),
@@ -22,6 +29,13 @@ const createBody = z
     message: "A video URL is required",
     path: ["videoUrl"],
   });
+
+const reelParams = z.object({ reelId: z.string().min(1) });
+const commentBody = z.object({ body: z.string().trim().min(1).max(1000) });
+const viewBody = z.object({
+  watchMs: z.coerce.number().int().min(0).max(86_400_000).default(0),
+  completed: z.boolean().default(false),
+});
 
 const include = {
   seller: {
@@ -42,6 +56,7 @@ const include = {
 };
 
 type Cursor = { publishedAt: string; id: string };
+type CommentCursor = { createdAt: string; id: string };
 
 function encodeCursor(cursor: Cursor) {
   return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
@@ -49,14 +64,51 @@ function encodeCursor(cursor: Cursor) {
 
 function decodeCursor(value: string): Cursor {
   try {
-    const parsed = JSON.parse(
+    const parsed: unknown = JSON.parse(
       Buffer.from(value, "base64url").toString("utf8"),
-    ) as Cursor;
-    if (!parsed.id || Number.isNaN(new Date(parsed.publishedAt).getTime()))
+    );
+    if (typeof parsed !== "object" || parsed === null)
       throw new Error("invalid cursor");
-    return parsed;
+
+    const { id, publishedAt } = parsed as Record<string, unknown>;
+    if (
+      typeof id !== "string" ||
+      id.length === 0 ||
+      typeof publishedAt !== "string" ||
+      Number.isNaN(new Date(publishedAt).getTime())
+    )
+      throw new Error("invalid cursor");
+
+    return { id, publishedAt };
   } catch {
     throw new AppError(400, "INVALID_CURSOR", "The reels cursor is invalid");
+  }
+}
+
+function encodeCommentCursor(cursor: CommentCursor) {
+  return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
+}
+
+function decodeCommentCursor(value: string): CommentCursor {
+  try {
+    const parsed: unknown = JSON.parse(
+      Buffer.from(value, "base64url").toString("utf8"),
+    );
+    if (typeof parsed !== "object" || parsed === null)
+      throw new Error("invalid cursor");
+
+    const { id, createdAt } = parsed as Record<string, unknown>;
+    if (
+      typeof id !== "string" ||
+      id.length === 0 ||
+      typeof createdAt !== "string" ||
+      Number.isNaN(new Date(createdAt).getTime())
+    )
+      throw new Error("invalid cursor");
+
+    return { id, createdAt };
+  } catch {
+    throw new AppError(400, "INVALID_CURSOR", "The comments cursor is invalid");
   }
 }
 
@@ -73,6 +125,16 @@ function serializeReel<
 
 export function registerReels(app: FastifyInstance, client?: PrismaClient) {
   const db = () => requireDatabase(client);
+  const auth = protectedRoute(app);
+
+  const requirePublishedReel = async (reelId: string) => {
+    const reel = await db().reel.findFirst({
+      where: { id: reelId, status: "PUBLISHED" },
+      select: { id: true },
+    });
+    if (!reel) throw new AppError(404, "REEL_NOT_FOUND", "Reel not found");
+    return reel;
+  };
 
   app.get("/reels/feed", async (request) => {
     const query = feedQuery.parse(request.query);
@@ -81,6 +143,7 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
       status: "PUBLISHED",
       source: query.source,
       productId: query.productId,
+      id: query.reelId,
       OR: cursor
         ? [
             { publishedAt: { lt: new Date(cursor.publishedAt) } },
@@ -118,7 +181,7 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
     };
   });
 
-  app.post("/reels", protectedRoute(app), async (request, reply) => {
+  app.post("/reels", auth, async (request, reply) => {
     const input = createBody.parse(request.body);
     const seller = await db().sellerProfile.findUnique({
       where: { userId: userId(request) },
@@ -130,6 +193,30 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
         "SELLER_REQUIRED",
         "Create a seller profile before publishing reels",
       );
+
+    // A lost response must not turn a retry into another public Reel.
+    const previousPublication = async () => {
+      if (!input.idempotencyKey) return null;
+      const previous = await db().reel.findUnique({
+        where: { id: input.idempotencyKey },
+        include,
+      });
+      if (
+        previous &&
+        (previous.sellerId !== seller.id ||
+          previous.videoUrl !== input.videoUrl ||
+          previous.status !== "PUBLISHED")
+      )
+        throw new AppError(
+          409,
+          "PUBLISH_CONFLICT",
+          "This publication key is already in use",
+        );
+      return previous;
+    };
+    const previous = await previousPublication();
+    if (previous)
+      return reply.code(200).send({ data: serializeReel(previous) });
 
     if (input.productId) {
       const product = await db().product.findFirst({
@@ -144,19 +231,166 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
         );
     }
 
-    const reel = await db().reel.create({
-      data: {
-        source: "EAZICART",
-        status: "PUBLISHED",
-        caption: input.caption,
-        videoUrl: input.videoUrl,
-        thumbnailUrl: input.thumbnailUrl,
-        sellerId: seller.id,
-        productId: input.productId,
+    try {
+      const reel = await db().reel.create({
+        data: {
+          ...(input.idempotencyKey ? { id: input.idempotencyKey } : {}),
+          source: "EAZICART",
+          status: "PUBLISHED",
+          caption: input.caption,
+          videoUrl: input.videoUrl,
+          thumbnailUrl: input.thumbnailUrl,
+          sellerId: seller.id,
+          productId: input.productId,
+        },
+        include,
+      });
+
+      return reply.code(201).send({ data: serializeReel(reel) });
+    } catch (error) {
+      if (
+        input.idempotencyKey &&
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const winner = await previousPublication();
+        if (winner)
+          return reply.code(200).send({ data: serializeReel(winner) });
+      }
+      throw error;
+    }
+  });
+
+  app.get("/reels/:reelId/interactions", auth, async (request) => {
+    const { reelId } = reelParams.parse(request.params);
+    await requirePublishedReel(reelId);
+    const uid = userId(request);
+    const [like, save] = await Promise.all([
+      db().reelLike.findUnique({
+        where: { userId_reelId: { userId: uid, reelId } },
+        select: { userId: true },
+      }),
+      db().reelSave.findUnique({
+        where: { userId_reelId: { userId: uid, reelId } },
+        select: { userId: true },
+      }),
+    ]);
+    return { data: { liked: Boolean(like), saved: Boolean(save) } };
+  });
+
+  app.post("/reels/:reelId/like", auth, async (request, reply) => {
+    const { reelId } = reelParams.parse(request.params);
+    await requirePublishedReel(reelId);
+    const uid = userId(request);
+    await db().reelLike.upsert({
+      where: { userId_reelId: { userId: uid, reelId } },
+      update: {},
+      create: { userId: uid, reelId },
+    });
+    const count = await db().reelLike.count({ where: { reelId } });
+    return reply.code(201).send({ data: { liked: true, count } });
+  });
+
+  app.delete("/reels/:reelId/like", auth, async (request, reply) => {
+    const { reelId } = reelParams.parse(request.params);
+    await requirePublishedReel(reelId);
+    await db().reelLike.deleteMany({
+      where: { userId: userId(request), reelId },
+    });
+    const count = await db().reelLike.count({ where: { reelId } });
+    return reply.send({ data: { liked: false, count } });
+  });
+
+  app.post("/reels/:reelId/save", auth, async (request, reply) => {
+    const { reelId } = reelParams.parse(request.params);
+    await requirePublishedReel(reelId);
+    const uid = userId(request);
+    await db().reelSave.upsert({
+      where: { userId_reelId: { userId: uid, reelId } },
+      update: {},
+      create: { userId: uid, reelId },
+    });
+    const count = await db().reelSave.count({ where: { reelId } });
+    return reply.code(201).send({ data: { saved: true, count } });
+  });
+
+  app.delete("/reels/:reelId/save", auth, async (request, reply) => {
+    const { reelId } = reelParams.parse(request.params);
+    await requirePublishedReel(reelId);
+    await db().reelSave.deleteMany({
+      where: { userId: userId(request), reelId },
+    });
+    const count = await db().reelSave.count({ where: { reelId } });
+    return reply.send({ data: { saved: false, count } });
+  });
+
+  app.get("/reels/:reelId/comments", async (request) => {
+    const { reelId } = reelParams.parse(request.params);
+    const query = commentsQuery.parse(request.query);
+    const cursor = query.cursor ? decodeCommentCursor(query.cursor) : null;
+    await requirePublishedReel(reelId);
+
+    const rows = await db().reelComment.findMany({
+      where: {
+        reelId,
+        OR: cursor
+          ? [
+              { createdAt: { lt: new Date(cursor.createdAt) } },
+              {
+                createdAt: new Date(cursor.createdAt),
+                id: { lt: cursor.id },
+              },
+            ]
+          : undefined,
       },
-      include,
+      include: { user: { select: { id: true, name: true } } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: query.limit + 1,
     });
 
-    return reply.code(201).send({ data: serializeReel(reel) });
+    const hasMore = rows.length > query.limit;
+    const page = hasMore ? rows.slice(0, query.limit) : rows;
+    const last = page.at(-1);
+
+    return {
+      data: [...page].reverse(),
+      pagination: {
+        nextCursor:
+          hasMore && last
+            ? encodeCommentCursor({
+                createdAt: last.createdAt.toISOString(),
+                id: last.id,
+              })
+            : null,
+        hasMore,
+      },
+    };
+  });
+
+  app.post("/reels/:reelId/comments", auth, async (request, reply) => {
+    const { reelId } = reelParams.parse(request.params);
+    const input = commentBody.parse(request.body);
+    await requirePublishedReel(reelId);
+    const data = await db().reelComment.create({
+      data: { reelId, userId: userId(request), body: input.body },
+      include: { user: { select: { id: true, name: true } } },
+    });
+    return reply.code(201).send({ data });
+  });
+
+  app.post("/reels/:reelId/views", auth, async (request, reply) => {
+    const { reelId } = reelParams.parse(request.params);
+    const input = viewBody.parse(request.body ?? {});
+    await requirePublishedReel(reelId);
+    const data = await db().reelView.create({
+      data: {
+        reelId,
+        userId: userId(request),
+        watchMs: input.watchMs,
+        completed: input.completed,
+      },
+      select: { id: true, watchMs: true, completed: true, createdAt: true },
+    });
+    return reply.code(201).send({ data });
   });
 }

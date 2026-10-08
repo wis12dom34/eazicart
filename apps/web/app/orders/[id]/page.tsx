@@ -123,15 +123,21 @@ export default function OrderDetail({
           {order.items.map((item) => {
             return (
               <article className={styles.item} key={item.id}>
-                {item.product?.name === "Nike Air Max 90" &&
-                item.product.seller.displayName === "Nike Official" ? (
+                {item.product ? (
                   <Link
                     className={styles.itemLink}
                     href={`/product/${item.product.id}`}
-                    aria-label="View Nike Air Max 90"
+                    aria-label={`View ${item.productName}`}
                   />
                 ) : null}
-                <div className={styles.thumb} aria-hidden="true" />
+                <div className={styles.thumb}>
+                  {item.product?.images[0] ? (
+                    <img
+                      src={item.product.images[0].url}
+                      alt={item.product.images[0].altText ?? item.productName}
+                    />
+                  ) : null}
+                </div>
                 <div className={styles.itemCopy}>
                   <strong>{item.productName}</strong>
                   <span>

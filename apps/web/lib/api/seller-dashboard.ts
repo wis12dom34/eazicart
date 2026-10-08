@@ -1,5 +1,10 @@
 import { apiRequest } from "./client";
-import type { DataResponse, Seller, SellerDashboard } from "./types";
+import type {
+  DataResponse,
+  Seller,
+  SellerDashboard,
+  SellerMapLocation,
+} from "./types";
 
 export type SellerProfileInput = {
   displayName?: string;
@@ -20,6 +25,26 @@ export const sellerDashboardApi = {
       method: "PATCH",
       auth: true,
       body: input,
+    }),
+  mapLocation: () =>
+    apiRequest<DataResponse<SellerMapLocation | null>>("/seller/map-location", {
+      auth: true,
+    }),
+  updateMapLocation: (input: {
+    latitude: number;
+    longitude: number;
+    label?: string | null;
+    visible?: boolean;
+  }) =>
+    apiRequest<DataResponse<SellerMapLocation>>("/seller/map-location", {
+      method: "PUT",
+      auth: true,
+      body: input,
+    }),
+  deleteMapLocation: () =>
+    apiRequest<void>("/seller/map-location", {
+      method: "DELETE",
+      auth: true,
     }),
   dashboard: () =>
     apiRequest<DataResponse<SellerDashboard>>("/seller/dashboard", {

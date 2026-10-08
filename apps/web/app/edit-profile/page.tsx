@@ -69,14 +69,9 @@ export default function EditProfile() {
             <>
               <div className={styles.avatarBlock}>
                 <div className={styles.avatar} aria-hidden="true" />
-                <button
-                  className={styles.photoButton}
-                  type="button"
-                  disabled
-                  title="Profile photo uploads are not available yet"
-                >
-                  Change photo
-                </button>
+                <span className={styles.photoButton}>
+                  Photo uploads unavailable
+                </span>
               </div>
 
               <form
@@ -100,7 +95,6 @@ export default function EditProfile() {
                         ? `@${auth.user.username}`
                         : "Not available yet"
                     }
-                    disabled
                     readOnly
                   />
                 </ProfileField>
@@ -108,7 +102,6 @@ export default function EditProfile() {
                   <input
                     className={styles.input}
                     value="Not available yet"
-                    disabled
                     readOnly
                   />
                 </ProfileField>
@@ -116,7 +109,6 @@ export default function EditProfile() {
                   <input
                     className={styles.input}
                     type="email"
-                    disabled
                     value={auth.user.email}
                     readOnly
                   />

@@ -282,3 +282,12 @@
     padding-left: 12px;
   }
 }
+.tabs a,
+.activeTab {
+  min-height: 44px;
+  height: 44px;
+}
+.activeTab {
+  border-color: #f97316;
+  background: #f97316;
+}

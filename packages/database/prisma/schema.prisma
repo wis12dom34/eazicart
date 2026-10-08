@@ -117,6 +117,19 @@ model SellerProfile {
   subscriptions SellerSubscription[]
   campaigns Campaign[]
   reels Reel[]
+  mapLocation SellerMapLocation?
+}
+
+model SellerMapLocation {
+  sellerId String @id
+  latitude Float
+  longitude Float
+  label String?
+  visible Boolean @default(false)
+  seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([visible, updatedAt])
 }
 
 model Category {

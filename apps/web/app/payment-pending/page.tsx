@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -116,28 +115,6 @@ export default function PaymentPending() {
       className={`app-shell ${styles.page} ${failed ? styles.failed : ""}`}
       data-figma-node={failed ? "212:122" : "212:104"}
     >
-      <div className={styles.islandHost}>
-        {failed ? (
-          <Link
-            className={styles.failedIsland}
-            href="/checkout"
-            aria-label="Payment failed. Tap to try again"
-          >
-            <img
-              src="/figma/payment-failed.svg"
-              width={20}
-              height={20}
-              alt=""
-            />
-            <span>
-              <strong>Payment failed</strong>
-              <small>Tap to try again</small>
-            </span>
-          </Link>
-        ) : (
-          <div aria-hidden="true" />
-        )}
-      </div>
       <h1>Payment status</h1>
       <section className={styles.pending} aria-live="polite">
         <h2>
@@ -209,9 +186,6 @@ function StatusShell({
 }) {
   return (
     <main className={`app-shell ${styles.page}`}>
-      <div className={styles.islandHost} aria-hidden="true">
-        <div />
-      </div>
       <h1>Payment status</h1>
       <section className={styles.pending}>
         <h2>{title}</h2>

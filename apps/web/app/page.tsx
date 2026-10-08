@@ -18,19 +18,6 @@ import type { Product } from "../lib/api/types";
 import { HomeSections } from "./home-sections";
 import { homeDesignProducts } from "./home-design";
 
-const stories = [
-  ["TechHub", "4.8", "1.2K"],
-  ["Nike Official", "4.9", "3.4K"],
-  ["Apple Store NG", "4.7", "980"],
-  ["HomeStyle NG", "4.8", "540"],
-  ["Glow Beauty", "4.8", "3.4K"],
-];
-const popular = [
-  "iPhone 15 Pro",
-  "AirPods Pro 2",
-  "Nike Air Max 90",
-  "Galaxy S25 Ultra",
-];
 export default function HomePage() {
   const auth = useAuth();
   const router = useRouter();
@@ -57,18 +44,13 @@ export default function HomePage() {
   const [feedback, setFeedback] = useState("");
   const closeDrawer = useCallback(() => setDrawer(false), []);
   const items = products.data?.data ?? [];
-  const sorted = [...items].sort((a, b) => {
-    const index = (product: Product) =>
-      homeDesignProducts.findIndex(
-        (d) =>
-          (d.name === product.name &&
-            d.seller === product.seller.displayName) ||
-          (d.name === "Nike Club Hoodie" &&
-            product.name === "Club Hoodie" &&
-            product.seller.displayName === "Nike Official"),
-      );
-    return (index(a) < 0 ? 100 : index(a)) - (index(b) < 0 ? 100 : index(b));
-  });
+  const sorted = [...items];
+  const popularItems = sorted.slice(0, 4);
+  const activeSellers = Array.from(
+    new Map(
+      sorted.map((product) => [product.seller.id, product.seller]),
+    ).values(),
+  ).slice(0, 8);
   const isSaved = (id: string) =>
     localSaved[id] ??
     saved.data?.data.some((item) => item.productId === id) ??
@@ -100,7 +82,6 @@ export default function HomePage() {
     >
       <header className="figma-home-sticky">
         <div className="figma-home-header">
-          <div className="figma-home-island" aria-hidden="true" />
           <button
             className="figma-home-avatar"
             aria-label="Open side navigation"
@@ -129,79 +110,82 @@ export default function HomePage() {
           <span>Search products, stores or brands</span>
         </Link>
         <nav className="figma-home-tabs" aria-label="Product discovery">
-          <Link className="active" href="/">
+          <Link className="active" href="/" aria-current="page">
             For You
           </Link>
-          {["Trending", "Categories", "Brands", "Sellers"].map((label) => (
-            <span
-              role="link"
-              aria-disabled="true"
-              title={`${label} screen is not connected yet`}
-              key={label}
-            >
-              {label}
-            </span>
-          ))}
+          <Link href="/explore?section=categories">Categories</Link>
+          <Link href="/explore?section=sellers">Sellers</Link>
         </nav>
       </header>
-      <section className="figma-home-stories" aria-label="Active Sellers">
-        <div className="figma-home-section-header">
-          <h2>
-            <img src="/figma/sparkle.svg" width={15} height={15} alt="" />
-            Active Sellers
-          </h2>
-          <span>
-            View all <b>›</b>
-          </span>
-        </div>
-        <div className="figma-home-story-strip">
-          {stories.map(([name, rating, sales], index) => (
-            <div className="figma-home-story" key={name}>
-              <img
-                src={`/figma/story-${index}.svg`}
-                alt=""
-                width={66}
-                height={66}
-              />
-              <strong>{name}</strong>
-              <small>
-                <span>{rating}</span>
-                <b>★</b>
-                <span>· {sales} sales</span>
-              </small>
-            </div>
-          ))}
-        </div>
-      </section>
-      <div className="figma-home-divider" />
-      <section className="figma-home-popular">
-        <SectionHeader title="Popular products" />
-        <div className="figma-home-popular-strip">
-          {popular.map((name) => {
-            const design = homeDesignProducts.find((d) => d.name === name);
-            const product = items.find(
-              (p) => p.name === name && p.seller.displayName === design?.seller,
-            );
-            return product && design ? (
+      {activeSellers.length ? (
+        <section className="figma-home-stories" aria-label="Active sellers">
+          <div className="figma-home-section-header">
+            <h2>
+              <img src="/figma/sparkle.svg" width={15} height={15} alt="" />
+              Sellers
+            </h2>
+            <Link href="/explore?section=sellers">
+              View all <b>›</b>
+            </Link>
+          </div>
+          <div className="figma-home-story-strip">
+            {activeSellers.map((seller) => (
               <Link
-                className="figma-home-popular-card"
-                href={`/product/${product.id}`}
-                key={name}
+                className="figma-home-story"
+                href={`/seller/${seller.id}`}
+                key={seller.id}
               >
-                <div style={{ background: design.background }}>
-                  <img src={`/figma/${design.image}`} alt={name} />
-                </div>
-                <strong>{name}</strong>
-                <b>{money(product.price)}</b>
-                <small>
-                  {product.viewsLabel ? `${product.viewsLabel} views` : ""}
-                </small>
+                <span className="figma-home-story-avatar" aria-hidden="true">
+                  {seller.displayName.slice(0, 2).toUpperCase()}
+                </span>
+                <strong>{seller.displayName}</strong>
+                {seller._count?.products ? (
+                  <small>{seller._count.products} products</small>
+                ) : null}
               </Link>
-            ) : null;
-          })}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <div className="figma-home-divider" />
+      {popularItems.length ? (
+        <section className="figma-home-popular">
+          <SectionHeader title="Popular products" />
+          <div className="figma-home-popular-strip">
+            {popularItems.map((product) => {
+              const design = homeDesignProducts.find(
+                (d) =>
+                  d.name === product.name &&
+                  d.seller === product.seller.displayName,
+              );
+              return (
+                <Link
+                  className="figma-home-popular-card"
+                  href={`/product/${product.id}`}
+                  key={product.id}
+                >
+                  <div style={{ background: design?.background }}>
+                    {product.images[0] ? (
+                      <img
+                        src={product.images[0].url}
+                        alt={product.images[0].altText ?? product.name}
+                      />
+                    ) : design ? (
+                      <img src={`/figma/${design.image}`} alt={product.name} />
+                    ) : null}
+                  </div>
+                  <strong>{product.name}</strong>
+                  <b>{money(product.price)}</b>
+                  <small>
+                    {product.stock > 0 ? "In stock" : "Out of stock"}
+                  </small>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+      {popularItems.length ? <div className="figma-home-divider" /> : null}
       <section className="figma-home-for-you">
         <SectionHeader title="For you" />
         {products.loading ? (
@@ -216,11 +200,8 @@ export default function HomePage() {
             {sorted.slice(0, 16).map((product) => {
               const design = homeDesignProducts.find(
                 (d) =>
-                  (d.name === product.name &&
-                    d.seller === product.seller.displayName) ||
-                  (d.name === "Nike Club Hoodie" &&
-                    product.name === "Club Hoodie" &&
-                    product.seller.displayName === "Nike Official"),
+                  d.name === product.name &&
+                  d.seller === product.seller.displayName,
               );
               return (
                 <article className="figma-home-product" key={product.id}>
@@ -231,15 +212,15 @@ export default function HomePage() {
                     aria-label={`View ${product.name}`}
                   >
                     <div>
-                      {design ? (
-                        <img
-                          src={`/figma/${design.image}`}
-                          alt={product.name}
-                        />
-                      ) : product.images[0] ? (
+                      {product.images[0] ? (
                         <img
                           src={product.images[0].url}
                           alt={product.images[0].altText ?? product.name}
+                        />
+                      ) : design ? (
+                        <img
+                          src={`/figma/${design.image}`}
+                          alt={product.name}
                         />
                       ) : null}
                     </div>
@@ -266,29 +247,25 @@ export default function HomePage() {
                     </span>
                   </button>
                   <div className="figma-home-product-copy">
-                    <div className="figma-home-product-seller">
+                    <Link
+                      className="figma-home-product-seller"
+                      href={`/seller/${product.seller.id}`}
+                    >
                       {product.seller.displayName}
-                      {design?.seller === product.seller.displayName ? (
-                        <b>✓</b>
-                      ) : null}
-                    </div>
+                    </Link>
                     <Link
                       className="figma-home-product-title"
                       href={`/product/${product.id}`}
                     >
-                      {design?.name ?? product.name}
+                      {product.name}
                     </Link>
                     <strong>{money(product.price)}</strong>
                     <div className="figma-home-product-rating">
-                      {product.rating ? (
-                        <>
-                          <b>★</b>
-                          {product.rating}
-                        </>
-                      ) : null}
-                      {product.soldLabel ? (
-                        <span>· {product.soldLabel} sold</span>
-                      ) : null}
+                      <span>
+                        {product.stock > 0
+                          ? `${product.stock} in stock`
+                          : "Out of stock"}
+                      </span>
                     </div>
                   </div>
                 </article>

@@ -97,33 +97,7 @@ export default function SettingsPage() {
                   <strong>Notifications</strong>
                   <span className={styles.switch} aria-hidden="true" />
                 </Link>
-                <div
-                  className={styles.preferenceRow}
-                  aria-disabled="true"
-                  title="Personalized recommendation controls are not available yet"
-                >
-                  <strong>Personalized recommendations</strong>
-                  <span className={styles.switch} aria-hidden="true" />
-                </div>
               </section>
-
-              <div
-                className={styles.helpRow}
-                role="link"
-                aria-disabled="true"
-                title="Help & Support is not available yet"
-              >
-                <span>
-                  <strong>Help & Support</strong>
-                  <small>Get answers and contact EaziCart</small>
-                </span>
-                <img
-                  src="/figma/profile-chevron.svg"
-                  width={24}
-                  height={44}
-                  alt=""
-                />
-              </div>
 
               <button className={styles.logout} type="button" onClick={logout}>
                 Log out

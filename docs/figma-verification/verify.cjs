@@ -83,6 +83,7 @@ let server;
       ...product,
       id: "airpods-pro-design",
       name: "AirPods Pro",
+      reel: { caption: "AirPods Pro. Listen on the move." },
       price: "320000",
       images: [{ url: "/figma/airpods-pro-2.jpg" }],
       seller: { ...product.seller, id: "jumia", displayName: "Jumia Nigeria" },
@@ -294,6 +295,32 @@ let server;
             offset: 0,
           },
         };
+      if (path === "/reels/feed") {
+        const productId = new URL(r.request().url()).searchParams.get(
+          "productId",
+        );
+        const products = productId
+          ? allProducts.filter((item) => item.id === productId)
+          : allProducts;
+        data = {
+          data: products
+            .filter((item) => item.reel)
+            .map((item) => ({
+              id: `legacy-product-${item.id}`,
+              source: "EAZICART",
+              caption: item.reel.caption,
+              videoUrl: null,
+              thumbnailUrl: item.images[0]?.url ?? null,
+              externalUrl: null,
+              attribution: item.seller.displayName,
+              publishedAt: null,
+              seller: item.seller,
+              product: item,
+              _count: { likes: 0, saves: 0, views: 0, comments: 0 },
+            })),
+          pagination: { nextCursor: null, hasMore: false },
+        };
+      }
       if (path === "/categories")
         data = {
           data: [
@@ -1028,11 +1055,17 @@ let server;
     if (await page.locator('[data-figma-node="8:54"]').count())
       throw Error("Non-Nike product routed to Nike detail");
     await page.goto("http://127.0.0.1:3100/reels?productId=design-product-2");
-    await page.getByText("iPhone 15 Pro", { exact: true }).waitFor();
+    await page
+      .getByText("No reels have been published yet.", { exact: true })
+      .waitFor();
+    if (await page.getByRole("link", { name: "View Product" }).count())
+      throw Error("Product without Reel data received a fabricated Reel");
+    await page.goto("http://127.0.0.1:3100/reels?productId=airpods-pro-design");
+    await page.getByText("AirPods Pro", { exact: true }).waitFor();
     if (
       (await page
         .getByRole("link", { name: "View Product" })
-        .getAttribute("href")) !== "/product/design-product-2"
+        .getAttribute("href")) !== "/product/airpods-pro-design"
     )
       throw Error("Reel linked unrelated product");
     if (
@@ -1075,6 +1108,7 @@ let server;
             "search Enter submission at 375×520 reduced viewport",
             "non-Nike detail guard",
             "Reels selected product identity",
+            "product without Reel data shows empty feed",
             "continuation Saved responsive capture",
             "continuation Following responsive capture",
             "continuation Reviews History responsive capture",

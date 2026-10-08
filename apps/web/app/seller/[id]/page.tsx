@@ -8,11 +8,12 @@ import { ErrorState, LoadingState } from "../../components/async-state";
 import { Icon } from "../../components/icon";
 import { sellersApi } from "../../../lib/api/sellers";
 import { followsApi } from "../../../lib/api/follows";
+import { reelsApi } from "../../../lib/api/reels";
 import { useRequest } from "../../hooks/use-request";
 import { useAuth } from "../../providers/auth-provider";
 import styles from "./seller-profile.module.css";
 
-type SellerTab = "products" | "about" | "reviews";
+type SellerTab = "products" | "reels" | "reviews" | "about";
 
 export default function SellerPage({
   params,
@@ -29,6 +30,7 @@ export default function SellerPage({
     [auth.isAuthenticated],
   );
   const products = useRequest(() => sellersApi.products(id), [id]);
+  const reels = useRequest(() => reelsApi.feed({ limit: 20 }), [id]);
   const count = useRequest(
     () => followsApi.count(seller.data?.data.userId ?? id),
     [seller.data?.data.userId, id],
@@ -63,6 +65,9 @@ export default function SellerPage({
   const currentSeller = seller.data.data;
   const productCount =
     currentSeller._count?.products ?? products.data?.data.length ?? 0;
+  const sellerReels = (reels.data?.data ?? []).filter(
+    (reel) => reel.seller?.id === id || reel.product?.seller.id === id,
+  );
   const followerCount =
     count.data?.data.count ?? currentSeller.followerCount ?? 0;
   const initials = currentSeller.displayName
@@ -146,14 +151,20 @@ export default function SellerPage({
           onSelect={setActiveTab}
         />
         <SellerTabButton
-          label="About"
-          tab="about"
+          label="Reels"
+          tab="reels"
           activeTab={activeTab}
           onSelect={setActiveTab}
         />
         <SellerTabButton
           label="Reviews"
           tab="reviews"
+          activeTab={activeTab}
+          onSelect={setActiveTab}
+        />
+        <SellerTabButton
+          label="About"
+          tab="about"
           activeTab={activeTab}
           onSelect={setActiveTab}
         />
@@ -182,6 +193,59 @@ export default function SellerPage({
         ) : (
           <div className={styles.productEmpty}>
             <p>No products are available from this seller yet.</p>
+          </div>
+        )}
+      </section>
+
+      <section
+        className={styles.panel}
+        id="seller-reels-panel"
+        role="tabpanel"
+        aria-labelledby="seller-reels-tab"
+        hidden={activeTab !== "reels"}
+      >
+        <div className={styles.panelHeader}>
+          <h2>Reels</h2>
+          {sellerReels.length ? (
+            <span>{sellerReels.length} available</span>
+          ) : null}
+        </div>
+        {reels.loading ? (
+          <LoadingState label="Loading reels…" />
+        ) : reels.error ? (
+          <ErrorState message={reels.error} retry={() => void reels.reload()} />
+        ) : sellerReels.length ? (
+          <div className={styles.reelGrid}>
+            {sellerReels.map((reel) => (
+              <Link
+                className={styles.reelCard}
+                href={`/reels?reelId=${encodeURIComponent(reel.id)}`}
+                key={reel.id}
+              >
+                <div className={styles.reelMedia}>
+                  {reel.thumbnailUrl || reel.product?.images[0]?.url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={
+                        reel.thumbnailUrl ?? reel.product?.images[0]?.url ?? ""
+                      }
+                      alt=""
+                    />
+                  ) : (
+                    <span aria-hidden="true">Play</span>
+                  )}
+                </div>
+                <strong>{reel.caption || reel.product?.name || "Reel"}</strong>
+                <small>
+                  {reel._count.views} views · {reel._count.comments} comments
+                </small>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyCard}>
+            <h2>No Reels yet</h2>
+            <p>This seller has not published any Reels.</p>
           </div>
         )}
       </section>

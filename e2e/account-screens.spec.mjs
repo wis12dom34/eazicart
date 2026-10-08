@@ -2,6 +2,8 @@ import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
+
 test("edit profile and address book use real supported account data", async ({
   page,
 }) => {
@@ -14,28 +16,37 @@ test("edit profile and address book use real supported account data", async ({
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 
   await page.goto("/edit-profile");
   await expect(
     page.getByRole("heading", { name: "Edit profile", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Change photo" }),
-  ).toBeDisabled();
-  await expect(page.getByLabel("Username")).toBeDisabled();
+    page.getByText("Photo uploads unavailable", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Change photo" })).toHaveCount(
+    0,
+  );
+  await expect(page.getByLabel("Username")).not.toBeDisabled();
+  await expect(page.getByLabel("Username")).toHaveAttribute("readonly", "");
   await expect(page.getByLabel("Username")).toHaveValue("Not available yet");
-  await expect(page.getByLabel("Phone number")).toBeDisabled();
+  await expect(page.getByLabel("Phone number")).not.toBeDisabled();
+  await expect(page.getByLabel("Phone number")).toHaveAttribute("readonly", "");
   await expect(page.getByLabel("Phone number")).toHaveValue(
     "Not available yet",
   );
-  await expect(page.getByLabel("Email address")).toBeDisabled();
+  await expect(page.getByLabel("Email address")).not.toBeDisabled();
+  await expect(page.getByLabel("Email address")).toHaveAttribute(
+    "readonly",
+    "",
+  );
   await expect(page.getByLabel("Email address")).toHaveValue(email);
   await expectCustomerNavigation(page);
 
   await page.getByLabel("Full name").fill("Updated Account Customer");
   await page.getByRole("button", { name: "Save changes" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/profile");
+  await expect(page).toHaveURL(`${web}/profile`);
   await expect(
     page.getByRole("heading", {
       name: "Updated Account Customer",

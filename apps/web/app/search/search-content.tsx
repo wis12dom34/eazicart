@@ -162,16 +162,22 @@ export function SearchContent() {
         >
           Sellers
         </Link>
-        <span aria-disabled="true" title="Reel search is not available yet">
-          Reels
-        </span>
       </nav>
 
       <div className={styles.searchResultsViewport}>
         {error ? (
           <div className={styles.searchState} role="alert">
             <strong>Search is unavailable</strong>
-            {error}
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => {
+                void products.reload();
+                void sellers.reload();
+              }}
+            >
+              Try again
+            </button>
           </div>
         ) : !loading && !hasVisibleResults ? (
           <div className={styles.searchState}>

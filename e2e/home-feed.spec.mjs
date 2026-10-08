@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+
+const web = process.env.E2E_WEB_BASE_URL ?? "http://localhost:3000";
 import { expectCustomerNavigation } from "./customer-navigation.mjs";
 
 test("Home saves and supported seller/cart actions persist through the real API", async ({
@@ -13,7 +15,7 @@ test("Home saves and supported seller/cart actions persist through the real API"
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`${web}/`);
 
   const product = page
     .locator(".figma-home-product")
@@ -61,8 +63,8 @@ test("Home saves and supported seller/cart actions persist through the real API"
   await expect(
     page
       .getByRole("navigation", { name: "Following sections" })
-      .getByRole("button", { name: "Recommended" }),
-  ).toBeDisabled();
+      .getByText("Recommended", { exact: true }),
+  ).toHaveCount(0);
   await expect(
     page.getByLabel("Followed sellers").getByText(/^\d+ followers?$/),
   ).toBeVisible();
