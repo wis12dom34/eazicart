@@ -90,6 +90,7 @@ export default function SellerPage({
       router.push(`/login?next=${encodeURIComponent(`/seller/${id}`)}`);
       return;
     }
+    if (ownStore) return;
 
     try {
       setMessage("");
@@ -139,19 +140,25 @@ export default function SellerPage({
         <div className={styles.summaryContent}>
           <div className={styles.summaryHeading}>
             <h2>{currentSeller.displayName}</h2>
-            <button
-              className={`${styles.followButton} ${following ? styles.following : ""}`}
-              type="button"
-              disabled={auth.loading || follows.loading || count.loading}
-              aria-pressed={following}
-              onClick={() => void follow()}
-            >
-              {follows.loading || count.loading
-                ? "Updating…"
-                : following
-                  ? "Following"
-                  : "Follow"}
-            </button>
+            {ownStore ? (
+              <Link className={styles.followButton} href="/seller/store">
+                Manage store
+              </Link>
+            ) : (
+              <button
+                className={`${styles.followButton} ${following ? styles.following : ""}`}
+                type="button"
+                disabled={auth.loading || follows.loading || count.loading}
+                aria-pressed={following}
+                onClick={() => void follow()}
+              >
+                {follows.loading || count.loading
+                  ? "Updating…"
+                  : following
+                    ? "Following"
+                    : "Follow"}
+              </button>
+            )}
           </div>
           <p className={styles.metrics}>
             {followerCount} {followerCount === 1 ? "follower" : "followers"} ·{" "}
@@ -160,18 +167,16 @@ export default function SellerPage({
           {currentSeller.bio ? (
             <p className={styles.bio}>{currentSeller.bio}</p>
           ) : null}
-          <button
-            className={styles.messageButton}
-            type="button"
-            disabled={ownStore || openingChat}
-            onClick={() => void openChat()}
-          >
-            {ownStore
-              ? "Your store"
-              : openingChat
-                ? "Opening chat…"
-                : "Message"}
-          </button>
+          {!ownStore ? (
+            <button
+              className={styles.messageButton}
+              type="button"
+              disabled={openingChat}
+              onClick={() => void openChat()}
+            >
+              {openingChat ? "Opening chat…" : "Message"}
+            </button>
+          ) : null}
         </div>
       </section>
 
