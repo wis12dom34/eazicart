@@ -47,7 +47,10 @@ export default function SellerDashboardPage() {
     return (
       <main className={`app-shell ${styles.page}`}>
         <DashboardHeader />
-        <SignInState message="Sign in to open your seller workspace." />
+        <SignInState
+          message="Sign in to open your seller workspace."
+          next="/seller/dashboard"
+        />
       </main>
     );
   }
@@ -225,6 +228,10 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
           href={`/seller/${dashboard.seller.id}`}
         >
           View store
+          <Icon name="chevron" size={18} />
+        </Link>
+        <Link className={styles.storeLink} href="/chat">
+          Messages
           <Icon name="chevron" size={18} />
         </Link>
         <Link className={styles.storeLink} href="/seller/subscription">
