@@ -17,7 +17,7 @@ async function register(request, name) {
 
 const headers = (token) => ({ authorization: `Bearer ${token}` });
 
-test("customer and seller can exchange messages in one protected conversation", async ({
+test("customer and seller can exchange messages with protected unread state", async ({
   page,
   request,
 }) => {
@@ -77,10 +77,32 @@ test("customer and seller can exchange messages in one protected conversation", 
   expect(sellerConversations.status()).toBe(200);
   expect((await sellerConversations.json()).data).toEqual(
     expect.arrayContaining([
-      expect.objectContaining({ id: conversationId, sellerId: seller.id }),
+      expect.objectContaining({
+        id: conversationId,
+        sellerId: seller.id,
+        sellerUnreadCount: 1,
+      }),
     ]),
   );
 
+  const sellerRead = await request.get(
+    `${api}/conversations/${conversationId}/messages`,
+    { headers: headers(sellerAccount.token) },
+  );
+  expect(sellerRead.status()).toBe(200);
+  const sellerAfterRead = await request.get(`${api}/conversations`, {
+    headers: headers(sellerAccount.token),
+  });
+  expect((await sellerAfterRead.json()).data).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: conversationId,
+        sellerUnreadCount: 0,
+      }),
+    ]),
+  );
+
+  await page.goto("/chat");
   const reply = await request.post(
     `${api}/conversations/${conversationId}/messages`,
     {
@@ -90,10 +112,44 @@ test("customer and seller can exchange messages in one protected conversation", 
   );
   expect(reply.status()).toBe(201);
 
+  const buyerUnread = await request.get(`${api}/conversations`, {
+    headers: headers(buyerToken),
+  });
+  expect((await buyerUnread.json()).data).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: conversationId,
+        buyerUnreadCount: 1,
+      }),
+    ]),
+  );
+
   await page.reload();
+  await expect(page.getByLabel("1 unread message")).toBeVisible();
   await expect(
     page.getByText("Yes, it is available.", { exact: true }),
   ).toBeVisible();
+  await page
+    .getByRole("link")
+    .filter({ hasText: "Chat Store" })
+    .first()
+    .click();
+  await expect(page).toHaveURL(`${web}/chat/${conversationId}`);
+  await expect(
+    page.getByText("Yes, it is available.", { exact: true }),
+  ).toBeVisible();
+
+  const buyerAfterRead = await request.get(`${api}/conversations`, {
+    headers: headers(buyerToken),
+  });
+  expect((await buyerAfterRead.json()).data).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: conversationId,
+        buyerUnreadCount: 0,
+      }),
+    ]),
+  );
 
   const stranger = await register(request, "Chat Stranger");
   const blocked = await request.get(
