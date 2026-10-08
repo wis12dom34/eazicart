@@ -60,10 +60,14 @@ export default function ChatPage() {
               ? conversation.seller.displayName
               : conversation.buyer.name;
             const lastMessage = conversation.messages[0];
+            const unreadCount = isBuyer
+              ? conversation.buyerUnreadCount
+              : conversation.sellerUnreadCount;
+            const unreadLabel = `${unreadCount} unread ${unreadCount === 1 ? "message" : "messages"}`;
 
             return (
               <Link
-                className="eazicart-chat-row"
+                className={`eazicart-chat-row${unreadCount ? " is-unread" : ""}`}
                 href={`/chat/${conversation.id}`}
                 key={conversation.id}
               >
@@ -73,9 +77,19 @@ export default function ChatPage() {
                 <span className="eazicart-chat-row-copy">
                   <span className="eazicart-chat-row-heading">
                     <strong>{name}</strong>
-                    <time dateTime={conversation.updatedAt}>
-                      {formatConversationTime(conversation.updatedAt)}
-                    </time>
+                    <span className="eazicart-chat-row-meta">
+                      <time dateTime={conversation.updatedAt}>
+                        {formatConversationTime(conversation.updatedAt)}
+                      </time>
+                      {unreadCount ? (
+                        <span
+                          className="eazicart-chat-unread"
+                          aria-label={unreadLabel}
+                        >
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      ) : null}
+                    </span>
                   </span>
                   <span className="eazicart-chat-preview">
                     {lastMessage?.body ?? "Start the conversation"}
