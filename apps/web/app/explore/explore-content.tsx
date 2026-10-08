@@ -339,6 +339,15 @@ export function ExploreContent() {
         ) : null}
       </div>
 
+      <Link
+        className="figma-explore-map"
+        href="/explore/map"
+        title="Open live commerce map"
+        aria-label="Open live commerce map"
+      >
+        <i aria-hidden="true" />
+        Map
+      </Link>
       <BottomNavigation />
       {menu ? <SideNavigation onClose={closeMenu} /> : null}
     </main>

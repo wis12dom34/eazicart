@@ -8,6 +8,12 @@ const body = z.object({
   displayName: z.string().trim().min(2).max(120),
   bio: z.string().trim().max(2000).nullable().optional(),
 });
+const mapLocationBody = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  label: z.string().trim().min(2).max(160).nullable().optional(),
+  visible: z.boolean().default(true),
+});
 const include = {
   user: { select: { id: true, name: true } },
   _count: { select: { products: { where: { active: true } } } },
@@ -50,6 +56,96 @@ export function registerSellerProfiles(
       },
     };
   });
+  app.get("/map/sellers", async () => ({
+    data: (
+      await db().sellerMapLocation.findMany({
+        where: { visible: true },
+        select: {
+          latitude: true,
+          longitude: true,
+          label: true,
+          updatedAt: true,
+          seller: {
+            select: {
+              id: true,
+              userId: true,
+              displayName: true,
+              bio: true,
+              _count: { select: { products: { where: { active: true } } } },
+            },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 500,
+      })
+    ).map(({ seller, ...location }) => ({ ...seller, location })),
+  }));
+  app.get("/seller/map-location", protectedRoute(app), async (r) => {
+    const seller = await db().sellerProfile.findUnique({
+      where: { userId: userId(r) },
+      select: { id: true },
+    });
+    if (!seller)
+      throw new AppError(
+        403,
+        "SELLER_REQUIRED",
+        "Create a seller profile first",
+      );
+    return {
+      data: await db().sellerMapLocation.findUnique({
+        where: { sellerId: seller.id },
+        select: {
+          latitude: true,
+          longitude: true,
+          label: true,
+          visible: true,
+          updatedAt: true,
+        },
+      }),
+    };
+  });
+  app.put("/seller/map-location", protectedRoute(app), async (r) => {
+    const seller = await db().sellerProfile.findUnique({
+      where: { userId: userId(r) },
+      select: { id: true },
+    });
+    if (!seller)
+      throw new AppError(
+        403,
+        "SELLER_REQUIRED",
+        "Create a seller profile first",
+      );
+    const input = mapLocationBody.parse(r.body);
+    return {
+      data: await db().sellerMapLocation.upsert({
+        where: { sellerId: seller.id },
+        create: { sellerId: seller.id, ...input },
+        update: input,
+        select: {
+          latitude: true,
+          longitude: true,
+          label: true,
+          visible: true,
+          updatedAt: true,
+        },
+      }),
+    };
+  });
+  app.delete("/seller/map-location", protectedRoute(app), async (r, reply) => {
+    const seller = await db().sellerProfile.findUnique({
+      where: { userId: userId(r) },
+      select: { id: true },
+    });
+    if (!seller)
+      throw new AppError(
+        403,
+        "SELLER_REQUIRED",
+        "Create a seller profile first",
+      );
+    await db().sellerMapLocation.deleteMany({ where: { sellerId: seller.id } });
+    return reply.code(204).send();
+  });
+
   app.get("/sellers/:id/products", async (r) => {
     const { id } = z.object({ id: z.string() }).parse(r.params);
     return {
