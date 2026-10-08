@@ -91,7 +91,10 @@ export default function PrivacySecurityPage() {
         </div>
       ) : !auth.user ? (
         <div className={styles.stateWrap}>
-          <SignInState message="Sign in to manage your privacy and security." />
+          <SignInState
+            message="Sign in to manage your privacy and security."
+            next="/privacy-security"
+          />
         </div>
       ) : showPassword ? (
         <PasswordPanel
