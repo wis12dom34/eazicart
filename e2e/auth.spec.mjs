@@ -60,3 +60,28 @@ test("auth screens use supported credentials flows and honest validation states"
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(`${web}/`);
 });
+
+test("new customers keep the protected destination through login and registration", async ({
+  page,
+}) => {
+  const email = `return-${randomUUID()}@eazicart.invalid`;
+  const password = `return-${randomUUID()}`;
+
+  await page.goto("/login?next=%2Fcart");
+  const createAccount = page.getByRole("link", { name: "Create one" });
+  await expect(createAccount).toHaveAttribute("href", "/register?next=%2Fcart");
+  await createAccount.click();
+  await expect(page).toHaveURL(`${web}/register?next=%2Fcart`);
+
+  await page.getByLabel("Full name").fill("Return Customer");
+  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password").fill(password);
+  await page.getByRole("button", { name: "Create account" }).click();
+
+  await expect(page).toHaveURL(`${web}/cart`);
+  await expect(
+    page.getByRole("heading", { name: "Cart", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Your cart is empty", { exact: true })).toBeVisible();
+});
