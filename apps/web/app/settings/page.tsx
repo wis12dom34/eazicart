@@ -41,7 +41,10 @@ export default function SettingsPage() {
           {auth.loading ? (
             <LoadingState />
           ) : !auth.user ? (
-            <SignInState message="Sign in to manage your account settings." />
+            <SignInState
+              message="Sign in to manage your account settings."
+              next="/settings"
+            />
           ) : (
             <>
               <section
@@ -69,7 +72,7 @@ export default function SettingsPage() {
                 <SettingLink
                   href="/edit-profile"
                   label="Personal information"
-                  detail="Name, phone and email"
+                  detail="Name and account email"
                 />
                 <SettingLink
                   href="/address-book"
@@ -79,7 +82,7 @@ export default function SettingsPage() {
                 <SettingLink
                   href="/payment-methods"
                   label="Payment methods"
-                  detail="Cards and wallet"
+                  detail="Paystack checkout information"
                 />
                 <SettingLink
                   href="/privacy-security"
@@ -95,7 +98,7 @@ export default function SettingsPage() {
               >
                 <Link className={styles.preferenceRow} href="/notifications">
                   <strong>Notifications</strong>
-                  <span className={styles.switch} aria-hidden="true" />
+                  <span>Manage</span>
                 </Link>
               </section>
 
