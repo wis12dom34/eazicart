@@ -26,6 +26,15 @@ const conversationInclude = {
   },
 };
 
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2002"
+  );
+}
+
 export function registerConversations(
   app: FastifyInstance,
   client?: PrismaClient,
@@ -78,19 +87,31 @@ export function registerConversations(
         "You cannot message your own store",
       );
 
+    const where = {
+      buyerId_sellerId: { buyerId: uid, sellerId: seller.id },
+    };
     const existing = await db().conversation.findUnique({
-      where: {
-        buyerId_sellerId: { buyerId: uid, sellerId: seller.id },
-      },
+      where,
       include: conversationInclude,
     });
     if (existing) return reply.send({ data: existing });
 
-    const data = await db().conversation.create({
-      data: { buyerId: uid, sellerId: seller.id },
-      include: conversationInclude,
-    });
-    return reply.code(201).send({ data });
+    try {
+      const data = await db().conversation.create({
+        data: { buyerId: uid, sellerId: seller.id },
+        include: conversationInclude,
+      });
+      return reply.code(201).send({ data });
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) throw error;
+
+      const raced = await db().conversation.findUnique({
+        where,
+        include: conversationInclude,
+      });
+      if (!raced) throw error;
+      return reply.send({ data: raced });
+    }
   });
 
   app.get("/conversations/:id/messages", auth, async (request) => {
