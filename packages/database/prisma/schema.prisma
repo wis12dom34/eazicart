@@ -346,6 +346,8 @@ model Conversation {
   id String @id @default(cuid())
   buyerId String
   sellerId String
+  buyerUnreadCount Int @default(0)
+  sellerUnreadCount Int @default(0)
   buyer User @relation("ConversationBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
   seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   messages Message[]
