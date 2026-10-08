@@ -225,7 +225,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
     populatedCounts.getByRole("link", { name: "1 Following" }),
   ).toBeVisible();
   await page
-    .getByRole("link", { name: /Reviews Review history is not available yet/ })
+    .getByRole("link", { name: /Reviews Review history is coming soon/ })
     .click();
   await expect(page).toHaveURL(`${web}/reviews`);
   await expect(
