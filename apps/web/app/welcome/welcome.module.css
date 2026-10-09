@@ -1,0 +1,458 @@
+.page {
+  min-height: 100svh;
+  background: #fff;
+  color: #111214;
+}
+
+.content {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: calc(52px + env(safe-area-inset-top)) 24px
+    calc(42px + env(safe-area-inset-bottom));
+}
+
+.brand {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: #ff5a18;
+  font-size: 30px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-decoration: none;
+}
+
+.hero {
+  margin-top: 25px;
+}
+
+.hero h1 {
+  max-width: 360px;
+  margin: 0;
+  color: #101114;
+  font-size: 34px;
+  font-weight: 750;
+  line-height: 1.19;
+  letter-spacing: -0.04em;
+}
+
+.hero p {
+  max-width: 355px;
+  margin: 12px 0 0;
+  color: #737985;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+}
+
+.illustration {
+  height: 330px;
+  margin-top: 44px;
+  padding: 41px 33px 49px;
+  overflow: hidden;
+  border: 1px solid #dfe2e7;
+  border-radius: 28px;
+  background: #f8f9fb;
+}
+
+.illustrationInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  background: #f3f5f8;
+}
+
+.phone {
+  position: absolute;
+  z-index: 3;
+  top: 18px;
+  left: 50%;
+  width: 134px;
+  height: 202px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border: 2px solid #11151b;
+  border-radius: 28px;
+  background: #fff;
+}
+
+.phoneSpeaker {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 35px;
+  height: 5px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #d0d1d4;
+}
+
+.phoneTopCard {
+  position: absolute;
+  top: 25px;
+  left: 13px;
+  width: 104px;
+  height: 76px;
+  border-radius: 15px;
+  background: #fff0e7;
+}
+
+.bag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 36px;
+  height: 38px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #e4e6eb;
+}
+
+.bag::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 10px;
+  width: 14px;
+  height: 11px;
+  border: 2px solid #ff5a18;
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+}
+
+.bag::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 8px;
+  width: 19px;
+  height: 22px;
+  border-radius: 3px;
+  background: #ffd6c0;
+}
+
+.playSmall {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ff5a18;
+  color: #fff;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.phoneTopCard i,
+.phoneTopCard b,
+.phoneInfoCard i,
+.phoneInfoCard b {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  background: #d1d2d5;
+}
+
+.phoneTopCard i {
+  top: 40px;
+  right: 16px;
+  width: 20px;
+  height: 4px;
+}
+
+.phoneTopCard b {
+  top: 51px;
+  right: 16px;
+  width: 27px;
+  height: 4px;
+  background: #e0c7b9;
+}
+
+.phoneInfoCard {
+  position: absolute;
+  top: 110px;
+  left: 13px;
+  width: 104px;
+  height: 31px;
+  border: 1px solid #dfe1e6;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.phoneInfoCard span {
+  position: absolute;
+  top: 9px;
+  left: 8px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff6b24;
+}
+
+.phoneInfoCard i {
+  top: 8px;
+  left: 27px;
+  width: 41px;
+  height: 5px;
+}
+
+.phoneInfoCard b {
+  top: 18px;
+  left: 27px;
+  width: 28px;
+  height: 4px;
+  background: #e5e6e8;
+}
+
+.phoneActions {
+  position: absolute;
+  right: 13px;
+  bottom: 15px;
+  left: 13px;
+  display: flex;
+  gap: 8px;
+}
+
+.phoneActions span {
+  height: 33px;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d8dbe1;
+  border-radius: 11px;
+  background: #fafafa;
+  color: #747983;
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.phoneActions span:first-child {
+  border-color: #11151b;
+  background: #11151b;
+  color: #fff;
+}
+
+.tile,
+.circleTile {
+  position: absolute;
+  z-index: 4;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(15, 20, 25, 0.03);
+}
+
+.tile {
+  width: 76px;
+  height: 82px;
+  border: 1px solid #d9dce2;
+  border-radius: 18px;
+}
+
+.storeTile {
+  top: 65px;
+  left: 16px;
+}
+
+.awning {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 50px;
+  height: 18px;
+  border-top: 3px solid #ff7540;
+  border-bottom: 1px solid #efc6b4;
+  transform: skewX(-11deg);
+}
+
+.storeBody {
+  position: absolute;
+  top: 31px;
+  left: 20px;
+  width: 38px;
+  height: 35px;
+  border: 2px solid #20242a;
+  border-top: 0;
+  background: #fff;
+}
+
+.storeBody::after {
+  content: "";
+  position: absolute;
+  right: 9px;
+  bottom: -1px;
+  width: 15px;
+  height: 20px;
+  background: #f0f2f6;
+}
+
+.circleTile {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.checkTile {
+  top: 16px;
+  right: 36px;
+  background: #fff0e8;
+  color: #ff5a18;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.reelTile {
+  top: 74px;
+  right: 16px;
+  width: 57px;
+  height: 57px;
+  border: 1px solid #dce0e5;
+  background: #fff;
+}
+
+.reelTile span {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ff5a18;
+  color: #fff;
+  font-size: 13px;
+}
+
+.boxTile {
+  right: 0;
+  bottom: 29px;
+  width: 72px;
+  height: 54px;
+  border-radius: 14px;
+}
+
+.boxTile span {
+  position: absolute;
+  top: 11px;
+  left: 14px;
+  width: 43px;
+  height: 31px;
+  border: 2px solid #20242a;
+  border-top: 0;
+  clip-path: polygon(0 0, 50% 42%, 100% 0, 100% 100%, 0 100%);
+}
+
+.boxTile span::before,
+.boxTile span::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 30px;
+  background: #20242a;
+}
+
+.boxTile span::before {
+  left: 10px;
+  transform: rotate(-55deg);
+  transform-origin: top;
+}
+
+.boxTile span::after {
+  right: 10px;
+  transform: rotate(55deg);
+  transform-origin: top;
+}
+
+.intro {
+  margin-top: 40px;
+}
+
+.intro h2 {
+  margin: 0;
+  color: #111214;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.intro p {
+  max-width: 360px;
+  margin: 10px 0 0;
+  color: #737985;
+  font-size: 14.5px;
+  line-height: 1.25;
+}
+
+.actions {
+  margin-top: 52px;
+}
+
+.primary {
+  width: 100%;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: #10151b;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.actions p {
+  margin: 12px 0 0;
+  text-align: center;
+  color: #0675ff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.actions p a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.actions p a:hover,
+.actions p a:focus-visible {
+  text-decoration: underline;
+}
+
+@media (max-width: 374px) {
+  .content {
+    padding-inline: 20px;
+  }
+
+  .hero h1 {
+    font-size: 31px;
+  }
+
+  .illustration {
+    height: 310px;
+    padding-inline: 24px;
+  }
+
+  .storeTile {
+    left: 5px;
+  }
+
+  .reelTile {
+    right: 5px;
+  }
+
+  .boxTile {
+    right: -8px;
+  }
+}
