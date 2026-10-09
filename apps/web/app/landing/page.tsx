@@ -169,7 +169,7 @@ export default function EaziCartLandingPage() {
             <a href="#solutions">Solutions</a>
             <a href="#businesses">For Businesses</a>
             <a href="#resources">Resources</a>
-            <a href="#pricing">Pricing</a>
+            <a href="#how-it-works">How it works</a>
           </div>
           <div className={styles.navActions}>
             <Link className={styles.signIn} href="/login">Sign In</Link>
@@ -181,9 +181,10 @@ export default function EaziCartLandingPage() {
       <section className={`${styles.section} ${styles.hero}`}>
         <div className={`${styles.shell} ${styles.heroGrid}`}>
           <div className={`${styles.heroCopy} ${styles.reveal}`}>
-            <h1>Commerce infrastructure for modern businesses.</h1>
+            <span className={styles.eyebrow}>COMMERCE, CONNECTED.</span>
+            <h1>The Operating System for <em>Modern Businesses.</em></h1>
             <p className={styles.lead}>
-              Discover products, connect with suppliers, manage orders and grow your business from one powerful platform.
+              Buy, sell and manage your business in one place. Connect with suppliers, reach new customers and keep every order moving.
             </p>
             <div className={styles.buttonRow}>
               <PrimaryLink href="/register">Get Started Free</PrimaryLink>
@@ -237,16 +238,13 @@ export default function EaziCartLandingPage() {
         <div className={`${styles.shell} ${styles.reveal}`}>
           <div className={styles.sectionHeading}>
             <h2>Discover products people want.</h2>
-            <p>A cleaner, editorial product feed inspired by the way people discover products visually.</p>
+            <p>From your next favourite product to your next supplier. Explore fashion, beauty and electronics in one place.</p>
           </div>
           <div className={styles.marketplacePanel}>
             <div className={styles.tabs}>
               <span className={styles.activeTab}>For You</span><span>Trending</span><span>Categories</span><span>Brands</span><span>Sellers</span>
             </div>
-            <div
-              className={styles.productGrid}
-              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 16 }}
-            >
+            <div className={styles.productGrid}>
               {products.map((product) => <ProductCard key={product.name} {...product} />)}
             </div>
           </div>
@@ -362,7 +360,7 @@ export default function EaziCartLandingPage() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section id="how-it-works" className={styles.section}>
         <div className={`${styles.shell} ${styles.reveal}`}>
           <div className={styles.sectionHeading}><h2>Start in three steps.</h2></div>
           <div className={styles.steps}>
