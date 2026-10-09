@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiRequest } from "./client";
+import { apiRequest, tokenStore } from "./client";
 import { cartApi } from "./cart";
 import { productsApi } from "./products";
 import { authApi } from "./auth";
@@ -18,7 +18,10 @@ const requestBody = (init?: RequestInit) => {
   return init.body;
 };
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  tokenStore.clear();
+  vi.unstubAllGlobals();
+});
 
 describe("API client", () => {
   it("surfaces structured non-2xx errors", async () => {
@@ -104,17 +107,11 @@ describe("API client", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("authenticates Reel like and save mutations with the stored access token", async () => {
-    const tokens = JSON.stringify({
+  it("authenticates Reel like and save mutations with the in-memory access token", async () => {
+    tokenStore.set({
       accessToken: "reels-unit-access",
-      refreshToken: "reels-unit-refresh",
+      refreshToken: "legacy-refresh-is-not-persisted",
       expiresAt: "2099-01-01T00:00:00.000Z",
-    });
-    vi.stubGlobal("window", {});
-    vi.stubGlobal("localStorage", {
-      getItem: vi.fn(() => tokens),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
     });
     const fetchMock = vi.fn<typeof fetch>().mockImplementation((input) => {
       const isSave = requestUrl(input).includes("/save");
@@ -138,6 +135,7 @@ describe("API client", () => {
       expect(new Headers(call[1]?.headers).get("Authorization")).toBe(
         "Bearer reels-unit-access",
       );
+      expect(call[1]?.credentials).toBe("include");
     }
   });
 
@@ -163,7 +161,7 @@ describe("API client", () => {
     expect(fetchMock.mock.calls[2]?.[1]?.method).toBe("DELETE");
   });
 
-  it("submits login credentials and omits authorization when signed out", async () => {
+  it("submits login credentials with cookies enabled and no authorization header", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(
@@ -178,6 +176,31 @@ describe("API client", () => {
     expect(
       new Headers(fetchMock.mock.calls[0]?.[1]?.headers).has("Authorization"),
     ).toBe(false);
+    expect(fetchMock.mock.calls[0]?.[1]?.credentials).toBe("include");
+  });
+
+  it("does not persist newly issued refresh credentials in localStorage", () => {
+    const setItem = vi.fn();
+    const removeItem = vi.fn();
+    vi.stubGlobal("window", { location: { origin: "http://localhost:3000" } });
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(() => null),
+      setItem,
+      removeItem,
+    });
+
+    tokenStore.set({
+      accessToken: "short-lived-access",
+      refreshToken: "sensitive-refresh",
+      expiresAt: "2099-01-01T00:00:00.000Z",
+    });
+
+    expect(setItem).not.toHaveBeenCalled();
+    expect(removeItem).toHaveBeenCalledWith("eazicart.auth.tokens");
+    expect(tokenStore.get()).toEqual({
+      accessToken: "short-lived-access",
+      expiresAt: "2099-01-01T00:00:00.000Z",
+    });
   });
 
   it("aborts stalled requests and returns a useful timeout error", async () => {
