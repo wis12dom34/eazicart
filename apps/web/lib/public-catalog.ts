@@ -46,6 +46,9 @@ export function publicProduct(product: Product): Product {
     price: String(product.price),
     stock: product.stock,
     active: product.active,
+    rating: product.rating,
+    soldLabel: product.soldLabel,
+    viewsLabel: product.viewsLabel,
     images: product.images.map(({ url, altText, position }) => ({
       url,
       altText,
