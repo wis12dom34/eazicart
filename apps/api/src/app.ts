@@ -34,6 +34,7 @@ export function buildApp(
   app.addHook("onRequest", async (request, reply) => {
     if (request.headers.origin === config.WEB_ORIGIN) {
       reply.header("Access-Control-Allow-Origin", config.WEB_ORIGIN);
+      reply.header("Access-Control-Allow-Credentials", "true");
       reply.header("Vary", "Origin");
       reply.header(
         "Access-Control-Allow-Headers",
