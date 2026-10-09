@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { pageMetadata } from "../lib/seo";
+import { pageMetadata } from "../../lib/seo";
 import styles from "./welcome.module.css";
 
 export const metadata = pageMetadata(
