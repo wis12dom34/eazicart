@@ -144,19 +144,14 @@ export default function SellerFinancePage() {
         <div className={styles.sectionHeading}>
           <div>
             <p className={styles.eyebrow}>Settlement</p>
-            <h2>Payouts not configured</h2>
+            <h2>Payouts are not enabled yet</h2>
           </div>
         </div>
         <p className={styles.note}>
-          Platform fees, net earnings and payout availability are intentionally
-          unavailable until real settlement rules and a payout provider are
-          configured.
+          Gross sales are available for reporting, but payout balances and net
+          settlement amounts will only appear after real settlement rules and a
+          payout provider are connected.
         </p>
-        <div className={styles.unavailableGrid}>
-          <Unavailable label="Platform fees" />
-          <Unavailable label="Net earnings" />
-          <Unavailable label="Available for payout" />
-        </div>
       </section>
 
       <section className={styles.salesSection}>
@@ -250,15 +245,6 @@ function MoneyRow({
     <div>
       <dt>{label}</dt>
       <dd>{formatMoney(value, currency)}</dd>
-    </div>
-  );
-}
-
-function Unavailable({ label }: { label: string }) {
-  return (
-    <div className={styles.unavailableItem}>
-      <span>{label}</span>
-      <strong>Not available yet</strong>
     </div>
   );
 }
