@@ -4,6 +4,7 @@ import { pageMetadata, canonicalUrl } from "../../lib/seo";
 import { StructuredData } from "../components/structured-data";
 import type { ReactNode } from "react";
 import styles from "./landing.module.css";
+import { BusinessAudiences } from "./business-audiences";
 
 export const metadata = {
   ...pageMetadata(
@@ -299,7 +300,10 @@ export default function EaziCartLandingPage() {
             <a href="#how-it-works">How it works</a>
           </div>
           <div className={styles.navActions}>
-            <Link className={styles.signIn} href="/login">
+            <Link
+              className={styles.signIn}
+              href="/login?next=/seller/dashboard"
+            >
               Sign In
             </Link>
             <PrimaryLink href="/register?next=/seller/dashboard">
@@ -618,33 +622,7 @@ export default function EaziCartLandingPage() {
           <div className={styles.sectionHeading}>
             <h2>Built for the businesses that power commerce.</h2>
           </div>
-          <div className={styles.businessSelector}>
-            {[
-              "Manufacturers",
-              "Wholesalers",
-              "Distributors",
-              "Retailers",
-              "DTC Brands",
-              "SMEs",
-            ].map((item, index) => (
-              <span className={index === 0 ? styles.activeTab : ""} key={item}>
-                {item}
-              </span>
-            ))}
-          </div>
-          <div className={styles.businessPanel}>
-            <div>
-              <h3>Manufacturers</h3>
-              <p>
-                Reach distributors, retailers and businesses looking for your
-                products.
-              </p>
-            </div>
-            <div className={styles.catalogue}>
-              <ProductCard {...products[1]!} />
-              <ProductCard {...products[2]!} />
-            </div>
-          </div>
+          <BusinessAudiences products={products} />
         </div>
       </section>
 
