@@ -1,6 +1,10 @@
 import { createHash, randomBytes } from "node:crypto";
 import argon2 from "argon2";
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type {
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+} from "fastify";
 import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
 import type { AppConfig } from "../../config.js";
@@ -16,6 +20,8 @@ declare module "fastify" {
     userId?: string;
   }
 }
+
+const REFRESH_COOKIE_NAME = "eazicart_refresh";
 const credentials = z.object({
   email: z.email().transform((value) => value.toLowerCase()),
   password: z.string().min(8).max(128),
@@ -23,10 +29,70 @@ const credentials = z.object({
 const registration = credentials.extend({
   name: z.string().trim().min(2).max(100),
 });
-const refreshBody = z.object({ refreshToken: z.string().min(1) });
+const refreshBody = z.object({ refreshToken: z.string().min(1).optional() });
 const publicUser = ({ id, email, name }: StoredUser) => ({ id, email, name });
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
+
+function refreshTokenFromCookie(request: FastifyRequest) {
+  const header = request.headers.cookie;
+  if (!header) return undefined;
+  for (const part of header.split(";")) {
+    const [rawName, ...rawValue] = part.trim().split("=");
+    if (rawName !== REFRESH_COOKIE_NAME) continue;
+    const value = rawValue.join("=");
+    if (!value) return undefined;
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
+function setRefreshCookie(
+  reply: FastifyReply,
+  token: string,
+  expiresAt: Date,
+  secure: boolean,
+) {
+  const maxAge = Math.max(
+    0,
+    Math.floor((expiresAt.getTime() - Date.now()) / 1000),
+  );
+  reply.header(
+    "Set-Cookie",
+    [
+      `${REFRESH_COOKIE_NAME}=${encodeURIComponent(token)}`,
+      "Path=/",
+      "HttpOnly",
+      "SameSite=Lax",
+      secure ? "Secure" : "",
+      `Max-Age=${maxAge}`,
+      `Expires=${expiresAt.toUTCString()}`,
+    ]
+      .filter(Boolean)
+      .join("; "),
+  );
+}
+
+function clearRefreshCookie(reply: FastifyReply, secure: boolean) {
+  reply.header(
+    "Set-Cookie",
+    [
+      `${REFRESH_COOKIE_NAME}=`,
+      "Path=/",
+      "HttpOnly",
+      "SameSite=Lax",
+      secure ? "Secure" : "",
+      "Max-Age=0",
+      "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+    ]
+      .filter(Boolean)
+      .join("; "),
+  );
+}
 
 export function registerAuth(
   app: FastifyInstance,
@@ -34,6 +100,7 @@ export function registerAuth(
   store: AuthStore,
 ) {
   const secret = new TextEncoder().encode(config.JWT_SECRET);
+  const secureCookie = config.NODE_ENV === "production";
   const issueTokens = async (userId: string) => {
     const accessToken = await new SignJWT({})
       .setProtectedHeader({ alg: "HS256" })
@@ -50,8 +117,27 @@ export function registerAuth(
       userId,
       expiresAt,
     });
-    return { accessToken, refreshToken, expiresAt: expiresAt.toISOString() };
+    return { accessToken, refreshToken, expiresAt };
   };
+
+  const issueSession = async (reply: FastifyReply, userId: string) => {
+    const tokens = await issueTokens(userId);
+    setRefreshCookie(reply, tokens.refreshToken, tokens.expiresAt, secureCookie);
+    return {
+      accessToken: tokens.accessToken,
+      // Kept temporarily for backwards compatibility while old web sessions migrate.
+      refreshToken: tokens.refreshToken,
+      expiresAt: tokens.expiresAt.toISOString(),
+    };
+  };
+
+  const requestRefreshToken = (request: FastifyRequest) => {
+    const cookieToken = refreshTokenFromCookie(request);
+    if (cookieToken) return cookieToken;
+    const body = refreshBody.parse(request.body ?? {});
+    return body.refreshToken;
+  };
+
   app.decorate("authenticate", async (request: FastifyRequest) => {
     const token = request.headers.authorization?.replace(/^Bearer\s+/i, "");
     if (!token)
@@ -68,6 +154,7 @@ export function registerAuth(
       );
     }
   });
+
   app.post("/auth/register", async (request, reply) => {
     const input = registration.parse(request.body);
     if (await store.findUserByEmail(input.email))
@@ -92,11 +179,13 @@ export function registerAuth(
         );
       throw error;
     }
-    return reply
-      .code(201)
-      .send({ user: publicUser(user), tokens: await issueTokens(user.id) });
+    return reply.code(201).send({
+      user: publicUser(user),
+      tokens: await issueSession(reply, user.id),
+    });
   });
-  app.post("/auth/login", async (request) => {
+
+  app.post("/auth/login", async (request, reply) => {
     const input = credentials.parse(request.body);
     const user = await store.findUserByEmail(input.email);
     if (!user || !(await argon2.verify(user.passwordHash, input.password)))
@@ -105,10 +194,20 @@ export function registerAuth(
         "INVALID_CREDENTIALS",
         "Email or password is incorrect",
       );
-    return { user: publicUser(user), tokens: await issueTokens(user.id) };
+    return {
+      user: publicUser(user),
+      tokens: await issueSession(reply, user.id),
+    };
   });
-  app.post("/auth/refresh", async (request) => {
-    const { refreshToken } = refreshBody.parse(request.body);
+
+  app.post("/auth/refresh", async (request, reply) => {
+    const refreshToken = requestRefreshToken(request);
+    if (!refreshToken)
+      throw new AppError(
+        401,
+        "INVALID_REFRESH_TOKEN",
+        "The refresh token is invalid or expired",
+      );
     const userId = await store.consumeRefreshToken(hashToken(refreshToken));
     if (!userId)
       throw new AppError(
@@ -116,7 +215,14 @@ export function registerAuth(
         "INVALID_REFRESH_TOKEN",
         "The refresh token is invalid or expired",
       );
-    return { tokens: await issueTokens(userId) };
+    return { tokens: await issueSession(reply, userId) };
+  });
+
+  app.post("/auth/logout", async (request, reply) => {
+    const refreshToken = requestRefreshToken(request);
+    if (refreshToken) await store.consumeRefreshToken(hashToken(refreshToken));
+    clearRefreshCookie(reply, secureCookie);
+    return reply.code(204).send();
   });
 }
 
