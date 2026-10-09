@@ -23,28 +23,28 @@ const businessTypes = [
 
 const products = [
   {
-    name: "Nigerian Rice & Beans",
-    seller: "Food & staples · Nigeria",
-    price: "See live seller prices",
-    image: "https://upload.wikimedia.org/wikipedia/commons/9/92/Nigeria_beans.jpg",
+    name: "Smartphones & Devices",
+    seller: "Electronics sellers · Africa",
+    price: "Explore live listings",
+    image: "https://images.unsplash.com/photo-1759505017950-25e0733b9e68?auto=format&fit=crop&q=82&w=1200",
   },
   {
-    name: "Hair Care & Beauty",
-    seller: "Beauty retailers · Nigeria",
-    price: "See live seller prices",
-    image: "https://nectarbeautyhub.com/cdn/shop/files/19.jpg?v=1680465122&width=1100",
+    name: "Premium Skincare",
+    seller: "Beauty sellers · Africa",
+    price: "Explore live listings",
+    image: "https://images.unsplash.com/photo-1773187973415-2c85a99aaa82?auto=format&fit=crop&q=82&w=1200",
   },
   {
-    name: "Ankara & Aso-Oke Fabrics",
-    seller: "Fashion sellers · Lagos & Abuja",
-    price: "See live seller prices",
-    image: photos.boutique,
+    name: "Everyday Sneakers",
+    seller: "Fashion sellers · Africa",
+    price: "Explore live listings",
+    image: "https://images.unsplash.com/photo-1625860191460-10a66c7384fb?auto=format&fit=crop&q=82&w=1200",
   },
   {
-    name: "Phones & Accessories",
-    seller: "Electronics sellers · Nigeria",
-    price: "See live seller prices",
-    image: photos.market,
+    name: "Wireless Headphones",
+    seller: "Tech sellers · Africa",
+    price: "Explore live listings",
+    image: "https://images.unsplash.com/photo-1553775744-0bae9da7f5e7?auto=format&fit=crop&q=82&w=1200",
   },
 ];
 
@@ -87,7 +87,7 @@ function ProductCard({
 }) {
   return (
     <article className={styles.productCard}>
-      <div className={styles.productArt} style={{ overflow: "hidden", background: "#f5f5f5" }}>
+      <div className={styles.productArt} style={{ overflow: "hidden", background: "#f7f7f7" }}>
         <img
           src={image}
           alt={name}
@@ -202,15 +202,15 @@ export default function EaziCartLandingPage() {
             </div>
             <div className={styles.heroProduct}>
               <div className={styles.miniArt} style={{ overflow: "hidden", padding: 0 }}>
-                <img src={products[0]!.image} alt="Nigerian food staples" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={products[0]!.image} alt="Modern smartphone" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
-              <strong>Nigerian Rice & Beans</strong>
-              <span>Local marketplace products</span>
-              <b>Live pricing</b>
+              <strong>Smartphones & Devices</strong>
+              <span>Modern products from African sellers</span>
+              <b>Explore listings</b>
             </div>
             <div className={styles.supplierBadge}>
               <strong>African commerce</strong>
-              <span>Real sellers · Real products</span>
+              <span>Modern sellers · Modern products</span>
             </div>
             <div className={styles.photoCaption}><i /> African retail · real commerce</div>
           </div>
@@ -227,8 +227,8 @@ export default function EaziCartLandingPage() {
       <section id="marketplace" className={styles.section}>
         <div className={`${styles.shell} ${styles.reveal}`}>
           <div className={styles.sectionHeading}>
-            <h2>Discover what your business needs.</h2>
-            <p>Browse products people actually buy and sell across African markets.</p>
+            <h2>Discover products people want.</h2>
+            <p>Browse clean, modern product categories from sellers across African markets.</p>
           </div>
           <div className={styles.marketplacePanel}>
             <div className={styles.tabs}>
@@ -243,24 +243,24 @@ export default function EaziCartLandingPage() {
         <div className={`${styles.shell} ${styles.split} ${styles.reveal}`}>
           <div className={styles.splitCopy}>
             <h2>Your business deserves more than a storefront.</h2>
-            <p>Create your business profile, showcase real products, reach new buyers and manage operations from one place.</p>
+            <p>Create your business profile, showcase modern products, reach new buyers and manage operations from one place.</p>
             <PrimaryLink href="/register">Start Selling</PrimaryLink>
           </div>
           <div className={styles.sellerDashboard}>
-            <img src={photos.market} alt="Shopkeeper in a small Abuja retail shop" />
+            <img src={photos.market} alt="Shopkeeper in a modern African retail shop" />
             <div className={styles.dashboardWash} />
             <div className={styles.dashboardContent}>
-              <h3>Local Store</h3>
+              <h3>Modern Store</h3>
               <div className={styles.metrics}>
                 <div><span>Products</span><strong>In stock</strong></div>
                 <div><span>Orders</span><strong>Live</strong></div>
               </div>
               <div className={styles.dashboardOrder}>
-                <div><strong>Food staples</strong><span>Retail & wholesale</span></div>
+                <div><strong>Phones & accessories</strong><span>Consumer electronics</span></div>
                 <b className={styles.statusDelivered}>Available</b>
               </div>
               <div className={styles.dashboardOrder}>
-                <div><strong>Everyday essentials</strong><span>Local inventory</span></div>
+                <div><strong>Beauty & lifestyle</strong><span>Modern inventory</span></div>
                 <b>Shop</b>
               </div>
             </div>
@@ -310,12 +310,12 @@ export default function EaziCartLandingPage() {
         <div className={`${styles.shell} ${styles.split} ${styles.reelsSection} ${styles.reveal}`}>
           <div className={styles.splitCopy}>
             <h2>Discover products the way people discover everything else.</h2>
-            <p>Watch real markets, products and sellers through short-form business content made for commerce.</p>
+            <p>Watch modern products and sellers through short-form business content made for commerce.</p>
           </div>
           <div className={styles.reelPhone}>
             <span className={styles.notch} /><h4>Reels</h4>
-            <img src={photos.seller} alt="Lagos food market and local sellers" />
-            <div className={styles.reelOverlay}><span>Local commerce</span><strong>Fresh products from Lagos</strong><b>Explore →</b></div>
+            <img src={photos.seller} alt="African seller showing products" />
+            <div className={styles.reelOverlay}><span>Modern commerce</span><strong>Products from African sellers</strong><b>Explore →</b></div>
           </div>
         </div>
       </section>
@@ -343,7 +343,7 @@ export default function EaziCartLandingPage() {
           </div>
           <div className={styles.businessPanel}>
             <div><h3>Manufacturers</h3><p>Reach distributors, retailers and businesses looking for your products.</p></div>
-            <div className={styles.catalogue}><ProductCard {...products[0]!} /><ProductCard {...products[2]!} /></div>
+            <div className={styles.catalogue}><ProductCard {...products[1]!} /><ProductCard {...products[2]!} /></div>
           </div>
         </div>
       </section>
