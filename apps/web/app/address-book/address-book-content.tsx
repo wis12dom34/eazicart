@@ -162,7 +162,7 @@ export function AddressBookContent({
           </div>
 
           <AddressForm
-            userName={isEditing ? user.name : undefined}
+            userName={user.name}
             address={editingAddress}
             submitLabel={isEditing ? "Save changes" : "Save address"}
             onSubmit={(event) =>
@@ -234,7 +234,7 @@ export function AddressBookContent({
           </div>
 
           <AddressForm
-            userName={isEditing ? user.name : undefined}
+            userName={user.name}
             address={editingAddress}
             submitLabel={isEditing ? "Save changes" : "Save address"}
             onSubmit={(event) =>
