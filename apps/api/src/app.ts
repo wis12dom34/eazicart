@@ -26,8 +26,19 @@ export function buildApp(
   config: AppConfig,
   dependencies: { authStore?: AuthStore; database?: PrismaClient } = {},
 ) {
+  if (
+    config.NODE_ENV === "production" &&
+    (!dependencies.database || !dependencies.authStore)
+  ) {
+    throw new Error("Production requires a database and persistent auth store");
+  }
   const app = Fastify({
-    logger: config.NODE_ENV !== "test",
+    logger:
+      config.NODE_ENV === "test"
+        ? false
+        : {
+            redact: ["req.headers.authorization", "req.headers.cookie"],
+          },
     requestIdHeader: "x-request-id",
   });
   const store = dependencies.authStore ?? new MemoryAuthStore();
@@ -71,6 +82,18 @@ export function buildApp(
     });
   });
   app.get("/health", () => ({ status: "ok", service: "eazicart-api" }));
+  app.get("/ready", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    if (!dependencies.database)
+      return reply.code(503).send({ status: "unavailable" });
+    try {
+      await dependencies.database.$queryRaw`SELECT 1`;
+      return { status: "ready", service: "eazicart-api" };
+    } catch (error) {
+      request.log.error({ err: error }, "Database readiness check failed");
+      return reply.code(503).send({ status: "unavailable" });
+    }
+  });
   registerAuth(app, config, store);
   registerUsers(app, store, dependencies.database);
   registerSellerProfiles(app, dependencies.database);

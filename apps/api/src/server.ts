@@ -12,4 +12,30 @@ const app = buildApp(config, {
   database,
 });
 app.addHook("onClose", async () => database.$disconnect());
-await app.listen({ host: config.HOST, port: config.PORT });
+
+let closing = false;
+async function shutdown() {
+  if (closing) return;
+  closing = true;
+  const deadline = setTimeout(() => process.exit(1), 10_000);
+  deadline.unref();
+  try {
+    await app.close();
+  } catch (error) {
+    app.log.error(error, "API shutdown failed");
+    process.exitCode = 1;
+  } finally {
+    clearTimeout(deadline);
+  }
+}
+process.once("SIGTERM", () => void shutdown());
+process.once("SIGINT", () => void shutdown());
+
+try {
+  await database.$connect();
+  await app.listen({ host: config.HOST, port: config.PORT });
+} catch (error) {
+  app.log.error(error, "API startup failed");
+  process.exitCode = 1;
+  await shutdown();
+}

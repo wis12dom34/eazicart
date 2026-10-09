@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: EaziCart private managed PostgreSQL foundation
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PrivateSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: At least two private subnets in different availability zones
+  ApiSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  InstanceClass:
+    Type: String
+    Default: db.t4g.small
+    AllowedValues: [db.t4g.small, db.t4g.medium, db.m7g.large, db.m7g.xlarge]
+  MultiAZ:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+  EngineVersion:
+    Type: String
+    AllowedPattern: '16\.[0-9]+'
+    Description: Supported PostgreSQL 16 minor version in the selected AWS region
+Conditions:
+  EnableMultiAZ: !Equals [!Ref MultiAZ, "true"]
+Resources:
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PostgreSQL access from EaziCart API tasks only
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ApiSecurityGroupId
+  SubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: EaziCart private PostgreSQL subnets
+      SubnetIds: !Ref PrivateSubnetIds
+  Parameters:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: Require TLS for EaziCart PostgreSQL
+      Family: postgres16
+      Parameters:
+        rds.force_ssl: "1"
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      Engine: postgres
+      EngineVersion: !Ref EngineVersion
+      DBInstanceClass: !Ref InstanceClass
+      DBName: eazicart
+      MasterUsername: eazicart_admin
+      ManageMasterUserPassword: true
+      AllocatedStorage: "20"
+      MaxAllocatedStorage: 100
+      StorageType: gp3
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      MultiAZ: !If [EnableMultiAZ, true, false]
+      BackupRetentionPeriod: 7
+      DeletionProtection: true
+      AutoMinorVersionUpgrade: true
+      CopyTagsToSnapshot: true
+      DBSubnetGroupName: !Ref SubnetGroup
+      DBParameterGroupName: !Ref Parameters
+      VPCSecurityGroups: [!Ref DatabaseSecurityGroup]
+Outputs:
+  DatabaseHost:
+    Value: !GetAtt Database.Endpoint.Address
+  AdminSecretArn:
+    Description: For controlled setup and migrations; do not give this to runtime API tasks
+    Value: !GetAtt Database.MasterUserSecret.SecretArn
