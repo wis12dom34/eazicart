@@ -114,7 +114,7 @@ export default function HomePage({
             ) : null}
           </Link>
         </div>
-        <Link className="figma-home-search" href="/explore">
+        <Link className="figma-home-search" href="/search">
           <img src="/figma/search.svg" width={18} height={18} alt="" />
           <span>Search products, stores or brands</span>
         </Link>
@@ -187,7 +187,8 @@ export default function HomePage({
                   <strong>{product.name}</strong>
                   <b>{money(product.price)}</b>
                   <small>
-                    {product.stock > 0 ? "In stock" : "Out of stock"}
+                    {product.viewsLabel ??
+                      (product.stock > 0 ? "In stock" : "Out of stock")}
                   </small>
                 </Link>
               );
