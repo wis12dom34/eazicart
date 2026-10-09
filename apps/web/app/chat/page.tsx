@@ -7,6 +7,8 @@ import "./chat.css";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { Icon } from "../components/icon";
 
+const sellersHref = "/explore?section=sellers";
+
 export default function ChatPage() {
   return (
     <main className="app-shell with-nav eazicart-chat-page">
@@ -15,7 +17,7 @@ export default function ChatPage() {
           <h1>Chat</h1>
           <p>Messages from sellers will appear here.</p>
         </div>
-        <Link href="/explore#sellers" aria-label="Find sellers">
+        <Link href={sellersHref} aria-label="Find sellers">
           <Icon name="search" size={21} />
         </Link>
       </header>
@@ -32,7 +34,7 @@ export default function ChatPage() {
           Open a seller store or product to start a conversation when messaging
           is available.
         </p>
-        <Link href="/explore#sellers">Explore sellers</Link>
+        <Link href={sellersHref}>Explore sellers</Link>
       </section>
 
       <BottomNavigation activeHref="/chat" />
