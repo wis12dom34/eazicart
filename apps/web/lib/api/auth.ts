@@ -11,9 +11,14 @@ export const authApi = {
       method: "POST",
       body: { name, email, password },
     }),
-  refresh: (refreshToken: string) =>
+  refresh: (refreshToken?: string) =>
     apiRequest<{ tokens: Tokens }>("/auth/refresh", {
       method: "POST",
-      body: { refreshToken },
+      body: refreshToken ? { refreshToken } : undefined,
+    }),
+  logout: (refreshToken?: string) =>
+    apiRequest<void>("/auth/logout", {
+      method: "POST",
+      body: refreshToken ? { refreshToken } : {},
     }),
 };
