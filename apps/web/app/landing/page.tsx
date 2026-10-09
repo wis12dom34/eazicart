@@ -26,25 +26,25 @@ const products = [
     name: "Smartphones & Devices",
     seller: "Electronics sellers · Africa",
     price: "Explore live listings",
-    image: "https://images.unsplash.com/photo-1759505017950-25e0733b9e68?auto=format&fit=crop&q=82&w=1200",
+    image: "https://images.unsplash.com/photo-1779094041702-af068ff4d612?auto=format&fit=crop&q=86&w=1400",
   },
   {
     name: "Premium Skincare",
     seller: "Beauty sellers · Africa",
     price: "Explore live listings",
-    image: "https://images.unsplash.com/photo-1773187973415-2c85a99aaa82?auto=format&fit=crop&q=82&w=1200",
+    image: "https://images.unsplash.com/photo-1748543668676-ea8241cb3886?auto=format&fit=crop&q=86&w=1400",
   },
   {
     name: "Everyday Sneakers",
     seller: "Fashion sellers · Africa",
     price: "Explore live listings",
-    image: "https://images.unsplash.com/photo-1625860191460-10a66c7384fb?auto=format&fit=crop&q=82&w=1200",
+    image: "https://images.unsplash.com/photo-1654907118243-a0a62cefbf0a?auto=format&fit=crop&q=86&w=1400",
   },
   {
     name: "Wireless Headphones",
     seller: "Tech sellers · Africa",
     price: "Explore live listings",
-    image: "https://images.unsplash.com/photo-1553775744-0bae9da7f5e7?auto=format&fit=crop&q=82&w=1200",
+    image: "https://images.unsplash.com/photo-1553775744-0bae9da7f5e7?auto=format&fit=crop&q=86&w=1400",
   },
 ];
 
@@ -86,8 +86,17 @@ function ProductCard({
   image: string;
 }) {
   return (
-    <article className={styles.productCard}>
-      <div className={styles.productArt} style={{ overflow: "hidden", background: "#f7f7f7" }}>
+    <article className={styles.productCard} style={{ padding: 10, borderRadius: 18 }}>
+      <div
+        className={styles.productArt}
+        style={{
+          overflow: "hidden",
+          background: "#f5f3ef",
+          aspectRatio: "4 / 5",
+          height: "auto",
+          borderRadius: 14,
+        }}
+      >
         <img
           src={image}
           alt={name}
@@ -228,13 +237,18 @@ export default function EaziCartLandingPage() {
         <div className={`${styles.shell} ${styles.reveal}`}>
           <div className={styles.sectionHeading}>
             <h2>Discover products people want.</h2>
-            <p>Browse clean, modern product categories from sellers across African markets.</p>
+            <p>A cleaner, editorial product feed inspired by the way people discover products visually.</p>
           </div>
           <div className={styles.marketplacePanel}>
             <div className={styles.tabs}>
               <span className={styles.activeTab}>For You</span><span>Trending</span><span>Categories</span><span>Brands</span><span>Sellers</span>
             </div>
-            <div className={styles.productGrid}>{products.map((product) => <ProductCard key={product.name} {...product} />)}</div>
+            <div
+              className={styles.productGrid}
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 16 }}
+            >
+              {products.map((product) => <ProductCard key={product.name} {...product} />)}
+            </div>
           </div>
         </div>
       </section>
