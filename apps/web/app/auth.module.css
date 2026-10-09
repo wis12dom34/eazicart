@@ -3,47 +3,61 @@
   max-width: 430px;
   min-height: 100svh;
   margin: 0 auto;
-  padding: calc(58px + env(safe-area-inset-top)) 24px
+  padding: calc(52px + env(safe-area-inset-top)) 24px
     calc(48px + env(safe-area-inset-bottom));
   background: #fff;
 }
 
-.loginPage {
-  padding-top: calc(66px + env(safe-area-inset-top));
+.loginPage,
+.registerPage {
+  padding-top: calc(52px + env(safe-area-inset-top));
 }
 
-.registerPage {
-  padding-top: calc(58px + env(safe-area-inset-top));
+.brand {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: #ff5a18;
+  font-size: 29px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-decoration: none;
+}
+
+.authIntro {
+  margin-top: 38px;
 }
 
 .heading {
   margin: 0;
   color: #0a0a0d;
-  font-size: 27.419px;
-  font-weight: 700;
-  line-height: normal;
-  letter-spacing: -0.025em;
+  font-size: 30px;
+  font-weight: 720;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
 }
 
 .subtitle {
-  margin: 7px 0 0;
+  max-width: 340px;
+  margin: 9px 0 0;
   color: #6b707a;
-  font-size: 13.709px;
+  font-size: 14px;
   line-height: 19px;
 }
 
 .form {
   display: grid;
   gap: 16px;
-  margin-top: 44px;
+  margin-top: 40px;
 }
 
 .loginPage .form {
-  margin-top: 43px;
+  margin-top: 40px;
 }
 
 .registerForm {
-  margin-top: 40px;
+  margin-top: 34px;
 }
 
 .field {
@@ -52,23 +66,23 @@
 }
 
 .field label {
-  color: #636366;
-  font-size: 11.881px;
+  color: #4f535b;
+  font-size: 12px;
   font-weight: 600;
   line-height: 16px;
 }
 
 .field input {
   width: 100%;
-  height: 49.353px;
-  padding: 0 14.623px;
-  border: 1px solid transparent;
-  border-radius: 12px;
+  height: 52px;
+  padding: 0 15px;
+  border: 1px solid #e7e8ec;
+  border-radius: 14px;
   outline: 0;
-  background: #f2f2f7;
+  background: #f5f6f8;
   color: #0a0a0d;
   font-family: inherit;
-  font-size: 13.709px;
+  font-size: 14px;
   line-height: 19px;
   transition:
     border-color 140ms ease,
@@ -77,14 +91,14 @@
 }
 
 .field input::placeholder {
-  color: #6b707a;
+  color: #8a8f98;
   opacity: 1;
 }
 
 .field input:focus {
-  border-color: #c8cbd1;
+  border-color: #b9bdc5;
   background: #fff;
-  box-shadow: 0 0 0 3px rgb(13 115 242 / 8%);
+  box-shadow: 0 0 0 3px rgb(6 117 255 / 8%);
 }
 
 .field input[aria-invalid="true"] {
@@ -97,16 +111,12 @@
 .formError {
   margin: -2px 0 0;
   color: #d92d20;
-  font-size: 11.881px;
+  font-size: 12px;
   line-height: 16px;
 }
 
-.formError {
-  font-size: 12px;
-}
-
 .success {
-  margin: 18px 0 -22px;
+  margin: 18px 0 -18px;
   padding: 12px 14px;
   border-radius: 12px;
   background: #eaf8ef;
@@ -117,15 +127,15 @@
 
 .primaryButton {
   width: 100%;
-  height: 49px;
+  height: 52px;
   margin-top: 8px;
   border: 0;
-  border-radius: 14px;
-  background: #0f1419;
+  border-radius: 15px;
+  background: #10151b;
   color: #fff;
   font-family: inherit;
-  font-size: 14.62px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 650;
   line-height: 20px;
   cursor: pointer;
   transition:
@@ -138,35 +148,35 @@
 }
 
 .primaryButton:disabled {
-  background: #2f3035;
+  background: #454a50;
   cursor: wait;
 }
 
 .busyNote {
   margin: -8px 0 0;
   color: #6b707a;
-  font-size: 11.881px;
+  font-size: 12px;
   line-height: 16px;
 }
 
 .terms {
   margin: 0;
-  color: #6b707a;
+  color: #787d86;
   font-size: 11px;
   line-height: 16px;
 }
 
 .switchLink {
-  margin: 34px 0 0;
+  margin: 28px 0 0;
   text-align: center;
   color: #0675ff;
-  font-size: 12.795px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 18px;
 }
 
 .registerPage .switchLink {
-  margin-top: 30px;
+  margin-top: 26px;
 }
 
 .switchLink a {
@@ -180,7 +190,9 @@
 }
 
 .switchLink a:focus-visible,
-.switchLink a:hover {
+.switchLink a:hover,
+.brand:focus-visible,
+.brand:hover {
   text-decoration: underline;
 }
 
@@ -200,7 +212,7 @@
   }
 
   .heading {
-    font-size: 26px;
+    font-size: 28px;
   }
 }
 
