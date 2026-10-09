@@ -1,8 +1,17 @@
 const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001"
+  process.env.NODE_ENV === "production"
+    ? "/api"
+    : (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001")
 ).replace(/\/$/, "");
 const TOKEN_KEY = "eazicart.auth.tokens";
 const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+
+type AccessSession = {
+  accessToken: string;
+  expiresAt: string;
+};
+type SessionTokens = AccessSession & { refreshToken?: string };
+let memoryTokens: AccessSession | null = null;
 
 export class ApiError extends Error {
   constructor(
@@ -26,6 +35,58 @@ type RequestOptions = Omit<RequestInit, "body"> & {
 };
 let refreshPromise: Promise<boolean> | null = null;
 
+const legacyStorage = () =>
+  typeof window !== "undefined" && typeof localStorage !== "undefined"
+    ? localStorage
+    : null;
+
+function readLegacyTokens(): SessionTokens | null {
+  const storage = legacyStorage();
+  if (!storage) return null;
+  const raw = storage.getItem(TOKEN_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Partial<SessionTokens>;
+    if (!parsed.accessToken || !parsed.expiresAt) return null;
+    return {
+      accessToken: parsed.accessToken,
+      expiresAt: parsed.expiresAt,
+      refreshToken: parsed.refreshToken,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export const getLegacyRefreshToken = () => readLegacyTokens()?.refreshToken;
+
+export const tokenStore = {
+  get: () => memoryTokens,
+  set: (tokens: SessionTokens) => {
+    memoryTokens = {
+      accessToken: tokens.accessToken,
+      expiresAt: tokens.expiresAt,
+    };
+    // New sessions never persist refresh credentials in browser storage.
+    legacyStorage()?.removeItem(TOKEN_KEY);
+  },
+  clear: () => {
+    memoryTokens = null;
+    legacyStorage()?.removeItem(TOKEN_KEY);
+  },
+};
+
+function apiUrl(path: string) {
+  const suffix = path.startsWith("/") ? path : `/${path}`;
+  const target = `${API_BASE_URL}${suffix}`;
+  if (/^https?:\/\//i.test(target)) return new URL(target);
+  const origin =
+    typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "http://localhost:3000";
+  return new URL(target, origin);
+}
+
 async function fetchWithTimeout(
   input: RequestInfo | URL,
   init: RequestInit = {},
@@ -45,7 +106,11 @@ async function fetchWithTimeout(
     externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
 
   try {
-    return await fetch(input, { ...init, signal: controller.signal });
+    return await fetch(input, {
+      ...init,
+      credentials: init.credentials ?? "include",
+      signal: controller.signal,
+    });
   } catch (error) {
     if (timedOut) {
       throw new ApiError(
@@ -68,51 +133,23 @@ async function fetchWithTimeout(
   }
 }
 
-export const tokenStore = {
-  get: () => {
-    if (typeof window === "undefined") return null;
-    const raw = localStorage.getItem(TOKEN_KEY);
-    try {
-      return raw
-        ? (JSON.parse(raw) as {
-            accessToken: string;
-            refreshToken: string;
-            expiresAt: string;
-          })
-        : null;
-    } catch {
-      return null;
-    }
-  },
-  set: (tokens: {
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: string;
-  }) => {
-    if (typeof window !== "undefined")
-      localStorage.setItem(TOKEN_KEY, JSON.stringify(tokens));
-  },
-  clear: () => {
-    if (typeof window !== "undefined") localStorage.removeItem(TOKEN_KEY);
-  },
-};
-
 async function refresh(): Promise<boolean> {
-  const token = tokenStore.get()?.refreshToken;
-  if (!token) return false;
+  const legacyRefreshToken = getLegacyRefreshToken();
   try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/refresh`, {
+    const response = await fetchWithTimeout(apiUrl("/auth/refresh"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken: token }),
+      headers: legacyRefreshToken
+        ? { "Content-Type": "application/json" }
+        : undefined,
+      body: legacyRefreshToken
+        ? JSON.stringify({ refreshToken: legacyRefreshToken })
+        : undefined,
     });
     if (!response.ok) {
       tokenStore.clear();
       return false;
     }
-    const payload = (await response.json()) as {
-      tokens: { accessToken: string; refreshToken: string; expiresAt: string };
-    };
+    const payload = (await response.json()) as { tokens: SessionTokens };
     tokenStore.set(payload.tokens);
     return true;
   } catch {
@@ -134,9 +171,7 @@ export async function apiRequest<T>(
     headers: customHeaders,
     ...init
   } = options;
-  const url = new URL(
-    `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`,
-  );
+  const url = apiUrl(path);
   Object.entries(query ?? {}).forEach(([key, value]) => {
     if (value !== undefined && value !== "")
       url.searchParams.set(key, String(value));
