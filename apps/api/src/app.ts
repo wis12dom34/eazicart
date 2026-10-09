@@ -10,6 +10,7 @@ import { registerCategories } from "./modules/categories/index.js";
 import { registerFollows } from "./modules/follows/index.js";
 import { registerNotifications } from "./modules/notifications/index.js";
 import { registerOrders } from "./modules/orders/index.js";
+import { registerPaymentConfiguration } from "./modules/payment-configuration/index.js";
 import { registerPayments } from "./modules/payments/index.js";
 import { registerProducts } from "./modules/products/index.js";
 import { registerReels } from "./modules/reels/index.js";
@@ -84,6 +85,7 @@ export function buildApp(
   registerReelMedia(app, config, dependencies.database);
   registerCart(app, dependencies.database);
   registerOrders(app, dependencies.database);
+  registerPaymentConfiguration(app, config);
   registerPayments(app, config, dependencies.database);
   registerAddresses(app, dependencies.database);
   registerSavedProducts(app, dependencies.database);
