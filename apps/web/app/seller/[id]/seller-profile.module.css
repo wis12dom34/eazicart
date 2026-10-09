@@ -124,21 +124,27 @@
 }
 
 .tabs {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 12;
   margin: 28px 24px 0;
   border-bottom: 1px solid var(--border);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: rgb(255 255 255 / 96%);
+  backdrop-filter: blur(14px);
 }
 
 .tab {
   min-height: 46px;
-  padding: 0 8px 10px;
+  padding: 0 6px 10px;
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .activeTab {
