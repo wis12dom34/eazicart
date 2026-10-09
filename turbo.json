@@ -4,7 +4,14 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["NEXT_PUBLIC_API_BASE_URL"]
+      "env": [
+        "NEXT_PUBLIC_API_BASE_URL",
+        "EAZICART_PUBLIC_API_URL",
+        "EAZICART_SITE_URL",
+        "EAZICART_INDEXING",
+        "EAZICART_CATALOG_INDEXING",
+        "VERCEL_ENV"
+      ]
     },
     "dev": {
       "cache": false,

@@ -1,272 +1,107 @@
-"use client";
+import { notFound } from "next/navigation";
+import { cache } from "react";
+import {
+  getPublicCategories,
+  getPublicProducts,
+} from "../../../lib/public-catalog";
+import { pageMetadata } from "../../../lib/seo";
+import { breadcrumbs } from "../../../lib/catalog-schema";
+import { StructuredData } from "../../components/structured-data";
+import CategoryContent from "./category-content";
 
-import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-
-import { BottomNavigation } from "../../components/bottom-navigation";
-import { DiscoveryProductCard } from "../../components/discovery-product-card";
-import { Icon } from "../../components/icon";
-import styles from "../../discovery.module.css";
-import { useRequest } from "../../hooks/use-request";
-import { useAuth } from "../../providers/auth-provider";
-import { categoriesApi } from "../../../lib/api/categories";
-import { productsApi } from "../../../lib/api/products";
-import { savedApi } from "../../../lib/api/saved";
-
-export default function CategoryPage() {
-  const auth = useAuth();
-  const router = useRouter();
-  const params = useParams<{ slug: string }>();
-  const searchParams = useSearchParams();
-  const slug = decodeURIComponent(params.slug);
-  const search = searchParams.get("search")?.trim() ?? "";
-
-  const categories = useRequest(() => categoriesApi.list(), []);
-  const products = useRequest(
-    () =>
-      productsApi.list({
-        category: slug,
-        search: search || undefined,
-        limit: 20,
-      }),
-    [slug, search],
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+const getCategory = cache(
+  async (slug: string, search: string, page: number) => {
+    const query = new URLSearchParams({
+      category: slug,
+      limit: "20",
+      page: String(page),
+    });
+    if (search) query.set("search", search);
+    const [categories, products] = await Promise.all([
+      getPublicCategories(),
+      getPublicProducts(query.toString()),
+    ]);
+    const category =
+      categories.status === "ok"
+        ? categories.data.find((c) => c.slug === slug)
+        : undefined;
+    return { categories, products, category };
+  },
+);
+async function input(props: Props) {
+  const [{ slug }, query] = await Promise.all([
+    props.params,
+    props.searchParams,
+  ]);
+  const page = Math.max(1, Number(query.page) || 1);
+  const search =
+    typeof query.search === "string" ? query.search.trim().slice(0, 100) : "";
+  return { slug, query, search, page };
+}
+export async function generateMetadata(props: Props) {
+  const { slug, query, search, page } = await input(props);
+  const { category, categories, products } = await getCategory(
+    slug,
+    search,
+    page,
   );
-  const saved = useRequest(
-    () =>
-      auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }),
-    [auth.isAuthenticated],
+  if (categories.status === "ok" && !category) notFound();
+  if (products.status === "ok" && page > 1 && !products.data.data.length)
+    notFound();
+  const eligible = Boolean(
+    category && products.status === "ok" && products.data.data.length,
   );
-  const [savedOverrides, setSavedOverrides] = useState<Record<string, boolean>>(
-    {},
+  const path = `/category/${encodeURIComponent(slug)}${page > 1 ? `?page=${page}` : ""}`;
+  return pageMetadata(
+    category
+      ? `${category.name}${page > 1 ? ` – Page ${page}` : ""}`
+      : "Category unavailable",
+    category
+      ? `Explore ${category.name.toLowerCase()} products and their sellers on EaziCart. View current product details and availability.`
+      : "Browse the current EaziCart marketplace categories.",
+    path,
+    {
+      index: eligible && Object.keys(query).every((key) => key === "page"),
+      catalog: true,
+    },
   );
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState("");
-
-  const category = categories.data?.data.find((item) => item.slug === slug);
-  const categoryName = category?.name ?? slug;
-  const relatedCategories = (categories.data?.data ?? [])
-    .filter((item) => item.slug !== slug)
-    .slice(0, 4);
-  const productRows = products.data?.data ?? [];
-  const productColumns = [0, 1].map((column) =>
-    productRows
-      .map((product, index) => ({ product, index }))
-      .filter(({ index }) => index % 2 === column),
+}
+export default async function CategoryPage(props: Props) {
+  const { slug, search, page } = await input(props);
+  const { category, categories, products } = await getCategory(
+    slug,
+    search,
+    page,
   );
-  const sellerRows = Array.from(
-    new Map(
-      productRows.map((product) => [product.seller.id, product.seller]),
-    ).values(),
-  ).slice(0, 4);
-  const loading = categories.loading || products.loading;
-  const error = categories.error || products.error;
-  const categoryMissing = !categories.loading && !categories.error && !category;
-
-  const toggleSaved = async (productId: string, selected: boolean) => {
-    if (!auth.isAuthenticated) {
-      const next = `/category/${encodeURIComponent(slug)}${search ? `?search=${encodeURIComponent(search)}` : ""}`;
-      router.push(`/login?next=${encodeURIComponent(next)}`);
-      return;
-    }
-
-    setSavingId(productId);
-    setSaveError("");
-    try {
-      if (selected) await savedApi.remove(productId);
-      else await savedApi.save(productId);
-      setSavedOverrides((current) => ({
-        ...current,
-        [productId]: !selected,
-      }));
-    } catch (caught) {
-      setSaveError(
-        caught instanceof Error
-          ? caught.message
-          : "Unable to update saved products",
-      );
-    } finally {
-      setSavingId(null);
-    }
-  };
-
-  if (categoryMissing) {
-    return (
-      <main className={`app-shell ${styles.categoryPage}`}>
-        <div className={styles.categoryViewport}>
-          <header className={styles.categoryHeader}>
-            <Link
-              className={styles.categoryBack}
-              href="/explore"
-              aria-label="Back to Explore"
-            >
-              <Icon name="back" size={22} />
-            </Link>
-            <h1>Category</h1>
-          </header>
-          <div className={styles.categoryState}>
-            <strong>Category not found</strong>
-            Browse the current categories in Explore.
-          </div>
-        </div>
-        <BottomNavigation />
-      </main>
-    );
-  }
-
+  if (categories.status === "ok" && !category) notFound();
+  if (products.status === "ok" && page > 1 && !products.data.data.length)
+    notFound();
+  const trail = category
+    ? breadcrumbs([
+        { name: "EaziCart", path: "/landing" },
+        { name: category.name, path: `/category/${encodeURIComponent(slug)}` },
+      ])
+    : undefined;
   return (
-    <main
-      className={`app-shell ${styles.categoryPage}`}
-      data-figma-node="31:50"
-    >
-      <div className={styles.categoryViewport}>
-        <header className={styles.categoryHeader}>
-          <Link
-            className={styles.categoryBack}
-            href="/explore"
-            aria-label="Back to Explore"
-          >
-            <Icon name="back" size={22} />
-          </Link>
-          <h1>{categoryName}</h1>
-        </header>
-
-        <p className={styles.categoryCount} aria-live="polite">
-          {loading
-            ? "Loading products…"
-            : `${products.data?.pagination.total ?? 0} products`}
-        </p>
-
-        <form
-          className={styles.categorySearch}
-          action={`/category/${encodeURIComponent(slug)}`}
-        >
-          <Icon name="search" size={17} />
-          <input
-            key={search}
-            name="search"
-            defaultValue={search}
-            aria-label={`Search ${categoryName}`}
-            placeholder={`Search ${categoryName}`}
-          />
-        </form>
-
-        {error ? (
-          <div className={styles.categoryState} role="alert">
-            <strong>Category is unavailable</strong>
-            {error}
-          </div>
-        ) : null}
-
-        {!error && relatedCategories.length > 0 ? (
-          <section
-            className={styles.categorySection}
-            aria-labelledby="browse-categories"
-          >
-            <h2 id="browse-categories">Shop by category</h2>
-            <div className={styles.categoryGrid}>
-              {relatedCategories.map((item) => (
-                <Link
-                  className={styles.categoryCard}
-                  href={`/category/${item.slug}`}
-                  key={item.id}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {!error && !loading ? (
-          <section
-            className={`${styles.categorySection} ${styles.categoryProducts}`}
-            aria-labelledby="category-products"
-          >
-            <h2 id="category-products">
-              {search
-                ? `Results in ${categoryName}`
-                : `Popular in ${categoryName}`}
-            </h2>
-            {productRows.length > 0 ? (
-              <div className={styles.categoryMasonry}>
-                {productColumns.map((column, columnIndex) => (
-                  <div
-                    className={styles.categoryMasonryColumn}
-                    key={columnIndex}
-                  >
-                    {column.map(({ product, index }) => {
-                      const selected =
-                        savedOverrides[product.id] ??
-                        saved.data?.data.some(
-                          (entry) => entry.productId === product.id,
-                        ) ??
-                        false;
-                      return (
-                        <DiscoveryProductCard
-                          product={product}
-                          key={product.id}
-                          variant="search"
-                          searchPosition={index}
-                          saved={selected}
-                          saving={savingId === product.id}
-                          onToggleSaved={() =>
-                            void toggleSaved(product.id, selected)
-                          }
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.categoryState}>
-                <strong>No products found</strong>
-                {search
-                  ? `No products in ${categoryName} match “${search}”.`
-                  : `There are no products in ${categoryName} yet.`}
-              </div>
-            )}
-          </section>
-        ) : null}
-
-        {!error && sellerRows.length > 0 ? (
-          <section
-            className={`${styles.categorySection} ${styles.categorySellerSection}`}
-            aria-labelledby="category-sellers"
-          >
-            <h2 id="category-sellers">Sellers in {categoryName}</h2>
-            <div className={styles.sellers}>
-              {sellerRows.map((seller) => (
-                <Link
-                  className={styles.sellerRow}
-                  href={`/seller/${seller.id}`}
-                  key={seller.id}
-                >
-                  <span className={styles.sellerAvatar} aria-hidden="true">
-                    {seller.displayName.slice(0, 2).toUpperCase()}
-                  </span>
-                  <span className={styles.sellerText}>
-                    <strong>{seller.displayName}</strong>
-                    {seller.bio ? <small>{seller.bio}</small> : null}
-                  </span>
-                  <span className={styles.view}>View</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {saveError ? (
-          <p className={styles.categorySaveError} role="alert">
-            {saveError}
-          </p>
-        ) : null}
-
-        <div className={styles.categoryScrollClearance} aria-hidden="true" />
-      </div>
-
-      <BottomNavigation />
-    </main>
+    <>
+      {trail ? <StructuredData data={trail} /> : null}
+      <CategoryContent
+        key={`${slug}:${search}:${page}`}
+        slug={slug}
+        initialCategories={
+          categories.status === "ok" ? categories.data : undefined
+        }
+        initialProducts={products.status === "ok" ? products.data : undefined}
+        initialError={
+          categories.status === "ok" && products.status === "ok"
+            ? ""
+            : "Category details are temporarily unavailable. Please try again."
+        }
+      />
+    </>
   );
 }

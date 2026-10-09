@@ -5,7 +5,18 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   distDir: process.env.EAZICART_TEST_DIST_DIR || ".next",
   poweredByHeader: false,
+  // Resolve metadata before emitting HTML for reliable previews and 404 statuses.
+  htmlLimitedBots: /.*/,
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/photo-*",
+      },
+    ],
+  },
   transpilePackages: ["@eazicart/ui"],
 };
 

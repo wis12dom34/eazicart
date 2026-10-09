@@ -1,330 +1,87 @@
-"use client";
+import { notFound, redirect } from "next/navigation";
+import { cache } from "react";
+import {
+  getPublicSeller,
+  getPublicProducts,
+} from "../../../lib/public-catalog";
+import { pageMetadata, canonicalUrl } from "../../../lib/seo";
+import { StructuredData } from "../../components/structured-data";
+import SellerContent from "./seller-content";
 
-import Link from "next/link";
-import { use, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ProductGrid } from "../../components/product-card";
-import { ErrorState, LoadingState } from "../../components/async-state";
-import { Icon } from "../../components/icon";
-import { sellersApi } from "../../../lib/api/sellers";
-import { followsApi } from "../../../lib/api/follows";
-import { reelsApi } from "../../../lib/api/reels";
-import { useRequest } from "../../hooks/use-request";
-import { useAuth } from "../../providers/auth-provider";
-import styles from "./seller-profile.module.css";
-
-type SellerTab = "products" | "reels" | "reviews" | "about";
-
-export default function SellerPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
-  const auth = useAuth();
-  const router = useRouter();
-  const seller = useRequest(() => sellersApi.get(id), [id]);
-  const follows = useRequest(
-    async () =>
-      auth.isAuthenticated ? followsApi.list() : Promise.resolve(undefined),
-    [auth.isAuthenticated],
+type Props = { params: Promise<{ id: string }> };
+const getStore = cache(async (id: string) => {
+  const seller = await getPublicSeller(id);
+  const products =
+    seller.status === "ok"
+      ? await getPublicProducts(
+          `seller=${encodeURIComponent(seller.data.id)}&limit=100`,
+        )
+      : undefined;
+  return { seller, products };
+});
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params;
+  const { seller, products } = await getStore(id);
+  if (seller.status === "missing") notFound();
+  const store = seller.status === "ok" ? seller.data : undefined;
+  const rows = products?.status === "ok" ? products.data.data : [];
+  return pageMetadata(
+    store?.displayName ?? "Store unavailable",
+    store?.bio?.slice(0, 160) ||
+      (store
+        ? `Browse products from ${store.displayName} on EaziCart.`
+        : "Store details are temporarily unavailable."),
+    `/seller/${encodeURIComponent(store?.id ?? id)}`,
+    {
+      catalog: true,
+      index: Boolean(store && rows.length),
+      image: rows[0]?.images[0]?.url,
+    },
   );
-  const products = useRequest(() => sellersApi.products(id), [id]);
-  const reels = useRequest(() => reelsApi.feed({ limit: 20 }), [id]);
-  const count = useRequest(
-    () => followsApi.count(seller.data?.data.userId ?? id),
-    [seller.data?.data.userId, id],
-  );
-  const [message, setMessage] = useState("");
-  const [activeTab, setActiveTab] = useState<SellerTab>("products");
-
-  const following = Boolean(
-    follows.data?.data.some(
-      (follow) => follow.sellerId === seller.data?.data.userId,
-    ),
-  );
-
-  if (seller.loading) {
-    return (
-      <main className={`app-shell ${styles.page}`}>
-        <SellerBackLink />
-        <LoadingState />
-      </main>
-    );
-  }
-
-  if (seller.error || !seller.data) {
-    return (
-      <main className={`app-shell ${styles.page}`}>
-        <SellerBackLink />
-        <ErrorState message={seller.error || "Seller not found"} />
-      </main>
-    );
-  }
-
-  const currentSeller = seller.data.data;
-  const productCount =
-    currentSeller._count?.products ?? products.data?.data.length ?? 0;
-  const sellerReels = (reels.data?.data ?? []).filter(
-    (reel) => reel.seller?.id === id || reel.product?.seller.id === id,
-  );
-  const followerCount =
-    count.data?.data.count ?? currentSeller.followerCount ?? 0;
-  const initials = currentSeller.displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-
-  const follow = async () => {
-    if (!auth.isAuthenticated) {
-      router.push(`/login?next=/seller/${id}`);
-      return;
-    }
-
-    try {
-      setMessage("");
-      if (following) await followsApi.unfollow(currentSeller.userId);
-      else await followsApi.follow(currentSeller.userId);
-      await follows.reload();
-      await count.reload();
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Unable to update follow",
-      );
-    }
-  };
-
+}
+export default async function SellerPage({ params }: Props) {
+  const { id } = await params;
+  const { seller, products } = await getStore(id);
+  if (seller.status === "missing") notFound();
+  const store = seller.status === "ok" ? seller.data : undefined;
+  // The API accepts user ID aliases. Consolidate on the seller profile ID.
+  if (store && store.id !== id)
+    redirect(`/seller/${encodeURIComponent(store.id)}`);
+  const rows = products?.status === "ok" ? products.data.data : undefined;
+  const url = canonicalUrl(`/seller/${encodeURIComponent(id)}`);
   return (
-    <main className={`app-shell ${styles.page}`}>
-      <SellerBackLink />
-
-      <section className={styles.intro}>
-        <h1>{currentSeller.displayName}</h1>
-        <p>Seller storefront</p>
-      </section>
-
-      <section className={styles.summaryCard} aria-label="Seller summary">
-        <div className={styles.avatar} aria-hidden="true">
-          {initials || "S"}
-        </div>
-        <div className={styles.summaryContent}>
-          <div className={styles.summaryHeading}>
-            <h2>{currentSeller.displayName}</h2>
-            <button
-              className={`${styles.followButton} ${following ? styles.following : ""}`}
-              type="button"
-              disabled={auth.loading || follows.loading}
-              aria-pressed={following}
-              onClick={() => void follow()}
-            >
-              {following ? "Following" : "Follow"}
-            </button>
-          </div>
-          <p className={styles.metrics}>
-            {followerCount} {followerCount === 1 ? "follower" : "followers"} ·{" "}
-            {productCount} {productCount === 1 ? "product" : "products"}
-          </p>
-          {currentSeller.bio ? (
-            <p className={styles.bio}>{currentSeller.bio}</p>
-          ) : null}
-        </div>
-      </section>
-
-      {message ? (
-        <p className={styles.alert} role="alert">
-          {message}
-        </p>
+    <>
+      {store && url && rows?.length ? (
+        <StructuredData
+          data={{
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: store.displayName,
+            description: store.bio || undefined,
+            url,
+            mainEntity: {
+              "@type": "ItemList",
+              itemListElement: rows.map((p, index) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                name: p.name,
+                url: canonicalUrl(`/product/${encodeURIComponent(p.id)}`),
+              })),
+            },
+          }}
+        />
       ) : null}
-
-      <div
-        className={styles.tabs}
-        role="tablist"
-        aria-label="Seller profile sections"
-      >
-        <SellerTabButton
-          label="Products"
-          tab="products"
-          activeTab={activeTab}
-          onSelect={setActiveTab}
-        />
-        <SellerTabButton
-          label="Reels"
-          tab="reels"
-          activeTab={activeTab}
-          onSelect={setActiveTab}
-        />
-        <SellerTabButton
-          label="Reviews"
-          tab="reviews"
-          activeTab={activeTab}
-          onSelect={setActiveTab}
-        />
-        <SellerTabButton
-          label="About"
-          tab="about"
-          activeTab={activeTab}
-          onSelect={setActiveTab}
-        />
-      </div>
-
-      <section
-        className={styles.panel}
-        id="seller-products-panel"
-        role="tabpanel"
-        aria-labelledby="seller-products-tab"
-        hidden={activeTab !== "products"}
-      >
-        <div className={styles.panelHeader}>
-          <h2>Products</h2>
-          <span>{productCount} available</span>
-        </div>
-        {products.loading ? (
-          <LoadingState />
-        ) : products.error ? (
-          <ErrorState
-            message={products.error}
-            retry={() => void products.reload()}
-          />
-        ) : products.data?.data.length ? (
-          <ProductGrid products={products.data.data} />
-        ) : (
-          <div className={styles.productEmpty}>
-            <p>No products are available from this seller yet.</p>
-          </div>
-        )}
-      </section>
-
-      <section
-        className={styles.panel}
-        id="seller-reels-panel"
-        role="tabpanel"
-        aria-labelledby="seller-reels-tab"
-        hidden={activeTab !== "reels"}
-      >
-        <div className={styles.panelHeader}>
-          <h2>Reels</h2>
-          {sellerReels.length ? (
-            <span>{sellerReels.length} available</span>
-          ) : null}
-        </div>
-        {reels.loading ? (
-          <LoadingState label="Loading reels…" />
-        ) : reels.error ? (
-          <ErrorState message={reels.error} retry={() => void reels.reload()} />
-        ) : sellerReels.length ? (
-          <div className={styles.reelGrid}>
-            {sellerReels.map((reel) => (
-              <Link
-                className={styles.reelCard}
-                href={`/reels?reelId=${encodeURIComponent(reel.id)}`}
-                key={reel.id}
-              >
-                <div className={styles.reelMedia}>
-                  {reel.thumbnailUrl || reel.product?.images[0]?.url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={
-                        reel.thumbnailUrl ?? reel.product?.images[0]?.url ?? ""
-                      }
-                      alt=""
-                    />
-                  ) : (
-                    <span aria-hidden="true">Play</span>
-                  )}
-                </div>
-                <strong>{reel.caption || reel.product?.name || "Reel"}</strong>
-                <small>
-                  {reel._count.views} views · {reel._count.comments} comments
-                </small>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className={styles.emptyCard}>
-            <h2>No Reels yet</h2>
-            <p>This seller has not published any Reels.</p>
-          </div>
-        )}
-      </section>
-
-      <section
-        className={styles.panel}
-        id="seller-about-panel"
-        role="tabpanel"
-        aria-labelledby="seller-about-tab"
-        hidden={activeTab !== "about"}
-      >
-        <div className={styles.aboutCard}>
-          <h2>About {currentSeller.displayName}</h2>
-          <p>
-            {currentSeller.bio || "This seller has not added a store bio yet."}
-          </p>
-          <div className={styles.aboutStats}>
-            <div>
-              <strong>{followerCount}</strong>
-              <span>{followerCount === 1 ? "Follower" : "Followers"}</span>
-            </div>
-            <div>
-              <strong>{productCount}</strong>
-              <span>{productCount === 1 ? "Product" : "Products"}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section
-        className={styles.panel}
-        id="seller-reviews-panel"
-        role="tabpanel"
-        aria-labelledby="seller-reviews-tab"
-        hidden={activeTab !== "reviews"}
-      >
-        <div className={styles.emptyCard}>
-          <h2>Reviews</h2>
-          <p>Seller reviews are not available yet.</p>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function SellerBackLink() {
-  return (
-    <header className={styles.topbar}>
-      <Link className={styles.back} href="/explore" aria-label="Go back">
-        <Icon name="back" />
-      </Link>
-    </header>
-  );
-}
-
-function SellerTabButton({
-  label,
-  tab,
-  activeTab,
-  onSelect,
-}: {
-  label: string;
-  tab: SellerTab;
-  activeTab: SellerTab;
-  onSelect: (tab: SellerTab) => void;
-}) {
-  const active = activeTab === tab;
-  return (
-    <button
-      className={`${styles.tab} ${active ? styles.activeTab : ""}`}
-      id={`seller-${tab}-tab`}
-      type="button"
-      role="tab"
-      aria-selected={active}
-      aria-controls={`seller-${tab}-panel`}
-      tabIndex={active ? 0 : -1}
-      onClick={() => onSelect(tab)}
-    >
-      {label}
-    </button>
+      <SellerContent
+        key={id}
+        id={id}
+        initialSeller={store}
+        initialProducts={rows}
+        initialError={
+          store
+            ? ""
+            : "The storefront is temporarily unavailable. Please try again."
+        }
+      />
+    </>
   );
 }

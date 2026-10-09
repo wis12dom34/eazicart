@@ -1,0 +1,11 @@
+import type { ReactNode } from "react";
+import { pageMetadata } from "../../lib/seo";
+export const metadata = pageMetadata(
+  "Create account",
+  "Create account on EaziCart.",
+  "/register",
+  { index: false },
+);
+export default function Layout({ children }: { children: ReactNode }) {
+  return children;
+}

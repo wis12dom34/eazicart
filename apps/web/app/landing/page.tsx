@@ -1,0 +1,790 @@
+import Link from "next/link";
+import Image from "next/image";
+import { pageMetadata, canonicalUrl } from "../../lib/seo";
+import { StructuredData } from "../components/structured-data";
+import type { ReactNode } from "react";
+import styles from "./landing.module.css";
+import { BusinessAudiences } from "./business-audiences";
+
+export const metadata = {
+  ...pageMetadata(
+    "Ecommerce & Business Commerce Platform for Nigeria",
+    "Run products, orders, customers and online selling from one platform. EaziCart helps modern businesses manage commerce and sell online.",
+    "/landing",
+  ),
+  title: {
+    absolute: "EaziCart | Ecommerce & Business Commerce Platform for Nigeria",
+  },
+};
+
+const faqs = [
+  [
+    "What is EaziCart?",
+    "EaziCart is a commerce platform for managing products, stock, orders and public storefronts, with a customer experience for discovering and buying products.",
+  ],
+  [
+    "Who is EaziCart for?",
+    "EaziCart is designed for retailers, wholesalers, distributors, manufacturers, importers, DTC brands and small businesses. Start with a product catalog and a public seller profile.",
+  ],
+  [
+    "Can customers browse my store on a phone?",
+    "Yes. Public seller profiles and product pages use the existing mobile customer experience, including product discovery, cart and checkout.",
+  ],
+  [
+    "Can I share my store link on social media?",
+    "Yes. Your public seller profile has a link you can share. Customers can browse the catalog and open product pages from that link.",
+  ],
+  [
+    "Does EaziCart connect directly to Instagram or WhatsApp orders?",
+    "Automatic Instagram and WhatsApp order imports are not currently supported. You can share your EaziCart store or product link on those channels.",
+  ],
+];
+
+const photos = {
+  hero: "https://images.unsplash.com/photo-1687422808311-a776f467a468?auto=format&fit=crop&q=82&w=1600",
+  market:
+    "https://images.unsplash.com/photo-1761370571806-886404629697?auto=format&fit=crop&q=82&w=1400",
+  seller:
+    "https://images.unsplash.com/photo-1579998120708-682dd8a5624f?auto=format&fit=crop&q=82&w=1400",
+  boutique:
+    "https://images.unsplash.com/photo-1761370571873-5d869310d731?auto=format&fit=crop&q=82&w=1400",
+  africa:
+    "https://images.unsplash.com/photo-1734255287995-7c09dbc99613?auto=format&fit=crop&q=82&w=1400",
+};
+
+const businessTypes = [
+  "Manufacturers",
+  "Wholesalers",
+  "Distributors",
+  "Importers",
+  "Retailers",
+  "DTC Brands",
+  "SMEs",
+];
+
+const products = [
+  {
+    name: "Smartphones & Devices",
+    seller: "Electronics sellers · Africa",
+    price: "Explore marketplace",
+    image:
+      "https://images.unsplash.com/photo-1779094041702-af068ff4d612?auto=format&fit=crop&q=86&w=1400",
+  },
+  {
+    name: "Premium Skincare",
+    seller: "Beauty sellers · Africa",
+    price: "Explore marketplace",
+    image:
+      "https://images.unsplash.com/photo-1748543668676-ea8241cb3886?auto=format&fit=crop&q=86&w=1400",
+  },
+  {
+    name: "Everyday Sneakers",
+    seller: "Fashion sellers · Africa",
+    price: "Explore marketplace",
+    image:
+      "https://images.unsplash.com/photo-1654907118243-a0a62cefbf0a?auto=format&fit=crop&q=86&w=1400",
+  },
+  {
+    name: "Wireless Headphones",
+    seller: "Tech sellers · Africa",
+    price: "Explore marketplace",
+    image:
+      "https://images.unsplash.com/photo-1553775744-0bae9da7f5e7?auto=format&fit=crop&q=86&w=1400",
+  },
+];
+
+const operatingFeatures = [
+  ["Marketplace", "Discover products, brands and trusted suppliers."],
+  ["Orders", "Track purchases and sales from one place."],
+  ["Inventory", "Manage product availability and stock."],
+  ["Customers", "Keep track of buyers and relationships."],
+  ["Payments", "Handle business transactions securely."],
+  ["Analytics", "Understand what is selling and where you are growing."],
+  ["Logistics", "Track deliveries and fulfilment."],
+  ["Business Profile", "Give your company a professional presence."],
+];
+
+const why = [
+  [
+    "Find opportunities",
+    "Discover products and suppliers beyond your existing network.",
+  ],
+  [
+    "Sell everywhere",
+    "Turn your business profile into a digital sales channel.",
+  ],
+  [
+    "Run smarter",
+    "Manage orders, products and business activity from one dashboard.",
+  ],
+  [
+    "Grow your network",
+    "Build relationships with buyers, sellers and businesses.",
+  ],
+];
+
+function PrimaryLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link className={styles.primaryButton} href={href}>
+      {children}
+    </Link>
+  );
+}
+
+function SecondaryLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link className={styles.secondaryButton} href={href}>
+      {children}
+    </Link>
+  );
+}
+
+function ProductCard({
+  name,
+  seller,
+  price,
+  image,
+}: {
+  name: string;
+  seller: string;
+  price: string;
+  image: string;
+}) {
+  return (
+    <article
+      className={styles.productCard}
+      style={{ padding: 10, borderRadius: 18 }}
+    >
+      <div
+        className={styles.productArt}
+        style={{
+          overflow: "hidden",
+          background: "#f5f3ef",
+          aspectRatio: "4 / 5",
+          height: "auto",
+          borderRadius: 14,
+        }}
+      >
+        <Image
+          src={image}
+          width={560}
+          height={700}
+          sizes="(max-width: 760px) 45vw, (max-width: 1180px) 40vw, 280px"
+          alt={name}
+          loading="lazy"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+      </div>
+      <strong>{name}</strong>
+      <span>{seller}</span>
+      <b>{price}</b>
+    </article>
+  );
+}
+
+function PhoneMockup({
+  title,
+  orders = false,
+}: {
+  title: string;
+  orders?: boolean;
+}) {
+  const phoneProducts = products.slice(0, 4);
+  return (
+    <div className={styles.phone}>
+      <span className={styles.notch} />
+      <h4>{title}</h4>
+      {orders ? (
+        <div className={styles.orderList}>
+          {[
+            ["Order #1042", "In transit · Lagos"],
+            ["Order #1038", "Delivered · Abuja"],
+            ["Order #1026", "Processing · Onitsha"],
+            ["Order #1019", "Delivered · Aba"],
+          ].map(([label, detail]) => (
+            <div key={label} className={styles.phoneOrder}>
+              <strong>{label}</strong>
+              <span>{detail}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.phoneGrid}>
+          {phoneProducts.map((product) => (
+            <div className={styles.phoneProduct} key={product.name}>
+              <span
+                className={styles.phoneProductArt}
+                style={{ overflow: "hidden", padding: 0 }}
+              >
+                <Image
+                  src={product.image}
+                  width={160}
+                  height={160}
+                  sizes="120px"
+                  alt=""
+                  loading="lazy"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              </span>
+              <strong>{product.name.split(" ").slice(0, 2).join(" ")}</strong>
+              <b>Shop</b>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className={styles.phoneNav}>
+        <span className={title === "Home" ? styles.activeDot : ""}>●</span>
+        <span>○</span>
+        <span>○</span>
+        <span>○</span>
+        <span>○</span>
+      </div>
+    </div>
+  );
+}
+
+export default function EaziCartLandingPage() {
+  return (
+    <main className={styles.page}>
+      {canonicalUrl("/landing") ? (
+        <StructuredData
+          data={[
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "EaziCart",
+              url: canonicalUrl("/landing"),
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "EaziCart",
+              url: canonicalUrl("/landing"),
+            },
+          ]}
+        />
+      ) : null}
+      <header className={styles.header}>
+        <nav className={styles.nav} aria-label="EaziCart landing navigation">
+          <Link href="/landing" className={styles.logo}>
+            EaziCart
+          </Link>
+          <div className={styles.navLinks}>
+            <a href="#product">Products</a>
+            <a href="#marketplace">Marketplace</a>
+            <a href="#solutions">Solutions</a>
+            <a href="#businesses">For Businesses</a>
+            <a href="#resources">Resources</a>
+            <a href="#how-it-works">How it works</a>
+          </div>
+          <div className={styles.navActions}>
+            <Link
+              className={styles.signIn}
+              href="/login?next=/seller/dashboard"
+            >
+              Sign In
+            </Link>
+            <PrimaryLink href="/register?next=/seller/dashboard">
+              Get Started
+            </PrimaryLink>
+          </div>
+        </nav>
+      </header>
+
+      <section className={`${styles.section} ${styles.hero}`}>
+        <div className={`${styles.shell} ${styles.heroGrid}`}>
+          <div className={`${styles.heroCopy} ${styles.reveal}`}>
+            <span className={styles.eyebrow}>COMMERCE, CONNECTED.</span>
+            <h1>
+              The Operating System for <em>Modern Businesses</em>
+            </h1>
+            <p className={styles.lead}>
+              Buy, sell and manage your business in one place. Connect with
+              suppliers, reach new customers and keep every order moving.
+            </p>
+            <div className={styles.buttonRow}>
+              <PrimaryLink href="/register?next=/seller/dashboard">
+                Get Started
+              </PrimaryLink>
+              <SecondaryLink href="/explore">Explore EaziCart</SecondaryLink>
+            </div>
+            <p className={styles.microcopy}>
+              Built for manufacturers, wholesalers, retailers, distributors and
+              growing businesses across Africa.
+            </p>
+          </div>
+
+          <div className={`${styles.heroVisual} ${styles.photoReveal}`}>
+            <Image
+              src={photos.hero}
+              width={800}
+              height={900}
+              sizes="(max-width: 760px) 100vw, 50vw"
+              preload
+              alt="African business owner inside her local retail store"
+            />
+            <div className={styles.photoWash} />
+            <div className={styles.overviewCard}>
+              <h3>Business overview</h3>
+              <div className={styles.metrics}>
+                <div>
+                  <span>Sales</span>
+                  <strong>Today</strong>
+                </div>
+                <div>
+                  <span>Orders</span>
+                  <strong>Live</strong>
+                </div>
+              </div>
+              <ul>
+                <li>
+                  <span>Retail orders</span>
+                  <b>Active</b>
+                </li>
+                <li>
+                  <span>Wholesale enquiries</span>
+                  <b>Open</b>
+                </li>
+                <li>
+                  <span>Marketplace</span>
+                  <b>Online</b>
+                </li>
+              </ul>
+            </div>
+            <div className={styles.heroProduct}>
+              <div
+                className={styles.miniArt}
+                style={{ overflow: "hidden", padding: 0 }}
+              >
+                <Image
+                  src={products[0]!.image}
+                  width={230}
+                  height={112}
+                  sizes="230px"
+                  alt="Modern smartphone"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+              <strong>Smartphones & Devices</strong>
+              <span>Modern products from African sellers</span>
+              <b>Explore listings</b>
+            </div>
+            <div className={styles.supplierBadge}>
+              <strong>African commerce</strong>
+              <span>Modern sellers · Modern products</span>
+            </div>
+            <div className={styles.photoCaption}>
+              <i /> African retail · real commerce
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={`${styles.proof} ${styles.sectionSoft}`}>
+        <div className={`${styles.shell} ${styles.proofInner}`}>
+          <p>Built for every layer of modern commerce</p>
+          <div className={styles.pillRow}>
+            {businessTypes.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="marketplace" className={styles.section}>
+        <div className={`${styles.shell} ${styles.reveal}`}>
+          <div className={styles.sectionHeading}>
+            <h2>Discover products people want.</h2>
+            <p>
+              Explore products and public storefronts in the marketplace. The
+              images below illustrate the shopping experience and are not live
+              listings.
+            </p>
+          </div>
+          <div className={styles.marketplacePanel}>
+            <div className={styles.tabs}>
+              <span className={styles.activeTab}>For You</span>
+              <span>Trending</span>
+              <span>Categories</span>
+              <span>Brands</span>
+              <span>Sellers</span>
+            </div>
+            <div className={styles.productGrid}>
+              {products.map((product) => (
+                <ProductCard key={product.name} {...product} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.sectionSoft}`}>
+        <div className={`${styles.shell} ${styles.split} ${styles.reveal}`}>
+          <div className={styles.splitCopy}>
+            <h2>Your business deserves more than a storefront.</h2>
+            <p>
+              Create your business profile, showcase modern products, reach new
+              buyers and manage operations from one place.
+            </p>
+            <PrimaryLink href="/register?next=/seller/dashboard">
+              Start Selling
+            </PrimaryLink>
+          </div>
+          <div className={styles.sellerDashboard}>
+            <Image
+              src={photos.market}
+              width={800}
+              height={600}
+              sizes="(max-width: 760px) 100vw, 50vw"
+              loading="lazy"
+              alt="Shopkeeper in a modern African retail shop"
+            />
+            <div className={styles.dashboardWash} />
+            <div className={styles.dashboardContent}>
+              <h3>Modern Store</h3>
+              <div className={styles.metrics}>
+                <div>
+                  <span>Products</span>
+                  <strong>In stock</strong>
+                </div>
+                <div>
+                  <span>Orders</span>
+                  <strong>Live</strong>
+                </div>
+              </div>
+              <div className={styles.dashboardOrder}>
+                <div>
+                  <strong>Phones & accessories</strong>
+                  <span>Consumer electronics</span>
+                </div>
+                <b className={styles.statusDelivered}>Available</b>
+              </div>
+              <div className={styles.dashboardOrder}>
+                <div>
+                  <strong>Beauty & lifestyle</strong>
+                  <span>Modern inventory</span>
+                </div>
+                <b>Shop</b>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="product" className={styles.section}>
+        <div className={`${styles.shell} ${styles.reveal}`}>
+          <div className={styles.sectionHeading}>
+            <h2>One operating system for your entire business.</h2>
+          </div>
+          <div className={styles.featureGrid}>
+            {operatingFeatures.map(([title, copy], index) => (
+              <article className={styles.featureCard} key={title}>
+                <span className={styles.featureIcon}>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.sectionSoft}`}>
+        <div
+          className={`${styles.shell} ${styles.networkSection} ${styles.reveal}`}
+        >
+          <h2>Commerce works better when businesses are connected.</h2>
+          <p>
+            EaziCart connects the people who make, move and sell products across
+            the economy.
+          </p>
+          <div className={styles.network}>
+            {[
+              "Manufacturer",
+              "Distributor",
+              "Wholesaler",
+              "Retailer",
+              "Customer",
+            ].map((item, index) => (
+              <div className={styles.networkPiece} key={item}>
+                <div
+                  className={`${styles.networkNode} ${item === "Wholesaler" ? styles.networkActive : ""}`}
+                >
+                  <span />
+                  <strong>{item}</strong>
+                </div>
+                {index < 4 ? <b className={styles.networkArrow}>→</b> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div
+          className={`${styles.shell} ${styles.mobileCommerce} ${styles.reveal}`}
+        >
+          <div className={styles.centerHeading}>
+            <h2>Your business, in your pocket.</h2>
+            <p>
+              A social-commerce experience for discovery, buying, selling and
+              order management.
+            </p>
+          </div>
+          <p className={styles.microcopy}>
+            Interface illustrations. Product availability and orders come from
+            the live catalog.
+          </p>
+          <div className={styles.phones}>
+            <PhoneMockup title="Home" />
+            <PhoneMockup title="Explore" />
+            <PhoneMockup title="Orders" orders />
+          </div>
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.sectionSoft}`}>
+        <div
+          className={`${styles.shell} ${styles.split} ${styles.reelsSection} ${styles.reveal}`}
+        >
+          <div className={styles.splitCopy}>
+            <h2>Discover products the way people discover everything else.</h2>
+            <p>
+              Watch modern products and sellers through short-form business
+              content made for commerce.
+            </p>
+          </div>
+          <div className={styles.reelPhone}>
+            <span className={styles.notch} />
+            <h4>Reels</h4>
+            <Image
+              src={photos.seller}
+              width={800}
+              height={600}
+              sizes="(max-width: 760px) 100vw, 50vw"
+              loading="lazy"
+              alt="African seller showing products"
+            />
+            <div className={styles.reelOverlay}>
+              <span>Modern commerce</span>
+              <strong>Products from African sellers</strong>
+              <b>Explore →</b>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="solutions" className={styles.section}>
+        <div className={`${styles.shell} ${styles.reveal}`}>
+          <div className={styles.sectionHeading}>
+            <h2>Why EaziCart</h2>
+          </div>
+          <div className={styles.whyGrid}>
+            {why.map(([title, copy], index) => (
+              <article className={styles.featureCard} key={title}>
+                <span className={styles.featureIcon}>0{index + 1}</span>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="businesses"
+        className={`${styles.section} ${styles.sectionSoft}`}
+      >
+        <div className={`${styles.shell} ${styles.reveal}`}>
+          <div className={styles.sectionHeading}>
+            <h2>Built for the businesses that power commerce.</h2>
+          </div>
+          <BusinessAudiences products={products} />
+        </div>
+      </section>
+
+      <section id="how-it-works" className={styles.section}>
+        <div className={`${styles.shell} ${styles.reveal}`}>
+          <div className={styles.sectionHeading}>
+            <h2>Start in three steps.</h2>
+          </div>
+          <div className={styles.steps}>
+            {[
+              [
+                "01",
+                "Create your business",
+                "Set up your profile and tell EaziCart what your business does.",
+              ],
+              [
+                "02",
+                "Discover or sell",
+                "Find suppliers and products or publish your catalogue.",
+              ],
+              [
+                "03",
+                "Grow",
+                "Manage transactions, relationships and operations.",
+              ],
+            ].map(([number, title, copy]) => (
+              <article key={number}>
+                <b>{number}</b>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={`${styles.storySection} ${styles.sectionSoft}`}>
+        <div className={`${styles.shell} ${styles.quoteCard} ${styles.reveal}`}>
+          <div>
+            <blockquote>
+              From the shop counter to wholesale distribution, EaziCart is
+              designed around how African commerce actually moves.
+            </blockquote>
+            <small>Made for real African businesses</small>
+            <p>Retail · Wholesale · Distribution · Manufacturing</p>
+          </div>
+          <Image
+            src={photos.boutique}
+            width={800}
+            height={600}
+            sizes="(max-width: 760px) 100vw, 50vw"
+            loading="lazy"
+            alt="African fashion retail business"
+          />
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div
+          className={`${styles.shell} ${styles.split} ${styles.africaSection} ${styles.reveal}`}
+        >
+          <div className={styles.splitCopy}>
+            <h2>
+              Commerce infrastructure built for Africa. Designed to scale beyond
+              it.
+            </h2>
+            <p>
+              Millions of businesses still operate through fragmented tools,
+              chats, spreadsheets and manual processes. EaziCart brings those
+              workflows together.
+            </p>
+          </div>
+          <div className={styles.africaGraphic}>
+            <span className={styles.africaWord}>AFRICA</span>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((dot) => (
+              <i key={dot} className={styles[`dot${dot}`]} />
+            ))}
+            <Image
+              src={photos.africa}
+              width={800}
+              height={600}
+              sizes="(max-width: 760px) 100vw, 50vw"
+              loading="lazy"
+              alt="African market commerce"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
+        className={`${styles.section} ${styles.sectionSoft} ${styles.finalCta}`}
+      >
+        <div
+          className={`${styles.shell} ${styles.centerHeading} ${styles.reveal}`}
+        >
+          <h2>Your business should run better.</h2>
+          <p>
+            Join EaziCart and discover a better way to buy, sell and operate.
+          </p>
+          <div className={styles.buttonRow}>
+            <PrimaryLink href="/register?next=/seller/dashboard">
+              Get Started
+            </PrimaryLink>
+            <SecondaryLink href="/explore">Explore Marketplace</SecondaryLink>
+          </div>
+        </div>
+      </section>
+
+      <section
+        className={`${styles.section} ${styles.sectionSoft}`}
+        aria-labelledby="landing-faq"
+      >
+        <div className={styles.shell}>
+          <div className={styles.sectionHeading}>
+            <h2 id="landing-faq">Questions before you start?</h2>
+          </div>
+          <div className={styles.faqList}>
+            {faqs.map(([question, answer]) => (
+              <details key={question}>
+                <summary>{question}</summary>
+                <p>{answer}</p>
+              </details>
+            ))}
+          </div>
+          <div className={styles.publicLinks}>
+            <Link href="/social-commerce">Social commerce</Link>
+            <Link href="/online-store">Create an online store</Link>
+            <Link href="/register?next=/seller/dashboard">
+              Create your account
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer id="resources" className={styles.footer}>
+        <div className={styles.shell}>
+          <h2>EaziCart</h2>
+          <p>The Operating System for Modern Businesses.</p>
+          <div className={styles.footerGrid}>
+            <div>
+              <strong>Product</strong>
+              <span>Marketplace · Orders · Inventory · Payments</span>
+            </div>
+            <div>
+              <strong>Solutions</strong>
+              <span>Manufacturers · Wholesalers · Retailers · SMEs</span>
+            </div>
+            <div>
+              <strong>Company</strong>
+              <span>About · Careers · Contact</span>
+            </div>
+            <div>
+              <strong>Resources</strong>
+              <span>Help Center · Blog · Developers</span>
+            </div>
+          </div>
+          <small>
+            © EaziCart. All rights reserved. · Privacy · Terms · X · LinkedIn ·
+            Instagram
+          </small>
+        </div>
+      </footer>
+    </main>
+  );
+}
