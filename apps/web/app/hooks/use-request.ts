@@ -3,12 +3,16 @@ import { useCallback, useEffect, useState } from "react";
 export function useRequest<T>(
   request: () => Promise<T>,
   dependencies: readonly unknown[] = [],
+  initialData?: T,
+  initialError = "",
 ) {
-  const [data, setData] = useState<T>();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<T | undefined>(initialData);
+  const [error, setError] = useState(initialError);
+  const [loading, setLoading] = useState(
+    initialData === undefined && !initialError,
+  );
   const load = useCallback(async () => {
-    setLoading(true);
+    setLoading(initialData === undefined);
     setError("");
     try {
       setData(await request());
