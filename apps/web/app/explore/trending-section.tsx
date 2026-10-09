@@ -42,7 +42,7 @@ export function TrendingSection({
           {trending.map((reel) => (
             <Link
               className="figma-explore-reel"
-              href={`/reels?reelId=${encodeURIComponent(reel.id)}`}
+              href={`/reels?reel=${encodeURIComponent(reel.id)}`}
               key={reel.id}
             >
               {reel.thumbnailUrl || reel.product?.images[0]?.url ? (
