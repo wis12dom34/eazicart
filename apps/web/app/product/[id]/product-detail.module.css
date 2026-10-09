@@ -11,7 +11,7 @@
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 6px;
 }
 
 .headerIconButton {
@@ -19,15 +19,24 @@
   background: transparent;
 }
 
+.headerActions .headerIconButton:first-child {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #e2e4e8;
+  border-radius: 999px;
+  background: #fff;
+}
+
 .media {
-  width: calc(100% - 40px);
-  margin: 0 20px;
-  aspect-ratio: 390 / 330;
+  width: 100%;
+  margin: 0;
+  aspect-ratio: 430 / 350;
   max-height: none;
   overflow: hidden;
-  border: 1px solid #eeeeec;
-  border-radius: 22px;
-  background: #f4f4f6 !important;
+  border-block: 1px solid #e4e6ea;
+  border-inline: 0;
+  border-radius: 0;
+  background: #f5f6f8 !important;
   isolation: isolate;
 }
 
@@ -37,13 +46,13 @@
   inset: 0;
   pointer-events: none;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 38%);
-  border-radius: inherit;
+  border-radius: 0;
 }
 
 .mediaImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .mediaFallback {
@@ -57,9 +66,9 @@
 .galleryMeta {
   position: absolute;
   z-index: 1;
-  left: 14px;
-  right: 14px;
-  bottom: 9px;
+  left: 20px;
+  right: 20px;
+  bottom: 7px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -97,20 +106,20 @@
 }
 
 .galleryDotActive::after {
+  width: 14px;
+  border-radius: 999px;
   background: #111214;
 }
 
 .galleryCount {
   grid-column: 3;
   justify-self: end;
-  border-radius: 999px;
-  padding: 3px 6px;
-  background: rgb(255 255 255 / 72%);
-  color: #60636a;
+  padding: 0;
+  background: transparent;
+  color: #6d7280;
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 550;
   line-height: 1;
-  backdrop-filter: blur(8px);
 }
 
 .content {
@@ -119,17 +128,33 @@
 
 .title {
   max-width: 480px;
-  margin: 0 0 8px !important;
+  margin: 0 0 6px !important;
   color: #111214;
-  font-size: 24px !important;
+  font-size: 22px !important;
   line-height: 1.2;
   letter-spacing: -0.035em !important;
 }
 
 .price {
   margin: 0;
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: -0.025em;
+}
+
+.socialProof {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 20px;
+  margin-top: 8px;
+  color: #737884;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.socialProof i {
+  color: #a5a9b1;
+  font-style: normal;
 }
 
 .inventory {
@@ -144,10 +169,12 @@
 }
 
 .sellerCard {
-  margin-top: 18px;
-  min-height: 72px;
-  border-radius: 18px;
-  padding: 14px;
+  margin-top: 10px;
+  min-height: 64px;
+  border: 1px solid #e7e8eb;
+  border-radius: 16px;
+  padding: 12px;
+  background: #f7f7f9;
   transition:
     border-color 160ms ease,
     transform 160ms ease;
@@ -161,6 +188,8 @@
   width: 42px;
   height: 42px;
   flex: 0 0 42px;
+  background: #0d1015;
+  color: #fff;
 }
 
 .sellerCard strong {
@@ -173,7 +202,7 @@
 }
 
 .divider {
-  margin: 24px 0;
+  margin: 12px 0 18px;
   border: 0;
   border-top: 1px solid #ececea;
 }
@@ -204,17 +233,17 @@
 
 .actions {
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
   border-top-color: #e9e9e7;
   background: rgb(255 255 255 / 95%);
-  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   box-shadow: 0 -10px 28px rgb(17 18 20 / 4%);
   backdrop-filter: blur(18px);
 }
 
 .actionButton {
   min-width: 0;
-  min-height: 56px;
+  min-height: 52px;
   border-radius: 14px;
 }
 
