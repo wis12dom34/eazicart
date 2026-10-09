@@ -20,6 +20,7 @@ import { sellersApi } from "../../lib/api/sellers";
 import { notificationsApi } from "../../lib/api/notifications";
 import { savedApi } from "../../lib/api/saved";
 import { reelsApi } from "../../lib/api/reels";
+import { TrendingSection } from "./trending-section";
 
 export function ExploreContent() {
   const auth = useAuth();
@@ -32,7 +33,7 @@ export function ExploreContent() {
     [search],
   );
   const sellers = useRequest(() => sellersApi.list(), []);
-  const reels = useRequest(() => reelsApi.feed({ limit: 6 }), []);
+  const reels = useRequest(() => reelsApi.feed({ limit: 20 }), []);
   const notifications = useRequest(
     () =>
       auth.isAuthenticated
@@ -141,6 +142,12 @@ export function ExploreContent() {
               For You
             </Link>
             <Link
+              href="/explore?section=trending"
+              aria-current={section === "trending" ? "page" : undefined}
+            >
+              Trending
+            </Link>
+            <Link
               href="/explore?section=categories"
               aria-current={section === "categories" ? "page" : undefined}
             >
@@ -154,6 +161,15 @@ export function ExploreContent() {
             </Link>
           </nav>
         </div>
+
+        {section === "trending" ? (
+          <TrendingSection
+            reels={reels.data?.data ?? []}
+            loading={reels.loading}
+            error={reels.error}
+            retry={() => void reels.reload()}
+          />
+        ) : null}
 
         {section === "categories" ? (
           <section
