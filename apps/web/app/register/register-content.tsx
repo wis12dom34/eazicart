@@ -17,6 +17,7 @@ export default function RegisterContent({ next = "/" }: { next?: string }) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const sellerFlow = next.startsWith("/seller/");
 
   useEffect(() => setReady(true), []);
 
@@ -52,12 +53,22 @@ export default function RegisterContent({ next = "/" }: { next?: string }) {
 
   return (
     <main className={`app-shell ${styles.page} ${styles.registerPage}`}>
-      <h1 className={styles.heading}>Create account</h1>
-      <p className={styles.subtitle}>
-        {next === "/seller/dashboard"
-          ? "Create your account, then set up your business profile."
-          : "Join EaziCart and start discovering trusted sellers."}
-      </p>
+      <Link
+        className={styles.brand}
+        href={sellerFlow ? "/landing" : "/welcome"}
+        aria-label={sellerFlow ? "Back to EaziCart business" : "Back to EaziCart welcome"}
+      >
+        EaziCart
+      </Link>
+
+      <div className={styles.authIntro}>
+        <h1 className={styles.heading}>Create account</h1>
+        <p className={styles.subtitle}>
+          {sellerFlow
+            ? "Create your account, then set up your business profile."
+            : "Join EaziCart and start discovering trusted sellers."}
+        </p>
+      </div>
 
       <form
         className={`${styles.form} ${styles.registerForm}`}
