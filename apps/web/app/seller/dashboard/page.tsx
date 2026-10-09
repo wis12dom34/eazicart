@@ -373,7 +373,7 @@ function SellerBottomNavigation() {
 
 function primaryRevenue(revenue: SellerDashboardRevenue[]) {
   if (!revenue.length) return { value: "—", detail: "No verified sales yet" };
-  const primary = revenue.find((item) => item.currency === "NGN") ?? revenue[0];
+  const primary = revenue.find((item) => item.currency === "NGN") ?? revenue[0]!;
   return {
     value: formatMoney(primary.gross, primary.currency),
     detail:
