@@ -21,52 +21,37 @@ export default function PaymentMethods() {
           />
         </Link>
         <h1>Payment Methods</h1>
-        <p>Manage how you pay for orders on EaziCart.</p>
+        <p>See how payments work when you place an EaziCart order.</p>
       </header>
 
       <div className={styles.content}>
-        <h2 className={styles.savedTitle}>Saved methods</h2>
-
-        <section
-          className={styles.walletCard}
-          aria-label="EaziCart Wallet unavailable"
-        >
-          <span className={styles.walletIcon} aria-hidden="true">
-            ₦
+        <h2 className={styles.otherTitle}>Available at checkout</h2>
+        <section className={styles.checkoutMethod}>
+          <span className={styles.checkoutCopy}>
+            <strong>Online payment</strong>
+            <span>Available payment options appear when you check out</span>
           </span>
-          <span className={styles.methodCopy}>
-            <strong>EaziCart Wallet</strong>
-            <span>Not available yet</span>
-          </span>
-          <span className={styles.unavailableBadge}>Unavailable</span>
         </section>
 
         <section
           className={styles.cardMethod}
-          aria-label="Saved cards unavailable"
+          aria-label="Saved payment methods unavailable"
         >
           <span className={styles.cardIcon} aria-hidden="true">
             ••
           </span>
           <span className={styles.methodCopy}>
-            <strong>Saved cards</strong>
-            <span>Card storage is not available yet</span>
-          </span>
-        </section>
-
-        <h2 className={styles.otherTitle}>Checkout payment</h2>
-        <section className={styles.checkoutMethod}>
-          <span className={styles.checkoutCopy}>
-            <strong>Paystack</strong>
-            <span>Payment options appear when you check out</span>
+            <strong>Saved payment methods</strong>
+            <span>Cards and wallet balances are not stored in EaziCart yet</span>
           </span>
         </section>
 
         <aside className={styles.securityCard}>
           <strong>Secure payments</strong>
           <p>
-            Paystack handles payment details. EaziCart verifies transactions
-            server-side and does not store your card details.
+            Payment details are handled by the payment provider. EaziCart
+            verifies transactions server-side and does not store your card
+            details.
           </p>
         </aside>
 
