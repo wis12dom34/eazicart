@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import {
   ErrorState,
   LoadingState,
@@ -98,8 +98,10 @@ export default function SellerDashboardPage() {
   }
 
   return (
-    <main className={`app-shell ${styles.page}`}>
-      <DashboardHeader />
+    <main
+      className={`app-shell ${styles.page} ${styles.dashboardPage}`}
+      data-figma-node="247:320"
+    >
       <DashboardContent dashboard={dashboard.data.data} />
     </main>
   );
@@ -208,137 +210,117 @@ function SellerSetup({
 }
 
 function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
+  const revenue = primaryRevenue(dashboard.analytics.revenue);
+  const attention = [
+    dashboard.orders.pending > 0
+      ? {
+          label: `${dashboard.orders.pending.toLocaleString()} ${dashboard.orders.pending === 1 ? "order" : "orders"} awaiting confirmation`,
+          action: "View orders",
+          href: "/seller/orders",
+        }
+      : null,
+    dashboard.orders.confirmed > 0
+      ? {
+          label: `${dashboard.orders.confirmed.toLocaleString()} confirmed ${dashboard.orders.confirmed === 1 ? "order" : "orders"} to fulfill`,
+          action: "Fulfill orders",
+          href: "/seller/orders",
+        }
+      : null,
+    dashboard.inventory.outOfStockProducts > 0
+      ? {
+          label: `${dashboard.inventory.outOfStockProducts.toLocaleString()} out-of-stock ${dashboard.inventory.outOfStockProducts === 1 ? "product" : "products"}`,
+          action: "Manage stock",
+          href: "/seller/products",
+        }
+      : null,
+  ].filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+  const quickActions = [
+    { label: "Products", href: "/seller/products" },
+    { label: "Orders", href: "/seller/orders" },
+    { label: "Finance", href: "/seller/finance" },
+    { label: "Content", href: "/seller/reels" },
+    { label: "Customers", href: "/seller/customers" },
+    { label: "Storefront", href: "/seller/store" },
+    { label: "Public store", href: `/seller/${dashboard.seller.id}` },
+    { label: "Subscription", href: "/seller/subscription" },
+    { label: "Profile", href: "/profile" },
+  ];
+
   return (
     <>
-      <section className={styles.hero}>
+      <header className={styles.mobileHeader}>
         <div>
-          <p className={styles.eyebrow}>Seller dashboard</p>
+          <p>Welcome back</p>
           <h1>{dashboard.seller.displayName}</h1>
-          <p>Real operational data from your EaziCart store.</p>
         </div>
-        <Link className={styles.storeLink} href="/seller/store">
-          Manage store
-          <Icon name="chevron" size={18} />
-        </Link>
-        <Link
-          className={styles.storeLink}
-          href={`/seller/${dashboard.seller.id}`}
-        >
-          View store
-          <Icon name="chevron" size={18} />
-        </Link>
-        <Link className={styles.storeLink} href="/seller/finance">
-          Finance
-          <Icon name="chevron" size={18} />
-        </Link>
-        <Link className={styles.storeLink} href="/seller/reels">
-          Publish a Reel
-          <Icon name="chevron" size={18} />
-        </Link>
-      </section>
+        <div className={styles.headerActions}>
+          <Link className={styles.customerSwitch} href="/">
+            Customer
+            <Icon name="back" size={16} />
+          </Link>
+          <Link className={styles.profileButton} href="/profile" aria-label="Profile">
+            <Icon name="user" size={19} />
+          </Link>
+        </div>
+      </header>
 
-      <section className={styles.metricGrid} aria-label="Seller summary">
+      <section className={styles.mobileMetricGrid} aria-label="Seller summary">
         <MetricCard
-          label="Products"
-          value={dashboard.inventory.totalProducts}
-          detail={`${dashboard.inventory.activeProducts} active`}
+          label="Verified sales"
+          value={revenue.value}
+          detail={revenue.detail}
         />
         <MetricCard
           label="Orders"
-          value={dashboard.orders.total}
-          detail={`${dashboard.orders.pending} pending`}
+          value={dashboard.orders.total.toLocaleString()}
+          detail={`${dashboard.orders.pending.toLocaleString()} pending`}
+        />
+        <MetricCard
+          label="Products"
+          value={dashboard.inventory.totalProducts.toLocaleString()}
+          detail={`${dashboard.inventory.activeProducts.toLocaleString()} active`}
         />
         <MetricCard
           label="Customers"
-          value={dashboard.customers.total}
+          value={dashboard.customers.total.toLocaleString()}
           detail="Unique buyers"
         />
-        <MetricCard
-          label="Units in stock"
-          value={dashboard.inventory.unitsInStock}
-          detail={`${dashboard.inventory.outOfStockProducts} out of stock`}
-        />
       </section>
 
-      <div className={styles.columns}>
-        <section className={styles.panel}>
-          <div className={styles.panelHeading}>
-            <div>
-              <p className={styles.eyebrow}>Inventory</p>
-              <h2>Stock overview</h2>
+      <section className={styles.attentionSection}>
+        <h2>Needs attention</h2>
+        <div className={styles.attentionList}>
+          {attention.length ? (
+            attention.map((item) => (
+              <Link className={styles.attentionRow} href={item.href} key={`${item.href}-${item.label}`}>
+                <strong>{item.label}</strong>
+                <span>
+                  {item.action} <b aria-hidden="true">›</b>
+                </span>
+              </Link>
+            ))
+          ) : (
+            <div className={`${styles.attentionRow} ${styles.attentionEmpty}`}>
+              <strong>No urgent store tasks</strong>
+              <span>You’re all caught up</span>
             </div>
-            <Icon name="box" size={22} />
-          </div>
-          <DataRow
-            label="Total products"
-            value={dashboard.inventory.totalProducts}
-          />
-          <DataRow
-            label="Active products"
-            value={dashboard.inventory.activeProducts}
-          />
-          <DataRow
-            label="Units available"
-            value={dashboard.inventory.unitsInStock}
-          />
-          <DataRow
-            label="Out of stock"
-            value={dashboard.inventory.outOfStockProducts}
-          />
-          <Link className={styles.panelLink} href="/seller/products">
-            Manage products
-            <Icon name="chevron" size={17} />
-          </Link>
-        </section>
-
-        <section className={styles.panel}>
-          <div className={styles.panelHeading}>
-            <div>
-              <p className={styles.eyebrow}>Orders</p>
-              <h2>Order status</h2>
-            </div>
-            <Icon name="bag" size={22} />
-          </div>
-          <DataRow label="Pending" value={dashboard.orders.pending} />
-          <DataRow label="Confirmed" value={dashboard.orders.confirmed} />
-          <DataRow label="Fulfilled" value={dashboard.orders.fulfilled} />
-          <DataRow label="Cancelled" value={dashboard.orders.cancelled} />
-          <Link className={styles.panelLink} href="/seller/orders">
-            Manage orders
-            <Icon name="chevron" size={17} />
-          </Link>
-        </section>
-
-        <section className={`${styles.panel} ${styles.customerPanel}`}>
-          <div className={styles.panelHeading}>
-            <div>
-              <p className={styles.eyebrow}>Customers</p>
-              <h2>Buyer relationships</h2>
-            </div>
-          </div>
-          <DataRow label="Unique buyers" value={dashboard.customers.total} />
-          <Link className={styles.panelLink} href="/seller/customers">
-            Manage customers
-            <Icon name="chevron" size={17} />
-          </Link>
-        </section>
-      </div>
-
-      <section className={styles.analyticsPanel}>
-        <div className={styles.panelHeading}>
-          <div>
-            <p className={styles.eyebrow}>Sales</p>
-            <h2>Verified performance</h2>
-          </div>
-          <Icon name="sparkle" size={22} />
-        </div>
-        <p className={styles.analyticsNote}>
-          Gross sales are calculated from successful payments for your store.
-        </p>
-        <div className={styles.analyticsGrid}>
-          <VerifiedRevenueMetric revenue={dashboard.analytics.revenue} />
+          )}
         </div>
       </section>
+
+      <section className={styles.quickSection}>
+        <h2>Quick actions</h2>
+        <div className={styles.quickGrid}>
+          {quickActions.map((item) => (
+            <Link href={item.href} key={item.label}>
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <SellerBottomNavigation />
     </>
   );
 }
@@ -349,46 +331,56 @@ function MetricCard({
   detail,
 }: {
   label: string;
-  value: number;
-  detail: string;
+  value: ReactNode;
+  detail?: string;
 }) {
   return (
-    <article className={styles.metricCard}>
+    <article className={styles.mobileMetricCard}>
       <span>{label}</span>
-      <strong>{value.toLocaleString()}</strong>
-      <small>{detail}</small>
+      <strong>{value}</strong>
+      {detail ? <small>{detail}</small> : null}
     </article>
   );
 }
 
-function DataRow({ label, value }: { label: string; value: number }) {
+function SellerBottomNavigation() {
+  const items = [
+    { label: "Home", href: "/seller/dashboard", icon: "home", active: true },
+    { label: "Products", href: "/seller/products", icon: "box" },
+    { label: "Orders", href: "/seller/orders", icon: "bag" },
+    { label: "Storefront", href: "/seller/store", icon: "shirt" },
+    { label: "Profile", href: "/profile", icon: "user" },
+  ];
+
   return (
-    <div className={styles.dataRow}>
-      <span>{label}</span>
-      <strong>{value.toLocaleString()}</strong>
-    </div>
+    <nav className={styles.sellerNav} aria-label="Seller navigation">
+      {items.map((item) => (
+        <Link
+          className={item.active ? styles.sellerNavActive : undefined}
+          href={item.href}
+          key={item.label}
+          aria-current={item.active ? "page" : undefined}
+        >
+          <span className={styles.sellerNavIcon}>
+            <Icon name={item.icon} size={20} />
+          </span>
+          <span>{item.label}</span>
+        </Link>
+      ))}
+    </nav>
   );
 }
 
-function VerifiedRevenueMetric({
-  revenue,
-}: {
-  revenue: SellerDashboardRevenue[];
-}) {
-  return (
-    <div className={styles.unavailableMetric}>
-      <span>Verified gross sales</span>
-      {revenue.length ? (
-        revenue.map((total) => (
-          <strong key={total.currency}>
-            {formatMoney(total.gross, total.currency)}
-          </strong>
-        ))
-      ) : (
-        <strong>No verified sales yet</strong>
-      )}
-    </div>
-  );
+function primaryRevenue(revenue: SellerDashboardRevenue[]) {
+  if (!revenue.length) return { value: "—", detail: "No verified sales yet" };
+  const primary = revenue.find((item) => item.currency === "NGN") ?? revenue[0];
+  return {
+    value: formatMoney(primary.gross, primary.currency),
+    detail:
+      revenue.length > 1
+        ? `${revenue.length.toLocaleString()} currencies tracked`
+        : "Successful payments",
+  };
 }
 
 function formatMoney(value: string, currency: string) {
