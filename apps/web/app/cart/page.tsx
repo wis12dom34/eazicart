@@ -260,8 +260,16 @@ export default function CartPage() {
         ))}
       </section>
 
-      <div className={styles.promo} aria-label="Promo code status">
-        <span>Promo codes are not available yet.</span>
+      <div className={styles.promo} aria-label="Promo code">
+        <span>Promo code</span>
+        <button
+          type="button"
+          disabled
+          title="Promo codes are not available yet"
+          aria-label="Apply promo code (not available yet)"
+        >
+          Apply
+        </button>
       </div>
 
       <section className={`summary ${styles.summary}`}>
