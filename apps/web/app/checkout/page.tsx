@@ -74,6 +74,11 @@ export default function CheckoutPage() {
     addresses.data?.data.find((candidate) => candidate.isDefault) ??
     addresses.data?.data[0];
   const data = cart.data?.data;
+  const addressLine = address
+    ? [address.line1, address.line2, address.city, address.region]
+        .filter(Boolean)
+        .join(", ")
+    : "";
 
   const place = async () => {
     if (!address) {
@@ -119,7 +124,7 @@ export default function CheckoutPage() {
               <strong>
                 {auth.user?.name || address.label || "Delivery address"}
               </strong>
-              <p>{[address.line1, address.line2].filter(Boolean).join(", ")}</p>
+              <p>{addressLine}</p>
             </div>
             <Link
               href={`/address-book?checkout=1&selectedId=${encodeURIComponent(address.id)}`}
@@ -142,8 +147,8 @@ export default function CheckoutPage() {
         <h2>Payment method</h2>
         <div className={styles.paymentCard}>
           <div>
-            <strong>Paystack</strong>
-            <p>Secure payment</p>
+            <strong>Online payment</strong>
+            <p>Secure checkout</p>
           </div>
           <span className={styles.selected} aria-label="Selected">
             ✓
@@ -170,7 +175,8 @@ export default function CheckoutPage() {
                 <div className={styles.itemCopy}>
                   <strong>{item.product.name}</strong>
                   <span>
-                    {item.product.seller.displayName} · Qty {item.quantity}
+                    {item.product.seller.displayName}
+                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty {item.quantity}
                   </span>
                 </div>
                 <strong className={styles.itemPrice}>
@@ -189,7 +195,7 @@ export default function CheckoutPage() {
           <strong>{money(data?.subtotal ?? "0")}</strong>
         </div>
         <div>
-          <span>Delivery slot</span>
+          <span>Delivery</span>
           <span>
             {data?.delivery === "0"
               ? "Free"
