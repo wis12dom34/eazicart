@@ -47,12 +47,23 @@ export function LoginContent() {
 
   return (
     <main className={`app-shell ${styles.page} ${styles.loginPage}`}>
-      <h1 className={styles.heading}>Welcome back</h1>
-      <p className={styles.subtitle}>
-        {sellerFlow
-          ? "Sign in to manage your EaziCart business."
-          : "Sign in to continue shopping on EaziCart."}
-      </p>
+      <Link
+        className={styles.brand}
+        href={sellerFlow ? "/landing" : "/welcome"}
+        aria-label={sellerFlow ? "Back to EaziCart business" : "Back to EaziCart welcome"}
+      >
+        EaziCart
+      </Link>
+
+      <div className={styles.authIntro}>
+        <h1 className={styles.heading}>Welcome back</h1>
+        <p className={styles.subtitle}>
+          {sellerFlow
+            ? "Sign in to manage your EaziCart business."
+            : "Sign in to continue shopping on EaziCart."}
+        </p>
+      </div>
+
       {params.get("passwordChanged") === "1" && (
         <p className={styles.success} role="status">
           Password updated. Sign in with your new password.
