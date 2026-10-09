@@ -26,7 +26,10 @@ export function AcquisitionPage({
             <Link href="/online-store">Online Store</Link>
           </div>
           <div className={styles.navActions}>
-            <Link className={styles.primaryButton} href="/register">
+            <Link
+              className={styles.primaryButton}
+              href="/register?next=/seller/dashboard"
+            >
               Get Started
             </Link>
           </div>
@@ -38,7 +41,10 @@ export function AcquisitionPage({
           <h1>{title}</h1>
           <p>{intro}</p>
           <div className={styles.buttonRow}>
-            <Link className={styles.primaryButton} href="/register">
+            <Link
+              className={styles.primaryButton}
+              href="/register?next=/seller/dashboard"
+            >
               Create your account
             </Link>
             <Link className={styles.secondaryButton} href="/explore">
@@ -65,7 +71,9 @@ export function AcquisitionPage({
           <div className={styles.publicLinks}>
             <Link href={otherPath}>{otherLabel}</Link>
             <Link href="/login?next=/seller/store">Manage your storefront</Link>
-            <Link href="/register">Get started with EaziCart</Link>
+            <Link href="/register?next=/seller/dashboard">
+              Get started with EaziCart
+            </Link>
           </div>
         </div>
       </section>

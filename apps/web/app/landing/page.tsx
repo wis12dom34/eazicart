@@ -302,7 +302,9 @@ export default function EaziCartLandingPage() {
             <Link className={styles.signIn} href="/login">
               Sign In
             </Link>
-            <PrimaryLink href="/register">Get Started</PrimaryLink>
+            <PrimaryLink href="/register?next=/seller/dashboard">
+              Get Started
+            </PrimaryLink>
           </div>
         </nav>
       </header>
@@ -319,7 +321,9 @@ export default function EaziCartLandingPage() {
               suppliers, reach new customers and keep every order moving.
             </p>
             <div className={styles.buttonRow}>
-              <PrimaryLink href="/register">Get Started</PrimaryLink>
+              <PrimaryLink href="/register?next=/seller/dashboard">
+                Get Started
+              </PrimaryLink>
               <SecondaryLink href="/explore">Explore EaziCart</SecondaryLink>
             </div>
             <p className={styles.microcopy}>
@@ -440,7 +444,9 @@ export default function EaziCartLandingPage() {
               Create your business profile, showcase modern products, reach new
               buyers and manage operations from one place.
             </p>
-            <PrimaryLink href="/register">Start Selling</PrimaryLink>
+            <PrimaryLink href="/register?next=/seller/dashboard">
+              Start Selling
+            </PrimaryLink>
           </div>
           <div className={styles.sellerDashboard}>
             <Image
@@ -739,7 +745,9 @@ export default function EaziCartLandingPage() {
             Join EaziCart and discover a better way to buy, sell and operate.
           </p>
           <div className={styles.buttonRow}>
-            <PrimaryLink href="/register">Get Started</PrimaryLink>
+            <PrimaryLink href="/register?next=/seller/dashboard">
+              Get Started
+            </PrimaryLink>
             <SecondaryLink href="/explore">Explore Marketplace</SecondaryLink>
           </div>
         </div>
@@ -764,7 +772,9 @@ export default function EaziCartLandingPage() {
           <div className={styles.publicLinks}>
             <Link href="/social-commerce">Social commerce</Link>
             <Link href="/online-store">Create an online store</Link>
-            <Link href="/register">Create your account</Link>
+            <Link href="/register?next=/seller/dashboard">
+              Create your account
+            </Link>
           </div>
         </div>
       </section>

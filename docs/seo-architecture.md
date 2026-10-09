@@ -44,3 +44,7 @@ Browser installation failed locally. No real mobile-browser, authenticated check
 | 18. Privacy/security    | Public DTO whitelist and safe JSON-LD serialization                           |
 | 19. Validation          | Build/lint/types/format, 68 unit tests, 28 raw HTML route checks              |
 | 20. Measurement         | Search Console, analytics, real conversions and field vitals unverified       |
+
+## Seller acquisition follow-up
+
+Landing and feature-page registration links carry a safe internal destination to the existing seller dashboard setup. Ordinary registration still returns to customer Home. Sign-in preserves that destination; external and malformed destinations are rejected by the existing navigation helper. The deployed hero and marketplace images, FAQ expansion and desktop overflow were checked in the browser. Real mobile and authenticated registration remain unverified pending a live backend.
