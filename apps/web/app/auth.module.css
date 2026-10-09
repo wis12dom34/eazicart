@@ -3,16 +3,17 @@
   max-width: 430px;
   min-height: 100svh;
   margin: 0 auto;
-  padding: 58px 59px 48px 22px;
+  padding: calc(58px + env(safe-area-inset-top)) 24px
+    calc(48px + env(safe-area-inset-bottom));
   background: #fff;
 }
 
 .loginPage {
-  padding-top: 66px;
+  padding-top: calc(66px + env(safe-area-inset-top));
 }
 
 .registerPage {
-  padding-top: 58px;
+  padding-top: calc(58px + env(safe-area-inset-top));
 }
 
 .heading {
@@ -116,10 +117,10 @@
 
 .primaryButton {
   width: 100%;
-  height: 47.526px;
+  height: 49px;
   margin-top: 8px;
   border: 0;
-  border-radius: 14.623px;
+  border-radius: 14px;
   background: #0f1419;
   color: #fff;
   font-family: inherit;
@@ -127,6 +128,13 @@
   font-weight: 600;
   line-height: 20px;
   cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background 140ms ease;
+}
+
+.primaryButton:active:not(:disabled) {
+  transform: scale(0.995);
 }
 
 .primaryButton:disabled {
@@ -151,7 +159,7 @@
 .switchLink {
   margin: 34px 0 0;
   text-align: center;
-  color: #0d73f2;
+  color: #0675ff;
   font-size: 12.795px;
   font-weight: 600;
   line-height: 18px;
@@ -176,6 +184,15 @@
   text-decoration: underline;
 }
 
+.busyForm .field input {
+  border-color: #e5e8ed;
+  background: #fff;
+}
+
+.busyForm .switchLink {
+  opacity: 0.45;
+}
+
 @media (max-width: 380px) {
   .page {
     padding-right: 20px;
@@ -187,38 +204,8 @@
   }
 }
 
-.busyForm .field input {
-  border-color: #e5e8ed;
-  background: #fff;
-}
-
-.busyForm .switchLink {
-  opacity: 0.45;
-}
-
-.page {
-  padding: calc(58px + env(safe-area-inset-top)) 24px
-    calc(48px + env(safe-area-inset-bottom));
-}
-.loginPage {
-  padding-top: calc(66px + env(safe-area-inset-top));
-}
-.registerPage {
-  padding-top: calc(58px + env(safe-area-inset-top));
-}
-.primaryButton {
-  background: #f97316;
-}
-.primaryButton:disabled {
-  background: #fdba74;
-}
-.switchLink a {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  color: #f97316;
-}
-.switchLink a {
-  min-width: 44px;
-  justify-content: center;
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton {
+    transition: none;
+  }
 }
