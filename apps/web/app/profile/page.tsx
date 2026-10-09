@@ -148,7 +148,7 @@ export default function ProfilePage() {
                 href="/payment-methods"
                 icon="payment"
                 label="Payment methods"
-                detail="Wallet and cards"
+                detail="Secure online checkout"
               />
               <ProfileRow
                 href="/notifications"
