@@ -9,8 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import { authApi } from "../../lib/api/auth";
-import { ApiError, tokenStore } from "../../lib/api/client";
-import type { User } from "../../lib/api/types";
+import {
+  ApiError,
+  getLegacyRefreshToken,
+  tokenStore,
+} from "../../lib/api/client";
+import type { AuthResponse, User } from "../../lib/api/types";
 import { usersApi } from "../../lib/api/users";
 
 type AuthValue = {
@@ -32,10 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(me);
   }, []);
   useEffect(() => {
-    if (!tokenStore.get()) {
-      setLoading(false);
-      return;
-    }
+    // HttpOnly refresh cookies cannot be inspected from JavaScript, so ask the
+    // API to restore the session. apiRequest performs one refresh-and-retry.
     reloadUser()
       .catch((error) => {
         if (error instanceof ApiError && error.status === 401)
@@ -44,23 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .finally(() => setLoading(false));
   }, [reloadUser]);
-  const authenticate = useCallback(
-    async (
-      request: Promise<{
-        user: User;
-        tokens: {
-          accessToken: string;
-          refreshToken: string;
-          expiresAt: string;
-        };
-      }>,
-    ) => {
-      const result = await request;
-      tokenStore.set(result.tokens);
-      setUser(result.user);
-    },
-    [],
-  );
+  const authenticate = useCallback(async (request: Promise<AuthResponse>) => {
+    const result = await request;
+    tokenStore.set(result.tokens);
+    setUser(result.user);
+  }, []);
   const value = useMemo<AuthValue>(
     () => ({
       user,
@@ -70,8 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register: (name, email, password) =>
         authenticate(authApi.register(name, email, password)),
       logout: () => {
+        const legacyRefreshToken = getLegacyRefreshToken();
         tokenStore.clear();
         setUser(null);
+        void authApi.logout(legacyRefreshToken).catch(() => {
+          // The local session is already cleared. A failed network logout will
+          // be retried naturally when the cookie next fails to restore.
+        });
       },
       reloadUser,
     }),
