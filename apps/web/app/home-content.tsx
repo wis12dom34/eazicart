@@ -122,6 +122,7 @@ export default function HomePage({
           <Link className="active" href="/" aria-current="page">
             For You
           </Link>
+          <Link href="/explore?section=trending">Trending</Link>
           <Link href="/explore?section=categories">Categories</Link>
           <Link href="/explore?section=sellers">Sellers</Link>
         </nav>
