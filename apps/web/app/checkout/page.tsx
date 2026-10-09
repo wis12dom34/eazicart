@@ -31,6 +31,10 @@ export default function CheckoutPage() {
       auth.isAuthenticated ? addressesApi.list() : Promise.resolve(undefined),
     [auth.isAuthenticated],
   );
+  const paymentConfiguration = useRequest(
+    () => paymentsApi.configuration(),
+    [],
+  );
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
   );
@@ -41,8 +45,14 @@ export default function CheckoutPage() {
   }, []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
-  if (auth.loading || cart.loading || addresses.loading)
+  if (
+    auth.loading ||
+    cart.loading ||
+    addresses.loading ||
+    paymentConfiguration.loading
+  )
     return (
       <CheckoutShell>
         <LoadingState label="Loading checkout…" />
@@ -54,14 +64,20 @@ export default function CheckoutPage() {
         <SignInState message="Sign in to continue to checkout." />
       </CheckoutShell>
     );
-  if (cart.error || addresses.error)
+  if (cart.error || addresses.error || paymentConfiguration.error)
     return (
       <CheckoutShell>
         <ErrorState
-          message={cart.error || addresses.error}
+          message={
+            cart.error ||
+            addresses.error ||
+            paymentConfiguration.error ||
+            "Checkout is unavailable"
+          }
           retry={() => {
             void cart.reload();
             void addresses.reload();
+            void paymentConfiguration.reload();
           }}
         />
       </CheckoutShell>
@@ -74,6 +90,8 @@ export default function CheckoutPage() {
     addresses.data?.data.find((candidate) => candidate.isDefault) ??
     addresses.data?.data[0];
   const data = cart.data?.data;
+  const paymentsAvailable =
+    paymentConfiguration.data?.data.available === true;
   const addressLine = address
     ? [address.line1, address.line2, address.city, address.region]
         .filter(Boolean)
@@ -81,6 +99,10 @@ export default function CheckoutPage() {
     : "";
 
   const place = async () => {
+    if (!paymentsAvailable) {
+      setError("Online payments are temporarily unavailable.");
+      return;
+    }
     if (!address) {
       setError("Add a delivery address before ordering.");
       return;
@@ -92,8 +114,10 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     setError("");
+    setPendingOrderId(null);
     try {
       const order = await ordersApi.create(address.id);
+      setPendingOrderId(order.data.id);
       const payment = await paymentsApi.initialize(order.data.id);
       if (payment.data.status === "SUCCESS") {
         router.push(
@@ -148,11 +172,17 @@ export default function CheckoutPage() {
         <div className={styles.paymentCard}>
           <div>
             <strong>Online payment</strong>
-            <p>Secure checkout</p>
+            <p>
+              {paymentsAvailable
+                ? "Secure checkout"
+                : "Temporarily unavailable"}
+            </p>
           </div>
-          <span className={styles.selected} aria-label="Selected">
-            ✓
-          </span>
+          {paymentsAvailable ? (
+            <span className={styles.selected} aria-label="Selected">
+              ✓
+            </span>
+          ) : null}
         </div>
       </section>
 
@@ -222,15 +252,30 @@ export default function CheckoutPage() {
             {error}
           </p>
         ) : null}
-        <button
-          aria-label="Place order"
-          disabled={submitting || !data?.items.length}
-          className={styles.placeButton}
-          type="button"
-          onClick={() => void place()}
-        >
-          {submitting ? "Starting payment…" : "Place Order"}
-        </button>
+        {pendingOrderId && error ? (
+          <Link
+            className={styles.recoveryLink}
+            href={`/orders/${encodeURIComponent(pendingOrderId)}`}
+          >
+            Open order to continue payment
+          </Link>
+        ) : (
+          <button
+            aria-label="Place order"
+            disabled={
+              submitting || !data?.items.length || !paymentsAvailable
+            }
+            className={styles.placeButton}
+            type="button"
+            onClick={() => void place()}
+          >
+            {submitting
+              ? "Starting payment…"
+              : paymentsAvailable
+                ? "Place Order"
+                : "Payments unavailable"}
+          </button>
+        )}
       </div>
     </CheckoutShell>
   );
