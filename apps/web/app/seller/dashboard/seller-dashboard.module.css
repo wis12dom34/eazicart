@@ -1,7 +1,15 @@
 .page {
+  width: 100%;
+  max-width: 430px;
   min-height: 100svh;
-  padding: 0 20px 72px;
+  margin: 0 auto;
+  padding: 0 16px calc(118px + env(safe-area-inset-bottom));
   background: #fff;
+  color: #111214;
+}
+
+.dashboardPage {
+  padding-top: calc(43px + env(safe-area-inset-top));
 }
 
 .topbar {
@@ -10,7 +18,7 @@
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
-  color: var(--ink);
+  color: #111214;
   font-size: 14px;
   font-weight: 700;
   text-align: center;
@@ -22,8 +30,244 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  color: var(--ink);
+  color: #111214;
   text-decoration: none;
+}
+
+.mobileHeader {
+  min-height: 66px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.mobileHeader p {
+  margin: 0 0 7px;
+  color: #6f747d;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.mobileHeader h1 {
+  max-width: 215px;
+  margin: 0;
+  color: #111214;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.customerSwitch {
+  height: 46px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e1e4e9;
+  border-radius: 15px;
+  background: #fafbfc;
+  color: #17191d;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.profileButton {
+  width: 34px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  color: #111214;
+  text-decoration: none;
+}
+
+.mobileMetricGrid {
+  margin-top: 23px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mobileMetricCard {
+  min-width: 0;
+  min-height: 79px;
+  padding: 13px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dfe2e7;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.mobileMetricCard span {
+  color: #777c85;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.mobileMetricCard strong {
+  margin-top: 11px;
+  color: #17191d;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+
+.mobileMetricCard small {
+  margin-top: 5px;
+  color: #9a9ea6;
+  font-size: 9px;
+  line-height: 12px;
+}
+
+.attentionSection,
+.quickSection {
+  margin-top: 37px;
+}
+
+.attentionSection h2,
+.quickSection h2 {
+  margin: 0 0 18px;
+  color: #15171a;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: -0.02em;
+}
+
+.attentionList {
+  display: grid;
+  gap: 12px;
+}
+
+.attentionRow {
+  min-height: 60px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #e0e3e8;
+  border-radius: 16px;
+  background: #f7f8fa;
+  color: #17191d;
+  text-decoration: none;
+}
+
+.attentionRow strong {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 17px;
+}
+
+.attentionRow span {
+  flex: 0 0 auto;
+  color: #0876f9;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.attentionRow b {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.attentionEmpty span {
+  color: #7c8189;
+}
+
+.quickSection {
+  margin-top: 38px;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quickGrid a {
+  min-width: 0;
+  min-height: 46px;
+  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e1e4e9;
+  border-radius: 12px;
+  background: #f4f5f8;
+  color: #17191d;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 14px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.sellerNav {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  width: calc(100% - 32px);
+  max-width: 398px;
+  min-height: 68px;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  transform: translateX(-50%);
+  border: 1px solid #e1e4e9;
+  border-radius: 34px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 5px 18px rgba(17, 24, 39, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.sellerNav a {
+  min-width: 0;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 27px;
+  color: #777d88;
+  font-size: 10px;
+  line-height: 12px;
+  text-decoration: none;
+}
+
+.sellerNav a span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sellerNavIcon {
+  height: 21px;
+  display: grid;
+  place-items: center;
+}
+
+.sellerNav .sellerNavActive {
+  background: #f3f4f6;
+  color: #15171a;
+  font-weight: 700;
 }
 
 .eyebrow {
@@ -35,193 +279,13 @@
   text-transform: uppercase;
 }
 
-.hero {
-  padding: 28px 0 24px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.hero h1,
-.setupIntro h1 {
-  margin: 0;
-  color: var(--ink);
-  font-size: clamp(28px, 5vw, 42px);
-  line-height: 1.05;
-  letter-spacing: -0.045em;
-}
-
-.hero > div > p:last-child,
-.setupIntro > p:last-child {
-  max-width: 620px;
-  margin: 10px 0 0;
-  color: #6b707a;
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.storeLink {
-  min-height: 44px;
-  padding: 0 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid #e8ebf0;
-  border-radius: 14px;
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.metricGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.metricCard,
-.panel,
-.analyticsPanel,
 .setupCard {
-  border: 1px solid #e8ebf0;
+  max-width: 398px;
+  margin: 26px auto 0;
+  padding: 22px;
+  border: 1px solid #e1e4e9;
   border-radius: 20px;
   background: #fff;
-}
-
-.metricCard {
-  min-height: 142px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.metricCard span,
-.unavailableMetric span {
-  color: #6b707a;
-  font-size: 12px;
-}
-
-.metricCard strong {
-  margin-top: 18px;
-  color: var(--ink);
-  font-size: 30px;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.metricCard small {
-  margin-top: auto;
-  padding-top: 14px;
-  color: #8b9099;
-  font-size: 11px;
-}
-
-.columns {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.panel,
-.analyticsPanel {
-  padding: 22px;
-}
-
-.customerPanel {
-  grid-column: 1 / -1;
-}
-
-.panelHeading {
-  margin-bottom: 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.panelHeading h2 {
-  margin: 0;
-  color: var(--ink);
-  font-size: 18px;
-  letter-spacing: -0.03em;
-}
-
-.dataRow {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border-top: 1px solid #f0f1f3;
-}
-
-.dataRow span {
-  color: #6b707a;
-  font-size: 13px;
-}
-
-.dataRow strong {
-  color: var(--ink);
-  font-size: 14px;
-}
-
-.panelLink {
-  min-height: 44px;
-  margin-top: 12px;
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border: 1px solid #e8ebf0;
-  border-radius: 14px;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 750;
-  text-decoration: none;
-}
-
-.analyticsPanel {
-  margin-top: 14px;
-}
-
-.analyticsNote {
-  max-width: 720px;
-  margin: -4px 0 20px;
-  color: #6b707a;
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-.analyticsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.unavailableMetric {
-  min-height: 92px;
-  padding: 16px;
-  border-radius: 14px;
-  background: #f8f9fa;
-}
-
-.unavailableMetric strong {
-  margin-top: 14px;
-  display: block;
-  color: #6b707a;
-  font-size: 13px;
-  font-weight: 650;
-}
-
-.setupCard {
-  max-width: 760px;
-  margin: 26px auto 0;
-  padding: 28px;
 }
 
 .setupIcon {
@@ -232,7 +296,22 @@
   place-items: center;
   border-radius: 16px;
   background: #f4f5f7;
-  color: var(--ink);
+  color: #111214;
+}
+
+.setupIntro h1 {
+  margin: 0;
+  color: #111214;
+  font-size: 28px;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.setupIntro > p:last-child {
+  margin: 10px 0 0;
+  color: #6b707a;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .setupForm {
@@ -244,7 +323,7 @@
 .setupForm label {
   display: grid;
   gap: 8px;
-  color: var(--ink);
+  color: #111214;
   font-size: 13px;
   font-weight: 650;
 }
@@ -262,7 +341,7 @@
   border: 1px solid #dfe3e8;
   border-radius: 14px;
   background: #fff;
-  color: var(--ink);
+  color: #111214;
   font: inherit;
   font-weight: 500;
   outline: none;
@@ -295,7 +374,7 @@
   min-height: 48px;
   border: 0;
   border-radius: 14px;
-  background: #111;
+  background: #11151b;
   color: #fff;
   font-size: 13px;
   font-weight: 750;
@@ -307,53 +386,33 @@
   opacity: 0.55;
 }
 
-@media (min-width: 900px) {
+@media (max-width: 374px) {
   .page {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding-left: 32px;
-    padding-right: 32px;
-  }
-}
-
-@media (max-width: 760px) {
-  .page {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-right: 12px;
+    padding-left: 12px;
   }
 
-  .hero {
-    align-items: flex-start;
-    flex-direction: column;
+  .mobileHeader h1 {
+    font-size: 23px;
   }
 
-  .metricGrid,
-  .columns,
-  .analyticsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .customerSwitch {
+    padding-inline: 9px;
   }
 
-  .storeLink {
-    align-self: stretch;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 440px) {
-  .metricGrid,
-  .columns,
-  .analyticsGrid {
-    grid-template-columns: 1fr;
+  .mobileMetricCard {
+    padding-inline: 11px;
   }
 
-  .metricCard {
-    min-height: 126px;
+  .mobileMetricCard strong {
+    font-size: 18px;
   }
 
-  .panel,
-  .analyticsPanel,
-  .setupCard {
-    padding: 18px;
-    border-radius: 18px;
+  .quickGrid {
+    gap: 8px;
+  }
+
+  .quickGrid a {
+    font-size: 10px;
   }
 }
