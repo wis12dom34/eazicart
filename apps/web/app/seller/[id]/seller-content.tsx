@@ -238,7 +238,7 @@ export default function SellerPage({
             {sellerReels.map((reel) => (
               <Link
                 className={styles.reelCard}
-                href={`/reels?reel=${encodeURIComponent(reel.id)}`}
+                href={`/reels?reelId=${encodeURIComponent(reel.id)}`}
                 key={reel.id}
               >
                 <div className={styles.reelMedia}>
