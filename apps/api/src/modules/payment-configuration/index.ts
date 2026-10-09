@@ -5,7 +5,7 @@ export function registerPaymentConfiguration(
   app: FastifyInstance,
   config: AppConfig,
 ) {
-  app.get("/payments/configuration", async () => ({
+  app.get("/payments/configuration", () => ({
     data: { available: Boolean(config.PAYSTACK_SECRET_KEY) },
   }));
 }
