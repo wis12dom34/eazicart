@@ -14,6 +14,8 @@ export function LoginContent() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const next = safeNextPath(params.get("next"));
+  const sellerFlow = next.startsWith("/seller/");
 
   useEffect(() => setReady(true), []);
 
@@ -30,7 +32,7 @@ export function LoginContent() {
         typeof email === "string" ? email : "",
         typeof password === "string" ? password : "",
       );
-      router.replace(safeNextPath(params.get("next")));
+      router.replace(next);
     } catch (caught) {
       const message =
         caught instanceof Error ? caught.message : "Unable to sign in";
@@ -47,7 +49,9 @@ export function LoginContent() {
     <main className={`app-shell ${styles.page} ${styles.loginPage}`}>
       <h1 className={styles.heading}>Welcome back</h1>
       <p className={styles.subtitle}>
-        Sign in to continue shopping on EaziCart.
+        {sellerFlow
+          ? "Sign in to manage your EaziCart business."
+          : "Sign in to continue shopping on EaziCart."}
       </p>
       {params.get("passwordChanged") === "1" && (
         <p className={styles.success} role="status">
@@ -102,7 +106,16 @@ export function LoginContent() {
       </form>
 
       <p className={styles.switchLink}>
-        Don’t have an account? <Link href="/register">Create one</Link>
+        Don’t have an account?{" "}
+        <Link
+          href={
+            next === "/"
+              ? "/register"
+              : `/register?next=${encodeURIComponent(next)}`
+          }
+        >
+          Create one
+        </Link>
       </p>
     </main>
   );
