@@ -224,18 +224,26 @@ export default function ProductPage({
             purchasing.
           </p>
         ) : null}
-        <Link href={`/category/${product.category.slug}`}>
-          {product.category.name}
-        </Link>
-
         <div className={`price large ${styles.price}`}>
           <strong>{money(product.price)}</strong>
         </div>
-        <p
-          className={`${styles.inventory} ${!inStock ? styles.inventoryOut : ""}`}
-        >
-          {inStock ? `${product.stock} in stock` : "Out of stock"}
-        </p>
+        <div className={styles.socialProof} aria-label="Product activity">
+          {product.rating ? <span>★ {product.rating}</span> : null}
+          {product.rating && product.soldLabel ? (
+            <i aria-hidden="true">·</i>
+          ) : null}
+          {product.soldLabel ? <span>{product.soldLabel} sold</span> : null}
+          {!product.rating && !product.soldLabel ? (
+            <span>
+              {inStock ? `${product.stock} in stock` : "Out of stock"}
+            </span>
+          ) : null}
+        </div>
+        {!inStock ? (
+          <p className={`${styles.inventory} ${styles.inventoryOut}`}>
+            Out of stock
+          </p>
+        ) : null}
 
         <Link
           href={`/seller/${product.seller.id}`}
@@ -247,9 +255,12 @@ export default function ProductPage({
           </span>
           <div>
             <strong>{product.seller.displayName}</strong>
-            <small>{product.category.name}</small>
+            <small>
+              {product.seller._count?.products
+                ? `${product.seller._count.products} products`
+                : "View seller profile"}
+            </small>
           </div>
-          <Icon name="chevron" />
         </Link>
 
         <hr className={styles.divider} />
