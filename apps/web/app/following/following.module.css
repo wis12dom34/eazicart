@@ -39,40 +39,32 @@
 
 .tabs {
   display: flex;
-  gap: 9px;
-  margin: 16px 22px 0;
+  gap: 8px;
+  margin: 18px 22px 0;
 }
 
-.tabs button,
+.tabs a,
 .activeTab {
-  height: 33px;
+  width: 88px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
   border: 1px solid #e5e5eb;
-  border-radius: 17px;
+  border-radius: 18px;
   background: #fff;
   color: #111214;
-  font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 16px;
+  line-height: 18px;
+  text-decoration: none;
 }
 
 .activeTab {
-  width: 84px;
   border-color: #111214;
   background: #111214;
   color: #fff;
-}
-
-.tabs button {
-  width: 102px;
-}
-
-.tabs button:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
 }
 
 .actionError {
