@@ -1,0 +1,16 @@
+.chip {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--muted);
+  padding: 8px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
