@@ -114,7 +114,9 @@ export default function OrderDetail({
           <strong>{orderStatusLabel(order.status)}</strong>
           <p>{orderStatusCopy(order.status)}</p>
         </div>
-        <Link href={`/tracking/${order.id}`}>Track package</Link>
+        <Link href={`/tracking/${order.id}`}>
+          {order.tracking ? "Track delivery" : "View progress"}
+        </Link>
       </section>
 
       <section className={styles.section}>
@@ -228,13 +230,13 @@ function PaymentState({
   if (!payment)
     return (
       <p className={styles.paymentNote}>
-        This order does not have a Paystack payment record.
+        This order does not have an online payment record yet.
       </p>
     );
   if (payment.status === "SUCCESS")
     return (
       <p className={styles.paymentNote}>
-        Payment confirmed by Paystack. Seller processing is enabled.
+        Payment confirmed. Seller processing is enabled.
       </p>
     );
   if (payment.status === "REVIEW_REQUIRED")
@@ -253,8 +255,8 @@ function PaymentState({
     );
   return (
     <p className={styles.paymentNote}>
-      Payment is pending. The seller cannot process this order until Paystack
-      confirms it.
+      Payment is pending. The seller cannot process this order until payment is
+      confirmed.
     </p>
   );
 }
@@ -285,10 +287,14 @@ function formatAddressDetails(address: {
   region: string;
   postalCode: string;
   country: string;
+  phone?: string | null;
 }) {
   return [
-    [address.city, address.country].filter(Boolean).join(", "),
-    "phone" in address ? address.phone : undefined,
+    address.line2,
+    [address.city, address.region].filter(Boolean).join(", "),
+    address.postalCode,
+    address.country,
+    address.phone,
   ]
     .filter(Boolean)
     .join(" · ");
