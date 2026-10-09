@@ -112,7 +112,7 @@ function PrivacyMenu({ onChangePassword }: { onChangePassword: () => void }) {
   return (
     <div className={styles.menu}>
       <h1>Privacy &amp; Security</h1>
-      <p className={styles.subtitle}>Control your account protection</p>
+      <p className={styles.subtitle}>Manage your account protection</p>
 
       <h2 className={styles.securityTitle}>Security</h2>
       <button
@@ -126,81 +126,6 @@ function PrivacyMenu({ onChangePassword }: { onChangePassword: () => void }) {
         </span>
         <img src="/figma/profile-chevron.svg" width={24} height={44} alt="" />
       </button>
-      <DisabledSecurityRow
-        className={styles.twoStepRow}
-        label="Two-step verification"
-      />
-      <DisabledSecurityRow
-        className={styles.activityRow}
-        label="Login activity"
-      />
-
-      <h2 className={styles.privacyTitle}>Privacy</h2>
-      <DisabledPrivacyRow
-        className={styles.visibilityRow}
-        label="Profile visibility"
-      />
-      <DisabledPrivacyRow
-        className={styles.recommendationsRow}
-        label="Personalized recommendations"
-      />
-      <DisabledPrivacyRow
-        className={styles.blockedRow}
-        label="Blocked accounts"
-      />
-      <DisabledPrivacyRow
-        className={styles.downloadRow}
-        label="Download my data"
-      />
-
-      <h2 className={styles.dangerTitle}>Danger zone</h2>
-      <div
-        className={styles.deleteAccount}
-        aria-disabled="true"
-        title="Account deletion is not available yet"
-      >
-        Delete account
-      </div>
-    </div>
-  );
-}
-
-function DisabledSecurityRow({
-  className,
-  label,
-}: {
-  className?: string;
-  label: string;
-}) {
-  return (
-    <div
-      className={`${styles.securityRow} ${className ?? ""} ${styles.disabledRow}`}
-      aria-disabled="true"
-      title={`${label} is not available yet`}
-    >
-      <span>
-        <strong>{label}</strong>
-        <small>Not available yet</small>
-      </span>
-    </div>
-  );
-}
-
-function DisabledPrivacyRow({
-  className,
-  label,
-}: {
-  className?: string;
-  label: string;
-}) {
-  return (
-    <div
-      className={`${styles.privacyRow} ${className ?? ""} ${styles.disabledRow}`}
-      aria-disabled="true"
-      title={`${label} is not available yet`}
-    >
-      <strong>{label}</strong>
-      <small>Unavailable</small>
     </div>
   );
 }
