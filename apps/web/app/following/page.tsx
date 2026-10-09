@@ -76,13 +76,14 @@ export default function FollowingPage() {
         >
           <Icon name="back" size={22} />
         </Link>
-        <h1>Following</h1>
-        <p>Updates from sellers you follow</p>
+        <h1>Saved</h1>
+        <p>Sellers you want to keep up with</p>
       </header>
 
-      <nav className={styles.tabs} aria-label="Following sections">
+      <nav className={styles.tabs} aria-label="Saved sections">
+        <Link href="/saved">Products</Link>
         <span className={styles.activeTab} aria-current="page">
-          Following
+          Sellers
         </span>
       </nav>
 
@@ -106,7 +107,10 @@ export default function FollowingPage() {
           <EmptyState
             title="You’re not following any sellers"
             message="Follow stores you like and they’ll appear here."
-            action={{ href: "/explore", label: "Explore sellers" }}
+            action={{
+              href: "/explore?section=sellers",
+              label: "Explore sellers",
+            }}
           />
         ) : (
           <div className={styles.feed} aria-label="Followed sellers">
@@ -139,7 +143,7 @@ export default function FollowingPage() {
                     <p className={styles.bio}>{seller.bio}</p>
                   ) : (
                     <p className={styles.bio}>
-                      Follow this seller to keep them in your Following list.
+                      Follow this seller to keep them in your Saved sellers.
                     </p>
                   )}
 
