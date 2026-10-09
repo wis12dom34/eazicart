@@ -1,5 +1,7 @@
 # Deploy the existing EaziCart API
 
+For the selected Contabo/VPS route, use [the VPS deployment guide](../infra/vps/README.md).
+
 The API already contains accounts, products, categories, cart, addresses, saved
 products, follows, orders, Paystack payments, notifications, Reels and seller
 management. These services reuse the existing Prisma schema and migrations.
