@@ -17,6 +17,13 @@ export type Category = {
   slug: string;
   _count?: { products: number };
 };
+export type SellerMapLocation = {
+  latitude: number;
+  longitude: number;
+  label?: string | null;
+  visible?: boolean;
+  updatedAt: string;
+};
 export type Seller = {
   id: string;
   userId: string;
@@ -25,6 +32,7 @@ export type Seller = {
   user?: { id: string; name: string };
   followerCount?: number;
   _count?: { products: number };
+  location?: SellerMapLocation;
 };
 export type Product = {
   reel?: { caption?: string; likesLabel?: string; commentsLabel?: string };

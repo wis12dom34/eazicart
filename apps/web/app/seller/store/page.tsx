@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   ErrorState,
   LoadingState,
@@ -80,6 +80,7 @@ export default function SellerStorePage() {
     <main className={`app-shell ${styles.page}`}>
       <StoreHeader />
       <StoreEditor profile={profile.data.data} />
+      <StoreMapLocation />
     </main>
   );
 }
@@ -233,6 +234,194 @@ function StoreEditor({ profile }: { profile: Seller }) {
         </aside>
       </div>
     </>
+  );
+}
+
+function StoreMapLocation() {
+  const location = useRequest(() => sellerDashboardApi.mapLocation(), []);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [label, setLabel] = useState("");
+  const [visible, setVisible] = useState(true);
+  const [locating, setLocating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const current = location.data?.data;
+    if (!current) return;
+    setLatitude(current.latitude);
+    setLongitude(current.longitude);
+    setLabel(current.label ?? "");
+    setVisible(current.visible ?? true);
+  }, [location.data]);
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError("Location is not supported in this browser.");
+      return;
+    }
+    setLocating(true);
+    setError("");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        setLocating(false);
+        setMessage("Location captured. Save it when you are ready.");
+      },
+      () => {
+        setLocating(false);
+        setError("Unable to get your current location.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+    );
+  };
+
+  const save = async () => {
+    if (latitude === null || longitude === null) {
+      setError("Choose your storefront location first.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await sellerDashboardApi.updateMapLocation({
+        latitude,
+        longitude,
+        label: label.trim() || null,
+        visible,
+      });
+      setLatitude(response.data.latitude);
+      setLongitude(response.data.longitude);
+      setVisible(response.data.visible ?? true);
+      setMessage(
+        response.data.visible
+          ? "Your storefront is now available on the EaziCart map."
+          : "Location saved privately. It is hidden from the public map.",
+      );
+      await location.reload();
+    } catch (value) {
+      setError(
+        value instanceof Error ? value.message : "Unable to save map location",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async () => {
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      await sellerDashboardApi.deleteMapLocation();
+      setLatitude(null);
+      setLongitude(null);
+      setLabel("");
+      setVisible(true);
+      setMessage("Storefront location removed from EaziCart.");
+      await location.reload();
+    } catch (value) {
+      setError(
+        value instanceof Error
+          ? value.message
+          : "Unable to remove map location",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section
+      className={styles.locationCard}
+      aria-labelledby="store-map-location"
+    >
+      <div>
+        <p className={styles.eyebrow}>Explore map</p>
+        <h2 id="store-map-location">Storefront location</h2>
+        <p>
+          Share a real storefront position so customers can discover your store
+          on the EaziCart map. Location sharing stays off until you choose and
+          save it.
+        </p>
+      </div>
+      {location.loading ? <p>Loading map location…</p> : null}
+      {location.error ? (
+        <p className={styles.error} role="alert">
+          {location.error}
+        </p>
+      ) : null}
+      <div className={styles.locationActions}>
+        <button
+          type="button"
+          className={styles.secondaryButton}
+          onClick={useCurrentLocation}
+          disabled={locating || saving}
+        >
+          {locating ? "Getting location…" : "Use current location"}
+        </button>
+        {latitude !== null && longitude !== null ? (
+          <code>
+            {latitude.toFixed(5)}, {longitude.toFixed(5)}
+          </code>
+        ) : (
+          <small>No storefront coordinates saved.</small>
+        )}
+      </div>
+      <label className={styles.field}>
+        <span>
+          Location label <em>Optional</em>
+        </span>
+        <input
+          value={label}
+          onChange={(event) => setLabel(event.target.value)}
+          maxLength={160}
+          placeholder="e.g. Shop 4, Main Market"
+        />
+      </label>
+      <label className={styles.visibilityToggle}>
+        <input
+          type="checkbox"
+          checked={visible}
+          onChange={(event) => setVisible(event.target.checked)}
+        />
+        <span>Show this storefront on the public EaziCart map</span>
+      </label>
+      {error ? (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      ) : null}
+      {message ? (
+        <p className={styles.success} role="status">
+          {message}
+        </p>
+      ) : null}
+      <div className={styles.actions}>
+        <button
+          type="button"
+          className={styles.primaryButton}
+          onClick={() => void save()}
+          disabled={saving || latitude === null || longitude === null}
+        >
+          {saving ? "Saving…" : "Save map location"}
+        </button>
+        {location.data?.data ? (
+          <button
+            type="button"
+            className={styles.dangerButton}
+            onClick={() => void remove()}
+            disabled={saving}
+          >
+            Remove location
+          </button>
+        ) : null}
+      </div>
+    </section>
   );
 }
 
