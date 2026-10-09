@@ -10,16 +10,17 @@ const nextConfig: NextConfig = {
   // Resolve metadata before emitting HTML for reliable previews and 404 statuses.
   htmlLimitedBots: /.*/,
   reactStrictMode: true,
-  async rewrites() {
-    return apiProxyTarget
-      ? [
-          {
-            source: "/api/:path*",
-            destination: `${apiProxyTarget}/:path*`,
-          },
-        ]
-      : [];
-  },
+  rewrites: () =>
+    Promise.resolve(
+      apiProxyTarget
+        ? [
+            {
+              source: "/api/:path*",
+              destination: `${apiProxyTarget}/:path*`,
+            },
+          ]
+        : [],
+    ),
   images: {
     remotePatterns: [
       {
