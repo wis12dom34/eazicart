@@ -161,7 +161,7 @@ function SellerSetup({
         <h1 id="seller-setup-title">Start selling on EaziCart</h1>
         <p>
           Create your store profile to unlock inventory, order and customer
-          management. No payment setup is required yet.
+          management.
         </p>
       </div>
 
@@ -331,23 +331,16 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
       <section className={styles.analyticsPanel}>
         <div className={styles.panelHeading}>
           <div>
-            <p className={styles.eyebrow}>Analytics</p>
-            <h2>Performance</h2>
+            <p className={styles.eyebrow}>Sales</p>
+            <h2>Verified performance</h2>
           </div>
           <Icon name="sparkle" size={22} />
         </div>
         <p className={styles.analyticsNote}>
-          Verified gross sales come from successful payments. Engagement
-          analytics will appear after EaziCart has real event data. Nothing is
-          estimated or fabricated here.
+          Gross sales are calculated from successful payments for your store.
         </p>
         <div className={styles.analyticsGrid}>
           <VerifiedRevenueMetric revenue={dashboard.analytics.revenue} />
-          <UnavailableMetric label="Product views" />
-          <UnavailableMetric label="Impressions" />
-          <UnavailableMetric label="Profile visits" />
-          <UnavailableMetric label="Clicks" />
-          <UnavailableMetric label="Conversion rate" />
         </div>
       </section>
     </>
@@ -398,15 +391,6 @@ function VerifiedRevenueMetric({
       ) : (
         <strong>No verified sales yet</strong>
       )}
-    </div>
-  );
-}
-
-function UnavailableMetric({ label }: { label: string }) {
-  return (
-    <div className={styles.unavailableMetric}>
-      <span>{label}</span>
-      <strong>Not available yet</strong>
     </div>
   );
 }
