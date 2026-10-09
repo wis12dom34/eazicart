@@ -107,7 +107,6 @@ export default function ProfilePage() {
             </section>
             <nav className={styles.tabs} aria-label="Profile sections">
               <span aria-current="page">Activity</span>
-              <Link href="/reviews">Reviews</Link>
               <Link href="/seller/dashboard">Sell</Link>
             </nav>
             <section className={styles.activity} aria-label="Your activity">
@@ -129,12 +128,6 @@ export default function ProfilePage() {
                 label="Following"
                 detail="Sellers and stores you follow"
               />
-              <ProfileRow
-                href="/reviews"
-                icon="reviews"
-                label="Reviews"
-                detail="Your ratings and feedback"
-              />
             </section>
             <section className={styles.account}>
               <h2>Account</h2>
@@ -154,7 +147,7 @@ export default function ProfilePage() {
                 href="/notifications"
                 icon="notifications"
                 label="Notifications"
-                detail="Orders, offers and activity"
+                detail="Orders and account activity"
               />
             </section>
           </div>
