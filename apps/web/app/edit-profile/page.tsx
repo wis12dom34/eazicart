@@ -69,9 +69,6 @@ export default function EditProfile() {
             <>
               <div className={styles.avatarBlock}>
                 <div className={styles.avatar} aria-hidden="true" />
-                <span className={styles.photoButton}>
-                  Photo uploads unavailable
-                </span>
               </div>
 
               <form
@@ -87,30 +84,23 @@ export default function EditProfile() {
                     defaultValue={auth.user.name}
                   />
                 </ProfileField>
-                <ProfileField label="Username">
-                  <input
-                    className={styles.input}
-                    value={
-                      auth.user.username
-                        ? `@${auth.user.username}`
-                        : "Not available yet"
-                    }
-                    readOnly
-                  />
-                </ProfileField>
-                <ProfileField label="Phone number">
-                  <input
-                    className={styles.input}
-                    value="Not available yet"
-                    readOnly
-                  />
-                </ProfileField>
+                {auth.user.username ? (
+                  <ProfileField label="Username">
+                    <input
+                      className={styles.input}
+                      value={`@${auth.user.username}`}
+                      readOnly
+                      aria-readonly="true"
+                    />
+                  </ProfileField>
+                ) : null}
                 <ProfileField label="Email address">
                   <input
                     className={styles.input}
                     type="email"
                     value={auth.user.email}
                     readOnly
+                    aria-readonly="true"
                   />
                 </ProfileField>
                 {error ? (
