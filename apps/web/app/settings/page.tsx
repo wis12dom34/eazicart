@@ -35,7 +35,7 @@ export default function SettingsPage() {
         </Link>
         <h1>Account Settings</h1>
       </header>
-      <p className={styles.intro}>Manage your profile and preferences</p>
+      <p className={styles.intro}>Manage your profile and account</p>
       <div className={styles.viewport}>
         <div className={styles.content}>
           {auth.loading ? (
@@ -69,7 +69,7 @@ export default function SettingsPage() {
                 <SettingLink
                   href="/edit-profile"
                   label="Personal information"
-                  detail="Name, phone and email"
+                  detail="Name and email"
                 />
                 <SettingLink
                   href="/address-book"
@@ -79,24 +79,18 @@ export default function SettingsPage() {
                 <SettingLink
                   href="/payment-methods"
                   label="Payment methods"
-                  detail="Cards and wallet"
+                  detail="Secure online checkout"
                 />
                 <SettingLink
                   href="/privacy-security"
                   label="Privacy & security"
-                  detail="Password and account protection"
+                  detail="Change your password"
                 />
-              </section>
-
-              <h2 className={styles.preferencesTitle}>Preferences</h2>
-              <section
-                className={styles.preferencesCard}
-                aria-label="Preferences"
-              >
-                <Link className={styles.preferenceRow} href="/notifications">
-                  <strong>Notifications</strong>
-                  <span className={styles.switch} aria-hidden="true" />
-                </Link>
+                <SettingLink
+                  href="/notifications"
+                  label="Notifications"
+                  detail="Order and account activity"
+                />
               </section>
 
               <button className={styles.logout} type="button" onClick={logout}>
