@@ -2,7 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { SellerBottomNavigation } from "../components/seller-bottom-navigation";
 import { SideNavigation } from "../components/side-navigation";
@@ -15,13 +16,19 @@ import { savedApi } from "../../lib/api/saved";
 import styles from "./profile.module.css";
 
 export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfileLoadingShell />}>
+      <ProfileContent />
+    </Suspense>
+  );
+}
+
+function ProfileContent() {
   const auth = useAuth();
+  const searchParams = useSearchParams();
+  const sellerMode = searchParams.get("mode") === "seller";
   const [menu, setMenu] = useState(false);
-  const [sellerMode, setSellerMode] = useState(false);
   const closeMenu = useCallback(() => setMenu(false), []);
-  useEffect(() => {
-    setSellerMode(new URLSearchParams(window.location.search).get("mode") === "seller");
-  }, []);
   const orders = useRequest(
     () => auth.isAuthenticated ? ordersApi.list() : Promise.resolve({ data: [] }),
     [auth.isAuthenticated],
@@ -51,11 +58,7 @@ export default function ProfilePage() {
           <div className={styles.content}>
             <section className={styles.identity} aria-label="Customer profile">
               <div className={styles.identityRow}>
-                <button
-                  className={styles.avatar}
-                  onClick={() => setMenu(true)}
-                  aria-label="Open side navigation"
-                >
+                <button className={styles.avatar} onClick={() => setMenu(true)} aria-label="Open side navigation">
                   {auth.user.name[0]?.toUpperCase() || "W"}
                 </button>
                 <div className={styles.identityCopy}>
@@ -106,6 +109,16 @@ export default function ProfilePage() {
     </main>
   );
 }
+
+function ProfileLoadingShell() {
+  return (
+    <main className={`app-shell ${styles.page}`}>
+      <header className={styles.header}><h1>Profile</h1></header>
+      <div className={styles.viewport}><LoadingState /></div>
+    </main>
+  );
+}
+
 function ProfileRow({ href, icon, label, detail }: { href: string; icon: string; label: string; detail: string }) {
   return (
     <Link href={href} className={styles.row}>
