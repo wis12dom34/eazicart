@@ -15,14 +15,15 @@ export default function SellerDashboardPage() {
   const auth = useAuth();
   const profile = useRequest(async () => auth.isAuthenticated ? sellerDashboardApi.profile() : Promise.resolve(undefined), [auth.isAuthenticated]);
   const dashboard = useRequest(async () => profile.data?.data ? sellerDashboardApi.dashboard() : Promise.resolve(undefined), [profile.data?.data?.id]);
-  if (auth.loading || (auth.isAuthenticated && profile.loading)) return <main className={`app-shell ${styles.page}`}><DashboardHeader /><LoadingState label="Loading your seller workspace…" /></main>;
-  if (!auth.user) return <main className={`app-shell ${styles.page}`}><DashboardHeader /><SignInState message="Sign in to open your seller workspace." /></main>;
-  if (profile.error) return <main className={`app-shell ${styles.page}`}><DashboardHeader /><ErrorState message={profile.error} retry={() => void profile.reload()} /></main>;
-  if (!profile.data?.data) return <main className={`app-shell ${styles.page}`}><DashboardHeader /><SellerSetup defaultName={auth.user.name} onCreated={() => profile.reload()} /></main>;
-  if (dashboard.loading) return <main className={`app-shell ${styles.page}`}><DashboardHeader /><LoadingState label="Loading seller metrics…" /></main>;
-  if (dashboard.error || !dashboard.data) return <main className={`app-shell ${styles.page}`}><DashboardHeader /><ErrorState message={dashboard.error || "Seller dashboard is unavailable."} retry={() => void dashboard.reload()} /></main>;
+  if (auth.loading || (auth.isAuthenticated && profile.loading)) return <DashboardStateShell><LoadingState label="Loading your seller workspace…" /></DashboardStateShell>;
+  if (!auth.user) return <DashboardStateShell><SignInState message="Sign in to open your seller workspace." /></DashboardStateShell>;
+  if (profile.error) return <DashboardStateShell><ErrorState message={profile.error} retry={() => void profile.reload()} /></DashboardStateShell>;
+  if (!profile.data?.data) return <DashboardStateShell><SellerSetup defaultName={auth.user.name} onCreated={() => profile.reload()} /></DashboardStateShell>;
+  if (dashboard.loading) return <DashboardStateShell><LoadingState label="Loading seller metrics…" /></DashboardStateShell>;
+  if (dashboard.error || !dashboard.data) return <DashboardStateShell><ErrorState message={dashboard.error || "Seller dashboard is unavailable."} retry={() => void dashboard.reload()} /></DashboardStateShell>;
   return <main className={`app-shell ${styles.page} ${styles.dashboardPage}`} data-figma-node="247:320"><DashboardContent dashboard={dashboard.data.data} /></main>;
 }
+function DashboardStateShell({ children }: { children: ReactNode }) { return <main className={`app-shell ${styles.page}`}><DashboardHeader />{children}<SellerBottomNavigation active="home" /></main>; }
 function DashboardHeader() { return <header className={styles.topbar}><Link className={styles.back} href="/profile?mode=seller" aria-label="Back to seller profile"><Icon name="back" size={22} /></Link><span>Seller workspace</span></header>; }
 function SellerSetup({ defaultName, onCreated }: { defaultName: string; onCreated: () => Promise<unknown> }) {
   const [displayName, setDisplayName] = useState(defaultName); const [bio, setBio] = useState(""); const [submitting, setSubmitting] = useState(false); const [error, setError] = useState("");
