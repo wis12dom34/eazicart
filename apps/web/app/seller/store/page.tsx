@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ErrorState, LoadingState, SignInState } from "../../components/async-state";
 import { Icon } from "../../components/icon";
 import { SellerBottomNavigation } from "../../components/seller-bottom-navigation";
@@ -14,12 +14,13 @@ import styles from "./seller-store.module.css";
 export default function SellerStorePage() {
   const auth = useAuth();
   const profile = useRequest(async () => auth.isAuthenticated ? sellerDashboardApi.profile() : Promise.resolve(undefined), [auth.isAuthenticated]);
-  if (auth.loading || (auth.isAuthenticated && profile.loading)) return <main className={`app-shell ${styles.page}`}><StoreHeader /><LoadingState label="Loading your storefront…" /></main>;
-  if (!auth.user) return <main className={`app-shell ${styles.page}`}><StoreHeader /><SignInState message="Sign in to manage your storefront." /></main>;
-  if (profile.error) return <main className={`app-shell ${styles.page}`}><StoreHeader /><ErrorState message={profile.error} retry={() => void profile.reload()} /></main>;
-  if (!profile.data?.data) return <main className={`app-shell ${styles.page}`}><StoreHeader /><section className={styles.emptyCard}><div className={styles.iconWrap} aria-hidden="true"><Icon name="bag" size={24} /></div><p className={styles.eyebrow}>Seller account required</p><h1>Create your store first</h1><p>Your public storefront is created from the seller profile tied to your account.</p><Link className={styles.primaryLink} href="/seller/dashboard">Open seller workspace</Link></section></main>;
-  return <main className={`app-shell ${styles.page}`}><StoreHeader /><StoreEditor profile={profile.data.data} /><StoreMapLocation /><SellerBottomNavigation active="storefront" /></main>;
+  if (auth.loading || (auth.isAuthenticated && profile.loading)) return <StoreShell><LoadingState label="Loading your storefront…" /></StoreShell>;
+  if (!auth.user) return <StoreShell><SignInState message="Sign in to manage your storefront." /></StoreShell>;
+  if (profile.error) return <StoreShell><ErrorState message={profile.error} retry={() => void profile.reload()} /></StoreShell>;
+  if (!profile.data?.data) return <StoreShell><section className={styles.emptyCard}><div className={styles.iconWrap} aria-hidden="true"><Icon name="bag" size={24} /></div><p className={styles.eyebrow}>Seller account required</p><h1>Create your store first</h1><p>Your public storefront is created from the seller profile tied to your account.</p><Link className={styles.primaryLink} href="/seller/dashboard">Open seller workspace</Link></section></StoreShell>;
+  return <StoreShell><StoreEditor profile={profile.data.data} /><StoreMapLocation /></StoreShell>;
 }
+function StoreShell({ children }: { children: ReactNode }) { return <main className={`app-shell ${styles.page}`}><StoreHeader />{children}<SellerBottomNavigation active="storefront" /></main>; }
 function StoreHeader() { return <header className={styles.topbar}><Link className={styles.back} href="/seller/dashboard" aria-label="Back to seller workspace"><Icon name="back" size={22} /></Link><span>Storefront</span></header>; }
 function StoreEditor({ profile }: { profile: Seller }) {
   const [displayName, setDisplayName] = useState(profile.displayName); const [bio, setBio] = useState(profile.bio ?? ""); const [submitting, setSubmitting] = useState(false); const [error, setError] = useState(""); const [saved, setSaved] = useState(false);
