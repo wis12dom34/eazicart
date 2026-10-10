@@ -17,7 +17,7 @@ const items: Array<{
   { key: "profile", label: "Profile", href: "/profile", icon: "user" },
 ];
 
-export function SellerBottomNavigation({ active }: { active: SellerNavItem }) {
+export function SellerBottomNavigation({ active }: { active?: SellerNavItem }) {
   return (
     <nav className={styles.nav} aria-label="Seller navigation">
       {items.map((item) => {
