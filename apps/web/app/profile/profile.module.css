@@ -101,7 +101,7 @@
 }
 .edit {
   width: 120px;
-  min-height: 40px;
+  min-height: 44px;
   margin-left: auto;
   display: grid;
   place-items: center;
@@ -151,6 +151,7 @@
 }
 .tabs > * {
   flex: 1;
+  min-height: 44px;
   text-align: center;
   padding-top: 10px;
   color: #65717d;
@@ -161,7 +162,7 @@
   position: relative;
 }
 .tabs [aria-current] {
-  color: #0f1419;
+  color: #f97316;
 }
 .tabs [aria-current]:after {
   content: "";
@@ -171,7 +172,7 @@
   bottom: 0;
   left: calc(50% - 18px);
   border-radius: 999px;
-  background: #0f1419;
+  background: #f97316;
 }
 .activity {
   margin-top: 12px;
@@ -204,6 +205,76 @@
   line-height: 17px;
   color: #65717d;
 }
+.sellerWorkspace {
+  margin-top: 16px;
+}
+.sellerIntro {
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #f7f8f8;
+}
+.sellerIntro p {
+  margin: 0 0 6px;
+  color: #f97316;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+}
+.sellerIntro h2 {
+  margin: 0;
+  color: #0f1419;
+  font-size: 21px;
+  line-height: 26px;
+  letter-spacing: -0.02em;
+}
+.sellerIntro span {
+  display: block;
+  margin-top: 7px;
+  color: #65717d;
+  font-size: 13px;
+  line-height: 19px;
+}
+.sellerGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.sellerTool {
+  min-width: 0;
+  min-height: 112px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+  color: #0f1419;
+  text-decoration: none;
+}
+.sellerToolIcon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #f3f4f6;
+  color: #0f1419;
+}
+.sellerTool strong {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 17px;
+  font-weight: 650;
+}
+.sellerTool small {
+  margin-top: 3px;
+  color: #65717d;
+  font-size: 11px;
+  line-height: 15px;
+}
 .account {
   margin-top: 20px;
 }
@@ -227,16 +298,8 @@
   .row > span {
     overflow-wrap: anywhere;
   }
-}
-.edit {
-  min-height: 44px;
-}
-.tabs > * {
-  min-height: 44px;
-}
-.tabs [aria-current] {
-  color: #f97316;
-}
-.tabs [aria-current]:after {
-  background: #f97316;
+  .sellerTool {
+    min-height: 108px;
+    padding: 12px;
+  }
 }
