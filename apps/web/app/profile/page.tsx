@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
 import { SellerBottomNavigation } from "../components/seller-bottom-navigation";
 import { SideNavigation } from "../components/side-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
@@ -14,6 +15,17 @@ import { followsApi } from "../../lib/api/follows";
 import { ordersApi } from "../../lib/api/orders";
 import { savedApi } from "../../lib/api/saved";
 import styles from "./profile.module.css";
+
+const sellerTools = [
+  { href: "/seller/dashboard", icon: "home", label: "Dashboard", detail: "Store overview" },
+  { href: "/seller/products", icon: "box", label: "Products", detail: "Catalog and stock" },
+  { href: "/seller/orders", icon: "bag", label: "Orders", detail: "Customer orders" },
+  { href: "/seller/store", icon: "shirt", label: "Storefront", detail: "Public store and map" },
+  { href: "/seller/customers", icon: "users", label: "Customers", detail: "Buyer history" },
+  { href: "/seller/finance", icon: "card", label: "Finance", detail: "Verified sales history" },
+  { href: "/seller/reels", icon: "reels", label: "Content", detail: "Publish product reels" },
+  { href: "/seller/subscription", icon: "sparkle", label: "Subscription", detail: "Seller plans" },
+] as const;
 
 export default function ProfilePage() {
   return (
@@ -30,16 +42,16 @@ function ProfileContent() {
   const [menu, setMenu] = useState(false);
   const closeMenu = useCallback(() => setMenu(false), []);
   const orders = useRequest(
-    () => auth.isAuthenticated ? ordersApi.list() : Promise.resolve({ data: [] }),
-    [auth.isAuthenticated],
+    () => auth.isAuthenticated && !sellerMode ? ordersApi.list() : Promise.resolve({ data: [] }),
+    [auth.isAuthenticated, sellerMode],
   );
   const saved = useRequest(
-    () => auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }),
-    [auth.isAuthenticated],
+    () => auth.isAuthenticated && !sellerMode ? savedApi.list() : Promise.resolve({ data: [] }),
+    [auth.isAuthenticated, sellerMode],
   );
   const following = useRequest(
-    () => auth.isAuthenticated ? followsApi.list() : Promise.resolve({ data: [] }),
-    [auth.isAuthenticated],
+    () => auth.isAuthenticated && !sellerMode ? followsApi.list() : Promise.resolve({ data: [] }),
+    [auth.isAuthenticated, sellerMode],
   );
   return (
     <main className={`app-shell ${styles.page}`} data-figma-node="19:120">
@@ -56,7 +68,7 @@ function ProfileContent() {
           <SignInState message="Sign in to manage your EaziCart profile." />
         ) : (
           <div className={styles.content}>
-            <section className={styles.identity} aria-label="Customer profile">
+            <section className={styles.identity} aria-label={sellerMode ? "Seller profile" : "Customer profile"}>
               <div className={styles.identityRow}>
                 <button className={styles.avatar} onClick={() => setMenu(true)} aria-label="Open side navigation">
                   {auth.user.name[0]?.toUpperCase() || "W"}
@@ -72,34 +84,68 @@ function ProfileContent() {
               </div>
               <Link className={styles.edit} href="/edit-profile">Edit profile</Link>
             </section>
-            <section className={styles.stats} aria-label="Profile activity counts">
-              {[
-                { label: "Orders", href: "/orders", result: orders },
-                { label: "Saved", href: "/saved", result: saved },
-                { label: "Following", href: "/following", result: following },
-              ].map(({ label, href, result }) => (
-                <Link href={href} key={label}>
-                  <strong className={result.error ? styles.metricError : undefined}>
-                    {result.loading ? "…" : result.error ? "—" : (result.data?.data.length ?? 0)}
-                  </strong>
-                  <span>{label}</span>
-                </Link>
-              ))}
-            </section>
+
+            {!sellerMode ? (
+              <section className={styles.stats} aria-label="Profile activity counts">
+                {[
+                  { label: "Orders", href: "/orders", result: orders },
+                  { label: "Saved", href: "/saved", result: saved },
+                  { label: "Following", href: "/following", result: following },
+                ].map(({ label, href, result }) => (
+                  <Link href={href} key={label}>
+                    <strong className={result.error ? styles.metricError : undefined}>
+                      {result.loading ? "…" : result.error ? "—" : (result.data?.data.length ?? 0)}
+                    </strong>
+                    <span>{label}</span>
+                  </Link>
+                ))}
+              </section>
+            ) : null}
+
             <nav className={styles.tabs} aria-label="Profile sections">
               {sellerMode ? <Link href="/profile">Activity</Link> : <span aria-current="page">Activity</span>}
               {sellerMode ? <span aria-current="page">Sell</span> : <Link href="/seller/dashboard">Sell</Link>}
             </nav>
-            <section className={styles.activity} aria-label="Your activity">
-              <ProfileRow href="/orders" icon="orders" label="Orders" detail="Track and manage purchases" />
-              <ProfileRow href="/saved" icon="saved" label="Saved" detail="Products you want to revisit" />
-              <ProfileRow href="/following" icon="following" label="Following" detail="Sellers and stores you follow" />
-            </section>
+
+            {sellerMode ? (
+              <section className={styles.sellerWorkspace} aria-label="Seller workspace">
+                <div className={styles.sellerIntro}>
+                  <p>Seller workspace</p>
+                  <h2>Manage your store</h2>
+                  <span>Open the real seller tools already connected to your EaziCart account.</span>
+                </div>
+                <div className={styles.sellerGrid}>
+                  {sellerTools.map((tool) => (
+                    <Link className={styles.sellerTool} href={tool.href} key={tool.href}>
+                      <span className={styles.sellerToolIcon}><Icon name={tool.icon} size={21} /></span>
+                      <strong>{tool.label}</strong>
+                      <small>{tool.detail}</small>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : (
+              <section className={styles.activity} aria-label="Your activity">
+                <ProfileRow href="/orders" icon="orders" label="Orders" detail="Track and manage purchases" />
+                <ProfileRow href="/saved" icon="saved" label="Saved" detail="Products you want to revisit" />
+                <ProfileRow href="/following" icon="following" label="Following" detail="Sellers and stores you follow" />
+              </section>
+            )}
+
             <section className={styles.account}>
               <h2>Account</h2>
-              <ProfileRow href="/address-book" icon="address" label="Address book" detail="Manage delivery addresses" />
-              <ProfileRow href="/payment-methods" icon="payment" label="Payment methods" detail="Secure online checkout" />
-              <ProfileRow href="/notifications" icon="notifications" label="Notifications" detail="Orders and account activity" />
+              {sellerMode ? (
+                <>
+                  <ProfileRow href="/notifications" icon="notifications" label="Notifications" detail="Orders and account activity" />
+                  <ProfileRow href="/settings" icon="settings" label="Account settings" detail="Security and preferences" />
+                </>
+              ) : (
+                <>
+                  <ProfileRow href="/address-book" icon="address" label="Address book" detail="Manage delivery addresses" />
+                  <ProfileRow href="/payment-methods" icon="payment" label="Payment methods" detail="Secure online checkout" />
+                  <ProfileRow href="/notifications" icon="notifications" label="Notifications" detail="Orders and account activity" />
+                </>
+              )}
             </section>
           </div>
         )}
