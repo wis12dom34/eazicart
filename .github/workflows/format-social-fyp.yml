@@ -35,7 +35,7 @@ jobs:
           path.write_text('\n'.join(lines).rstrip() + '\n')
           PY
       - name: Format FYP files
-        run: pnpm exec prettier --write apps/web/app/home-content.tsx apps/web/app/home-social-feed.tsx apps/web/app/home-social-feed.css .prettierignore
+        run: pnpm exec prettier --write apps/web/app/home-content.tsx apps/web/app/home-social-feed.tsx apps/web/app/home-social-feed.css
       - name: Commit formatting
         run: |
           if git diff --quiet; then
