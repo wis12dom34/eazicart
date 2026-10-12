@@ -457,6 +457,8 @@ export function HomeSocialFeed({
   if (!products.length) return null;
 
   const feature = products.find((product) => product.reel) ?? products[0];
+  if (!feature) return null;
+
   const fresh = products
     .filter((product) => product.id !== feature.id)
     .slice(0, 4);
