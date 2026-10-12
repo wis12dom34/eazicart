@@ -212,8 +212,25 @@ let server;
     let continuationFixture = false;
     let authLoginMode = "success";
     let failCartUpdate = false;
-    await page.route("http://localhost:3001/**", async (r) => {
-      const path = new URL(r.request().url()).pathname;
+    const apiRequests =
+      /http:\/\/(?:localhost:3001\/|127\.0\.0\.1:3100\/api\/)/;
+    await page.route(apiRequests, async (r) => {
+      const path = new URL(r.request().url()).pathname.replace(
+        /^\/api(?=\/)/,
+        "",
+      );
+
+      if (path === "/auth/refresh")
+        return r.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            tokens: {
+              accessToken: "sandbox",
+              expiresAt: "2099-01-01T00:00:00.000Z",
+            },
+          }),
+        });
 
       if (path === "/auth/login") {
         if (authLoginMode === "slow")
