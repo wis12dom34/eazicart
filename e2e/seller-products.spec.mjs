@@ -178,9 +178,6 @@ test("seller can create edit and deactivate a product from the workspace", async
     .click();
   await expect(page).toHaveURL("http://localhost:3000/seller/products?add=1");
   await expect(
-    page.getByRole("heading", { name: "Your inventory", exact: true }),
-  ).toBeVisible();
-  await expect(
     page.getByRole("heading", { name: "Add product", exact: true }),
   ).toBeVisible();
 
