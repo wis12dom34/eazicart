@@ -26,12 +26,18 @@ function Icon({
         <circle cx="12" cy="10" r="2.5" />
       </>
     ),
-    sparkle: <path d="m12 2 1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9Z" />,
+    sparkle: (
+      <path d="m12 2 1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9Z" />
+    ),
     check: <path d="m5 12 4 4L19 6" />,
   } as const;
 
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"}>
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+    >
       <g
         stroke="currentColor"
         strokeWidth="1.8"
@@ -100,8 +106,13 @@ function SocialProductCard({
         className="social-home-product-media"
         style={{ background: productBackground(product) }}
       >
-        <Link href={`/product/${product.id}`} aria-label={`View ${product.name}`}>
-          {image ? <img src={image} alt={product.images[0]?.altText ?? product.name} /> : null}
+        <Link
+          href={`/product/${product.id}`}
+          aria-label={`View ${product.name}`}
+        >
+          {image ? (
+            <img src={image} alt={product.images[0]?.altText ?? product.name} />
+          ) : null}
         </Link>
         <button
           type="button"
@@ -114,16 +125,24 @@ function SocialProductCard({
           <Icon name="heart" filled={saved} />
         </button>
       </div>
-      <Link className="social-home-product-name" href={`/product/${product.id}`}>
+      <Link
+        className="social-home-product-name"
+        href={`/product/${product.id}`}
+      >
         {product.name}
       </Link>
       <strong>{money(product.price)}</strong>
-      <Link className="social-home-product-meta" href={`/seller/${product.seller.id}`}>
+      <Link
+        className="social-home-product-meta"
+        href={`/seller/${product.seller.id}`}
+      >
         {product.seller.displayName}
         {product.rating ? ` · ★ ${product.rating}` : ""}
       </Link>
       <small>
-        {product.soldLabel ?? product.viewsLabel ?? (product.stock > 0 ? `${product.stock} in stock` : "Out of stock")}
+        {product.soldLabel ??
+          product.viewsLabel ??
+          (product.stock > 0 ? `${product.stock} in stock` : "Out of stock")}
       </small>
     </article>
   );
@@ -182,10 +201,19 @@ function FeaturePost({
 
   return (
     <article className="social-home-feature">
-      {image ? <img className="social-home-feature-image" src={image} alt={product.name} /> : null}
+      {image ? (
+        <img
+          className="social-home-feature-image"
+          src={image}
+          alt={product.name}
+        />
+      ) : null}
       <div className="social-home-feature-shade" />
       <div className="social-home-feature-top">
-        <Link href={`/seller/${product.seller.id}`} className="social-home-feature-seller">
+        <Link
+          href={`/seller/${product.seller.id}`}
+          className="social-home-feature-seller"
+        >
           <span aria-hidden="true">
             {product.seller.displayName.slice(0, 2).toUpperCase()}
           </span>
@@ -207,7 +235,10 @@ function FeaturePost({
       </div>
       <div className="social-home-feature-copy">
         <p>{caption}</p>
-        <Link className="social-home-product-pill" href={`/product/${product.id}`}>
+        <Link
+          className="social-home-product-pill"
+          href={`/product/${product.id}`}
+        >
           <span
             className="social-home-pill-image"
             style={{ background: productBackground(product) }}
@@ -223,7 +254,11 @@ function FeaturePost({
           </span>
         </Link>
       </div>
-      <Link className="social-home-watch" href="/reels" aria-label="Open EaziCart Reels">
+      <Link
+        className="social-home-watch"
+        href="/reels"
+        aria-label="Open EaziCart Reels"
+      >
         <Icon name="play" />
         Reels
       </Link>
@@ -233,7 +268,11 @@ function FeaturePost({
 
 function NearbyRail({ products }: { products: Product[] }) {
   if (!products.length) return null;
-  const hasLocation = products.some((product) => product.seller.location?.visible !== false && product.seller.location?.label);
+  const hasLocation = products.some(
+    (product) =>
+      product.seller.location?.visible !== false &&
+      product.seller.location?.label,
+  );
   return (
     <section className="social-home-section social-home-nearby">
       <SectionHeading
@@ -249,7 +288,11 @@ function NearbyRail({ products }: { products: Product[] }) {
               ? null
               : product.seller.location?.label;
           return (
-            <Link className="social-home-nearby-card" href={`/product/${product.id}`} key={product.id}>
+            <Link
+              className="social-home-nearby-card"
+              href={`/product/${product.id}`}
+              key={product.id}
+            >
               <div style={{ background: productBackground(product) }}>
                 {image ? <img src={image} alt={product.name} /> : null}
               </div>
@@ -261,7 +304,7 @@ function NearbyRail({ products }: { products: Product[] }) {
                     <Icon name="pin" /> {location}
                   </>
                 ) : (
-                  product.soldLabel ?? product.viewsLabel ?? "Popular now"
+                  (product.soldLabel ?? product.viewsLabel ?? "Popular now")
                 )}
               </small>
             </Link>
@@ -284,13 +327,18 @@ function SellerPost({ product }: { product: Product }) {
           {product.seller.displayName.slice(0, 2).toUpperCase()}
         </span>
         <div>
-          <Link href={`/seller/${product.seller.id}`}>{product.seller.displayName}</Link>
+          <Link href={`/seller/${product.seller.id}`}>
+            {product.seller.displayName}
+          </Link>
           <small>Seller post</small>
         </div>
       </div>
       <p>{copy}</p>
       {image ? (
-        <Link className="social-home-editorial-media" href={`/product/${product.id}`}>
+        <Link
+          className="social-home-editorial-media"
+          href={`/product/${product.id}`}
+        >
           <img src={image} alt={product.name} />
           <span>
             <small>Featured product</small>
@@ -329,12 +377,18 @@ function QuickPick({ products }: { products: Product[] }) {
               </span>
               <strong>{product.name}</strong>
               <small>{selected ? "Your pick" : money(product.price)}</small>
-              {selected ? <i><Icon name="check" /></i> : null}
+              {selected ? (
+                <i>
+                  <Icon name="check" />
+                </i>
+              ) : null}
             </button>
           );
         })}
       </div>
-      <small className="social-home-poll-note">Your choice stays on this device session only.</small>
+      <small className="social-home-poll-note">
+        Your choice stays on this device session only.
+      </small>
     </section>
   );
 }
@@ -343,7 +397,9 @@ function SellerRail({ products }: { products: Product[] }) {
   const sellers = useMemo(
     () =>
       Array.from(
-        new Map(products.map((product) => [product.seller.id, product.seller])).values(),
+        new Map(
+          products.map((product) => [product.seller.id, product.seller]),
+        ).values(),
       ).slice(0, 4),
     [products],
   );
@@ -358,15 +414,27 @@ function SellerRail({ products }: { products: Product[] }) {
       />
       <div className="social-home-seller-list">
         {sellers.map((seller) => {
-          const count = products.filter((product) => product.seller.id === seller.id).length;
+          const count = products.filter(
+            (product) => product.seller.id === seller.id,
+          ).length;
           return (
-            <Link href={`/seller/${seller.id}`} className="social-home-seller" key={seller.id}>
-              <span aria-hidden="true">{seller.displayName.slice(0, 2).toUpperCase()}</span>
+            <Link
+              href={`/seller/${seller.id}`}
+              className="social-home-seller"
+              key={seller.id}
+            >
+              <span aria-hidden="true">
+                {seller.displayName.slice(0, 2).toUpperCase()}
+              </span>
               <div>
                 <strong>{seller.displayName}</strong>
-                <small>{seller.bio || `${seller._count?.products ?? count} products`}</small>
+                <small>
+                  {seller.bio || `${seller._count?.products ?? count} products`}
+                </small>
               </div>
-              <b>View store <Icon name="arrow" /></b>
+              <b>
+                View store <Icon name="arrow" />
+              </b>
             </Link>
           );
         })}
@@ -389,7 +457,9 @@ export function HomeSocialFeed({
   if (!products.length) return null;
 
   const feature = products.find((product) => product.reel) ?? products[0];
-  const fresh = products.filter((product) => product.id !== feature.id).slice(0, 4);
+  const fresh = products
+    .filter((product) => product.id !== feature.id)
+    .slice(0, 4);
   const trending = [...products]
     .sort((a, b) => (b.stock ?? 0) - (a.stock ?? 0))
     .slice(0, 4);
@@ -397,12 +467,20 @@ export function HomeSocialFeed({
     .filter((product) => Number(product.price) <= 20_000)
     .sort((a, b) => Number(a.price) - Number(b.price))
     .slice(0, 4);
-  const budgetFallback = budget.length >= 2
-    ? budget
-    : [...products].sort((a, b) => Number(a.price) - Number(b.price)).slice(0, 4);
-  const editorial = products.find(
-    (product) => product.id !== feature.id && (product.description || product.reel?.caption),
-  ) ?? fresh[0] ?? feature;
+  const budgetFallback =
+    budget.length >= 2
+      ? budget
+      : [...products]
+          .sort((a, b) => Number(a.price) - Number(b.price))
+          .slice(0, 4);
+  const editorial =
+    products.find(
+      (product) =>
+        product.id !== feature.id &&
+        (product.description || product.reel?.caption),
+    ) ??
+    fresh[0] ??
+    feature;
 
   return (
     <div className="social-home-feed">
@@ -424,7 +502,11 @@ export function HomeSocialFeed({
       <SellerPost product={editorial} />
       <ProductRail
         products={budgetFallback}
-        title={budget.length >= 2 ? "Under ₦20k for you" : "Easy picks for your budget"}
+        title={
+          budget.length >= 2
+            ? "Under ₦20k for you"
+            : "Easy picks for your budget"
+        }
         eyebrow="Simple, useful finds"
         isSaved={isSaved}
         busy={busy}
@@ -433,12 +515,16 @@ export function HomeSocialFeed({
       <QuickPick products={fresh.length >= 2 ? fresh : products} />
       <SellerRail products={products} />
       <Link className="social-home-reels-cta" href="/reels">
-        <span><Icon name="play" /></span>
+        <span>
+          <Icon name="play" />
+        </span>
         <div>
           <small>Keep discovering</small>
           <strong>Watch products in action</strong>
         </div>
-        <b><Icon name="arrow" /></b>
+        <b>
+          <Icon name="arrow" />
+        </b>
       </Link>
     </div>
   );

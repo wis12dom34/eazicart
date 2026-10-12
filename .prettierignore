@@ -6,7 +6,3 @@ pnpm-lock.yaml
 
 playwright-report/
 test-results/
-
-# Figma social feed is maintained as an isolated generated-style UI module.
-apps/web/app/home-social-feed.tsx
-apps/web/app/home-social-feed.css

@@ -131,7 +131,10 @@ export default function HomePage({
       </header>
 
       {activeSellers.length ? (
-        <section className="figma-home-stories social-home-stories" aria-label="Seller stories">
+        <section
+          className="figma-home-stories social-home-stories"
+          aria-label="Seller stories"
+        >
           <div className="figma-home-section-header">
             <h2>Seller Stories</h2>
             <Link href="/explore?section=sellers">View all</Link>
