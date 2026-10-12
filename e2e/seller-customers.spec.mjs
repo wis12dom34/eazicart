@@ -1,3 +1,4 @@
+import { browserSessionTokens } from "./helpers/session.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { markOrderPaid } from "./helpers/paid-order.mjs";
@@ -38,7 +39,7 @@ async function createProduct(request, token, name, price, stock = 10) {
       name,
       price,
       stock,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(response.status()).toBe(201);
@@ -235,10 +236,7 @@ test("seller workspace renders customer list and privacy-safe detail", async ({
     }),
   ).toBeVisible();
 
-  const token = await page.evaluate(() => {
-    const raw = localStorage.getItem("eazicart.auth.tokens");
-    return raw ? JSON.parse(raw).accessToken : null;
-  });
+  const { accessToken: token } = await browserSessionTokens(page);
   expect(token).toBeTruthy();
 
   const product = await createProduct(

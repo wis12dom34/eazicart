@@ -1,3 +1,4 @@
+import { browserSessionTokens } from "./helpers/session.mjs";
 import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
@@ -22,9 +23,7 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(`${web}/`);
 
-  const tokens = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("eazicart.auth.tokens")),
-  );
+  const tokens = await browserSessionTokens(page);
   const headers = { Authorization: `Bearer ${tokens.accessToken}` };
 
   const added = await request.post(`${api}/cart/items`, {

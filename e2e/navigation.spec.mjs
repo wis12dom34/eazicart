@@ -6,7 +6,9 @@ test("navigation matches Figma sizing and leaves products reachable", async ({
 }, testInfo) => {
   await page.goto("/");
   await expect(
-    page.getByRole("link", { name: "View Woven everyday tote" }),
+    page
+      .locator(".figma-home-product")
+      .getByRole("link", { name: "View Woven everyday tote" }),
   ).toBeVisible();
   const nav = await expectCustomerNavigation(page, "Home");
   await expect(nav).toHaveCSS("height", "88px");

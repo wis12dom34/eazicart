@@ -1,3 +1,4 @@
+import { browserSessionTokens } from "./helpers/session.mjs";
 import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
@@ -175,11 +176,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
 
   await page.goto("/checkout");
   await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
-  const accessToken = await page.evaluate(() => {
-    const stored = localStorage.getItem("eazicart.auth.tokens");
-    if (!stored) throw new Error("Missing auth tokens");
-    return JSON.parse(stored).accessToken;
-  });
+  const { accessToken } = await browserSessionTokens(page);
   const orderHeaders = { Authorization: `Bearer ${accessToken}` };
   const addresses = await request.get(`${api}/addresses`, {
     headers: orderHeaders,
@@ -270,17 +267,32 @@ test("customer journey persists in PostgreSQL without payment", async ({
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
 
-  // Force an expired access token and verify the actual refresh endpoint.
-  await page.evaluate(() => {
-    const key = "eazicart.auth.tokens";
-    const tokens = JSON.parse(localStorage.getItem(key));
-    tokens.accessToken = "expired-token";
-    localStorage.setItem(key, JSON.stringify(tokens));
+  // Reject one protected request and verify cookie-based refresh restores it.
+  let refreshResponses = 0;
+  page.on("response", (response) => {
+    if (
+      response.url().endsWith("/api/auth/refresh") &&
+      response.status() === 200
+    )
+      refreshResponses += 1;
   });
+  await page.route(
+    "**/api/users/me",
+    (route) =>
+      route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: { code: "UNAUTHORIZED", message: "Expired access token" },
+        }),
+      }),
+    { times: 1 },
+  );
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
+  expect(refreshResponses).toBeGreaterThan(0);
   await page.getByRole("link", { name: "Account settings" }).click();
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL(`${web}/login`);

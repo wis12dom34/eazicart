@@ -73,25 +73,34 @@ test("save sign-in preserves the exact Reel return path", async ({ page }) => {
 
 test("authenticated Reel hydrates liked and saved state", async ({ page }) => {
   let interactionsAuthorization = "";
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "eazicart.auth.tokens",
-      JSON.stringify({
-        accessToken: "reels-e2e-access",
-        refreshToken: "reels-e2e-refresh",
-        expiresAt: "2099-01-01T00:00:00.000Z",
-      }),
-    );
-  });
-  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
-    await route.fulfill({
+  await page.route(/\/auth\/refresh(?:\?|$)/, (route) =>
+    route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        id: "reels-e2e-user",
-        email: "reels@example.com",
-        name: "Reels Tester",
+        tokens: {
+          accessToken: "reels-e2e-access",
+          expiresAt: "2099-01-01T00:00:00.000Z",
+        },
       }),
+    }),
+  );
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    const authenticated =
+      (await route.request().allHeaders())["authorization"] ===
+      "Bearer reels-e2e-access";
+    await route.fulfill({
+      status: authenticated ? 200 : 401,
+      contentType: "application/json",
+      body: JSON.stringify(
+        authenticated
+          ? {
+              id: "reels-e2e-user",
+              email: "reels@example.com",
+              name: "Reels Tester",
+            }
+          : { error: { code: "UNAUTHORIZED" } },
+      ),
     });
   });
   await page.route(

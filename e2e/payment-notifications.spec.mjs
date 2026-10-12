@@ -1,3 +1,4 @@
+import { browserSessionTokens } from "./helpers/session.mjs";
 import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
@@ -38,9 +39,7 @@ test("payment settings stay honest and notifications use live account data", asy
   await expect(page.getByText(/Visa •••• 2048/)).toHaveCount(0);
   await expectCustomerNavigation(page);
 
-  const tokens = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("eazicart.auth.tokens")),
-  );
+  const tokens = await browserSessionTokens(page);
   const headers = { Authorization: `Bearer ${tokens.accessToken}` };
   const address = await request.post(`${api}/addresses`, {
     headers,

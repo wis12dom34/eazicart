@@ -52,7 +52,7 @@ test("seller inventory is private and retains inactive products for management",
       name: "Seller one inventory product",
       price: "12500",
       stock: 5,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(sellerOneCreate.status()).toBe(201);
@@ -64,7 +64,7 @@ test("seller inventory is private and retains inactive products for management",
       name: "Seller two inventory product",
       price: "9800",
       stock: 9,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(sellerTwoCreate.status()).toBe(201);
