@@ -251,7 +251,7 @@ test("seller workspace renders customer list and privacy-safe detail", async ({
   ]);
 
   await page.goto("/seller/dashboard");
-  await page.getByRole("link", { name: "Manage customers" }).click();
+  await page.getByRole("link", { name: "Customers", exact: true }).click();
   await expect(page).toHaveURL("http://localhost:3000/seller/customers");
   await expect(page.getByRole("heading", { name: "Customers" })).toBeVisible();
   await expect(page.getByText("Seller UI Customer Buyer")).toBeVisible();

@@ -171,7 +171,10 @@ test("seller can create edit and deactivate a product from the workspace", async
       exact: true,
     }),
   ).toBeVisible();
-  await page.getByRole("link", { name: /Manage products/ }).click();
+  await page
+    .getByRole("navigation", { name: "Seller navigation" })
+    .getByRole("link", { name: "Products", exact: true })
+    .click();
   await expect(page).toHaveURL("http://localhost:3000/seller/products");
   await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
 
@@ -213,7 +216,7 @@ test("seller can create edit and deactivate a product from the workspace", async
     .getByRole("article")
     .filter({ hasText: "UI Inventory Product" });
   await expect(
-    productCard.getByText("Inactive", { exact: true }),
+    productCard.getByText("Draft", { exact: true }).first(),
   ).toBeVisible();
   await expect(
     productCard.getByRole("button", { name: "Deactivate" }),

@@ -139,7 +139,10 @@ test("seller can edit storefront details from the workspace and see them publicl
   await expect(
     page.getByRole("heading", { name: "Storefront UI Store", exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Manage store" }).click();
+  await page
+    .getByRole("navigation", { name: "Seller navigation" })
+    .getByRole("link", { name: "Storefront", exact: true })
+    .click();
   await expect(page).toHaveURL("http://localhost:3000/seller/store");
   await expect(
     page.getByRole("heading", { name: "Manage your storefront" }),

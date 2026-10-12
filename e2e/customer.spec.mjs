@@ -143,10 +143,10 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.goto("/following");
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
   const followingSections = page.getByRole("navigation", {
-    name: "Following sections",
+    name: "Saved sections",
   });
   await expect(
-    followingSections.getByText("Following", { exact: true }),
+    followingSections.getByText("Sellers", { exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await expect(
     followingSections.getByText("Recommended", { exact: true }),
@@ -175,7 +175,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
   ).toContainText("1 Demo Street");
 
   await page.goto("/checkout");
-  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
+  await expect(page.getByText("Online payment", { exact: true })).toBeVisible();
   const { accessToken } = await browserSessionTokens(page);
   const orderHeaders = { Authorization: `Bearer ${accessToken}` };
   const addresses = await request.get(`${api}/addresses`, {

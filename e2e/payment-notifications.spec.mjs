@@ -30,11 +30,11 @@ test("payment settings stay honest and notifications use live account data", asy
     page.getByRole("button", { name: /Add payment method/ }),
   ).toHaveCount(0);
   await expect(
-    page.getByText("Card storage is not available yet", {
+    page.getByText("Cards and wallet balances are not stored in EaziCart yet", {
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
+  await expect(page.getByText("Online payment", { exact: true })).toBeVisible();
   await expect(page.getByText(/Balance ₦86,400/)).toHaveCount(0);
   await expect(page.getByText(/Visa •••• 2048/)).toHaveCount(0);
   await expectCustomerNavigation(page);
