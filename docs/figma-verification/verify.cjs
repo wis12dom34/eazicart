@@ -827,12 +827,23 @@ let server;
     await page.getByRole("radio").filter({ hasText: "WORK" }).click();
     await page.getByRole("link", { name: "Use selected address" }).click();
     await page.waitForURL("**/checkout?addressId=work");
-    await page.getByText(workAddress.line1, { exact: true }).waitFor();
+    await page
+      .getByText(
+        [workAddress.line1, workAddress.city, workAddress.region].join(", "),
+        {
+          exact: true,
+        },
+      )
+      .waitFor();
     await page.getByRole("link", { name: "Change", exact: true }).click();
     await page.getByRole("radio").filter({ hasText: "HOME" }).click();
     await page.getByRole("link", { name: "Use selected address" }).click();
     await page.waitForURL("**/checkout?addressId=address");
-    await page.getByText(address.line1, { exact: true }).waitFor();
+    await page
+      .getByText([address.line1, address.city, address.region].join(", "), {
+        exact: true,
+      })
+      .waitFor();
     await page
       .getByRole("button", { name: "Place order", exact: true })
       .click();
@@ -871,7 +882,7 @@ let server;
       .click();
     await page.waitForURL("**/orders/design-order");
     await page
-      .getByRole("link", { name: "Track package", exact: true })
+      .getByRole("link", { name: "Track delivery", exact: true })
       .click();
     await page.waitForURL("**/tracking/design-order");
     paymentStatus = "PENDING";
