@@ -47,7 +47,7 @@ test("Home saves and supported seller/cart actions persist through the real API"
   await expect(page).toHaveURL(/\/seller\/demo-seller-lagos-studio$/);
   await page.getByRole("button", { name: "Follow", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Saved", exact: true }),
+    page.getByRole("button", { name: "Following", exact: true }),
   ).toBeVisible();
 
   await page.goto("/following");

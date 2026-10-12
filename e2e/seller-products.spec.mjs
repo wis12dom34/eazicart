@@ -172,13 +172,18 @@ test("seller can create edit and deactivate a product from the workspace", async
     }),
   ).toBeVisible();
   await page
-    .getByRole("navigation", { name: "Seller navigation" })
-    .getByRole("link", { name: "Products", exact: true })
+    .getByRole("heading", { name: "Quick actions", exact: true })
+    .locator("..")
+    .getByRole("link", { name: "Add product", exact: true })
     .click();
-  await expect(page).toHaveURL("http://localhost:3000/seller/products");
-  await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
+  await expect(page).toHaveURL("http://localhost:3000/seller/products?add=1");
+  await expect(
+    page.getByRole("heading", { name: "Your inventory", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Add product", exact: true }),
+  ).toBeVisible();
 
-  await page.getByRole("button", { name: "Add product" }).click();
   await page.getByLabel("Product name").fill("UI Inventory Product");
   await page.getByLabel("Price (NGN)").fill("15750");
   await page.getByLabel("Stock").fill("8");

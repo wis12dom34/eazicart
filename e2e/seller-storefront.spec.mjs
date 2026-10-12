@@ -140,7 +140,8 @@ test("seller can edit storefront details from the workspace and see them publicl
     page.getByRole("heading", { name: "Storefront UI Store", exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("navigation", { name: "Seller navigation" })
+    .getByRole("heading", { name: "Quick actions", exact: true })
+    .locator("..")
     .getByRole("link", { name: "Storefront", exact: true })
     .click();
   await expect(page).toHaveURL("http://localhost:3000/seller/store");
