@@ -2,18 +2,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import type { Product } from "../lib/api/types";
 import { money } from "./data";
-import { homeDesignProducts } from "./home-design";
 
-function Icon({
-  name,
-  filled = false,
-}: {
-  name: "heart" | "play" | "arrow" | "pin" | "sparkle" | "check";
-  filled?: boolean;
-}) {
+type IconName = "heart" | "play" | "arrow" | "pin";
+
+function Icon({ name, filled = false }: { name: IconName; filled?: boolean }) {
   const paths = {
     heart: (
       <path d="M20.8 4.7a5.5 5.5 0 0 0-7.8 0L12 5.8l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.4 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
@@ -26,10 +20,6 @@ function Icon({
         <circle cx="12" cy="10" r="2.5" />
       </>
     ),
-    sparkle: (
-      <path d="m12 2 1.6 5.1L19 9l-5.4 1.9L12 16l-1.6-5.1L5 9l5.4-1.9Z" />
-    ),
-    check: <path d="m5 12 4 4L19 6" />,
   } as const;
 
   return (
@@ -50,20 +40,12 @@ function Icon({
   );
 }
 
-function productDesign(product: Product) {
-  return homeDesignProducts.find(
-    (item) =>
-      item.name === product.name && item.seller === product.seller.displayName,
-  );
-}
-
 function productImage(product: Product) {
-  const design = productDesign(product);
-  return product.images[0]?.url ?? (design ? `/figma/${design.image}` : null);
+  return product.images[0]?.url ?? null;
 }
 
-function productBackground(product: Product) {
-  return productDesign(product)?.background ?? "#f2f2f7";
+function productBackground() {
+  return "#f2f2f7";
 }
 
 function SectionHeading({
@@ -100,11 +82,12 @@ function SocialProductCard({
   onToggleSaved: (product: Product) => void;
 }) {
   const image = productImage(product);
+
   return (
     <article className="social-home-product-card">
       <div
         className="social-home-product-media"
-        style={{ background: productBackground(product) }}
+        style={{ background: productBackground() }}
       >
         <Link
           href={`/product/${product.id}`}
@@ -164,6 +147,7 @@ function ProductRail({
   onToggleSaved: (product: Product) => void;
 }) {
   if (!products.length) return null;
+
   return (
     <section className="social-home-section">
       <SectionHeading title={title} eyebrow={eyebrow} />
@@ -241,7 +225,7 @@ function FeaturePost({
         >
           <span
             className="social-home-pill-image"
-            style={{ background: productBackground(product) }}
+            style={{ background: productBackground() }}
           >
             {image ? <img src={image} alt="" /> : null}
           </span>
@@ -268,11 +252,13 @@ function FeaturePost({
 
 function NearbyRail({ products }: { products: Product[] }) {
   if (!products.length) return null;
+
   const hasLocation = products.some(
     (product) =>
       product.seller.location?.visible !== false &&
       product.seller.location?.label,
   );
+
   return (
     <section className="social-home-section social-home-nearby">
       <SectionHeading
@@ -287,13 +273,14 @@ function NearbyRail({ products }: { products: Product[] }) {
             product.seller.location?.visible === false
               ? null
               : product.seller.location?.label;
+
           return (
             <Link
               className="social-home-nearby-card"
               href={`/product/${product.id}`}
               key={product.id}
             >
-              <div style={{ background: productBackground(product) }}>
+              <div style={{ background: productBackground() }}>
                 {image ? <img src={image} alt={product.name} /> : null}
               </div>
               <strong>{product.name}</strong>
@@ -320,6 +307,7 @@ function SellerPost({ product }: { product: Product }) {
   const copy =
     product.description ??
     `${product.seller.displayName} shared a closer look at ${product.name}.`;
+
   return (
     <article className="social-home-editorial">
       <div className="social-home-editorial-header">
@@ -353,7 +341,6 @@ function SellerPost({ product }: { product: Product }) {
 
 function QuickPick({ products }: { products: Product[] }) {
   const choices = products.slice(0, 2);
-  const [vote, setVote] = useState<string | null>(null);
   if (choices.length < 2) return null;
 
   return (
@@ -363,46 +350,35 @@ function QuickPick({ products }: { products: Product[] }) {
       <div className="social-home-poll-products">
         {choices.map((product) => {
           const image = productImage(product);
-          const selected = vote === product.id;
           return (
             <button
               key={product.id}
               type="button"
-              className={selected ? "is-selected" : ""}
-              aria-pressed={selected}
-              onClick={() => setVote(product.id)}
+              onClick={() => window.location.assign(`/product/${product.id}`)}
             >
-              <span style={{ background: productBackground(product) }}>
+              <span style={{ background: productBackground() }}>
                 {image ? <img src={image} alt="" /> : null}
               </span>
               <strong>{product.name}</strong>
-              <small>{selected ? "Your pick" : money(product.price)}</small>
-              {selected ? (
-                <i>
-                  <Icon name="check" />
-                </i>
-              ) : null}
+              <small>{money(product.price)}</small>
             </button>
           );
         })}
       </div>
       <small className="social-home-poll-note">
-        Your choice stays on this device session only.
+        Tap a product to view details.
       </small>
     </section>
   );
 }
 
 function SellerRail({ products }: { products: Product[] }) {
-  const sellers = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          products.map((product) => [product.seller.id, product.seller]),
-        ).values(),
-      ).slice(0, 4),
-    [products],
-  );
+  const sellers = Array.from(
+    new Map(
+      products.map((product) => [product.seller.id, product.seller]),
+    ).values(),
+  ).slice(0, 4);
+
   if (!sellers.length) return null;
 
   return (
@@ -413,31 +389,32 @@ function SellerRail({ products }: { products: Product[] }) {
         href="/explore?section=sellers"
       />
       <div className="social-home-seller-list">
-        {sellers.map((seller) => {
-          const count = products.filter(
-            (product) => product.seller.id === seller.id,
-          ).length;
-          return (
-            <Link
-              href={`/seller/${seller.id}`}
-              className="social-home-seller"
-              key={seller.id}
-            >
-              <span aria-hidden="true">
-                {seller.displayName.slice(0, 2).toUpperCase()}
-              </span>
-              <div>
-                <strong>{seller.displayName}</strong>
-                <small>
-                  {seller.bio || `${seller._count?.products ?? count} products`}
-                </small>
-              </div>
-              <b>
-                View store <Icon name="arrow" />
-              </b>
-            </Link>
-          );
-        })}
+        {sellers.map((seller) => (
+          <Link
+            href={`/seller/${seller.id}`}
+            className="social-home-seller"
+            key={seller.id}
+          >
+            <span aria-hidden="true">
+              {seller.displayName.slice(0, 2).toUpperCase()}
+            </span>
+            <div>
+              <strong>{seller.displayName}</strong>
+              <small>
+                {seller.bio ||
+                  `${
+                    seller._count?.products ??
+                    products.filter(
+                      (product) => product.seller.id === seller.id,
+                    ).length
+                  } products`}
+              </small>
+            </div>
+            <b>
+              View store <Icon name="arrow" />
+            </b>
+          </Link>
+        ))}
       </div>
     </section>
   );
