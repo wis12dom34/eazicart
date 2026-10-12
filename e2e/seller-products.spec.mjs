@@ -198,6 +198,11 @@ test("seller can create edit and deactivate a product from the workspace", async
     productCard.getByText("8 in stock", { exact: true }),
   ).toBeVisible();
 
+  const manage = productCard.getByRole("button", {
+    name: "Manage UI Inventory Product",
+    exact: true,
+  });
+  if (await manage.isVisible()) await manage.click();
   await productCard.getByRole("button", { name: "Edit" }).click();
   await productCard.getByLabel("Price (NGN)").fill("16250");
   await productCard.getByLabel("Stock").fill("11");
@@ -211,6 +216,7 @@ test("seller can create edit and deactivate a product from the workspace", async
     productCard.getByText("11 in stock", { exact: true }),
   ).toBeVisible();
 
+  if (await manage.isVisible()) await manage.click();
   page.once("dialog", (dialog) => dialog.accept());
   await productCard.getByRole("button", { name: "Deactivate" }).click();
 
