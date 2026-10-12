@@ -1,0 +1,91 @@
+name: API container
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/database/**"
+      - "packages/config/**"
+      - "Dockerfile.api"
+      - ".dockerignore"
+      - "infra/vps/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/api-container.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: eazicart
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: eazicart_container_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U eazicart -d eazicart_container_test"
+          --health-interval 2s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://eazicart:ci-only-password@127.0.0.1:5432/eazicart_container_test
+      JWT_SECRET: ci-only-container-secret-at-least-32-characters
+      WEB_ORIGIN: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate VPS configuration
+        env:
+          API_IMAGE: eazicart-api:ci
+          API_DOMAIN: api.example.com
+          ACME_EMAIL: ci@example.com
+          POSTGRES_PASSWORD: ci-only-password
+        run: docker compose -f infra/vps/compose.yaml config --quiet
+      - name: Build API image
+        run: docker build -f Dockerfile.api -t eazicart-api .
+      - name: Apply existing migrations
+        run: >-
+          docker run --rm --network host -e DATABASE_URL
+          --workdir /app/packages/database eazicart-api
+          node node_modules/prisma/build/index.js migrate deploy
+      - name: Start production API
+        run: >-
+          docker run -d --name eazicart-api --network host
+          -e DATABASE_URL -e JWT_SECRET -e WEB_ORIGIN eazicart-api
+      - name: Verify database readiness and persistent account login
+        run: |
+          node --input-type=module <<'JS'
+          const base = 'http://127.0.0.1:3001';
+          let ready = false;
+          for (let attempt = 0; attempt < 30; attempt++) {
+            try {
+              const response = await fetch(`${base}/ready`, { signal: AbortSignal.timeout(2000) });
+              if (response.ok) { ready = true; break; }
+            } catch {}
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          if (!ready) throw new Error('API never became ready');
+          const account = { email: 'container@example.com', name: 'Container Tester', password: 'container-test-password' };
+          const register = await fetch(`${base}/auth/register`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(account),
+          });
+          if (register.status !== 201) throw new Error(`Register failed: ${register.status}`);
+          const login = await fetch(`${base}/auth/login`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(account),
+          });
+          if (!login.ok) throw new Error(`Login failed: ${login.status}`);
+          const { tokens } = await login.json();
+          const me = await fetch(`${base}/users/me`, { headers: { Authorization: `Bearer ${tokens.accessToken}` } });
+          if (!me.ok || (await me.json()).email !== account.email) throw new Error('Persistent account verification failed');
+          JS
+      - name: Container logs
+        if: always()
+        run: docker logs eazicart-api || true
+      - name: Stop API
+        if: always()
+        run: docker stop --time 15 eazicart-api || true

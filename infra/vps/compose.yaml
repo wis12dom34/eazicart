@@ -1,0 +1,81 @@
+name: eazicart
+
+x-api-environment: &api-environment
+  NODE_ENV: production
+  HOST: 0.0.0.0
+  PORT: 3001
+  DATABASE_URL: postgresql://eazicart:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/eazicart
+  JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+  WEB_ORIGIN: ${WEB_ORIGIN:?Set WEB_ORIGIN}
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: eazicart
+      POSTGRES_USER: eazicart
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eazicart -d eazicart"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    logging: *logging
+
+  migrate:
+    image: ${API_IMAGE:?Set API_IMAGE to the release image}
+    restart: "no"
+    environment:
+      <<: *api-environment
+    working_dir: /app/packages/database
+    command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *logging
+
+  api:
+    image: ${API_IMAGE:?Set API_IMAGE to the release image}
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    environment:
+      <<: *api-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    logging: *logging
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    logging: *logging
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
