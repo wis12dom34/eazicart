@@ -1,9 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import "./home.css";
+import "./home-social-feed.css";
 import { BottomNavigation } from "./components/bottom-navigation";
 import { SideNavigation } from "./components/side-navigation";
 import { EmptyState, ErrorState, LoadingState } from "./components/async-state";
@@ -15,8 +17,8 @@ import { productsApi } from "../lib/api/products";
 import { notificationsApi } from "../lib/api/notifications";
 import { savedApi } from "../lib/api/saved";
 import type { Product } from "../lib/api/types";
-import { HomeSections } from "./home-sections";
 import { homeDesignProducts } from "./home-design";
+import { HomeSocialFeed } from "./home-social-feed";
 import type { ProductList } from "../lib/public-catalog";
 
 export default function HomePage({
@@ -54,7 +56,6 @@ export default function HomePage({
   const closeDrawer = useCallback(() => setDrawer(false), []);
   const items = products.data?.data ?? [];
   const sorted = [...items];
-  const popularItems = sorted.slice(0, 4);
   const activeSellers = Array.from(
     new Map(
       sorted.map((product) => [product.seller.id, product.seller]),
@@ -84,12 +85,13 @@ export default function HomePage({
       setBusy(null);
     }
   };
+
   return (
     <main
-      className="app-shell with-nav figma-home"
+      className="app-shell with-nav figma-home social-home"
       data-figma-node="1247:16174"
     >
-      <header className="figma-home-sticky">
+      <header className="figma-home-sticky social-home-sticky">
         <div className="figma-home-header">
           <button
             className="figma-home-avatar"
@@ -123,20 +125,16 @@ export default function HomePage({
             For You
           </Link>
           <Link href="/explore?section=trending">Trending</Link>
-          <Link href="/explore?section=categories">Categories</Link>
-          <Link href="/explore?section=sellers">Sellers</Link>
+          <Link href="/explore">Nearby</Link>
+          <Link href="/following">Following</Link>
         </nav>
       </header>
+
       {activeSellers.length ? (
-        <section className="figma-home-stories" aria-label="Active sellers">
+        <section className="figma-home-stories social-home-stories" aria-label="Seller stories">
           <div className="figma-home-section-header">
-            <h2>
-              <img src="/figma/sparkle.svg" width={15} height={15} alt="" />
-              Sellers
-            </h2>
-            <Link href="/explore?section=sellers">
-              View all <b>›</b>
-            </Link>
+            <h2>Seller Stories</h2>
+            <Link href="/explore?section=sellers">View all</Link>
           </div>
           <div className="figma-home-story-strip">
             {activeSellers.map((seller) => (
@@ -157,56 +155,34 @@ export default function HomePage({
           </div>
         </section>
       ) : null}
-      <div className="figma-home-divider" />
-      {popularItems.length ? (
-        <section className="figma-home-popular">
-          <SectionHeader title="Popular products" />
-          <div className="figma-home-popular-strip">
-            {popularItems.map((product) => {
-              const design = homeDesignProducts.find(
-                (d) =>
-                  d.name === product.name &&
-                  d.seller === product.seller.displayName,
-              );
-              return (
-                <Link
-                  className="figma-home-popular-card"
-                  href={`/product/${product.id}`}
-                  key={product.id}
-                >
-                  <div style={{ background: design?.background }}>
-                    {product.images[0] ? (
-                      <img
-                        src={product.images[0].url}
-                        alt={product.images[0].altText ?? product.name}
-                      />
-                    ) : design ? (
-                      <img src={`/figma/${design.image}`} alt={product.name} />
-                    ) : null}
-                  </div>
-                  <strong>{product.name}</strong>
-                  <b>{money(product.price)}</b>
-                  <small>
-                    {product.viewsLabel ??
-                      (product.stock > 0 ? "In stock" : "Out of stock")}
-                  </small>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
-      {popularItems.length ? <div className="figma-home-divider" /> : null}
-      <section className="figma-home-for-you">
-        <SectionHeader title="For you" />
-        {products.loading && !products.data ? (
-          <LoadingState label="Loading products…" />
-        ) : products.error && !products.data ? (
+
+      {products.loading && !products.data ? (
+        <div className="social-home-state">
+          <LoadingState label="Loading your feed…" />
+        </div>
+      ) : products.error && !products.data ? (
+        <div className="social-home-state">
           <ErrorState
             message={products.error}
             retry={() => void products.reload()}
           />
-        ) : sorted.length ? (
+        </div>
+      ) : sorted.length ? (
+        <HomeSocialFeed
+          products={sorted}
+          isSaved={isSaved}
+          busy={busy}
+          onToggleSaved={(product) => void toggleSaved(product)}
+        />
+      ) : (
+        <div className="social-home-state">
+          <EmptyState message="No products are available yet." />
+        </div>
+      )}
+
+      {sorted.length ? (
+        <section className="figma-home-for-you social-home-more-products">
+          <SectionHeader title="More for you" />
           <div className="figma-home-product-grid">
             {sorted.slice(0, 16).map((product) => {
               const design = homeDesignProducts.find(
@@ -273,9 +249,11 @@ export default function HomePage({
                     <strong>{money(product.price)}</strong>
                     <div className="figma-home-product-rating">
                       <span>
-                        {product.stock > 0
-                          ? `${product.stock} in stock`
-                          : "Out of stock"}
+                        {product.soldLabel ??
+                          product.viewsLabel ??
+                          (product.stock > 0
+                            ? `${product.stock} in stock`
+                            : "Out of stock")}
                       </span>
                     </div>
                   </div>
@@ -283,11 +261,9 @@ export default function HomePage({
               );
             })}
           </div>
-        ) : (
-          <EmptyState message="No products are available yet." />
-        )}
-      </section>
-      {sorted.length ? <HomeSections products={sorted} /> : null}
+        </section>
+      ) : null}
+
       {feedback ? (
         <p role="alert" className="figma-home-feedback">
           {feedback}
@@ -303,6 +279,7 @@ export default function HomePage({
     </main>
   );
 }
+
 function SectionHeader({ title }: { title: string }) {
   return (
     <div className="figma-home-section-header">
