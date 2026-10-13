@@ -1,0 +1,81 @@
+.figma-home-product-media > div {
+  width: 100%;
+  height: 196px;
+  padding: 0;
+}
+
+.figma-home-product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.figma-home-avatar {
+  overflow: hidden;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.figma-home-avatar > img {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.figma-home-story-avatar {
+  position: relative;
+  overflow: hidden;
+}
+
+.figma-home-story-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.figma-home-story-avatar.has-story {
+  border: 2px solid #f56300;
+  padding: 2px;
+  background: #fff;
+}
+
+.figma-home-story-add {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.figma-home-story-add input {
+  display: none;
+}
+
+.figma-home-story-plus {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #f56300;
+  color: #fff;
+  font-size: 17px;
+  line-height: 17px;
+  font-weight: 500;
+}
+
+.figma-home-story-upload-error {
+  margin: 6px 16px 0;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 16px;
+}
