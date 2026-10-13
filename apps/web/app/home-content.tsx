@@ -3,12 +3,19 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type ChangeEvent,
+} from "react";
 import "./home.css";
 import "./home-social-feed.css";
+import "./home-media.css";
 import { BottomNavigation } from "./components/bottom-navigation";
 import { SideNavigation } from "./components/side-navigation";
 import { EmptyState, ErrorState, LoadingState } from "./components/async-state";
+import { ProfileAvatar } from "./components/profile-avatar";
 import { money } from "./data";
 import { useRequest } from "./hooks/use-request";
 import { useAuth } from "./providers/auth-provider";
@@ -17,6 +24,11 @@ import { productsApi } from "../lib/api/products";
 import { notificationsApi } from "../lib/api/notifications";
 import { savedApi } from "../lib/api/saved";
 import type { Product } from "../lib/api/types";
+import {
+  fetchStories,
+  uploadSocialMedia,
+  type SocialMediaItem,
+} from "../lib/social-media";
 import { homeDesignProducts } from "./home-design";
 import { HomeSocialFeed } from "./home-social-feed";
 import { Icon } from "./components/icon";
@@ -54,6 +66,9 @@ export default function HomePage({
   const [busy, setBusy] = useState<string | null>(null);
   const [localSaved, setLocalSaved] = useState<Record<string, boolean>>({});
   const [feedback, setFeedback] = useState("");
+  const [stories, setStories] = useState<Record<string, SocialMediaItem>>({});
+  const [storyBusy, setStoryBusy] = useState(false);
+  const [storyError, setStoryError] = useState("");
   const closeDrawer = useCallback(() => setDrawer(false), []);
   const items = products.data?.data ?? [];
   const sorted = [...items];
@@ -62,10 +77,38 @@ export default function HomePage({
       sorted.map((product) => [product.seller.id, product.seller]),
     ).values(),
   ).slice(0, 8);
+  const storyUserIds = Array.from(
+    new Set([
+      ...(auth.user ? [auth.user.id] : []),
+      ...activeSellers
+        .map((seller) => seller.user?.id)
+        .filter((id): id is string => Boolean(id)),
+    ]),
+  );
+  const storyKey = storyUserIds.join(",");
+
+  useEffect(() => {
+    let active = true;
+    const ids = storyKey ? storyKey.split(",") : [];
+    if (!ids.length) {
+      setStories({});
+      return () => {
+        active = false;
+      };
+    }
+    void fetchStories(ids).then((next) => {
+      if (active) setStories(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [storyKey]);
+
   const isSaved = (id: string) =>
     localSaved[id] ??
     saved.data?.data.some((item) => item.productId === id) ??
     false;
+
   const toggleSaved = async (product: Product) => {
     if (!auth.isAuthenticated) {
       router.push(`/login?next=${encodeURIComponent("/")}`);
@@ -87,6 +130,29 @@ export default function HomePage({
     }
   };
 
+  const uploadStory = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    if (!auth.user) {
+      router.push("/login?next=/");
+      return;
+    }
+
+    setStoryBusy(true);
+    setStoryError("");
+    try {
+      const story = await uploadSocialMedia("story", auth.user.id, file);
+      setStories((current) => ({ ...current, [auth.user!.id]: story }));
+    } catch (error) {
+      setStoryError(
+        error instanceof Error ? error.message : "Could not upload your story",
+      );
+    } finally {
+      setStoryBusy(false);
+    }
+  };
+
   return (
     <main
       className="app-shell with-nav figma-home social-home"
@@ -99,7 +165,11 @@ export default function HomePage({
             aria-label="Open side navigation"
             onClick={() => setDrawer(true)}
           >
-            <Icon name="user-circle" size={32} />
+            {auth.user ? (
+              <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+            ) : (
+              <Icon name="user-circle" size={32} />
+            )}
           </button>
           <Link className="figma-home-logo" href="/" aria-label="EaziCart home">
             <img src="/figma/logo.svg" width={27} height={27} alt="" />
@@ -131,32 +201,63 @@ export default function HomePage({
         </nav>
       </header>
 
-      {activeSellers.length ? (
+      {auth.user || activeSellers.length ? (
         <section
           className="figma-home-stories social-home-stories"
-          aria-label="Seller stories"
+          aria-label="Stories"
         >
           <div className="figma-home-section-header">
-            <h2>Seller Stories</h2>
+            <h2>Stories</h2>
             <Link href="/explore?section=sellers">View all</Link>
           </div>
           <div className="figma-home-story-strip">
-            {activeSellers.map((seller) => (
-              <Link
-                className="figma-home-story"
-                href={`/seller/${seller.id}`}
-                key={seller.id}
-              >
-                <span className="figma-home-story-avatar" aria-hidden="true">
-                  {seller.displayName.slice(0, 2).toUpperCase()}
+            {auth.user ? (
+              <label className="figma-home-story figma-home-story-add">
+                <span
+                  className={`figma-home-story-avatar ${stories[auth.user.id] ? "has-story" : ""}`}
+                >
+                  <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+                  <b className="figma-home-story-plus">+</b>
                 </span>
-                <strong>{seller.displayName}</strong>
-                {seller._count?.products ? (
-                  <small>{seller._count.products} products</small>
-                ) : null}
-              </Link>
-            ))}
+                <strong>{storyBusy ? "Uploading…" : "Your story"}</strong>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                  onChange={(event) => void uploadStory(event)}
+                  disabled={storyBusy}
+                  aria-label="Upload a story from your gallery"
+                />
+              </label>
+            ) : null}
+            {activeSellers.map((seller) => {
+              const userId = seller.user?.id;
+              const story = userId ? stories[userId] : undefined;
+              return (
+                <Link
+                  className="figma-home-story"
+                  href={story && userId ? `/story/${userId}` : `/seller/${seller.id}`}
+                  key={seller.id}
+                >
+                  <span
+                    className={`figma-home-story-avatar ${story ? "has-story" : ""}`}
+                    aria-hidden="true"
+                  >
+                    {userId ? (
+                      <ProfileAvatar userId={userId} name={seller.displayName} />
+                    ) : (
+                      seller.displayName.slice(0, 2).toUpperCase()
+                    )}
+                  </span>
+                  <strong>{seller.displayName}</strong>
+                </Link>
+              );
+            })}
           </div>
+          {storyError ? (
+            <p className="figma-home-story-upload-error" role="alert">
+              {storyError}
+            </p>
+          ) : null}
         </section>
       ) : null}
 

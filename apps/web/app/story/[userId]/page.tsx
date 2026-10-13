@@ -5,8 +5,7 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
-const videoFile = (url: string, contentType?: string) =>
-  contentType?.startsWith("video/") || /\.(mp4|mov|webm)(?:\?|$)/i.test(url);
+const videoFile = (url: string) => /\.(mp4|mov|webm)(?:\?|$)/i.test(url);
 
 export default async function StoryPage({
   params,
@@ -59,7 +58,7 @@ export default async function StoryPage({
         ‹
       </Link>
       {story ? (
-        videoFile(story.url, story.contentType) ? (
+        videoFile(story.url) ? (
           <video
             src={story.url}
             autoPlay

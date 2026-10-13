@@ -4,7 +4,10 @@
   padding: 0;
 }
 
-.figma-home-product-media img {
+.figma-home-product-media img,
+.social-home-product-media img,
+.social-home-nearby-card img,
+.social-home-poll-products img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -27,15 +30,15 @@
 
 .figma-home-story-avatar {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
-.figma-home-story-avatar img {
+.figma-home-story-avatar > img {
   width: 100%;
   height: 100%;
   display: block;
   object-fit: cover;
-  border-radius: inherit;
+  border-radius: 50%;
 }
 
 .figma-home-story-avatar.has-story {
@@ -58,8 +61,8 @@
 
 .figma-home-story-plus {
   position: absolute;
-  right: -1px;
-  bottom: -1px;
+  right: -2px;
+  bottom: -2px;
   width: 21px;
   height: 21px;
   display: grid;

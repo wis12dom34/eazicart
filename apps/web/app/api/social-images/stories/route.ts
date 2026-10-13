@@ -23,13 +23,7 @@ export async function GET(request: Request) {
         )[0];
       return [
         userId,
-        latest
-          ? {
-              url: latest.url,
-              uploadedAt: latest.uploadedAt,
-              contentType: latest.contentType,
-            }
-          : null,
+        latest ? { url: latest.url, uploadedAt: latest.uploadedAt } : null,
       ] as const;
     }),
   );
