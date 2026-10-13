@@ -7,35 +7,32 @@ type IconProps = {
 const paths: Record<string, React.ReactNode> = {
   home: (
     <>
-      <path d="m3 10 9-7 9 7" />
-      <path d="M5 9v11h14V9M9 20v-6h6v6" />
+      <path d="m2.5 10 9.5-7.5 9.5 7.5" />
+      <path d="M5 8.5V20a1 1 0 0 0 1 1h3v-7h6v7h3a1 1 0 0 0 1-1V8.5" />
     </>
   ),
   search: (
     <>
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-4-4" />
+      <circle cx="10.5" cy="10.5" r="7.5" />
+      <path d="m16 16 5 5" />
     </>
   ),
   reels: (
     <>
-      <circle cx="11" cy="11" r="8" />
-      <circle cx="8" cy="8" r="1.5" />
-      <circle cx="14" cy="8" r="1.5" />
-      <circle cx="8" cy="14" r="1.5" />
-      <circle cx="14" cy="14" r="1.5" />
-      <path d="M11 19h10" />
+      <path d="M6 3h12" />
+      <rect x="2.5" y="6.5" width="19" height="15" rx="3" />
+      <path d="m10 11 5 3-5 3v-6Z" />
     </>
   ),
   cart: (
     <>
-      <path d="M3 4h2l2.5 12h11L21 7H6M8 16l-1 3h12" />
+      <path d="M2 3h2.5l2.2 12.2a2 2 0 0 0 2 1.8h9.1a2 2 0 0 0 2-1.6L21.5 7H5.3" />
       <circle cx="9" cy="21" r="1" />
       <circle cx="18" cy="21" r="1" />
     </>
   ),
   chat: (
-    <path d="M21 11.5a9 9 0 0 1-13.5 7.8L3 21l1.7-4.5A9 9 0 1 1 21 11.5Z" />
+    <path d="M12 3c-5.2 0-9.5 3.6-9.5 8 0 2.2 1.1 4.2 2.9 5.7L4 21l5.1-2.4c.9.3 1.9.4 2.9.4 5.2 0 9.5-3.6 9.5-8S17.2 3 12 3Z" />
   ),
   bag: (
     <>
