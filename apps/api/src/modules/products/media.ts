@@ -19,9 +19,19 @@ const filePattern = /^[0-9a-f-]{36}\.(jpg|png|webp)$/;
 
 const isValidImage = (body: Buffer, extension: string) => {
   if (extension === "jpg")
-    return body.length >= 3 && body[0] === 0xff && body[1] === 0xd8 && body[2] === 0xff;
+    return (
+      body.length >= 3 &&
+      body[0] === 0xff &&
+      body[1] === 0xd8 &&
+      body[2] === 0xff
+    );
   if (extension === "png")
-    return body.length >= 8 && body.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    return (
+      body.length >= 8 &&
+      body
+        .subarray(0, 8)
+        .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+    );
   return (
     body.length >= 12 &&
     body.toString("ascii", 0, 4) === "RIFF" &&
@@ -202,7 +212,9 @@ export function registerProductMedia(
       if (!info?.isFile())
         throw new AppError(404, "MEDIA_NOT_FOUND", "Photo not found");
       const extension = name.split(".").at(-1);
-      const mime = Object.entries(types).find(([, ext]) => ext === extension)?.[0];
+      const mime = Object.entries(types).find(
+        ([, ext]) => ext === extension,
+      )?.[0];
       if (!mime) throw new AppError(404, "MEDIA_NOT_FOUND", "Photo not found");
       reply
         .type(mime)
