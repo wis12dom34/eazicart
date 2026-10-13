@@ -91,9 +91,7 @@ export function ProductImagePicker({
             );
           },
         });
-        setImages((current) =>
-          [...current, blob.url].slice(0, MAX_IMAGES),
-        );
+        setImages((current) => [...current, blob.url].slice(0, MAX_IMAGES));
       }
     } catch (value) {
       setError(
@@ -107,7 +105,9 @@ export function ProductImagePicker({
   };
 
   const removeImage = (index: number) =>
-    setImages((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    setImages((current) =>
+      current.filter((_, itemIndex) => itemIndex !== index),
+    );
 
   const makeCover = (index: number) =>
     setImages((current) => {
