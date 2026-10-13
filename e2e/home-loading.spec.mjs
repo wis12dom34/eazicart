@@ -41,20 +41,31 @@ for (const width of [320, 393, 440]) {
     await expect(hero).toHaveAttribute("fetchpriority", "high");
     await expect(hero).toHaveAttribute("sizes", /416px/);
     const cards = page.locator(
-      ".social-home-product-media img, .social-home-editorial-media > img, .figma-home-product-media img",
+      ".social-home-product-media img:visible, .social-home-editorial-media > img:visible, .figma-home-product-media img:visible",
     );
-    expect(await cards.count()).toBeGreaterThan(0);
-    for (const card of await cards.all()) {
-      await expect(card).toHaveAttribute("loading", "lazy");
-      await expect(card).toHaveAttribute("decoding", "async");
-    }
-    expect(
-      await page.evaluate(
-        () =>
-          Array.from(document.images).filter((i) => i.loading !== "lazy")
-            .length,
-      ),
-    ).toBeLessThanOrEqual(2);
+    // Streaming and the fresh catalog can replace cards; inspect one current DOM snapshot.
+    await expect
+      .poll(() =>
+        cards.evaluateAll(
+          (images) =>
+            images.length > 0 &&
+            images.every(
+              (image) =>
+                image.getAttribute("loading") === "lazy" &&
+                image.getAttribute("decoding") === "async",
+            ),
+        ),
+      )
+      .toBe(true);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            Array.from(document.images).filter((i) => i.loading !== "lazy")
+              .length,
+        ),
+      )
+      .toBeLessThanOrEqual(2);
     await page.reload();
     await expect(hero).toHaveAttribute("src", /\/_next\/image\?/);
   });
