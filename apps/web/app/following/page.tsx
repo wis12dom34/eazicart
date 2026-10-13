@@ -12,6 +12,7 @@ import {
 } from "../components/async-state";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { Icon } from "../components/icon";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./following.module.css";
@@ -127,7 +128,10 @@ export default function FollowingPage() {
                     className={styles.avatar}
                     aria-label={`View ${displayName}`}
                   >
-                    {displayName.slice(0, 2).toUpperCase()}
+                    <ProfileAvatar
+                      userId={follow.sellerId}
+                      name={displayName}
+                    />
                   </Link>
 
                   <Link className={styles.sellerIdentity} href={href}>
