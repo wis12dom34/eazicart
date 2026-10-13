@@ -94,8 +94,8 @@
 
 /* Figma 1247:16230 — Active Sellers / stories rail. */
 .social-home-stories {
-  height: 168px;
-  padding: 16px 0 12px;
+  height: auto;
+  padding: 16px 0 4px;
   box-sizing: border-box;
   border-bottom: 1px solid #e5e7eb;
   background: #fff;
@@ -160,9 +160,9 @@
 
 .social-home-stories .figma-home-story-strip {
   width: 100%;
-  height: 116px;
+  height: auto;
   margin: 0;
-  padding: 10px 5px 0 9px;
+  padding: 14px 5px 0 9px;
   box-sizing: border-box;
   display: flex;
   align-items: flex-start;
@@ -182,8 +182,8 @@
 .social-home-stories .figma-home-story {
   width: 80px;
   min-width: 80px;
-  height: 106px;
-  min-height: 106px;
+  height: auto;
+  min-height: 0;
   flex: 0 0 80px;
   display: flex;
   flex-direction: column;
