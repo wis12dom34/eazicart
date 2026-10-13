@@ -34,6 +34,30 @@ import { HomeSocialFeed } from "./home-social-feed";
 import { Icon } from "./components/icon";
 import type { ProductList } from "../lib/public-catalog";
 
+function StoryPreview({ story }: { story: SocialMediaItem }) {
+  if (story.contentType?.startsWith("video/")) {
+    return (
+      <video
+        className="figma-home-story-preview"
+        src={story.url}
+        muted
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+      />
+    );
+  }
+
+  return (
+    <img
+      className="figma-home-story-preview"
+      src={story.url}
+      alt=""
+      aria-hidden="true"
+    />
+  );
+}
+
 export default function HomePage({
   initialProducts,
 }: {
@@ -216,7 +240,11 @@ export default function HomePage({
                 <span
                   className={`figma-home-story-avatar ${stories[auth.user.id] ? "has-story" : ""}`}
                 >
-                  <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+                  {stories[auth.user.id] ? (
+                    <StoryPreview story={stories[auth.user.id]} />
+                  ) : (
+                    <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+                  )}
                   <b className="figma-home-story-plus">+</b>
                 </span>
                 <strong>{storyBusy ? "Uploading…" : "Your story"}</strong>
@@ -242,7 +270,9 @@ export default function HomePage({
                     className={`figma-home-story-avatar ${story ? "has-story" : ""}`}
                     aria-hidden="true"
                   >
-                    {userId ? (
+                    {story ? (
+                      <StoryPreview story={story} />
+                    ) : userId ? (
                       <ProfileAvatar userId={userId} name={seller.displayName} />
                     ) : (
                       seller.displayName.slice(0, 2).toUpperCase()
