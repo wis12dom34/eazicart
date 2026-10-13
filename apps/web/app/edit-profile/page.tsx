@@ -3,19 +3,75 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
 import { BottomNavigation } from "../components/bottom-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
 import { useAuth } from "../providers/auth-provider";
 import { usersApi } from "../../lib/api/users";
+import {
+  fetchProfilePhoto,
+  uploadSocialMedia,
+} from "../../lib/social-media";
 import styles from "./edit-profile.module.css";
+import "./profile-photo-upload.css";
 
 export default function EditProfile() {
   const auth = useAuth();
   const router = useRouter();
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoStatus, setPhotoStatus] = useState("");
+  const [photoError, setPhotoError] = useState(false);
+
+  useEffect(() => {
+    if (!auth.user?.id) return;
+    let active = true;
+    void fetchProfilePhoto(auth.user.id).then((photo) => {
+      if (active) setPhotoUrl(photo?.url ?? null);
+    });
+    return () => {
+      active = false;
+    };
+  }, [auth.user?.id]);
+
+  const uploadPhoto = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file || !auth.user) return;
+
+    setPhotoUploading(true);
+    setPhotoError(false);
+    setPhotoStatus("Uploading…");
+    try {
+      const photo = await uploadSocialMedia(
+        "profile",
+        auth.user.id,
+        file,
+        (percentage) =>
+          setPhotoStatus(`Uploading · ${Math.round(percentage)}%`),
+      );
+      setPhotoUrl(photo.url);
+      setPhotoStatus("Profile photo updated");
+    } catch (uploadError) {
+      setPhotoError(true);
+      setPhotoStatus(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Could not upload profile photo",
+      );
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -68,7 +124,36 @@ export default function EditProfile() {
           ) : (
             <>
               <div className={styles.avatarBlock}>
-                <div className={styles.avatar} aria-hidden="true" />
+                <div className={`${styles.avatar} eazicart-profile-avatar`}>
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="Your profile" />
+                  ) : (
+                    <span>{auth.user.name[0]?.toUpperCase() || "W"}</span>
+                  )}
+                </div>
+                <label className={styles.photoButton}>
+                  {photoUploading
+                    ? "Uploading…"
+                    : photoUrl
+                      ? "Change photo"
+                      : "Add photo"}
+                  <input
+                    className="eazicart-profile-photo-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) => void uploadPhoto(event)}
+                    disabled={photoUploading}
+                    aria-label="Choose profile photo from your gallery"
+                  />
+                </label>
+                {photoStatus ? (
+                  <p
+                    className={`eazicart-profile-photo-status ${photoError ? "is-error" : ""}`}
+                    role={photoError ? "alert" : "status"}
+                  >
+                    {photoStatus}
+                  </p>
+                ) : null}
               </div>
 
               <form
@@ -108,7 +193,11 @@ export default function EditProfile() {
                     {error}
                   </p>
                 ) : null}
-                <button className={styles.save} type="submit" disabled={saving}>
+                <button
+                  className={styles.save}
+                  type="submit"
+                  disabled={saving || photoUploading}
+                >
                   {saving ? "Saving…" : "Save changes"}
                 </button>
               </form>
