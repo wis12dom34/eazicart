@@ -26,10 +26,12 @@ export function ProfileAvatar({
     });
 
     const onPhotoUpdated = (event: Event) => {
-      const detail = (event as CustomEvent<{
-        userId: string;
-        photo: SocialMediaItem;
-      }>).detail;
+      const detail = (
+        event as CustomEvent<{
+          userId: string;
+          photo: SocialMediaItem;
+        }>
+      ).detail;
       if (detail?.userId === userId) setUrl(detail.photo.url);
     };
     window.addEventListener(PROFILE_PHOTO_EVENT, onPhotoUpdated);
