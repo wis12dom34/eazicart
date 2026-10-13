@@ -146,5 +146,45 @@ for (const width of [320, 393, 430, 440]) {
     await expect(
       post.locator(".social-home-editorial-media > img"),
     ).not.toHaveAttribute("src", photo);
+
+    const sellerHref = await page
+      .locator(".social-home-feature-seller")
+      .getAttribute("href");
+    await page.goto(sellerHref);
+    const profilePhoto = page.locator('img[src^="data:image/svg+xml"]').first();
+    await expect(profilePhoto).toHaveAttribute("src", photo);
+    await expect
+      .poll(() =>
+        profilePhoto.evaluate((image) => {
+          const bounds = image.getBoundingClientRect();
+          const frame = image.parentElement.getBoundingClientRect();
+          return (
+            Math.abs(bounds.width - bounds.height) < 1 &&
+            bounds.height <= frame.height
+          );
+        }),
+      )
+      .toBe(true);
+    await page.getByRole("link", { name: "Message", exact: true }).click();
+    const chatPhotos = page.locator(
+      ".eazicart-chat-store-avatar img, .eazicart-chat-start-avatar img",
+    );
+    await expect(chatPhotos.first()).toHaveAttribute("src", photo);
+    await expect
+      .poll(() =>
+        chatPhotos.evaluateAll(
+          (images) =>
+            images.length === 2 &&
+            images.every((image) => {
+              const bounds = image.getBoundingClientRect();
+              const frame = image.parentElement.getBoundingClientRect();
+              return (
+                Math.abs(bounds.width - bounds.height) < 1 &&
+                bounds.height <= frame.height
+              );
+            }),
+        ),
+      )
+      .toBe(true);
   });
 }
