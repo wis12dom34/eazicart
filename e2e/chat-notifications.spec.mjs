@@ -265,7 +265,7 @@ test("Chat store list and conversation recover without leaving the page", async 
   for (const path of ["/chat", "/chat?seller=qa-store"]) {
     state.sellerFailure = true;
     await page.goto(path);
-    await expect(page.getByRole("alert")).toContainText(
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
       "Could not load stores",
     );
     state.sellerFailure = false;
@@ -289,7 +289,7 @@ test("failed notification read actions preserve unread rows and allow retry", as
   await expect(row).toBeVisible();
   state.writeFailure = true;
   await row.click();
-  await expect(page.getByRole("alert")).toHaveText(
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(
     "Could not mark notifications as read",
   );
   await expect(row).toBeEnabled();
@@ -301,7 +301,7 @@ test("failed notification read actions preserve unread rows and allow retry", as
   state.writeFailure = true;
   const all = page.getByRole("button", { name: "Read all" });
   await all.click();
-  await expect(page.getByRole("alert")).toHaveText(
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(
     "Could not mark notifications as read",
   );
   await expect(
@@ -314,7 +314,7 @@ test("failed notification read actions preserve unread rows and allow retry", as
     page.getByRole("button", { name: "Your store replied, read" }),
   ).toBeDisabled();
   await expect(all).toHaveCount(0);
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
 });
 
 test("notification relative times advance without reloading the list", async ({
