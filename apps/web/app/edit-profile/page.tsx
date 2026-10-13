@@ -15,10 +15,7 @@ import { BottomNavigation } from "../components/bottom-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
 import { useAuth } from "../providers/auth-provider";
 import { usersApi } from "../../lib/api/users";
-import {
-  fetchProfilePhoto,
-  uploadSocialMedia,
-} from "../../lib/social-media";
+import { fetchProfilePhoto, uploadSocialMedia } from "../../lib/social-media";
 import styles from "./edit-profile.module.css";
 import "./profile-photo-upload.css";
 
