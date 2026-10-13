@@ -218,6 +218,12 @@ test("one seller photo updates everywhere in Chat and after navigation", async (
   await expect(
     page.locator(".eazicart-chat-seller-avatar img"),
   ).toHaveAttribute("src", state.photo);
+  await page.locator(".eazicart-chat-seller-row").click();
+  await expect(page.locator(".eazicart-chat-store-copy strong")).toHaveText(
+    seller.displayName,
+  );
+  await page.getByRole("link", { name: "Back to chats" }).click();
+  await expect(page.locator(".eazicart-chat-seller-row")).toBeVisible();
   await page.goto("/settings");
   await expect(
     page.getByLabel("Account identity").locator("img"),

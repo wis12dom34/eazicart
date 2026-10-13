@@ -2,7 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 import "./chat.css";
 import { BottomNavigation } from "../components/bottom-navigation";
@@ -15,7 +16,22 @@ import type { Seller } from "../../lib/api/types";
 const sellersHref = "/explore?section=sellers";
 
 export default function ChatPage() {
-  const [sellerId, setSellerId] = useState<string | null>(null);
+  return (
+    <Suspense
+      fallback={
+        <main className="app-shell with-nav eazicart-chat-page">
+          <LoadingState label="Loading chat…" />
+          <BottomNavigation activeHref="/chat" />
+        </main>
+      }
+    >
+      <ChatScreen />
+    </Suspense>
+  );
+}
+
+function ChatScreen() {
+  const sellerId = useSearchParams().get("seller");
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,12 +39,11 @@ export default function ChatPage() {
 
   useEffect(() => {
     let active = true;
-    const id = new URLSearchParams(window.location.search).get("seller");
-    setSellerId(id);
     setLoading(true);
     setError("");
+    setSelectedSeller(null);
 
-    const request = id ? sellersApi.get(id) : sellersApi.list();
+    const request = sellerId ? sellersApi.get(sellerId) : sellersApi.list();
     void request
       .then((response) => {
         if (!active) return;
@@ -52,7 +67,7 @@ export default function ChatPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [sellerId]);
 
   if (sellerId) {
     return (
