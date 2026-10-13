@@ -28,9 +28,20 @@
   border-radius: 50%;
 }
 
-/* Home discovery tabs — compact, native-feeling and precise. */
+/* Home search — compact iOS-style surface. */
+.social-home .figma-home-search {
+  height: 46px;
+  margin: 0 16px 8px;
+  border: 0;
+  border-radius: 14px;
+  background: #f2f2f7;
+  color: #636366;
+  font-size: 16px;
+}
+
+/* Discovery tabs — balanced spacing and a subtle active indicator. */
 .social-home .figma-home-tabs {
-  height: 42px;
+  height: 40px;
   padding: 0 16px;
   display: flex;
   align-items: stretch;
@@ -48,15 +59,16 @@
 }
 
 .social-home .figma-home-tabs > * {
+  position: relative;
   flex: 0 0 auto;
   min-width: 0;
-  height: 41px;
-  padding: 9px 10px 8px;
+  height: 39px;
+  padding: 8px 10px 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #8e8e93;
-  font-size: 16px;
+  color: #636366;
+  font-size: 15px;
   line-height: 22px;
   font-weight: 500;
   letter-spacing: -0.2px;
@@ -69,27 +81,28 @@
 }
 
 .social-home .figma-home-tabs .active::after {
-  top: auto;
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 7px;
   bottom: -1px;
-  left: 6px;
   width: auto;
-  right: 6px;
-  height: 3px;
+  height: 2px;
   border-radius: 999px;
   background: #f56300;
 }
 
-/* Stories — one compact carousel, no cards or unnecessary vertical space. */
+/* Stories — precise rings, compact labels and minimal dead space before feed. */
 .social-home-stories {
   height: auto;
-  padding: 20px 0;
-  border-bottom: 1px solid #e5e5ea;
+  padding: 14px 0 5px;
+  border-bottom: 1px solid #ececf1;
   background: #fff;
 }
 
 .social-home-stories .figma-home-section-header {
-  height: 32px;
-  min-height: 32px;
+  height: 28px;
+  min-height: 28px;
   padding: 0 16px;
   display: flex;
   align-items: center;
@@ -99,10 +112,10 @@
 .social-home-stories .figma-home-section-header h2 {
   margin: 0;
   color: #1c1c1e;
-  font-size: 23px;
-  line-height: 28px;
+  font-size: 20px;
+  line-height: 24px;
   font-weight: 700;
-  letter-spacing: -0.45px;
+  letter-spacing: -0.3px;
 }
 
 .social-home-stories .figma-home-section-header > a {
@@ -112,7 +125,7 @@
   display: flex;
   align-items: center;
   color: #6e6e73;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 20px;
   font-weight: 500;
   text-decoration: none;
@@ -127,10 +140,10 @@
 .social-home-stories .figma-home-story-strip {
   height: auto;
   margin: 0;
-  padding: 14px 16px 2px;
+  padding: 9px 16px 0;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 12px;
   overflow-x: auto;
   overflow-y: visible;
   scroll-snap-type: x proximity;
@@ -144,16 +157,15 @@
 }
 
 .social-home-stories .figma-home-story {
-  width: 76px;
-  min-width: 76px;
-  height: auto;
-  min-height: 94px;
-  flex: 0 0 76px;
+  width: 64px;
+  min-width: 64px;
+  min-height: 80px;
+  flex: 0 0 64px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 6px;
   color: #1c1c1e;
   text-decoration: none;
   scroll-snap-align: start;
@@ -162,26 +174,26 @@
 }
 
 .social-home-stories .figma-home-story:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
   opacity: 0.82;
 }
 
 .social-home-stories .figma-home-story-avatar {
   position: relative;
-  width: 68px;
-  height: 68px;
-  min-width: 68px;
-  min-height: 68px;
-  padding: 2px;
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  min-height: 58px;
   box-sizing: border-box;
   display: grid;
   place-items: center;
   overflow: visible;
-  border: 3px solid #d1d1d6;
+  border: 2px solid #d1d1d6;
   border-radius: 50%;
-  background: #f2f2f7;
+  padding: 2px;
+  background: #fff;
   color: #1c1c1e;
-  font-size: 20px;
+  font-size: 17px;
   line-height: 1;
   font-weight: 650;
   letter-spacing: -0.3px;
@@ -189,7 +201,6 @@
 
 .social-home-stories .figma-home-story-avatar.has-story {
   border-color: #f56300;
-  padding: 2px;
   background: #fff;
 }
 
@@ -198,20 +209,20 @@
   height: 100%;
   display: block;
   object-fit: cover;
-  border: 2px solid #fff;
+  border: 0;
   border-radius: 50%;
   box-sizing: border-box;
 }
 
 .social-home-stories .figma-home-story strong {
-  width: 76px;
-  max-width: 76px;
-  height: 18px;
+  width: 64px;
+  max-width: 64px;
+  height: 17px;
   margin: 0;
   overflow: hidden;
   color: #1c1c1e;
-  font-size: 14px;
-  line-height: 18px;
+  font-size: 12px;
+  line-height: 17px;
   font-weight: 500;
   letter-spacing: -0.1px;
   text-align: center;
@@ -237,10 +248,10 @@
 
 .figma-home-story-plus {
   position: absolute;
-  right: -3px;
-  bottom: -3px;
-  width: 22px;
-  height: 22px;
+  right: -2px;
+  bottom: -2px;
+  width: 20px;
+  height: 20px;
   box-sizing: border-box;
   display: grid;
   place-items: center;
@@ -248,124 +259,24 @@
   border-radius: 50%;
   background: #f56300;
   color: #fff;
-  font-size: 18px;
-  line-height: 16px;
-  font-weight: 500;
+  font-size: 16px;
+  line-height: 14px;
+  font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 .figma-home-story-upload-error {
-  margin: 8px 16px 0;
+  margin: 6px 16px 0;
   color: #b42318;
   font-size: 12px;
   line-height: 16px;
 }
 
-@media (max-width: 360px) {
-  .social-home .figma-home-tabs {
-    padding-inline: 10px;
-  }
-
-  .social-home .figma-home-tabs > * {
-    padding-inline: 8px;
-    font-size: 15px;
-  }
-
-  .social-home-stories .figma-home-story-strip {
-    gap: 12px;
-  }
-}
-
-/* Home screenshot polish — tighter Apple-style hierarchy and a balanced feature card. */
-.social-home .figma-home-search {
-  height: 46px;
-  margin: 0 16px 8px;
-  border-radius: 14px;
-  background: #f2f2f7;
-  color: #636366;
-  font-size: 16px;
-}
-
-.social-home .figma-home-tabs {
-  height: 40px;
-}
-
-.social-home .figma-home-tabs > * {
-  height: 39px;
-  padding-top: 8px;
-  padding-bottom: 7px;
-  color: #636366;
-  font-size: 15px;
-}
-
-.social-home .figma-home-tabs .active::after {
-  height: 2px;
-}
-
-.social-home-stories {
-  padding: 16px 0 14px;
-}
-
-.social-home-stories .figma-home-section-header {
-  height: 28px;
-  min-height: 28px;
-}
-
-.social-home-stories .figma-home-section-header h2 {
-  font-size: 20px;
-  line-height: 24px;
-  letter-spacing: -0.3px;
-}
-
-.social-home-stories .figma-home-section-header > a {
-  font-size: 14px;
-}
-
-.social-home-stories .figma-home-story-strip {
-  padding: 10px 16px 0;
-  gap: 12px;
-}
-
-.social-home-stories .figma-home-story {
-  width: 64px;
-  min-width: 64px;
-  min-height: 82px;
-  flex-basis: 64px;
-  gap: 6px;
-}
-
-.social-home-stories .figma-home-story-avatar {
-  width: 58px;
-  height: 58px;
-  min-width: 58px;
-  min-height: 58px;
-  border-width: 2px;
-  font-size: 17px;
-}
-
-.social-home-stories .figma-home-story-avatar > img {
-  border-width: 1.5px;
-}
-
-.social-home-stories .figma-home-story strong {
-  width: 64px;
-  max-width: 64px;
-  height: 17px;
-  font-size: 12px;
-  line-height: 17px;
-}
-
-.figma-home-story-plus {
-  right: -2px;
-  bottom: -2px;
-  width: 20px;
-  height: 20px;
-  font-size: 16px;
-  line-height: 14px;
-}
-
+/* Pull the content feed closer to Stories without visually colliding with it. */
 .social-home-feed {
-  padding-top: 12px;
+  padding-top: 6px;
+  background: #fff;
 }
 
 .social-home-feature {
@@ -373,11 +284,13 @@
   height: clamp(360px, 108vw, 440px);
   min-height: 360px;
   max-height: 440px;
-  margin: 0 12px 18px;
+  margin: 0 12px 14px;
   overflow: hidden;
   border: 0;
   border-radius: 22px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .social-home-feature-image {
@@ -483,9 +396,17 @@
 }
 
 @media (max-width: 360px) {
-  .social-home-feature {
-    margin-inline: 10px;
-    border-radius: 20px;
+  .social-home .figma-home-tabs {
+    padding-inline: 10px;
+  }
+
+  .social-home .figma-home-tabs > * {
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+
+  .social-home-stories .figma-home-story-strip {
+    gap: 10px;
   }
 
   .social-home-stories .figma-home-story {
@@ -497,5 +418,10 @@
   .social-home-stories .figma-home-story strong {
     width: 62px;
     max-width: 62px;
+  }
+
+  .social-home-feature {
+    margin-inline: 10px;
+    border-radius: 20px;
   }
 }
