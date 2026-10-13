@@ -241,7 +241,7 @@ export default function HomePage({
                   className={`figma-home-story-avatar ${stories[auth.user.id] ? "has-story" : ""}`}
                 >
                   {stories[auth.user.id] ? (
-                    <StoryPreview story={stories[auth.user.id]} />
+                    <StoryPreview story={stories[auth.user.id]!} />
                   ) : (
                     <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
                   )}
