@@ -23,6 +23,13 @@ const searchSizes = [
 ];
 
 const hostedImage = (url: string) => /^https?:\/\//i.test(url);
+const fillGridImage = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  objectPosition: "center",
+} as const;
 
 export function DiscoveryProductCard({
   product,
@@ -44,7 +51,7 @@ export function DiscoveryProductCard({
           aria-label={`View ${product.name}`}
         />
         <div className={styles.searchProductMedia} aria-hidden="true">
-          {image ? <img src={image.url} alt="" /> : null}
+          {image ? <img src={image.url} alt="" style={fillGridImage} /> : null}
         </div>
         <Link
           className={styles.searchProductSeller}
@@ -85,7 +92,11 @@ export function DiscoveryProductCard({
         aria-label={`View ${product.name}`}
       >
         {image ? (
-          <img src={image.url} alt={image.altText ?? product.name} />
+          <img
+            src={image.url}
+            alt={image.altText ?? product.name}
+            style={fillGridImage}
+          />
         ) : (
           <Icon name="bag" size={30} />
         )}
