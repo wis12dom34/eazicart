@@ -351,6 +351,17 @@ test("Reel comments dialog opens accessibly and closes with Escape", async ({
   page,
 }) => {
   await mockSharedReel(page);
+  let releaseComments;
+  const commentsReady = new Promise((resolve) => {
+    releaseComments = resolve;
+  });
+  await page.route(
+    /\/reels\/reel-share-test\/comments(?:\?|$)/,
+    async (route) => {
+      await commentsReady;
+      await route.fulfill({ json: { data: [] } });
+    },
+  );
   await page.goto(`/reels?reel=${reel.id}`);
 
   await page
@@ -368,6 +379,11 @@ test("Reel comments dialog opens accessibly and closes with Escape", async ({
     name: "Sign in to comment",
     exact: true,
   });
+  await expect(
+    page.getByText("Loading comments…", { exact: true }),
+  ).toBeVisible();
+  await expect(signInButton).toHaveCount(0);
+  releaseComments();
   await expect(signInButton).toBeEnabled();
   await page.keyboard.press("Shift+Tab");
   await expect(signInButton).toBeFocused();

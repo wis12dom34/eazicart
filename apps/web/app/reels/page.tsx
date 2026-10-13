@@ -47,7 +47,7 @@ function CommentsSheet({
 }) {
   const [comments, setComments] = useState<ReelComment[]>([]);
   const [body, setBody] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadCommentsKey, setReloadCommentsKey] = useState(0);
