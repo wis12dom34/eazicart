@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
+import { ContentImage } from "./components/content-image";
 import type { Product } from "../lib/api/types";
 import { ProfileAvatar } from "./components/profile-avatar";
 import { money } from "./data";
@@ -95,7 +95,13 @@ function SocialProductCard({
           aria-label={`View ${product.name}`}
         >
           {image ? (
-            <img src={image} alt={product.images[0]?.altText ?? product.name} />
+            <ContentImage
+              src={image}
+              alt={product.images[0]?.altText ?? product.name}
+              width={166}
+              height={190}
+              sizes="166px"
+            />
           ) : null}
         </Link>
         <button
@@ -187,8 +193,13 @@ function FeaturePost({
   return (
     <article className="social-home-feature">
       {image ? (
-        <img
+        <ContentImage
           className="social-home-feature-image"
+          width={440}
+          height={440}
+          sizes="(max-width: 440px) calc(100vw - 24px), 416px"
+          loading="eager"
+          fetchPriority="high"
           src={image}
           alt={product.name}
         />
@@ -231,7 +242,15 @@ function FeaturePost({
             className="social-home-pill-image"
             style={{ background: productBackground() }}
           >
-            {image ? <img src={image} alt="" /> : null}
+            {image ? (
+              <ContentImage
+                src={image}
+                alt=""
+                width={50}
+                height={50}
+                sizes="50px"
+              />
+            ) : null}
           </span>
           <span className="social-home-pill-copy">
             <strong>{product.name}</strong>
@@ -285,7 +304,15 @@ function NearbyRail({ products }: { products: Product[] }) {
               key={product.id}
             >
               <div style={{ background: productBackground() }}>
-                {image ? <img src={image} alt={product.name} /> : null}
+                {image ? (
+                  <ContentImage
+                    src={image}
+                    alt={product.name}
+                    width={166}
+                    height={190}
+                    sizes="166px"
+                  />
+                ) : null}
               </div>
               <strong>{product.name}</strong>
               <b>{money(product.price)}</b>
@@ -334,7 +361,13 @@ function SellerPost({ product }: { product: Product }) {
           className="social-home-editorial-media"
           href={`/product/${product.id}`}
         >
-          <img src={image} alt={product.name} />
+          <ContentImage
+            src={image}
+            alt={product.name}
+            width={416}
+            height={310}
+            sizes="(max-width: 440px) calc(100vw - 32px), 408px"
+          />
           <span>
             <small>Featured product</small>
             <strong>{product.name}</strong>
@@ -364,7 +397,15 @@ function QuickPick({ products }: { products: Product[] }) {
               onClick={() => window.location.assign(`/product/${product.id}`)}
             >
               <span style={{ background: productBackground() }}>
-                {image ? <img src={image} alt="" /> : null}
+                {image ? (
+                  <ContentImage
+                    src={image}
+                    alt=""
+                    width={166}
+                    height={190}
+                    sizes="166px"
+                  />
+                ) : null}
               </span>
               <strong>{product.name}</strong>
               <small>{money(product.price)}</small>

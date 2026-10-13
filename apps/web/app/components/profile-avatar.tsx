@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useState } from "react";
+import { ContentImage } from "./content-image";
 import {
   fetchProfilePhoto,
   invalidateProfilePhoto,
@@ -83,9 +83,14 @@ export function ProfileAvatar({
   if (!url) return <>{name[0]?.toUpperCase() || "W"}</>;
 
   return (
-    <img
+    <ContentImage
       src={url}
       alt={alt}
+      width={128}
+      height={128}
+      sizes="128px"
+      loading="lazy"
+      decoding="async"
       onError={() => setImage({ userId, url: null })}
       style={{
         width: "100%",

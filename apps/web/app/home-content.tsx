@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { ContentImage } from "./components/content-image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import "./home.css";
@@ -58,7 +59,16 @@ function StoryPreview({
       />
     );
 
-  return <img src={story.url} alt="" onError={() => setFailedUrl(story.url)} />;
+  return (
+    <ContentImage
+      src={story.url}
+      alt=""
+      width={58}
+      height={58}
+      sizes="58px"
+      onError={() => setFailedUrl(story.url)}
+    />
+  );
 }
 
 export default function HomePage({
@@ -348,12 +358,18 @@ export default function HomePage({
                   >
                     <div>
                       {product.images[0] ? (
-                        <img
+                        <ContentImage
+                          width={196}
+                          height={196}
+                          sizes="(max-width: 440px) calc((100vw - 44px) / 2), 198px"
                           src={product.images[0].url}
                           alt={product.images[0].altText ?? product.name}
                         />
                       ) : design ? (
-                        <img
+                        <ContentImage
+                          width={196}
+                          height={196}
+                          sizes="(max-width: 440px) calc((100vw - 44px) / 2), 198px"
                           src={`/figma/${design.image}`}
                           alt={product.name}
                         />

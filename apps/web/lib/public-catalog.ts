@@ -8,14 +8,19 @@ export type ProductList = {
   pagination: { page: number; limit: number; total: number; pages: number };
 };
 
-async function publicFetch<T>(path: string): Promise<PublicResult<T>> {
+async function publicFetch<T>(
+  path: string,
+  revalidate = 0,
+): Promise<PublicResult<T>> {
   // No browser tokens, cookies, database credentials or private endpoints.
   const base =
     process.env.EAZICART_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!base) return { status: "unavailable" };
   try {
     const response = await fetch(`${base.replace(/\/$/, "")}${path}`, {
-      cache: "no-store",
+      ...(revalidate > 0
+        ? { next: { revalidate } }
+        : { cache: "no-store" as const }),
       signal: AbortSignal.timeout(5000),
       headers: { Accept: "application/json" },
     });
@@ -91,9 +96,10 @@ export const getPublicSeller = cache(
   },
 );
 export const getPublicProducts = cache(
-  async (query = ""): Promise<PublicResult<ProductList>> => {
+  async (query = "", revalidate = 0): Promise<PublicResult<ProductList>> => {
     const result = await publicFetch<ProductList>(
       `/products${query ? `?${query}` : ""}`,
+      revalidate,
     );
     if (result.status !== "ok") return result;
     try {
