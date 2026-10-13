@@ -71,6 +71,7 @@
 }
 .back,
 .search {
+  color: white;
   height: 44px;
   width: 44px;
   display: grid;
@@ -80,6 +81,10 @@
 }
 .search {
   margin-left: auto;
+}
+.back:focus-visible,
+.search:focus-visible {
+  outline-color: white;
 }
 .details {
   position: absolute;

@@ -732,6 +732,12 @@ test("Reel creator and actions align above navigation at mobile widths", async (
     exact: true,
   });
   await expect(follow).toBeEnabled();
+  for (const name of ["Back to home", "Search products"]) {
+    const icon = page.getByRole("link", { name, exact: true }).locator("svg");
+    expect(
+      await icon.evaluate((element) => getComputedStyle(element).color),
+    ).toBe("rgb(255, 255, 255)");
+  }
   const labels = [
     "Like reel",
     "Open reel comments",
