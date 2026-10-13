@@ -55,9 +55,9 @@ export function ProductImagePicker({
     setUploading(true);
     onUploadingChange?.(true);
     try {
-      for (let index = 0; index < files.length; index++) {
+      for (const [index, file] of files.entries()) {
         setProgress(`Uploading ${index + 1} of ${files.length}…`);
-        const result = await productsApi.uploadImage(files[index]);
+        const result = await productsApi.uploadImage(file);
         setImages((current) =>
           [...current, result.data.imageUrl].slice(0, MAX_IMAGES),
         );
@@ -80,7 +80,8 @@ export function ProductImagePicker({
     setImages((current) => {
       if (index <= 0 || index >= current.length) return current;
       const next = [...current];
-      const [selected] = next.splice(index, 1);
+      const selected = next.splice(index, 1)[0];
+      if (!selected) return current;
       next.unshift(selected);
       return next;
     });
