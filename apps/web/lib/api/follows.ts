@@ -21,4 +21,8 @@ export const followsApi = {
     apiRequest<{ data: { count: number } }>(
       `/sellers/${encodeURIComponent(id)}/followers/count`,
     ),
+  followingCount: (id: string) =>
+    apiRequest<{ data: { count: number } }>(
+      `/sellers/${encodeURIComponent(id)}/following/count`,
+    ),
 };
