@@ -48,7 +48,7 @@ test("Chat is the working fifth customer navigation destination", async ({
     page.getByRole("heading", { name: "Chat", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "No conversations yet" }),
+    page.getByRole("heading", { name: "Stores", exact: true }),
   ).toBeVisible();
   const nav = await expectCustomerNavigation(page, "Chat");
   await expect(nav.getByRole("link", { name: "Chat" })).toHaveAttribute(
