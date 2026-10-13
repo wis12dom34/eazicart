@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import type { Product } from "../lib/api/types";
+import { ProfileAvatar } from "./components/profile-avatar";
 import { money } from "./data";
 
 type IconName = "heart" | "play" | "arrow" | "pin";
@@ -199,7 +200,10 @@ function FeaturePost({
           className="social-home-feature-seller"
         >
           <span aria-hidden="true">
-            {product.seller.displayName.slice(0, 2).toUpperCase()}
+            <ProfileAvatar
+              userId={product.seller.userId}
+              name={product.seller.displayName}
+            />
           </span>
           <div>
             <strong>{product.seller.displayName}</strong>
@@ -312,7 +316,10 @@ function SellerPost({ product }: { product: Product }) {
     <article className="social-home-editorial">
       <div className="social-home-editorial-header">
         <span aria-hidden="true">
-          {product.seller.displayName.slice(0, 2).toUpperCase()}
+          <ProfileAvatar
+            userId={product.seller.userId}
+            name={product.seller.displayName}
+          />
         </span>
         <div>
           <Link href={`/seller/${product.seller.id}`}>
@@ -396,7 +403,7 @@ function SellerRail({ products }: { products: Product[] }) {
             key={seller.id}
           >
             <span aria-hidden="true">
-              {seller.displayName.slice(0, 2).toUpperCase()}
+              <ProfileAvatar userId={seller.userId} name={seller.displayName} />
             </span>
             <div>
               <strong>{seller.displayName}</strong>
