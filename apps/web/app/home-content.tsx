@@ -191,10 +191,7 @@ export default function HomePage({
             onClick={() => setDrawer(true)}
           >
             {auth.user ? (
-              <ProfileAvatar
-                userId={auth.user.id}
-                name={auth.user.name}
-              />
+              <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
             ) : (
               <Icon name="user-circle" size={32} />
             )}
