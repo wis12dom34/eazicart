@@ -55,7 +55,9 @@ export function registerFollows(app: FastifyInstance, client?: PrismaClient) {
   app.get("/sellers/:sellerId/following/count", async (r) => {
     const { sellerId } = p.parse(r.params);
     return {
-      data: { count: await db().follow.count({ where: { followerId: sellerId } }) },
+      data: {
+        count: await db().follow.count({ where: { followerId: sellerId } }),
+      },
     };
   });
 }
