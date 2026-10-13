@@ -92,10 +92,10 @@
   background: #f56300;
 }
 
-/* Stories — precise rings, compact labels and minimal dead space before feed. */
+/* Stories — story media previews with a compact handoff from discovery tabs. */
 .social-home-stories {
   height: auto;
-  padding: 13px 0 2px;
+  padding: 6px 0 10px;
   border-bottom: 1px solid #ececf1;
   background: #fff;
 }
@@ -140,7 +140,7 @@
 .social-home-stories .figma-home-story-strip {
   height: auto;
   margin: 0;
-  padding: 8px 16px 2px;
+  padding: 8px 16px 1px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -204,14 +204,21 @@
   background: #fff;
 }
 
-.social-home-stories .figma-home-story-avatar > img {
+.social-home-stories .figma-home-story-avatar > img,
+.social-home-stories .figma-home-story-preview {
   width: 100%;
   height: 100%;
   display: block;
   object-fit: cover;
+  object-position: center;
   border: 0;
   border-radius: 50%;
   box-sizing: border-box;
+  background: #f2f2f7;
+}
+
+.social-home-stories video.figma-home-story-preview {
+  pointer-events: none;
 }
 
 .social-home-stories .figma-home-story strong {
@@ -273,9 +280,9 @@
   line-height: 16px;
 }
 
-/* Pull the content feed close to Stories while preserving a clear section boundary. */
+/* Keep normal breathing room below Stories; only the space above is tightened. */
 .social-home-feed {
-  padding-top: 4px;
+  padding-top: 10px;
   background: #fff;
 }
 
