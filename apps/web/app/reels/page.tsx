@@ -660,7 +660,7 @@ function ReelSlide({
         {product ? (
           <>
             <strong className={styles.productName}>
-              {product.name} · {formatNaira(product.price)}
+              <span>{product.name}</span> · {formatNaira(product.price)}
             </strong>
             <Link
               className={styles.viewProduct}
