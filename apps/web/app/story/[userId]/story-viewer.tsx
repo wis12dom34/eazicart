@@ -470,12 +470,7 @@ export default function StoryViewer({
               backdropFilter: "blur(10px)",
             }}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6.5" y="5" width="4" height="14" rx="1" />
               <rect x="13.5" y="5" width="4" height="14" rx="1" />
             </svg>
