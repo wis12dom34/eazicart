@@ -14,25 +14,30 @@ const storyTypes = [
 const apiBaseUrl = process.env.EAZICART_PUBLIC_API_URL?.replace(/\/$/, "");
 
 async function requireUser(clientPayload: string | null) {
-  if (!apiBaseUrl) throw new Error("Social media uploads are not configured yet.");
+  if (!apiBaseUrl)
+    throw new Error("Social media uploads are not configured yet.");
 
   let accessToken = "";
   try {
-    const payload = JSON.parse(clientPayload || "{}") as { accessToken?: unknown };
+    const payload = JSON.parse(clientPayload || "{}") as {
+      accessToken?: unknown;
+    };
     accessToken =
       typeof payload.accessToken === "string" ? payload.accessToken.trim() : "";
   } catch {
     throw new Error("Your session is invalid. Please sign in again.");
   }
 
-  if (!accessToken) throw new Error("Please sign in again before uploading media.");
+  if (!accessToken)
+    throw new Error("Please sign in again before uploading media.");
 
   const response = await fetch(`${apiBaseUrl}/users/me`, {
     method: "GET",
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
-  if (!response.ok) throw new Error("Your session expired. Please sign in again.");
+  if (!response.ok)
+    throw new Error("Your session expired. Please sign in again.");
 
   const user = (await response.json()) as { id?: unknown };
   const userId = typeof user.id === "string" ? user.id : "";
@@ -50,11 +55,14 @@ export async function POST(request: Request) {
         const userId = await requireUser(clientPayload);
         const profileUpload = pathname.startsWith(`profiles/${userId}/`);
         const storyUpload = pathname.startsWith(`stories/${userId}/`);
-        if (!profileUpload && !storyUpload) throw new Error("Invalid social media path.");
+        if (!profileUpload && !storyUpload)
+          throw new Error("Invalid social media path.");
 
         return {
           allowedContentTypes: profileUpload ? imageTypes : storyTypes,
-          maximumSizeInBytes: profileUpload ? PROFILE_MAX_BYTES : STORY_MAX_BYTES,
+          maximumSizeInBytes: profileUpload
+            ? PROFILE_MAX_BYTES
+            : STORY_MAX_BYTES,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({ userId }),
         };
@@ -68,7 +76,9 @@ export async function POST(request: Request) {
     return Response.json(
       {
         error:
-          error instanceof Error ? error.message : "Unable to prepare this media upload.",
+          error instanceof Error
+            ? error.message
+            : "Unable to prepare this media upload.",
       },
       { status: 400 },
     );
