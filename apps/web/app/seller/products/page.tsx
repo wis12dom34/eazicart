@@ -18,9 +18,12 @@ import { categoriesApi } from "../../../lib/api/categories";
 import { productsApi, type ProductInput } from "../../../lib/api/products";
 import { sellerDashboardApi } from "../../../lib/api/seller-dashboard";
 import type { Category, Product } from "../../../lib/api/types";
+import { ProductImagePicker } from "./product-image-picker";
 import styles from "./seller-products.module.css";
 
 type ProductFilter = "all" | "active" | "low-stock" | "drafts";
+
+const hostedImage = (url: string) => /^https?:\/\//i.test(url);
 
 const formString = (form: FormData, key: string) => {
   const value = form.get(key);
@@ -33,9 +36,13 @@ const productPayload = (
 ): ProductInput => {
   const name = formString(form, "name");
   const description = formString(form, "description");
-  const imageUrl = formString(form, "imageUrl");
-  const images = imageUrl
-    ? [{ url: imageUrl, altText: name, position: 0 }]
+  const imageUrls = form
+    .getAll("imageUrls")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter((value) => hostedImage(value));
+  const images = imageUrls.length
+    ? imageUrls.map((url, position) => ({ url, altText: name, position }))
     : options.clearImageWhenBlank
       ? []
       : undefined;
@@ -354,6 +361,7 @@ export default function SellerProductsPage() {
               const outOfStock =
                 product.active !== false && product.stock === 0;
               const draft = product.active === false;
+              const image = product.images.find((item) => hostedImage(item.url));
               const status = draft
                 ? "Draft"
                 : outOfStock
@@ -365,10 +373,10 @@ export default function SellerProductsPage() {
                 <article className={styles.productCard} key={product.id}>
                   <div className={styles.productMain}>
                     <div className={styles.productImage}>
-                      {product.images[0] ? (
+                      {image ? (
                         <img
-                          src={product.images[0].url}
-                          alt={product.images[0].altText || product.name}
+                          src={image.url}
+                          alt={image.altText || product.name}
                         />
                       ) : (
                         <Icon name="box" size={28} />
@@ -535,6 +543,8 @@ function ProductForm({
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const [imageUploading, setImageUploading] = useState(false);
+
   return (
     <form className={styles.productForm} onSubmit={onSubmit}>
       <label className={styles.field}>
@@ -603,25 +613,21 @@ function ProductForm({
           placeholder="Describe the product"
         />
       </label>
-      <label className={styles.field}>
-        <span>Image URL</span>
-        <input
-          name="imageUrl"
-          type="url"
-          defaultValue={product?.images[0]?.url || ""}
-          placeholder="https://example.com/product.jpg"
-        />
-        <small>
-          Optional. Use a real hosted product image URL; no image is fabricated
-          by EaziCart.
-        </small>
-      </label>
+      <ProductImagePicker
+        initialUrls={product?.images.map((image) => image.url) ?? []}
+        disabled={submitting}
+        onUploadingChange={setImageUploading}
+      />
       <button
         className={styles.submitButton}
         type="submit"
-        disabled={submitting || !categories.length}
+        disabled={submitting || imageUploading || !categories.length}
       >
-        {submitting ? "Saving…" : submitLabel}
+        {imageUploading
+          ? "Uploading photos…"
+          : submitting
+            ? "Saving…"
+            : submitLabel}
       </button>
     </form>
   );

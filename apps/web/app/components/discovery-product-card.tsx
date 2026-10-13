@@ -22,6 +22,8 @@ const searchSizes = [
   styles.searchCard300,
 ];
 
+const hostedImage = (url: string) => /^https?:\/\//i.test(url);
+
 export function DiscoveryProductCard({
   product,
   variant = "default",
@@ -30,7 +32,7 @@ export function DiscoveryProductCard({
   saving = false,
   onToggleSaved,
 }: DiscoveryProductCardProps) {
-  const image = product.images[0];
+  const image = product.images.find((item) => hostedImage(item.url));
 
   if (variant === "search") {
     const sizeClass = searchSizes[searchPosition % searchSizes.length];

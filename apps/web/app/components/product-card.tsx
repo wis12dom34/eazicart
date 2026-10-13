@@ -9,12 +9,15 @@ import { Icon } from "./icon";
 import { savedApi } from "../../lib/api/saved";
 import { useAuth } from "../providers/auth-provider";
 
+const hostedImage = (url: string) => /^https?:\/\//i.test(url);
+
 export function ProductCard({ product }: { product: Product }) {
   const auth = useAuth();
   const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const image = product.images.find((item) => hostedImage(item.url));
 
   const toggleSaved = async () => {
     if (!auth.isAuthenticated) {
@@ -61,11 +64,8 @@ export function ProductCard({ product }: { product: Product }) {
         aria-label={`View ${product.name}`}
       >
         <span>
-          {product.images[0] ? (
-            <img
-              src={product.images[0].url}
-              alt={product.images[0].altText ?? product.name}
-            />
+          {image ? (
+            <img src={image.url} alt={image.altText ?? product.name} />
           ) : (
             "🛍️"
           )}
