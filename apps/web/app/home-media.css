@@ -194,7 +194,9 @@
   text-decoration: none;
   scroll-snap-align: start;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 120ms ease, opacity 120ms ease;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease;
 }
 
 .social-home-stories .figma-home-story:active {
@@ -272,9 +274,17 @@
   transform: none !important;
 }
 
-.social-home-stories .figma-home-story-avatar:not(.has-story) .figma-home-story-media > img,
-.social-home-stories .figma-home-story-avatar:not(.has-story) .figma-home-story-media > video,
-.social-home-stories .figma-home-story-avatar:not(.has-story) .figma-home-story-preview {
+.social-home-stories
+  .figma-home-story-avatar:not(.has-story)
+  .figma-home-story-media
+  > img,
+.social-home-stories
+  .figma-home-story-avatar:not(.has-story)
+  .figma-home-story-media
+  > video,
+.social-home-stories
+  .figma-home-story-avatar:not(.has-story)
+  .figma-home-story-preview {
   opacity: 0.6;
 }
 
@@ -357,7 +367,9 @@
   font-size: 16px;
   line-height: 14px;
   font-weight: 600;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    sans-serif;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
 }
 
