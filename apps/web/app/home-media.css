@@ -95,7 +95,7 @@
 /* Figma 1247:16230 — Active Sellers / stories rail. */
 .social-home-stories {
   height: auto;
-  padding: 10px 0 1px;
+  padding: 6px 0 1px;
   box-sizing: border-box;
   border-bottom: 1px solid #e5e7eb;
   background: #fff;
@@ -162,7 +162,7 @@
   width: 100%;
   height: auto;
   margin: 0;
-  padding: 10px 5px 0 9px;
+  padding: 6px 5px 0 9px;
   box-sizing: border-box;
   display: flex;
   align-items: flex-start;
@@ -383,7 +383,7 @@
 
 /* Keep feed spacing separate from the Figma story rail. */
 .social-home-feed {
-  padding-top: 10px;
+  padding-top: 6px;
   background: #fff;
 }
 

@@ -67,11 +67,11 @@ for (const width of [320, 393, 430, 440]) {
           rect(".figma-home-story strong").bottom,
       ];
     });
-    expect(spacing[0]).toBeGreaterThanOrEqual(9);
-    expect(spacing[0]).toBeLessThanOrEqual(11);
-    expect(spacing[1]).toBeGreaterThanOrEqual(9);
-    expect(spacing[1]).toBeLessThanOrEqual(11);
-    expect(spacing[2]).toBe(12);
+    expect(spacing[0]).toBeGreaterThanOrEqual(5);
+    expect(spacing[0]).toBeLessThanOrEqual(7);
+    expect(spacing[1]).toBeGreaterThanOrEqual(5);
+    expect(spacing[1]).toBeLessThanOrEqual(7);
+    expect(spacing[2]).toBe(8);
     expect(await circle.boundingBox()).toMatchObject({ width: 66, height: 66 });
     // Story previews do not replace seller identity in the feed.
     await expect(
