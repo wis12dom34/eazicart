@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ProfileAvatar } from "../../components/profile-avatar";
 import { useState, type ReactNode } from "react";
 import {
   EmptyState,
@@ -159,7 +160,7 @@ export default function SellerCustomersPage() {
               key={customer.id}
             >
               <div className={styles.avatar} aria-hidden="true">
-                {initials(customer.name)}
+                <ProfileAvatar userId={customer.id} name={customer.name} />
               </div>
               <div className={styles.customerInfo}>
                 <h2>{customer.name}</h2>
@@ -219,14 +220,7 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
     </article>
   );
 }
-function initials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
+
 function formatLocation(location: {
   city: string;
   region: string;

@@ -91,6 +91,11 @@
 }
 
 .avatar {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #fff;
+  font-weight: 600;
   width: 52px;
   height: 52px;
   border-radius: 50%;

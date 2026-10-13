@@ -7,6 +7,7 @@ import { BottomNavigation } from "../components/bottom-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./settings.module.css";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { Icon } from "../components/icon";
 
 export default function SettingsPage() {
@@ -43,7 +44,9 @@ export default function SettingsPage() {
                 className={styles.identityCard}
                 aria-label="Account identity"
               >
-                <div className={styles.avatar} aria-hidden="true" />
+                <div className={styles.avatar} aria-hidden="true">
+                  <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+                </div>
                 <div className={styles.identityCopy}>
                   <strong>{auth.user.name}</strong>
                   <span>

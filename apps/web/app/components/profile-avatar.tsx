@@ -4,7 +4,9 @@
 import { useEffect, useState } from "react";
 import {
   fetchProfilePhoto,
+  invalidateProfilePhoto,
   PROFILE_PHOTO_EVENT,
+  PROFILE_PHOTO_STORAGE_KEY,
   type SocialMediaItem,
 } from "../../lib/social-media";
 
@@ -17,28 +19,59 @@ export function ProfileAvatar({
   name: string;
   alt?: string;
 }) {
-  const [url, setUrl] = useState<string | null>(null);
+  const [image, setImage] = useState<{ userId: string; url: string | null }>();
+  const url = image?.userId === userId ? image.url : null;
 
   useEffect(() => {
     let active = true;
-    void fetchProfilePhoto(userId).then((photo) => {
-      if (active) setUrl(photo?.url ?? null);
-    });
+    let revision = 0;
+    const refresh = () => {
+      if (document.visibilityState === "hidden") return;
+      const currentRevision = ++revision;
+      void fetchProfilePhoto(userId).then((photo) => {
+        if (active && currentRevision === revision)
+          setImage({ userId, url: photo?.url ?? null });
+      });
+    };
 
     const onPhotoUpdated = (event: Event) => {
       const detail = (
         event as CustomEvent<{
           userId: string;
-          photo: SocialMediaItem;
+          photo: SocialMediaItem | null;
         }>
       ).detail;
-      if (detail?.userId === userId) setUrl(detail.photo.url);
+      if (detail?.userId === userId) {
+        revision++;
+        setImage({ userId, url: detail.photo?.url ?? null });
+      }
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== PROFILE_PHOTO_STORAGE_KEY || !event.newValue) return;
+      try {
+        const detail = JSON.parse(event.newValue) as { userId?: string };
+        if (detail.userId === userId) {
+          invalidateProfilePhoto(userId);
+          refresh();
+        }
+      } catch {
+        // Ignore malformed invalidation signals.
+      }
     };
     window.addEventListener(PROFILE_PHOTO_EVENT, onPhotoUpdated);
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const interval = window.setInterval(refresh, 30_000);
+    refresh();
 
     return () => {
       active = false;
       window.removeEventListener(PROFILE_PHOTO_EVENT, onPhotoUpdated);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+      window.clearInterval(interval);
     };
   }, [userId]);
 
@@ -48,6 +81,7 @@ export function ProfileAvatar({
     <img
       src={url}
       alt={alt}
+      onError={() => setImage({ userId, url: null })}
       style={{
         width: "100%",
         height: "100%",

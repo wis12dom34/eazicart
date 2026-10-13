@@ -297,3 +297,21 @@
     top: 76px;
   }
 }
+
+.sellerMapMarker span {
+  overflow: hidden;
+  font-size: 12px;
+}
+.sellerMapMarker span::after {
+  display: none;
+}
+.sellerMapMarker span > div {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  transform: rotate(45deg);
+}
+.storeIcon {
+  overflow: hidden;
+}

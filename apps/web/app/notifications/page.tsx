@@ -4,12 +4,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
-import { Icon } from "../components/icon";
-import {
-  ErrorState,
-  LoadingState,
-  SignInState,
-} from "../components/async-state";
+import { SignInState } from "../components/async-state";
 import { notificationsApi } from "../../lib/api/notifications";
 import type { Notification } from "../../lib/api/types";
 import { useRequest } from "../hooks/use-request";
@@ -29,6 +24,7 @@ export default function Notifications() {
   const auth = useAuth();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [actionError, setActionError] = useState("");
+  const [pendingRead, setPendingRead] = useState<string | null>(null);
   const result = useRequest(
     async () =>
       auth.isAuthenticated
@@ -44,37 +40,79 @@ export default function Notifications() {
       : notifications.filter((notification) => notification.type === filter);
 
   const markRead = async (id: string) => {
+    if (pendingRead) return;
+    setPendingRead(id);
     try {
       setActionError("");
       await notificationsApi.read(id);
-      await result.reload();
+      result.setData((current) =>
+        current
+          ? {
+              ...current,
+              data: current.data.map((notification) =>
+                notification.id === id
+                  ? { ...notification, readAt: new Date().toISOString() }
+                  : notification,
+              ),
+              meta: { unreadCount: Math.max(0, current.meta.unreadCount - 1) },
+            }
+          : current,
+      );
     } catch (error) {
       setActionError(
         error instanceof Error
           ? error.message
           : "Unable to update notification",
       );
+    } finally {
+      setPendingRead(null);
     }
   };
 
   const markAllRead = async () => {
+    if (pendingRead) return;
+    setPendingRead("all");
     try {
       setActionError("");
       await notificationsApi.readAll();
-      await result.reload();
+      result.setData((current) =>
+        current
+          ? {
+              ...current,
+              data: current.data.map((notification) => ({
+                ...notification,
+                readAt: notification.readAt ?? new Date().toISOString(),
+              })),
+              meta: { unreadCount: 0 },
+            }
+          : current,
+      );
     } catch (error) {
       setActionError(
         error instanceof Error
           ? error.message
           : "Unable to update notifications",
       );
+    } finally {
+      setPendingRead(null);
     }
   };
 
+  const loading = auth.loading || result.loading;
+  const failed = !loading && auth.isAuthenticated && Boolean(result.error);
+  const empty = !loading && !failed && auth.isAuthenticated && !visible.length;
+  const stateNode = loading
+    ? "229:76"
+    : failed
+      ? "229:116"
+      : empty
+        ? "229:50"
+        : "32:2";
+
   return (
     <main
-      className={`app-shell with-nav ${styles.page}`}
-      data-figma-node="32:2"
+      className={`app-shell with-nav ${styles.page} ${loading || empty || failed ? styles.statePage : ""} ${failed ? styles.failedPage : ""}`}
+      data-figma-node={stateNode}
     >
       <header className={styles.header}>
         <Link
@@ -82,11 +120,14 @@ export default function Notifications() {
           href="/profile"
           aria-label="Back to profile"
         >
-          <img src="/figma/back.svg" width={20} height={20} alt="" />
+          <img
+            src={`/figma/chat-notifications/${loading || empty || failed ? "state-back" : "notification-back"}.svg`}
+            alt=""
+          />
         </Link>
         <h1>Notifications</h1>
         <span className={styles.headerBell} aria-hidden="true">
-          <Icon name="bell" size={22} />
+          <img src="/figma/chat-notifications/bell.svg" alt="" />
           {unreadCount > 0 ? (
             <span className={styles.unreadBadge}>
               {badgeCount(unreadCount)}
@@ -95,7 +136,11 @@ export default function Notifications() {
         </span>
       </header>
 
-      <div className={styles.filters} aria-label="Notification filters">
+      <div
+        className={styles.filters}
+        aria-label="Notification filters"
+        hidden={failed}
+      >
         {filters.map((item) => (
           <button
             key={item.key}
@@ -112,21 +157,39 @@ export default function Notifications() {
       </div>
 
       <div className={styles.contentViewport}>
-        {auth.loading || result.loading ? (
-          <div className={styles.stateWrap}>
-            <LoadingState />
-          </div>
+        {loading ? (
+          <section
+            className={styles.loading}
+            role="status"
+            aria-label="Loading notifications"
+            aria-busy="true"
+          >
+            {Array.from({ length: 4 }, (_, index) => (
+              <div
+                className={styles.skeletonRow}
+                key={index}
+                aria-hidden="true"
+              >
+                <span className={styles.skeletonAvatar} />
+                <span className={styles.skeletonTitle} />
+                <span className={styles.skeletonBody} />
+                <span className={styles.skeletonDivider} />
+              </div>
+            ))}
+            <p>Loading notifications…</p>
+          </section>
         ) : !auth.isAuthenticated ? (
           <div className={styles.stateWrap}>
             <SignInState message="Sign in to view your notifications." />
           </div>
         ) : result.error ? (
-          <div className={styles.stateWrap}>
-            <ErrorState
-              message={result.error}
-              retry={() => void result.reload()}
-            />
-          </div>
+          <section className={styles.failure} role="alert">
+            <h2>Could not load notifications</h2>
+            <p>Check your connection and try again.</p>
+            <button type="button" onClick={() => void result.reload()}>
+              Try again
+            </button>
+          </section>
         ) : (
           <div className={styles.content}>
             {actionError ? (
@@ -137,13 +200,11 @@ export default function Notifications() {
 
             {!visible.length ? (
               <section className={styles.empty} aria-label="No notifications">
-                <span className={styles.emptyIcon}>
-                  <Icon name="bell" size={22} />
+                <span className={styles.emptyIcon} aria-hidden="true">
+                  <img src="/figma/chat-notifications/empty-bell.svg" alt="" />
                 </span>
                 <h2>{emptyTitle(filter)}</h2>
-                <p>
-                  New notifications will appear here when they are available.
-                </p>
+                <p>Order updates, replies and offers will appear here.</p>
               </section>
             ) : (
               <section className={styles.list} aria-label="Notifications">
@@ -151,6 +212,7 @@ export default function Notifications() {
                   <NotificationRow
                     key={notification.id}
                     notification={notification}
+                    pending={Boolean(pendingRead)}
                     onRead={() => void markRead(notification.id)}
                   />
                 ))}
@@ -162,6 +224,7 @@ export default function Notifications() {
                 className={styles.readAll}
                 type="button"
                 aria-label="Read all"
+                disabled={Boolean(pendingRead)}
                 onClick={() => void markAllRead()}
               >
                 Mark all as read
@@ -179,9 +242,11 @@ export default function Notifications() {
 function NotificationRow({
   notification,
   onRead,
+  pending,
 }: {
   notification: Notification;
   onRead: () => void;
+  pending: boolean;
 }) {
   const unread = !notification.readAt;
 
@@ -189,7 +254,7 @@ function NotificationRow({
     <button
       className={`${styles.row} ${unread ? styles.unread : styles.read}`}
       type="button"
-      disabled={!unread}
+      disabled={!unread || pending}
       onClick={onRead}
       aria-label={
         unread
@@ -216,7 +281,7 @@ function emptyTitle(filter: Filter) {
   if (filter === "ORDER") return "No order notifications";
   if (filter === "SOCIAL") return "No message notifications";
   if (filter === "SYSTEM") return "No promo notifications";
-  return "You have no notifications";
+  return "No notifications yet";
 }
 
 function relativeTime(value: string) {

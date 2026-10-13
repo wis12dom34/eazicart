@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { createPortal } from "react-dom";
+import { ProfileAvatar } from "../../components/profile-avatar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { sellersApi } from "../../../lib/api/sellers";
 import type { Seller } from "../../../lib/api/types";
@@ -142,6 +144,10 @@ export function ExploreMap() {
     );
   }, [mappedSellers, query]);
 
+  const [markerSlots, setMarkerSlots] = useState<
+    Array<{ seller: Seller; element: HTMLElement }>
+  >([]);
+
   const selected =
     visibleSellers.find((seller) => seller.id === selectedId) ?? null;
 
@@ -191,17 +197,20 @@ export function ExploreMap() {
     const runtime = runtimeRef.current;
     if (!runtime) return;
 
+    const slots: Array<{ seller: Seller; element: HTMLElement }> = [];
     sellerMarkers.current = visibleSellers.map((seller) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = `sellerMapMarker${selectedId === seller.id ? " isSelected" : ""}`;
       button.setAttribute("aria-label", `View ${seller.displayName}`);
-      button.innerHTML = `<span>${escapeText(seller.displayName.slice(0, 1).toUpperCase())}</span><b>${escapeText(seller.displayName)}</b>`;
+      slots.push({ seller, element: button });
       button.addEventListener("click", () => setSelectedId(seller.id));
       return new runtime.Marker({ element: button, anchor: "bottom" })
         .setLngLat([seller.location.longitude, seller.location.latitude])
         .addTo(map);
     });
+
+    setMarkerSlots(slots);
 
     if (visibleSellers.length && !userPosition) {
       const bounds = new runtime.LngLatBounds();
@@ -276,6 +285,23 @@ export function ExploreMap() {
 
   return (
     <main className="mapPage">
+      {markerSlots.map(({ seller, element }) =>
+        createPortal(
+          <>
+            <span>
+              <div>
+                <ProfileAvatar
+                  userId={seller.userId}
+                  name={seller.displayName}
+                />
+              </div>
+            </span>
+            <b>{seller.displayName}</b>
+          </>,
+          element,
+          seller.id,
+        ),
+      )}
       <div
         ref={mapNode}
         className="mapCanvas"
@@ -349,7 +375,10 @@ export function ExploreMap() {
             ×
           </button>
           <div className="storeIcon" aria-hidden="true">
-            {selected.displayName.slice(0, 1).toUpperCase()}
+            <ProfileAvatar
+              userId={selected.userId}
+              name={selected.displayName}
+            />
           </div>
           <div className="storeInfo">
             <strong>{selected.displayName}</strong>
@@ -392,13 +421,4 @@ function distanceLabel(
 
 function radians(value: number) {
   return (value * Math.PI) / 180;
-}
-
-function escapeText(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }

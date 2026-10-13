@@ -76,9 +76,9 @@ test("payment settings stay honest and notifications use live account data", asy
   const filters = page.getByLabel("Notification filters");
   await filters.getByRole("button", { name: "Orders" }).click();
   await expect(page.getByText("Order received", { exact: true })).toBeVisible();
-  await filters.getByRole("button", { name: "Social" }).click();
+  await filters.getByRole("button", { name: "Messages" }).click();
   await expect(
-    page.getByRole("heading", { name: "No social notifications" }),
+    page.getByRole("heading", { name: "No message notifications" }),
   ).toBeVisible();
   await filters.getByRole("button", { name: "All" }).click();
 

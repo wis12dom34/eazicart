@@ -6,8 +6,12 @@ const STORY_MAX_BYTES = 50 * 1024 * 1024;
 const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const videoTypes = new Set(["video/mp4", "video/quicktime", "video/webm"]);
 const profilePhotoCache = new Map<string, Promise<SocialMediaItem | null>>();
+const profilePhotoFetchedAt = new Map<string, number>();
+const profilePhotoRequests = new Set<string>();
+const PROFILE_PHOTO_TTL_MS = 30_000;
 
 export const PROFILE_PHOTO_EVENT = "eazicart:profile-photo-updated";
+export const PROFILE_PHOTO_STORAGE_KEY = "eazicart:profile-photo-refresh";
 
 export type SocialMediaItem = {
   url: string;
@@ -92,12 +96,23 @@ export async function uploadSocialMedia(
 
   if (kind === "profile") {
     profilePhotoCache.set(userId, Promise.resolve(item));
+    profilePhotoFetchedAt.set(userId, Date.now());
     if (typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent(PROFILE_PHOTO_EVENT, {
           detail: { userId, photo: item },
         }),
       );
+      // This is only an invalidation signal. Photos remain in the existing
+      // user-scoped Blob folder, never in browser storage.
+      try {
+        window.localStorage.setItem(
+          PROFILE_PHOTO_STORAGE_KEY,
+          JSON.stringify({ userId, at: Date.now() }),
+        );
+      } catch {
+        // Same-tab updates still work when browser storage is unavailable.
+      }
     }
   }
 
@@ -106,26 +121,48 @@ export async function uploadSocialMedia(
 
 export async function fetchProfilePhoto(userId: string) {
   const cached = profilePhotoCache.get(userId);
-  if (cached) return cached;
+  if (
+    cached &&
+    (profilePhotoRequests.has(userId) ||
+      Date.now() - (profilePhotoFetchedAt.get(userId) ?? 0) <
+        PROFILE_PHOTO_TTL_MS)
+  )
+    return cached;
 
-  const request = fetch(
+  const request: Promise<SocialMediaItem | null> = fetch(
     `/api/social-images/profile?userId=${encodeURIComponent(userId)}`,
-    { cache: "no-store" },
+    { cache: "no-store", signal: AbortSignal.timeout(10_000) },
   )
     .then(async (response) => {
-      if (!response.ok) return null;
+      if (!response.ok) throw new Error("Could not load profile photo");
       const payload = (await response.json()) as {
         data?: SocialMediaItem | null;
       };
+      // An upload can finish while an older read is still in flight.
+      const current = profilePhotoCache.get(userId);
+      if (current && current !== request) return current;
       return payload.data ?? null;
     })
     .catch(() => {
-      profilePhotoCache.delete(userId);
-      return null;
-    });
+      const current = profilePhotoCache.get(userId);
+      if (current && current !== request) return current;
+      if (profilePhotoCache.get(userId) === request) {
+        if (cached) profilePhotoCache.set(userId, cached);
+        else profilePhotoCache.delete(userId);
+        profilePhotoFetchedAt.delete(userId);
+      }
+      return cached ?? null;
+    })
+    .finally(() => profilePhotoRequests.delete(userId));
 
   profilePhotoCache.set(userId, request);
+  profilePhotoFetchedAt.set(userId, Date.now());
+  profilePhotoRequests.add(userId);
   return request;
+}
+
+export function invalidateProfilePhoto(userId: string) {
+  profilePhotoFetchedAt.delete(userId);
 }
 
 export async function fetchStories(userIds: string[]) {

@@ -1,5 +1,8 @@
 import { list } from "@vercel/blob";
-import { getPublicProducts } from "../../../lib/public-catalog";
+import {
+  getPublicProducts,
+  getPublicSeller,
+} from "../../../lib/public-catalog";
 import StoryViewer from "./story-viewer";
 
 export const dynamic = "force-dynamic";
@@ -16,15 +19,13 @@ export default async function StoryPage({
   const { userId } = await params;
   const safeUserId = validUserId(userId) ? userId : "";
 
-  const [{ blobs: storyBlobs }, { blobs: profileBlobs }, productsResult] =
+  const [{ blobs: storyBlobs }, productsResult, sellerResult] =
     await Promise.all([
       safeUserId
         ? list({ prefix: `stories/${safeUserId}/`, limit: 50 })
         : Promise.resolve({ blobs: [] }),
-      safeUserId
-        ? list({ prefix: `profiles/${safeUserId}/`, limit: 50 })
-        : Promise.resolve({ blobs: [] }),
       getPublicProducts("limit=100"),
+      getPublicSeller(safeUserId),
     ]);
 
   const cutoff = Date.now() - STORY_TTL_MS;
@@ -40,11 +41,6 @@ export default async function StoryPage({
       isVideo: videoFile(blob.url),
     }));
 
-  const profile = [...profileBlobs].sort(
-    (a, b) =>
-      new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
-  )[0];
-
   const sellerProduct =
     productsResult.status === "ok"
       ? productsResult.data.data.find(
@@ -52,15 +48,9 @@ export default async function StoryPage({
         )
       : undefined;
 
-  const sellerName = sellerProduct?.seller.displayName || "Seller";
-  const initials =
-    sellerName
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join("") || "S";
-
+  const seller =
+    sellerResult.status === "ok" ? sellerResult.data : sellerProduct?.seller;
+  const sellerName = seller?.displayName || "Seller";
   if (!stories.length) {
     return (
       <main
@@ -91,8 +81,8 @@ export default async function StoryPage({
     <StoryViewer
       stories={stories}
       sellerName={sellerName}
-      initials={initials}
-      profileUrl={profile?.url}
+      userId={safeUserId}
+      sellerId={seller?.id}
       verified={Boolean(sellerProduct)}
       product={
         sellerProduct

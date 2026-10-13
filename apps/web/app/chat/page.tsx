@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -78,17 +79,19 @@ export default function ChatPage() {
                 href="/chat"
                 aria-label="Back to chats"
               >
-                <Icon name="back" size={24} />
+                <img src="/figma/chat-notifications/chat-back.svg" alt="" />
               </Link>
               <Link
                 className="eazicart-chat-store-avatar"
                 href={`/seller/${selectedSeller.id}`}
                 aria-label={`View ${selectedSeller.displayName}`}
               >
-                <ProfileAvatar
-                  userId={selectedSeller.userId}
-                  name={selectedSeller.displayName}
-                />
+                <span>
+                  <ProfileAvatar
+                    userId={selectedSeller.userId}
+                    name={selectedSeller.displayName}
+                  />
+                </span>
               </Link>
               <Link
                 className="eazicart-chat-store-copy"
@@ -103,7 +106,6 @@ export default function ChatPage() {
               className="eazicart-chat-thread"
               aria-label={`Conversation with ${selectedSeller.displayName}`}
             >
-              <span className="eazicart-chat-date">Today</span>
               <div className="eazicart-chat-start">
                 <span className="eazicart-chat-start-avatar" aria-hidden="true">
                   <ProfileAvatar
@@ -113,8 +115,8 @@ export default function ChatPage() {
                 </span>
                 <h1>{selectedSeller.displayName}</h1>
                 <p>
-                  No messages yet. When messaging is connected, your
-                  conversation with this store will stay here.
+                  No messages yet. Messaging with this store is not available
+                  yet.
                 </p>
                 <Link href={`/seller/${selectedSeller.id}`}>View store</Link>
               </div>

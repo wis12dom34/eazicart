@@ -694,10 +694,7 @@ function ReelSlide({
               href={`/seller/${reel.seller.id}`}
               aria-label={`View ${sellerName} seller profile`}
             >
-              <ProfileAvatar
-                userId={reel.seller.userId}
-                name={sellerName}
-              />
+              <ProfileAvatar userId={reel.seller.userId} name={sellerName} />
             </Link>
           ) : (
             <span className={styles.avatar} aria-hidden="true">

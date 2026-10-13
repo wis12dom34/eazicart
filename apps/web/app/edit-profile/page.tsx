@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { ProfileAvatar } from "../components/profile-avatar";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
 import { useAuth } from "../providers/auth-provider";
@@ -122,11 +123,11 @@ export default function EditProfile() {
             <>
               <div className={styles.avatarBlock}>
                 <div className={`${styles.avatar} eazicart-profile-avatar`}>
-                  {photoUrl ? (
-                    <img src={photoUrl} alt="Your profile" />
-                  ) : (
-                    <span>{auth.user.name[0]?.toUpperCase() || "W"}</span>
-                  )}
+                  <ProfileAvatar
+                    userId={auth.user.id}
+                    name={auth.user.name}
+                    alt="Your profile"
+                  />
                 </div>
                 <label className={styles.photoButton}>
                   {photoUploading

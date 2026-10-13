@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { ProfileAvatar } from "../../components/profile-avatar";
 import { useRouter } from "next/navigation";
 import {
   useCallback,
@@ -32,8 +33,8 @@ type StoryProduct = {
 type Props = {
   stories: StoryItem[];
   sellerName: string;
-  initials: string;
-  profileUrl?: string;
+  userId: string;
+  sellerId?: string;
   verified: boolean;
   product?: StoryProduct;
 };
@@ -54,8 +55,8 @@ function relativeTime(value: string) {
 export default function StoryViewer({
   stories,
   sellerName,
-  initials,
-  profileUrl,
+  userId,
+  sellerId,
   verified,
   product,
 }: Props) {
@@ -309,7 +310,13 @@ export default function StoryViewer({
         }}
       >
         <Link
-          href={product ? `/seller/${product.sellerId}` : "/"}
+          href={
+            sellerId
+              ? `/seller/${sellerId}`
+              : product
+                ? `/seller/${product.sellerId}`
+                : "/"
+          }
           onPointerDown={stopStoryGesture}
           onPointerUp={stopStoryGesture}
           aria-label={`View ${sellerName}`}
@@ -337,17 +344,7 @@ export default function StoryViewer({
               fontWeight: 750,
             }}
           >
-            {profileUrl ? (
-              <img
-                src={profileUrl}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              initials
-            )}
+            <ProfileAvatar userId={userId} name={sellerName} />
           </span>
         </Link>
 
