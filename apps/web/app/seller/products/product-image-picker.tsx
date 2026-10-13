@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useState, type ChangeEvent } from "react";
-import { productsApi } from "../../../lib/api/products";
+import { tokenStore } from "../../../lib/api/client";
 import styles from "./product-image-picker.module.css";
 
 const MAX_IMAGES = 6;
@@ -12,6 +13,21 @@ const supportedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const isHostedImage = (value: string) => /^https?:\/\//i.test(value);
 const supportedFile = (file: File) =>
   supportedTypes.has(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+
+const safeFileName = (file: File) => {
+  const cleaned = file.name
+    .normalize("NFKD")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (cleaned && /\.(jpe?g|png|webp)$/i.test(cleaned)) return cleaned;
+  const extension =
+    file.type === "image/png"
+      ? "png"
+      : file.type === "image/webp"
+        ? "webp"
+        : "jpg";
+  return `product-photo.${extension}`;
+};
 
 export function ProductImagePicker({
   initialUrls = [],
@@ -51,15 +67,32 @@ export function ProductImagePicker({
       return;
     }
 
+    const accessToken = tokenStore.get()?.accessToken;
+    if (!accessToken) {
+      setError("Please sign in again before uploading product photos.");
+      return;
+    }
+
     setError("");
     setUploading(true);
     onUploadingChange?.(true);
     try {
       for (const [index, file] of files.entries()) {
-        setProgress(`Uploading ${index + 1} of ${files.length}…`);
-        const result = await productsApi.uploadImage(file);
+        const pathname = `products/${Date.now()}-${index}-${safeFileName(file)}`;
+        const blob = await upload(pathname, file, {
+          access: "public",
+          handleUploadUrl: "/api/product-images/upload",
+          clientPayload: JSON.stringify({ accessToken }),
+          contentType: file.type || undefined,
+          multipart: file.size > 4 * 1024 * 1024,
+          onUploadProgress: ({ percentage }) => {
+            setProgress(
+              `Uploading ${index + 1} of ${files.length} · ${Math.round(percentage)}%`,
+            );
+          },
+        });
         setImages((current) =>
-          [...current, result.data.imageUrl].slice(0, MAX_IMAGES),
+          [...current, blob.url].slice(0, MAX_IMAGES),
         );
       }
     } catch (value) {
@@ -90,15 +123,23 @@ export function ProductImagePicker({
     <fieldset className={styles.picker} disabled={disabled || uploading}>
       <legend>Product photos</legend>
       <div className={styles.heading}>
-        <span>{images.length ? `${images.length}/${MAX_IMAGES} added` : "Add real product photos"}</span>
-        {uploading ? <strong role="status">{progress || "Uploading…"}</strong> : null}
+        <span>
+          {images.length
+            ? `${images.length}/${MAX_IMAGES} added`
+            : "Add real product photos"}
+        </span>
+        {uploading ? (
+          <strong role="status">{progress || "Uploading…"}</strong>
+        ) : null}
       </div>
 
       <div className={styles.gallery}>
         {images.map((url, index) => (
           <div className={styles.photo} key={url}>
             <img src={url} alt={`Product photo ${index + 1}`} />
-            {index === 0 ? <span className={styles.coverBadge}>Cover</span> : null}
+            {index === 0 ? (
+              <span className={styles.coverBadge}>Cover</span>
+            ) : null}
             <button
               className={styles.remove}
               type="button"
@@ -142,7 +183,9 @@ export function ProductImagePicker({
       </div>
 
       <p className={styles.helper}>
-        Choose up to {MAX_IMAGES} photos from your gallery. The first photo is the cover shown in Explore and your storefront. JPG, PNG or WebP, max 8 MB each.
+        Choose up to {MAX_IMAGES} photos from your gallery. The first photo is
+        the cover shown in Explore and your storefront. JPG, PNG or WebP, max 8
+        MB each.
       </p>
       {error ? (
         <p className={styles.error} role="alert">
