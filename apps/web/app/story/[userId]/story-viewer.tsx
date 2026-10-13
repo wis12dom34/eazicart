@@ -154,7 +154,9 @@ export default function StoryViewer({
   const addToCart = async () => {
     if (!product || busy || product.stock < 1) return;
     if (!auth.isAuthenticated) {
-      router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+      router.push(
+        `/login?next=${encodeURIComponent(window.location.pathname)}`,
+      );
       return;
     }
 
@@ -266,11 +268,7 @@ export default function StoryViewer({
       >
         {stories.map((story, storyIndex) => {
           const width =
-            storyIndex < index
-              ? 100
-              : storyIndex > index
-                ? 0
-                : progress * 100;
+            storyIndex < index ? 100 : storyIndex > index ? 0 : progress * 100;
           return (
             <span
               key={`${story.url}-${storyIndex}`}
@@ -432,7 +430,13 @@ export default function StoryViewer({
           padding: 0,
         }}
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
           <path
             d="M6 6 18 18M18 6 6 18"
             stroke="currentColor"
@@ -466,7 +470,12 @@ export default function StoryViewer({
               backdropFilter: "blur(10px)",
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
               <rect x="6.5" y="5" width="4" height="14" rx="1" />
               <rect x="13.5" y="5" width="4" height="14" rx="1" />
             </svg>
@@ -494,7 +503,14 @@ export default function StoryViewer({
             boxShadow: "0 14px 40px rgba(0,0,0,.26)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              minWidth: 0,
+            }}
+          >
             <div
               style={{
                 width: 52,
@@ -553,7 +569,14 @@ export default function StoryViewer({
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 9 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 8,
+              marginTop: 9,
+            }}
+          >
             <Link
               href={`/product/${product.id}`}
               style={{
@@ -579,7 +602,8 @@ export default function StoryViewer({
                 minHeight: 44,
                 border: 0,
                 borderRadius: 13,
-                background: product.stock < 1 ? "rgba(255,255,255,.16)" : "#ff6500",
+                background:
+                  product.stock < 1 ? "rgba(255,255,255,.16)" : "#ff6500",
                 color: "#fff",
                 font: "inherit",
                 fontSize: 14,
