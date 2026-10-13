@@ -5,10 +5,7 @@ const PROFILE_MAX_BYTES = 8 * 1024 * 1024;
 const STORY_MAX_BYTES = 50 * 1024 * 1024;
 const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const videoTypes = new Set(["video/mp4", "video/quicktime", "video/webm"]);
-const profilePhotoCache = new Map<
-  string,
-  Promise<SocialMediaItem | null>
->();
+const profilePhotoCache = new Map<string, Promise<SocialMediaItem | null>>();
 
 export const PROFILE_PHOTO_EVENT = "eazicart:profile-photo-updated";
 
