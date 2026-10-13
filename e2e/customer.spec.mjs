@@ -69,13 +69,17 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(`${web}/`);
 
-  await page.goto("/explore");
+  // Follow the app's links so document reloads do not cancel cookie rotation.
+  await page
+    .getByRole("navigation", { name: "Customer navigation" })
+    .getByRole("link", { name: "Explore", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Explore", exact: true }),
   ).toBeVisible();
-  await page.goto("/category/fashion");
+  await page.getByRole("link", { name: "Fashion", exact: true }).click();
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
-  await page.goto(`/product/${productId}`);
+  await page.locator(`a[href="/product/${productId}"]`).first().click();
   await expect(
     page.getByRole("heading", { name: "Woven everyday tote" }),
   ).toBeVisible();
