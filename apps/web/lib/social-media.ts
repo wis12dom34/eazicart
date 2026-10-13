@@ -38,8 +38,10 @@ function safeFileName(file: File) {
 }
 
 function validateMedia(kind: "profile" | "story", file: File) {
-  const image = imageTypes.has(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
-  const video = videoTypes.has(file.type) || /\.(mp4|mov|webm)$/i.test(file.name);
+  const image =
+    imageTypes.has(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+  const video =
+    videoTypes.has(file.type) || /\.(mp4|mov|webm)$/i.test(file.name);
 
   if (kind === "profile" && !image)
     throw new Error("Choose a JPG, PNG or WebP profile photo.");
@@ -63,7 +65,8 @@ export async function uploadSocialMedia(
 ) {
   validateMedia(kind, file);
   const accessToken = tokenStore.get()?.accessToken;
-  if (!accessToken) throw new Error("Please sign in again before uploading media.");
+  if (!accessToken)
+    throw new Error("Please sign in again before uploading media.");
 
   const folder = kind === "profile" ? "profiles" : "stories";
   const blob = await upload(
