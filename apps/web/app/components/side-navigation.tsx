@@ -6,6 +6,7 @@ import { useRequest } from "../hooks/use-request";
 import { ordersApi } from "../../lib/api/orders";
 import styles from "./side-navigation.module.css";
 import { Icon } from "./icon";
+import { ProfileAvatar } from "./profile-avatar";
 const entries = [
   ["Profile", "/profile", "user"],
   ["Order History", "/orders", "box"],
@@ -83,7 +84,13 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
           <Icon name="close" size={22} />
         </button>
         <div className={styles.identity}>
-          <div className={styles.avatar}>{initials}</div>
+          <div className={styles.avatar}>
+            {auth.user ? (
+              <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+            ) : (
+              initials
+            )}
+          </div>
           <h2>{name}</h2>
           {auth.user?.username ? (
             <p>@{auth.user.username}</p>
