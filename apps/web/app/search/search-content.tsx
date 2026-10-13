@@ -64,10 +64,12 @@ export function SearchContent() {
       : filter === "sellers"
         ? sellerMatches.length
         : productTotal + sellerMatches.length;
-  const loading = products.loading || sellers.loading;
-  const error = products.error || sellers.error;
   const showProducts = filter !== "sellers";
   const showSellers = filter !== "products";
+  const loading =
+    (showProducts && products.loading) || (showSellers && sellers.loading);
+  const error =
+    (showProducts && products.error) || (showSellers && sellers.error);
   const hasVisibleResults =
     (showProducts && productRows.length > 0) ||
     (showSellers && sellerMatches.length > 0);
@@ -120,12 +122,17 @@ export function SearchContent() {
       </header>
 
       <form className={styles.searchField} action="/search">
+        {filter !== "all" ? (
+          <input type="hidden" name="filter" value={filter} />
+        ) : null}
         <span aria-hidden="true">
           <img src="/figma/explore-search.svg" width={20} height={20} alt="" />
         </span>
         <input
           key={search}
           name="search"
+          type="search"
+          enterKeyHint="search"
           defaultValue={search}
           aria-label="Search products and sellers"
           placeholder="Search products and sellers"
@@ -133,7 +140,13 @@ export function SearchContent() {
       </form>
 
       <p className={styles.searchCount} aria-live="polite">
-        {loading ? "Searching…" : `${resultCount} results`}
+        {loading
+          ? "Searching…"
+          : error
+            ? "Search unavailable"
+            : resultCount === 1
+              ? "1 result"
+              : `${resultCount} results`}
       </p>
 
       <nav className={styles.searchFilters} aria-label="Search filters">
@@ -172,8 +185,8 @@ export function SearchContent() {
             <button
               type="button"
               onClick={() => {
-                void products.reload();
-                void sellers.reload();
+                if (showProducts) void products.reload();
+                if (showSellers) void sellers.reload();
               }}
             >
               Try again
