@@ -19,7 +19,12 @@ function contentTypeFromPathname(pathname: string) {
 export async function GET(request: Request) {
   const raw = new URL(request.url).searchParams.get("userIds") ?? "";
   const userIds = Array.from(
-    new Set(raw.split(",").map((value) => value.trim()).filter(validUserId)),
+    new Set(
+      raw
+        .split(",")
+        .map((value) => value.trim())
+        .filter(validUserId),
+    ),
   ).slice(0, 12);
 
   const cutoff = Date.now() - STORY_TTL_MS;
