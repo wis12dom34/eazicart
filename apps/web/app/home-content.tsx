@@ -3,12 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useState,
-  type ChangeEvent,
-} from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import "./home.css";
 import "./home-social-feed.css";
 import "./home-media.css";
@@ -196,7 +191,10 @@ export default function HomePage({
             onClick={() => setDrawer(true)}
           >
             {auth.user ? (
-              <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+              <ProfileAvatar
+                userId={auth.user.id}
+                name={auth.user.name}
+              />
             ) : (
               <Icon name="user-circle" size={32} />
             )}
@@ -250,7 +248,10 @@ export default function HomePage({
                     {stories[auth.user.id] ? (
                       <StoryPreview story={stories[auth.user.id]!} />
                     ) : (
-                      <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+                      <ProfileAvatar
+                        userId={auth.user.id}
+                        name={auth.user.name}
+                      />
                     )}
                   </span>
                   <b className="figma-home-story-plus">+</b>
@@ -271,7 +272,11 @@ export default function HomePage({
               return (
                 <Link
                   className="figma-home-story"
-                  href={story && userId ? `/story/${userId}` : `/seller/${seller.id}`}
+                  href={
+                    story && userId
+                      ? `/story/${userId}`
+                      : `/seller/${seller.id}`
+                  }
                   key={seller.id}
                 >
                   <span
@@ -282,7 +287,10 @@ export default function HomePage({
                       {story ? (
                         <StoryPreview story={story} />
                       ) : userId ? (
-                        <ProfileAvatar userId={userId} name={seller.displayName} />
+                        <ProfileAvatar
+                          userId={userId}
+                          name={seller.displayName}
+                        />
                       ) : (
                         seller.displayName.slice(0, 2).toUpperCase()
                       )}
