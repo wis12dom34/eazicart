@@ -87,3 +87,64 @@ test("Home saves and supported seller/cart actions persist through the real API"
   ).toContainText("18,500");
   await expectCustomerNavigation(page, "Cart");
 });
+
+for (const width of [320, 393, 430, 440]) {
+  test(`Home profile photos stay circular with portrait uploads at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 932 });
+    // Isolated photo fixture; products and seller identities use the real test API.
+    const photo = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="1200"><rect width="400" height="1200" fill="#935c39"/></svg>')}`;
+    await page.route("**/api/social-images/profile?**", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: { url: photo, uploadedAt: new Date().toISOString() },
+        }),
+      }),
+    );
+    await page.goto("/");
+    for (const selector of [
+      ".social-home-feature-seller > span",
+      ".social-home-editorial-header > span",
+      ".social-home-seller > span",
+      ".figma-home-story-media",
+    ]) {
+      const avatars = page.locator(selector);
+      await expect(avatars.first().locator("img")).toHaveAttribute(
+        "src",
+        photo,
+      );
+      await expect
+        .poll(() =>
+          avatars.evaluateAll((elements) =>
+            elements.every((element) => {
+              const image = element.querySelector("img");
+              if (!image?.complete || !image.naturalWidth) return false;
+              const frame = element.getBoundingClientRect();
+              const bounds = image.getBoundingClientRect();
+              return (
+                Math.abs(bounds.width - bounds.height) < 1 &&
+                bounds.left >= frame.left - 1 &&
+                bounds.right <= frame.right + 1 &&
+                bounds.top >= frame.top - 1 &&
+                bounds.bottom <= frame.bottom + 1 &&
+                getComputedStyle(image).objectFit === "cover"
+              );
+            }),
+          ),
+        )
+        .toBe(true);
+    }
+    const post = page.locator(".social-home-editorial");
+    const avatar = await post
+      .locator(".social-home-editorial-header > span img")
+      .boundingBox();
+    const copy = await post.locator(":scope > p").boundingBox();
+    expect(avatar.y + avatar.height).toBeLessThanOrEqual(copy.y);
+    // Profile fixtures never replace catalog imagery.
+    await expect(
+      post.locator(".social-home-editorial-media > img"),
+    ).not.toHaveAttribute("src", photo);
+  });
+}

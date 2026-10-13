@@ -247,7 +247,10 @@
   height: 38px;
   flex: none;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.85);
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.2);
@@ -604,7 +607,10 @@
   height: 38px;
   flex: none;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
+  overflow: hidden;
   border-radius: 50%;
   color: #3a3a3c;
   background: #f2f2f7;
@@ -836,7 +842,10 @@
   height: 46px;
   flex: none;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   place-items: center;
+  overflow: hidden;
   border-radius: 50%;
   color: #3a3a3c;
   background: #f2f2f7;
