@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { SignInState } from "../components/async-state";
 import { notificationsApi } from "../../lib/api/notifications";
@@ -22,9 +22,30 @@ const filters: Array<{ key: Filter; label: string }> = [
 
 export default function Notifications() {
   const auth = useAuth();
+  return <NotificationScreen key={auth.user?.id ?? "signed-out"} auth={auth} />;
+}
+
+function NotificationScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
   const [filter, setFilter] = useState<Filter>("ALL");
   const [actionError, setActionError] = useState("");
   const [pendingRead, setPendingRead] = useState<string | null>(null);
+  const [confirmedReadIds, setConfirmedReadIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const refreshTime = () => {
+      if (document.visibilityState !== "hidden") setNow(Date.now());
+    };
+    const interval = window.setInterval(refreshTime, 60_000);
+    document.addEventListener("visibilitychange", refreshTime);
+    window.addEventListener("focus", refreshTime);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshTime);
+      window.removeEventListener("focus", refreshTime);
+    };
+  }, []);
   const result = useRequest(
     async () =>
       auth.isAuthenticated
@@ -44,15 +65,13 @@ export default function Notifications() {
     setPendingRead(id);
     try {
       setActionError("");
-      await notificationsApi.read(id);
+      const response = await notificationsApi.read(id);
       result.setData((current) =>
         current
           ? {
               ...current,
               data: current.data.map((notification) =>
-                notification.id === id
-                  ? { ...notification, readAt: new Date().toISOString() }
-                  : notification,
+                notification.id === id ? response.data : notification,
               ),
               meta: { unreadCount: Math.max(0, current.meta.unreadCount - 1) },
             }
@@ -75,14 +94,15 @@ export default function Notifications() {
     try {
       setActionError("");
       await notificationsApi.readAll();
+      // The endpoint confirms read status but does not return read timestamps.
+      // Keep the API's dates intact rather than generating dates in the UI.
+      setConfirmedReadIds(
+        new Set(notifications.map((notification) => notification.id)),
+      );
       result.setData((current) =>
         current
           ? {
               ...current,
-              data: current.data.map((notification) => ({
-                ...notification,
-                readAt: notification.readAt ?? new Date().toISOString(),
-              })),
               meta: { unreadCount: 0 },
             }
           : current,
@@ -212,6 +232,11 @@ export default function Notifications() {
                   <NotificationRow
                     key={notification.id}
                     notification={notification}
+                    read={
+                      Boolean(notification.readAt) ||
+                      confirmedReadIds.has(notification.id)
+                    }
+                    now={now}
                     pending={Boolean(pendingRead)}
                     onRead={() => void markRead(notification.id)}
                   />
@@ -243,12 +268,16 @@ function NotificationRow({
   notification,
   onRead,
   pending,
+  read,
+  now,
 }: {
   notification: Notification;
   onRead: () => void;
   pending: boolean;
+  read: boolean;
+  now: number;
 }) {
-  const unread = !notification.readAt;
+  const unread = !read;
 
   return (
     <button
@@ -270,7 +299,7 @@ function NotificationRow({
       <strong className={styles.rowTitle}>{notification.title}</strong>
       <span className={styles.rowBody}>{notification.body}</span>
       <time className={styles.time} dateTime={notification.createdAt}>
-        {relativeTime(notification.createdAt)}
+        {relativeTime(notification.createdAt, now)}
       </time>
       <span className={styles.divider} aria-hidden="true" />
     </button>
@@ -284,9 +313,9 @@ function emptyTitle(filter: Filter) {
   return "No notifications yet";
 }
 
-function relativeTime(value: string) {
+function relativeTime(value: string, now: number) {
   const timestamp = new Date(value).getTime();
-  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  const seconds = Math.max(0, Math.floor((now - timestamp) / 1000));
   if (seconds < 60) return "Now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;

@@ -6,9 +6,11 @@ const seller = {
   userId: "qa-seller-user",
   displayName: "QA Store",
 };
-async function fixtures(page) {
+async function fixtures(page, now = Date.now()) {
   const state = {
     mode: "loaded",
+    writeFailure: false,
+    sellerFailure: false,
     photo: "/figma/logo.svg",
     writes: [],
     reads: 0,
@@ -20,7 +22,7 @@ async function fixtures(page) {
       type: "ORDER",
       title: "Your order is on the way",
       body: "Order update from your store",
-      createdAt: new Date(Date.now() - 120000).toISOString(),
+      createdAt: new Date(now - 120000).toISOString(),
       readAt: null,
     },
     {
@@ -28,7 +30,7 @@ async function fixtures(page) {
       type: "SOCIAL",
       title: "Your store replied",
       body: "Open your conversation",
-      createdAt: new Date(Date.now() - 1080000).toISOString(),
+      createdAt: new Date(now - 1080000).toISOString(),
       readAt: null,
     },
     {
@@ -36,13 +38,24 @@ async function fixtures(page) {
       type: "SYSTEM",
       title: "Price drop on a saved item",
       body: "A saved item has an update",
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      createdAt: new Date(now - 3600000).toISOString(),
       readAt: new Date().toISOString(),
     },
   ];
   await page.route("**/api/**", async (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, "");
     let data = { data: [] };
+    if (
+      state.sellerFailure &&
+      (path === "/sellers" || path === `/sellers/${seller.id}`)
+    )
+      return route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: { code: "UNAVAILABLE", message: "Could not load stores" },
+        }),
+      });
     if (path === "/users/me")
       data = {
         id: seller.userId,
@@ -86,6 +99,17 @@ async function fixtures(page) {
       route.request().method() === "PATCH"
     ) {
       state.writes.push(path);
+      if (state.writeFailure)
+        return route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: {
+              code: "UNAVAILABLE",
+              message: "Could not mark notifications as read",
+            },
+          }),
+        });
       const items = path.endsWith("read-all")
         ? notifications
         : notifications.filter((n) => path.includes(n.id));
@@ -232,4 +256,80 @@ test("one seller photo updates everywhere in Chat and after navigation", async (
   await expect(
     page.getByRole("button", { name: "Open side navigation" }).locator("img"),
   ).toHaveAttribute("src", state.photo);
+});
+
+test("Chat store list and conversation recover without leaving the page", async ({
+  page,
+}) => {
+  const state = await fixtures(page);
+  for (const path of ["/chat", "/chat?seller=qa-store"]) {
+    state.sellerFailure = true;
+    await page.goto(path);
+    await expect(page.getByRole("alert")).toContainText(
+      "Could not load stores",
+    );
+    state.sellerFailure = false;
+    await page.getByRole("button", { name: "Try again" }).click();
+    if (path.includes("?"))
+      await expect(page.locator(".eazicart-chat-store-copy strong")).toHaveText(
+        seller.displayName,
+      );
+    else await expect(page.locator(".eazicart-chat-seller-row")).toBeVisible();
+  }
+});
+
+test("failed notification read actions preserve unread rows and allow retry", async ({
+  page,
+}) => {
+  const state = await fixtures(page);
+  await page.goto("/notifications");
+  const row = page.getByRole("button", {
+    name: "Mark Your order is on the way as read",
+  });
+  await expect(row).toBeVisible();
+  state.writeFailure = true;
+  await row.click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Could not mark notifications as read",
+  );
+  await expect(row).toBeEnabled();
+  state.writeFailure = false;
+  await row.click();
+  await expect(
+    page.getByRole("button", { name: "Your order is on the way, read" }),
+  ).toBeDisabled();
+  state.writeFailure = true;
+  const all = page.getByRole("button", { name: "Read all" });
+  await all.click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Could not mark notifications as read",
+  );
+  await expect(
+    page.getByRole("button", { name: "Mark Your store replied as read" }),
+  ).toBeEnabled();
+  await expect(all).toBeEnabled();
+  state.writeFailure = false;
+  await all.click();
+  await expect(
+    page.getByRole("button", { name: "Your store replied, read" }),
+  ).toBeDisabled();
+  await expect(all).toHaveCount(0);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("notification relative times advance without reloading the list", async ({
+  page,
+}) => {
+  const now = Date.now();
+  await page.clock.install({ time: new Date(now) });
+  const state = await fixtures(page, now);
+  await page.goto("/notifications");
+  const row = page.getByRole("button", {
+    name: "Mark Your order is on the way as read",
+  });
+  await expect(row.locator("time")).toHaveText("2m");
+  const reads = state.reads;
+  await page.clock.fastForward(60_001);
+  await expect(row.locator("time")).toHaveText("3m");
+  expect(state.reads).toBe(reads);
 });

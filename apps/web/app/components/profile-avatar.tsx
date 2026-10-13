@@ -30,7 +30,12 @@ export function ProfileAvatar({
       const currentRevision = ++revision;
       void fetchProfilePhoto(userId).then((photo) => {
         if (active && currentRevision === revision)
-          setImage({ userId, url: photo?.url ?? null });
+          setImage((current) => {
+            const url = photo?.url ?? null;
+            return current?.userId === userId && current.url === url
+              ? current
+              : { userId, url };
+          });
       });
     };
 

@@ -36,6 +36,8 @@ function ChatScreen() {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retryVersion, setRetryVersion] = useState(0);
+  const retry = () => setRetryVersion((current) => current + 1);
 
   useEffect(() => {
     let active = true;
@@ -67,7 +69,7 @@ function ChatScreen() {
     return () => {
       active = false;
     };
-  }, [sellerId]);
+  }, [sellerId, retryVersion]);
 
   if (sellerId) {
     return (
@@ -81,7 +83,7 @@ function ChatScreen() {
           </div>
         ) : error || !selectedSeller ? (
           <div className="eazicart-chat-loading">
-            <ErrorState message={error || "Seller not found"} />
+            <ErrorState message={error || "Seller not found"} retry={retry} />
             <Link className="eazicart-chat-return" href="/chat">
               Back to Chat
             </Link>
@@ -184,7 +186,7 @@ function ChatScreen() {
         {loading ? (
           <LoadingState label="Loading stores…" />
         ) : error ? (
-          <ErrorState message={error} />
+          <ErrorState message={error} retry={retry} />
         ) : sellers.length ? (
           <div className="eazicart-chat-seller-list">
             {sellers.map((seller) => (
