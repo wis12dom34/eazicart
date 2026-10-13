@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import "./explore.css";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { SideNavigation } from "../components/side-navigation";
 import {
   EmptyState,
@@ -92,7 +93,11 @@ export function ExploreContent() {
             aria-label="Open side navigation"
             onClick={() => setMenu(true)}
           >
-            <Icon name="user-circle" size={32} />
+            {auth.user ? (
+              <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+            ) : (
+              <Icon name="user-circle" size={32} />
+            )}
           </button>
           <Link
             className="figma-explore-logo"
@@ -325,7 +330,12 @@ export function ExploreContent() {
               <div className="figma-explore-seller-strip">
                 {sellers.data.data.map((seller) => (
                   <Link href={`/seller/${seller.id}`} key={seller.id}>
-                    <i aria-hidden="true" />
+                    <i aria-hidden="true">
+                      <ProfileAvatar
+                        userId={seller.userId}
+                        name={seller.displayName}
+                      />
+                    </i>
                     <strong>{seller.displayName}</strong>
                   </Link>
                 ))}
