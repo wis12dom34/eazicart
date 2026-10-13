@@ -8,6 +8,7 @@ import {
   SignInState,
 } from "../../components/async-state";
 import { Icon } from "../../components/icon";
+import { ProfileAvatar } from "../../components/profile-avatar";
 import { SellerBottomNavigation } from "../../components/seller-bottom-navigation";
 import { useRequest } from "../../hooks/use-request";
 import { useAuth } from "../../providers/auth-provider";
@@ -206,7 +207,7 @@ function StoreEditor({ profile }: { profile: Seller }) {
         <aside className={styles.previewCard} aria-label="Storefront preview">
           <p className={styles.eyebrow}>Preview</p>
           <div className={styles.avatar} aria-hidden="true">
-            {initials(displayName)}
+            <ProfileAvatar userId={profile.userId} name={displayName} />
           </div>
           <h2>{displayName.trim() || "Your store"}</h2>
           <p className={styles.previewBio}>
@@ -401,17 +402,5 @@ function StoreMapLocation() {
         ) : null}
       </div>
     </section>
-  );
-}
-function initials(value: string) {
-  return (
-    value
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase() || "S"
   );
 }
