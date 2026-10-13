@@ -7,6 +7,19 @@ export const dynamic = "force-dynamic";
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const videoFile = (url: string) => /\.(mp4|mov|webm)(?:\?|$)/i.test(url);
 
+const mediaStyle = {
+  position: "absolute",
+  inset: 0,
+  width: "100%",
+  height: "100%",
+  minWidth: "100%",
+  minHeight: "100%",
+  display: "block",
+  objectFit: "cover",
+  objectPosition: "center center",
+  background: "#000",
+} as const;
+
 export default async function StoryPage({
   params,
 }: {
@@ -25,57 +38,93 @@ export default async function StoryPage({
   return (
     <main
       style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        width: "100vw",
+        height: "100dvh",
         minHeight: "100svh",
-        maxWidth: 440,
-        margin: "0 auto",
-        background: "#080808",
-        color: "#fff",
-        position: "relative",
-        display: "grid",
-        placeItems: "center",
         overflow: "hidden",
+        overscrollBehavior: "none",
+        background: "#000",
+        color: "#fff",
       }}
     >
-      <Link
-        href="/"
-        aria-label="Close story"
-        style={{
-          position: "absolute",
-          zIndex: 2,
-          top: "calc(16px + env(safe-area-inset-top))",
-          left: 16,
-          width: 44,
-          height: 44,
-          display: "grid",
-          placeItems: "center",
-          borderRadius: 22,
-          background: "rgba(0,0,0,.35)",
-          color: "white",
-          textDecoration: "none",
-          fontSize: 32,
-        }}
-      >
-        ‹
-      </Link>
       {story ? (
         videoFile(story.url) ? (
           <video
             src={story.url}
             autoPlay
+            muted
+            loop
             playsInline
-            controls
-            style={{ width: "100%", height: "100svh", objectFit: "cover" }}
+            preload="auto"
+            aria-label="Story video"
+            style={mediaStyle}
           />
         ) : (
           <img
             src={story.url}
-            alt="Seller story"
-            style={{ width: "100%", height: "100svh", objectFit: "cover" }}
+            alt="Story"
+            draggable={false}
+            style={mediaStyle}
           />
         )
       ) : (
-        <p style={{ padding: 24, color: "#d1d1d6" }}>This story has expired.</p>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            padding: 24,
+            background: "#000",
+            color: "#d1d1d6",
+            textAlign: "center",
+            fontSize: 15,
+          }}
+        >
+          This story has expired.
+        </div>
       )}
+
+      <Link
+        href="/"
+        aria-label="Back"
+        style={{
+          position: "absolute",
+          zIndex: 3,
+          top: "calc(env(safe-area-inset-top, 0px) + 24px)",
+          left: 24,
+          width: 44,
+          height: 44,
+          display: "grid",
+          placeItems: "center",
+          borderRadius: "50%",
+          background: "rgba(25, 25, 25, 0.46)",
+          WebkitBackdropFilter: "blur(14px)",
+          backdropFilter: "blur(14px)",
+          color: "#fff",
+          textDecoration: "none",
+          boxShadow: "0 1px 8px rgba(0,0,0,.08)",
+        }}
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M15 5.5 8.5 12l6.5 6.5"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </Link>
     </main>
   );
 }
