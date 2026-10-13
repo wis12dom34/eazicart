@@ -61,6 +61,7 @@ export default function ProductPage({
     action: () => Promise<unknown>,
     success: string,
   ) => {
+    if (auth.loading) return;
     if (!auth.isAuthenticated) {
       router.push(`/login?next=/product/${id}`);
       return;
@@ -149,7 +150,7 @@ export default function ProductPage({
               className={`icon-button ${styles.headerIconButton}`}
               aria-label={saved ? "Unsave product" : "Save product"}
               aria-pressed={saved}
-              disabled={busyAction === "save"}
+              disabled={auth.loading || busyAction === "save"}
               onClick={() =>
                 void protectedAction(
                   "save",
@@ -290,7 +291,12 @@ export default function ProductPage({
         aria-label="Product actions"
       >
         <button
-          disabled={!inStock || busyAction !== null || Boolean(result.error)}
+          disabled={
+            auth.loading ||
+            !inStock ||
+            busyAction !== null ||
+            Boolean(result.error)
+          }
           className={`secondary-button ${styles.actionButton}`}
           onClick={() =>
             void protectedAction(
@@ -303,7 +309,12 @@ export default function ProductPage({
           {busyAction === "cart" ? "Adding…" : "Add to Cart"}
         </button>
         <button
-          disabled={!inStock || busyAction !== null || Boolean(result.error)}
+          disabled={
+            auth.loading ||
+            !inStock ||
+            busyAction !== null ||
+            Boolean(result.error)
+          }
           className={`dark-button ${styles.actionButton}`}
           onClick={() =>
             void protectedAction(

@@ -365,3 +365,35 @@ test("API trusts database prices and enforces CORS and ownership", async ({
     );
   }
 });
+
+test("product actions wait for session restoration before accepting input", async ({
+  page,
+}) => {
+  let releaseSession;
+  const sessionReady = new Promise((resolve) => {
+    releaseSession = resolve;
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await sessionReady;
+    await route.fulfill({
+      json: {
+        id: "qa-session-user",
+        name: "QA Customer",
+        email: "qa@eazicart.invalid",
+      },
+    });
+  });
+  await page.route(/\/saved(?:\?|$)/, (route) =>
+    route.fulfill({ json: { data: [] } }),
+  );
+  await page.goto(`/product/${productId}`);
+  const buttons = [
+    page.getByRole("button", { name: "Save product", exact: true }),
+    page.getByRole("button", { name: "Add to Cart", exact: true }),
+    page.getByRole("button", { name: "Buy Now", exact: true }),
+  ];
+  for (const button of buttons) await expect(button).toBeDisabled();
+  releaseSession();
+  for (const button of buttons) await expect(button).toBeEnabled();
+  await expect(page).toHaveURL(`${web}/product/${productId}`);
+});
