@@ -81,7 +81,7 @@ export default function HomePage({
     new Set([
       ...(auth.user ? [auth.user.id] : []),
       ...activeSellers
-        .map((seller) => seller.user?.id)
+        .map((seller) => seller.userId)
         .filter((id): id is string => Boolean(id)),
     ]),
   );
@@ -230,7 +230,7 @@ export default function HomePage({
               </label>
             ) : null}
             {activeSellers.map((seller) => {
-              const userId = seller.user?.id;
+              const userId = seller.userId;
               const story = userId ? stories[userId] : undefined;
               return (
                 <Link
