@@ -95,7 +95,7 @@
 /* Stories — precise rings, compact labels and minimal dead space before feed. */
 .social-home-stories {
   height: auto;
-  padding: 14px 0 5px;
+  padding: 13px 0 2px;
   border-bottom: 1px solid #ececf1;
   background: #fff;
 }
@@ -140,10 +140,10 @@
 .social-home-stories .figma-home-story-strip {
   height: auto;
   margin: 0;
-  padding: 9px 16px 0;
+  padding: 8px 16px 2px;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   overflow-x: auto;
   overflow-y: visible;
   scroll-snap-type: x proximity;
@@ -157,15 +157,15 @@
 }
 
 .social-home-stories .figma-home-story {
-  width: 64px;
-  min-width: 64px;
+  width: 66px;
+  min-width: 66px;
   min-height: 80px;
-  flex: 0 0 64px;
+  flex: 0 0 66px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 6px;
+  gap: 5px;
   color: #1c1c1e;
   text-decoration: none;
   scroll-snap-align: start;
@@ -180,17 +180,17 @@
 
 .social-home-stories .figma-home-story-avatar {
   position: relative;
-  width: 58px;
-  height: 58px;
-  min-width: 58px;
-  min-height: 58px;
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  min-height: 60px;
   box-sizing: border-box;
   display: grid;
   place-items: center;
   overflow: visible;
   border: 2px solid #d1d1d6;
   border-radius: 50%;
-  padding: 2px;
+  padding: 3px;
   background: #fff;
   color: #1c1c1e;
   font-size: 17px;
@@ -215,8 +215,8 @@
 }
 
 .social-home-stories .figma-home-story strong {
-  width: 64px;
-  max-width: 64px;
+  width: 66px;
+  max-width: 66px;
   height: 17px;
   margin: 0;
   overflow: hidden;
@@ -248,10 +248,10 @@
 
 .figma-home-story-plus {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 20px;
-  height: 20px;
+  right: -1px;
+  bottom: -1px;
+  width: 19px;
+  height: 19px;
   box-sizing: border-box;
   display: grid;
   place-items: center;
@@ -259,11 +259,11 @@
   border-radius: 50%;
   background: #f56300;
   color: #fff;
-  font-size: 16px;
-  line-height: 14px;
+  font-size: 15px;
+  line-height: 13px;
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .figma-home-story-upload-error {
@@ -273,9 +273,9 @@
   line-height: 16px;
 }
 
-/* Pull the content feed closer to Stories without visually colliding with it. */
+/* Pull the content feed close to Stories while preserving a clear section boundary. */
 .social-home-feed {
-  padding-top: 6px;
+  padding-top: 4px;
   background: #fff;
 }
 
@@ -284,13 +284,13 @@
   height: clamp(360px, 108vw, 440px);
   min-height: 360px;
   max-height: 440px;
-  margin: 0 12px 14px;
+  margin: 0 12px 12px;
   overflow: hidden;
   border: 0;
-  border-radius: 22px;
+  border-radius: 20px;
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 8px 24px rgba(0, 0, 0, 0.08);
+    0 1px 2px rgba(0, 0, 0, 0.035),
+    0 6px 18px rgba(0, 0, 0, 0.07);
 }
 
 .social-home-feature-image {
@@ -406,22 +406,22 @@
   }
 
   .social-home-stories .figma-home-story-strip {
-    gap: 10px;
+    gap: 9px;
   }
 
   .social-home-stories .figma-home-story {
-    width: 62px;
-    min-width: 62px;
-    flex-basis: 62px;
+    width: 63px;
+    min-width: 63px;
+    flex-basis: 63px;
   }
 
   .social-home-stories .figma-home-story strong {
-    width: 62px;
-    max-width: 62px;
+    width: 63px;
+    max-width: 63px;
   }
 
   .social-home-feature {
     margin-inline: 10px;
-    border-radius: 20px;
+    border-radius: 19px;
   }
 }
