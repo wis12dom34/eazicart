@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
@@ -6,14 +5,15 @@ import { useAuth } from "../providers/auth-provider";
 import { useRequest } from "../hooks/use-request";
 import { ordersApi } from "../../lib/api/orders";
 import styles from "./side-navigation.module.css";
+import { Icon } from "./icon";
 const entries = [
-  ["Profile", "/profile", "profile"],
-  ["Order History", "/orders", "orders"],
-  ["Saved Items", "/saved", "saved"],
-  ["Payment Methods", "/payment-methods", "payment"],
-  ["Delivery Addresses", "/address-book", "address"],
+  ["Profile", "/profile", "user"],
+  ["Order History", "/orders", "box"],
+  ["Saved Items", "/saved", "heart"],
+  ["Payment Methods", "/payment-methods", "card"],
+  ["Delivery Addresses", "/address-book", "location"],
   ["My Store", "/seller/store", "store"],
-  ["Business Insights", "/seller/dashboard", "insights"],
+  ["Business Insights", "/seller/dashboard", "chart"],
   ["Settings", "/settings", "settings"],
 ] as const;
 export function SideNavigation({ onClose }: { onClose: () => void }) {
@@ -80,7 +80,7 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
           aria-label="Close menu"
           onClick={onClose}
         >
-          <img src="/figma/drawer-close.svg" alt="" width={22} height={22} />
+          <Icon name="close" size={22} />
         </button>
         <div className={styles.identity}>
           <div className={styles.avatar}>{initials}</div>
@@ -96,22 +96,12 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
           {entries.map(([label, href, icon], index) => {
             const content = (
               <>
-                <img
-                  src={`/figma/drawer-${icon}.svg`}
-                  width={22}
-                  height={22}
-                  alt=""
-                />
+                <Icon name={icon} size={22} />
                 <span>{label}</span>
                 {label === "Order History" && !!orders.data?.data.length ? (
                   <b>{orders.data.data.length}</b>
                 ) : null}
-                <img
-                  src="/figma/drawer-chevron.svg"
-                  width={16}
-                  height={16}
-                  alt=""
-                />
+                <Icon name="chevron" size={16} />
               </>
             );
             return (

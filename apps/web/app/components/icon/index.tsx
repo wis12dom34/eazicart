@@ -49,6 +49,25 @@ const paths: Record<string, React.ReactNode> = {
       <path d="M4 21a8 8 0 0 1 16 0" />
     </>
   ),
+  "user-circle": (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="9" r="3" />
+      <path d="M5 19a7 7 0 0 1 14 0" />
+    </>
+  ),
+  close: <path d="m6 6 12 12M6 18 18 6" />,
+  store: (
+    <>
+      <path d="M3 10 5 3h14l2 7M4 10v11h16V10M9 21v-7h6v7" />
+      <path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M9 10l1-7m5 7-1-7" />
+    </>
+  ),
+  chart: (
+    <>
+      <path d="M3 3v18h18M7 16v-5m5 5V7m5 9V4" />
+    </>
+  ),
   bell: (
     <>
       <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />

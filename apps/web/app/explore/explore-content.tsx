@@ -21,6 +21,7 @@ import { notificationsApi } from "../../lib/api/notifications";
 import { savedApi } from "../../lib/api/saved";
 import { reelsApi } from "../../lib/api/reels";
 import { TrendingSection } from "./trending-section";
+import { Icon } from "../components/icon";
 
 export function ExploreContent() {
   const auth = useAuth();
@@ -91,12 +92,7 @@ export function ExploreContent() {
             aria-label="Open side navigation"
             onClick={() => setMenu(true)}
           >
-            <img
-              src="/figma/explore-profile.svg"
-              width={40}
-              height={40}
-              alt=""
-            />
+            <Icon name="user-circle" size={32} />
           </button>
           <Link
             className="figma-explore-logo"
@@ -110,7 +106,7 @@ export function ExploreContent() {
             href="/notifications"
             aria-label="Notifications"
           >
-            <img src="/figma/explore-bell.svg" width={22} height={22} alt="" />
+            <Icon name="bell" size={24} />
             {notifications.data?.meta.unreadCount ? (
               <b>{notifications.data.meta.unreadCount}</b>
             ) : null}
@@ -121,12 +117,7 @@ export function ExploreContent() {
 
         <div className="figma-explore-sticky">
           <form className="figma-explore-search" action="/search">
-            <img
-              src="/figma/explore-search.svg"
-              width={20}
-              height={20}
-              alt=""
-            />
+            <Icon name="search" size={20} />
             <input
               name="search"
               defaultValue={search}
@@ -262,16 +253,7 @@ export function ExploreContent() {
                           disabled={busy === product.id}
                           onClick={() => void toggle(product.id, selected)}
                         >
-                          <img
-                            src={
-                              selected
-                                ? "/figma/heart-saved.svg"
-                                : "/figma/heart.svg"
-                            }
-                            width={18}
-                            height={18}
-                            alt=""
-                          />
+                          <Icon name="heart" size={20} filled={selected} />
                         </button>
                       </article>
                     );

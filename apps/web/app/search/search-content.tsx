@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -6,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
 import { DiscoveryProductCard } from "../components/discovery-product-card";
 import styles from "../discovery.module.css";
 import { useRequest } from "../hooks/use-request";
@@ -115,7 +115,7 @@ export function SearchContent() {
           aria-label="Back to Explore"
         >
           <span aria-hidden="true">
-            <img src="/figma/back.svg" width={20} height={20} alt="" />
+            <Icon name="back" size={22} />
           </span>
         </Link>
         <h1>Search</h1>
@@ -126,7 +126,7 @@ export function SearchContent() {
           <input type="hidden" name="filter" value={filter} />
         ) : null}
         <span aria-hidden="true">
-          <img src="/figma/explore-search.svg" width={20} height={20} alt="" />
+          <Icon name="search" size={20} />
         </span>
         <input
           key={search}

@@ -342,7 +342,7 @@
   overflow: hidden;
 }
 
-.searchBack img {
+.searchBack svg {
   display: block;
 }
 
@@ -379,7 +379,7 @@
   overflow: hidden;
 }
 
-.searchField img {
+.searchField svg {
   display: block;
 }
 
@@ -651,7 +651,7 @@
   opacity: 0.55;
 }
 
-.searchFavorite img {
+.searchFavorite svg {
   display: block;
 }
 
@@ -946,4 +946,8 @@
 }
 .categoryCard {
   min-height: 78px;
+}
+
+.searchFavorite[aria-pressed="true"] {
+  color: var(--brand-pressed);
 }

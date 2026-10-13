@@ -121,3 +121,50 @@ test("shared loading indicator respects reduced motion and restores sign-in stat
     release();
   }
 });
+
+test("updated header and account icons preserve drawer focus and navigation", async ({
+  page,
+}) => {
+  await anonymousSession(page);
+  await page.goto("/");
+  const menu = page.getByRole("button", {
+    name: "Open side navigation",
+    exact: true,
+  });
+  await expect(menu.locator("svg")).toHaveAttribute("focusable", "false");
+  const bell = page
+    .getByRole("link", { name: "Notifications", exact: true })
+    .locator("svg");
+  const color = await bell.evaluate(
+    (element) => getComputedStyle(element).color,
+  );
+  expect(
+    (luminance("rgb(255, 255, 255)") + 0.05) / (luminance(color) + 0.05),
+  ).toBeGreaterThanOrEqual(3);
+  await menu.click();
+  const drawer = page.getByRole("dialog", { name: "Side navigation" });
+  const links = drawer
+    .getByRole("navigation", { name: "Account navigation" })
+    .getByRole("link");
+  await expect(links).toHaveCount(8);
+  for (const link of await links.all()) {
+    await expect(link.locator("svg")).toHaveCount(2);
+    for (const icon of await link.locator("svg").all()) {
+      await expect(icon).toHaveAttribute("aria-hidden", "true");
+      await expect(icon).toHaveAttribute("focusable", "false");
+    }
+  }
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    drawer.getByRole("link", { name: "Settings", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    drawer.getByRole("button", { name: "Close menu", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeFocused();
+  await menu.click();
+  await drawer.getByRole("link", { name: "Saved Items", exact: true }).click();
+  await expect(page).toHaveURL(/\/saved$/);
+});

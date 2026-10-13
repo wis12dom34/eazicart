@@ -237,6 +237,7 @@
 }
 
 .removeButton {
+  color: var(--brand-pressed);
   position: absolute;
   z-index: 3;
   top: 7px;
@@ -258,7 +259,7 @@
   opacity: 0.55;
 }
 
-.removeButton img {
+.removeButton svg {
   display: block;
 }
 

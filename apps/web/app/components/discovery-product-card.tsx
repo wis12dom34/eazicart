@@ -68,12 +68,7 @@ export function DiscoveryProductCard({
             disabled={saving}
             onClick={onToggleSaved}
           >
-            <img
-              src={saved ? "/figma/heart-saved.svg" : "/figma/heart.svg"}
-              width={18}
-              height={18}
-              alt=""
-            />
+            <Icon name="heart" size={20} filled={saved} />
           </button>
         ) : null}
       </article>

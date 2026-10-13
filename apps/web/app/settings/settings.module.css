@@ -31,7 +31,7 @@
   color: #0a0a0d;
   text-decoration: none;
 }
-.back img {
+.back svg {
   display: block;
 }
 
@@ -158,7 +158,8 @@
   background: #fff;
 }
 
-.settingCard > img {
+.settingCard > svg {
+  color: #8e8e93;
   display: block;
   flex: none;
   margin-right: 16px;

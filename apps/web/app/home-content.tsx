@@ -19,6 +19,7 @@ import { savedApi } from "../lib/api/saved";
 import type { Product } from "../lib/api/types";
 import { homeDesignProducts } from "./home-design";
 import { HomeSocialFeed } from "./home-social-feed";
+import { Icon } from "./components/icon";
 import type { ProductList } from "../lib/public-catalog";
 
 export default function HomePage({
@@ -98,7 +99,7 @@ export default function HomePage({
             aria-label="Open side navigation"
             onClick={() => setDrawer(true)}
           >
-            <img src="/figma/profile.svg" width={36} height={36} alt="" />
+            <Icon name="user-circle" size={32} />
           </button>
           <Link className="figma-home-logo" href="/" aria-label="EaziCart home">
             <img src="/figma/logo.svg" width={27} height={27} alt="" />
@@ -108,7 +109,7 @@ export default function HomePage({
             href="/notifications"
             aria-label="Notifications"
           >
-            <img src="/figma/bell.svg" width={24} height={24} alt="" />
+            <Icon name="bell" size={24} />
             {notifications.data?.meta?.unreadCount ? (
               <b className="figma-home-notification-count">
                 {notifications.data.meta.unreadCount}
@@ -117,7 +118,7 @@ export default function HomePage({
           </Link>
         </div>
         <Link className="figma-home-search" href="/search">
-          <img src="/figma/search.svg" width={18} height={18} alt="" />
+          <Icon name="search" size={20} />
           <span>Search products, stores or brands</span>
         </Link>
         <nav className="figma-home-tabs" aria-label="Product discovery">
@@ -224,15 +225,10 @@ export default function HomePage({
                     onClick={() => void toggleSaved(product)}
                   >
                     <span>
-                      <img
-                        src={
-                          isSaved(product.id)
-                            ? "/figma/heart-saved.svg"
-                            : "/figma/heart.svg"
-                        }
-                        alt=""
-                        width={18}
-                        height={18}
+                      <Icon
+                        name="heart"
+                        size={20}
+                        filled={isSaved(product.id)}
                       />
                     </span>
                   </button>

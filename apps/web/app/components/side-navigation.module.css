@@ -90,7 +90,7 @@
   font-weight: 500;
   line-height: 19px;
 }
-.panel nav img {
+.panel nav svg {
   flex: none;
   display: block;
 }

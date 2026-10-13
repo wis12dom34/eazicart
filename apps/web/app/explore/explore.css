@@ -19,6 +19,7 @@
   position: relative;
 }
 .figma-explore-avatar {
+  justify-content: center;
   width: 44px;
   height: 44px;
   background: none;
@@ -37,6 +38,7 @@
   place-items: center;
 }
 .figma-explore-notifications {
+  color: var(--ink);
   width: 44px;
   height: 44px;
   display: grid;
@@ -461,4 +463,12 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+}
+
+.figma-explore-search > svg {
+  flex: none;
+  color: #8e8e93;
+}
+.figma-explore-favourite[aria-pressed="true"] {
+  color: var(--brand-pressed);
 }

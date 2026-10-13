@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -146,12 +145,7 @@ function ProfileContent() {
                   className={styles.settings}
                   aria-label="Account settings"
                 >
-                  <img
-                    src="/figma/profile-settings.svg"
-                    alt=""
-                    width={24}
-                    height={24}
-                  />
+                  <Icon name="settings" size={24} />
                 </Link>
               </div>
               <Link className={styles.edit} href="/edit-profile">
@@ -316,6 +310,16 @@ function ProfileLoadingShell() {
   );
 }
 
+const profileIcons: Record<string, string> = {
+  orders: "box",
+  saved: "heart",
+  following: "users",
+  notifications: "bell",
+  settings: "settings",
+  address: "location",
+  payment: "card",
+};
+
 function ProfileRow({
   href,
   icon,
@@ -329,12 +333,12 @@ function ProfileRow({
 }) {
   return (
     <Link href={href} className={styles.row}>
-      <img src={`/figma/profile-${icon}.svg`} width={32} height={32} alt="" />
+      <Icon name={profileIcons[icon] ?? icon} size={24} />
       <span>
         <strong>{label}</strong>
         <small>{detail}</small>
       </span>
-      <img src="/figma/profile-chevron.svg" width={24} height={44} alt="" />
+      <Icon name="chevron" size={20} />
     </Link>
   );
 }
