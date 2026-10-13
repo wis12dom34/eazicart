@@ -29,36 +29,6 @@ import { HomeSocialFeed } from "./home-social-feed";
 import { Icon } from "./components/icon";
 import type { ProductList } from "../lib/public-catalog";
 
-function StoryPreview({ story }: { story: SocialMediaItem }) {
-  if (story.contentType?.startsWith("video/")) {
-    return (
-      <video
-        className="figma-home-story-preview"
-        src={story.url}
-        muted
-        autoPlay
-        loop
-        playsInline
-        preload="auto"
-        aria-hidden="true"
-        onCanPlay={(event) => {
-          void event.currentTarget.play().catch(() => undefined);
-        }}
-      />
-    );
-  }
-
-  return (
-    <img
-      className="figma-home-story-preview"
-      src={story.url}
-      alt=""
-      aria-hidden="true"
-      draggable={false}
-    />
-  );
-}
-
 export default function HomePage({
   initialProducts,
 }: {
@@ -242,14 +212,10 @@ export default function HomePage({
                   className={`figma-home-story-avatar ${stories[auth.user.id] ? "has-story" : ""}`}
                 >
                   <span className="figma-home-story-media" aria-hidden="true">
-                    {stories[auth.user.id] ? (
-                      <StoryPreview story={stories[auth.user.id]!} />
-                    ) : (
-                      <ProfileAvatar
-                        userId={auth.user.id}
-                        name={auth.user.name}
-                      />
-                    )}
+                    <ProfileAvatar
+                      userId={auth.user.id}
+                      name={auth.user.name}
+                    />
                   </span>
                   <b className="figma-home-story-plus">+</b>
                 </span>
@@ -281,9 +247,7 @@ export default function HomePage({
                     aria-hidden="true"
                   >
                     <span className="figma-home-story-media">
-                      {story ? (
-                        <StoryPreview story={story} />
-                      ) : userId ? (
+                      {userId ? (
                         <ProfileAvatar
                           userId={userId}
                           name={seller.displayName}
