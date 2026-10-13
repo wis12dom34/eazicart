@@ -12,6 +12,17 @@ export type SocialMediaItem = {
   contentType?: string;
 };
 
+function contentTypeFromName(value: string) {
+  const pathname = value.split(/[?#]/, 1)[0]?.toLowerCase() ?? "";
+  if (/\.mp4$/.test(pathname)) return "video/mp4";
+  if (/\.mov$/.test(pathname)) return "video/quicktime";
+  if (/\.webm$/.test(pathname)) return "video/webm";
+  if (/\.png$/.test(pathname)) return "image/png";
+  if (/\.webp$/.test(pathname)) return "image/webp";
+  if (/\.jpe?g$/.test(pathname)) return "image/jpeg";
+  return undefined;
+}
+
 function safeFileName(file: File) {
   const cleaned = file.name
     .normalize("NFKD")
@@ -70,7 +81,7 @@ export async function uploadSocialMedia(
   return {
     url: blob.url,
     uploadedAt: new Date().toISOString(),
-    contentType: file.type || undefined,
+    contentType: file.type || contentTypeFromName(file.name),
   };
 }
 
@@ -94,5 +105,14 @@ export async function fetchStories(userIds: string[]) {
   const payload = (await response.json()) as {
     data?: Record<string, SocialMediaItem>;
   };
-  return payload.data ?? {};
+  const stories = payload.data ?? {};
+  return Object.fromEntries(
+    Object.entries(stories).map(([userId, story]) => [
+      userId,
+      {
+        ...story,
+        contentType: story.contentType || contentTypeFromName(story.url),
+      },
+    ]),
+  ) as Record<string, SocialMediaItem>;
 }
