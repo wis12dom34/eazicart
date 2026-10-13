@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Icon } from "./icon";
 export function LoadingState({ label = "Loading…" }: { label?: string }) {
   return (
-    <section className="state-card" role="status">
+    <section className="state-card loading-state" role="status">
+      <span className="loading-indicator" aria-hidden="true" />
       <p>{label}</p>
     </section>
   );

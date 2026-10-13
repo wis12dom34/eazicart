@@ -10,6 +10,7 @@ import { useRequest } from "../hooks/use-request";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./reels.module.css";
+import { Icon } from "../components/icon";
 
 const formatNaira = (value: string) =>
   new Intl.NumberFormat("en-NG", {
@@ -722,19 +723,7 @@ function ReelSlide({
           onClick={() => void toggleLike()}
         >
           <i>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill={liked ? "currentColor" : "none"}
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
-            </svg>
+            <Icon name="heart" size={30} filled={liked} />
           </i>
           <span>{formatCount(reel._count.likes)}</span>
         </button>
@@ -745,7 +734,7 @@ function ReelSlide({
           onClick={() => setCommentsOpen(true)}
         >
           <i>
-            <img src="/figma/reel-comment.svg" width={20} height={20} alt="" />
+            <Icon name="chat" size={30} />
           </i>
           <span>{formatCount(reel._count.comments)}</span>
         </button>
@@ -763,7 +752,7 @@ function ReelSlide({
           onClick={() => void toggleSave()}
         >
           <i>
-            <img src="/figma/reel-save.svg" width={20} height={20} alt="" />
+            <Icon name="bookmark" size={30} filled={saved} />
           </i>
           <small>{formatCount(reel._count.saves)}</small>
         </button>
@@ -773,13 +762,13 @@ function ReelSlide({
           aria-label="Share reel"
         >
           <i>
-            <img src="/figma/reel-share.svg" width={20} height={20} alt="" />
+            <Icon name="share" size={30} />
           </i>
           <small>Share</small>
         </button>
         <Link className={styles.action} href="/cart" aria-label="Open cart">
           <i>
-            <img src="/figma/reel-cart.svg" width={22} height={22} alt="" />
+            <Icon name="cart" size={30} />
           </i>
           <small>Cart</small>
         </Link>
@@ -1011,7 +1000,7 @@ export default function ReelsPage() {
 
       <header className={styles.header}>
         <Link href="/" className={styles.back} aria-label="Back to home">
-          <img src="/figma/reel-back.svg" width={20} height={20} alt="" />
+          <Icon name="back" size={24} />
         </Link>
         <h1>Reels</h1>
         <Link
@@ -1019,7 +1008,7 @@ export default function ReelsPage() {
           className={styles.search}
           aria-label="Search products"
         >
-          <img src="/figma/reel-search.svg" width={20} height={20} alt="" />
+          <Icon name="search" size={24} />
         </Link>
       </header>
 

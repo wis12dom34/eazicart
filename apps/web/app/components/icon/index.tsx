@@ -1,4 +1,9 @@
-type IconProps = { name: string; size?: number; className?: string };
+type IconProps = {
+  name: string;
+  size?: number;
+  className?: string;
+  filled?: boolean;
+};
 const paths: Record<string, React.ReactNode> = {
   home: (
     <>
@@ -14,9 +19,23 @@ const paths: Record<string, React.ReactNode> = {
   ),
   reels: (
     <>
-      <rect x="3" y="4" width="18" height="16" rx="3" />
-      <path d="m10 9 6 3-6 3Z" />
+      <circle cx="11" cy="11" r="8" />
+      <circle cx="8" cy="8" r="1.5" />
+      <circle cx="14" cy="8" r="1.5" />
+      <circle cx="8" cy="14" r="1.5" />
+      <circle cx="14" cy="14" r="1.5" />
+      <path d="M11 19h10" />
     </>
+  ),
+  cart: (
+    <>
+      <path d="M3 4h2l2.5 12h11L21 7H6M8 16l-1 3h12" />
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="18" cy="21" r="1" />
+    </>
+  ),
+  chat: (
+    <path d="M21 11.5a9 9 0 0 1-13.5 7.8L3 21l1.7-4.5A9 9 0 1 1 21 11.5Z" />
   ),
   bag: (
     <>
@@ -41,8 +60,8 @@ const paths: Record<string, React.ReactNode> = {
   ),
   share: (
     <>
-      <path d="M7 17 17 7" />
-      <path d="M8 7h9v9" />
+      <path d="M12 15V3m-4 4 4-4 4 4" />
+      <path d="M8 11H5v10h14V11h-3" />
     </>
   ),
   settings: (
@@ -94,19 +113,25 @@ const paths: Record<string, React.ReactNode> = {
     <path d="M12 2c1 6 4 9 10 10-6 1-9 4-10 10-1-6-4-9-10-10 6-1 9-4 10-10Z" />
   ),
 };
-export function Icon({ name, size = 24, className }: IconProps) {
+export function Icon({
+  name,
+  size = 24,
+  className,
+  filled = false,
+}: IconProps) {
   return (
     <svg
       className={className}
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="none"
+      fill={filled ? "currentColor" : "none"}
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
+      focusable="false"
     >
       {paths[name] ?? paths.box}
     </svg>

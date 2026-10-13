@@ -308,8 +308,8 @@ button.loadingMore:active {
 .actionActive i {
   background: transparent;
 }
-.actionActive img {
-  filter: drop-shadow(0 0 2px white);
+.actionActive svg {
+  fill: currentColor;
 }
 .actionActive span,
 .actionActive small {
