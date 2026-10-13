@@ -361,7 +361,9 @@ export default function SellerProductsPage() {
               const outOfStock =
                 product.active !== false && product.stock === 0;
               const draft = product.active === false;
-              const image = product.images.find((item) => hostedImage(item.url));
+              const image = product.images.find((item) =>
+                hostedImage(item.url),
+              );
               const status = draft
                 ? "Draft"
                 : outOfStock
