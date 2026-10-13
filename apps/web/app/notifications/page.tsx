@@ -21,8 +21,8 @@ type Filter = "ALL" | "ORDER" | "SOCIAL" | "SYSTEM";
 const filters: Array<{ key: Filter; label: string }> = [
   { key: "ALL", label: "All" },
   { key: "ORDER", label: "Orders" },
-  { key: "SOCIAL", label: "Social" },
-  { key: "SYSTEM", label: "Updates" },
+  { key: "SOCIAL", label: "Messages" },
+  { key: "SYSTEM", label: "Promos" },
 ];
 
 export default function Notifications() {
@@ -86,7 +86,7 @@ export default function Notifications() {
         </Link>
         <h1>Notifications</h1>
         <span className={styles.headerBell} aria-hidden="true">
-          <img src="/figma/explore-bell.svg" width={22} height={22} alt="" />
+          <Icon name="bell" size={22} />
           {unreadCount > 0 ? (
             <span className={styles.unreadBadge}>
               {badgeCount(unreadCount)}
@@ -214,8 +214,8 @@ function NotificationRow({
 
 function emptyTitle(filter: Filter) {
   if (filter === "ORDER") return "No order notifications";
-  if (filter === "SOCIAL") return "No social notifications";
-  if (filter === "SYSTEM") return "No update notifications";
+  if (filter === "SOCIAL") return "No message notifications";
+  if (filter === "SYSTEM") return "No promo notifications";
   return "You have no notifications";
 }
 
