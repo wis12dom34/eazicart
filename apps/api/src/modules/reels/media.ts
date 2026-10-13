@@ -47,6 +47,14 @@ export function registerReelMedia(
             "MEDIA_UNAVAILABLE",
             "Video uploads are temporarily unavailable",
           );
+        const mime =
+          request.headers["content-type"]?.split(";")[0]?.trim() ?? "";
+        if (!types[mime])
+          throw new AppError(
+            415,
+            "VIDEO_TYPE",
+            "Choose an MP4, MOV or WebM video",
+          );
         const seller = await requireDatabase(client).sellerProfile.findUnique({
           where: { userId: userId(request) },
           select: { id: true },
