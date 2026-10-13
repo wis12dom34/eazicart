@@ -466,7 +466,7 @@
   position: absolute;
   top: calc(238px + var(--search-safe-top-shift));
   right: 0;
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  bottom: calc(var(--customer-nav-height) + env(safe-area-inset-bottom));
   left: 0;
   overflow-x: hidden;
   overflow-y: auto;
@@ -709,7 +709,7 @@
 
 .categoryViewport {
   position: absolute;
-  inset: 0 0 calc(88px + env(safe-area-inset-bottom)) 0;
+  inset: 0 0 calc(var(--customer-nav-height) + env(safe-area-inset-bottom)) 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;

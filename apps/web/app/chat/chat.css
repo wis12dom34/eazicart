@@ -290,7 +290,9 @@
   top: calc(108px + var(--chat-safe-top-shift));
   left: 16px;
   right: 16px;
-  bottom: calc(204px + max(0px, env(safe-area-inset-bottom) - 24px));
+  bottom: calc(
+    var(--customer-nav-height) + 116px + env(safe-area-inset-bottom)
+  );
   overflow: auto;
   padding: 16px 14px 24px;
   border-radius: 28px;
@@ -368,7 +370,7 @@
   z-index: 5;
   left: 16px;
   right: 16px;
-  bottom: calc(104px + max(0px, env(safe-area-inset-bottom) - 24px));
+  bottom: calc(var(--customer-nav-height) + 16px + env(safe-area-inset-bottom));
   height: 56px;
   padding: 5px 9px 5px 19px;
   display: flex;
@@ -418,7 +420,7 @@
 }
 
 .eazicart-chat-loading {
-  min-height: calc(100dvh - 88px);
+  min-height: calc(100dvh - var(--customer-nav-height));
   padding: calc(108px + env(safe-area-inset-top)) 24px 120px;
   display: grid;
   align-content: center;

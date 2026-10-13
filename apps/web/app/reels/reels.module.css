@@ -11,7 +11,7 @@
 }
 .viewport {
   position: absolute;
-  inset: 0 0 calc(88px + env(safe-area-inset-bottom));
+  inset: 0 0 calc(var(--customer-nav-height) + env(safe-area-inset-bottom));
   overflow-y: auto;
   overflow-x: hidden;
   scroll-snap-type: y mandatory;
@@ -291,7 +291,7 @@ button.loadingMore {
   position: fixed;
   z-index: 31;
   left: 50%;
-  bottom: calc(100px + env(safe-area-inset-bottom));
+  bottom: calc(var(--customer-nav-height) + 12px + env(safe-area-inset-bottom));
   width: min(calc(100% - 32px), 408px);
   min-height: 44px;
   border: 0;

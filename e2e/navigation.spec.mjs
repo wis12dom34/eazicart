@@ -1,7 +1,7 @@
 import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 
-test("navigation matches Figma sizing and leaves products reachable", async ({
+test("navigation stays compact and leaves products reachable", async ({
   page,
 }, testInfo) => {
   await page.goto("/");
@@ -11,7 +11,7 @@ test("navigation matches Figma sizing and leaves products reachable", async ({
       .getByRole("link", { name: "View Woven everyday tote" }),
   ).toBeVisible();
   const nav = await expectCustomerNavigation(page, "Home");
-  await expect(nav).toHaveCSS("height", "88px");
+  await expect(nav).toHaveCSS("height", "64px");
   await expect(nav).toHaveCSS("border-radius", "0px");
   await expect(nav).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(nav.getByRole("link")).toHaveCount(5);
@@ -20,6 +20,11 @@ test("navigation matches Figma sizing and leaves products reachable", async ({
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
   }
+  const lastItem = await nav.getByRole("link").last().boundingBox();
+  const compactNav = await nav.boundingBox();
+  expect(
+    compactNav.y + compactNav.height - lastItem.y - lastItem.height,
+  ).toBeLessThanOrEqual(6);
   await page.screenshot({ path: testInfo.outputPath("home.png") });
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const lastCard = await page

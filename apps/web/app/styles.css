@@ -1,4 +1,5 @@
 :root {
+  --customer-nav-height: 64px;
   color-scheme: light;
   --ink: #1c1c1e;
   --muted: #636366;
