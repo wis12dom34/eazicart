@@ -449,14 +449,16 @@ let server;
     await page.evaluate(() =>
       Promise.all([
         document.fonts.ready,
-        ...Array.from(document.images).map((img) =>
-          img.complete
+        ...Array.from(document.images).map((img) => {
+          // Full-page QA captures must request offscreen lazy images too.
+          img.loading = "eager";
+          return img.complete
             ? Promise.resolve()
             : new Promise((resolve) => {
                 img.onload = resolve;
                 img.onerror = resolve;
-              }),
-        ),
+              });
+        }),
       ]),
     );
     await page.screenshot({ path: evidence + "/product-app.png" });
@@ -503,14 +505,15 @@ let server;
     await page.evaluate(() =>
       Promise.all([
         document.fonts.ready,
-        ...Array.from(document.images).map((img) =>
-          img.complete
+        ...Array.from(document.images).map((img) => {
+          img.loading = "eager";
+          return img.complete
             ? Promise.resolve()
             : new Promise((resolve) => {
                 img.onload = resolve;
                 img.onerror = resolve;
-              }),
-        ),
+              });
+        }),
       ]),
     );
     await page.screenshot({ path: evidence + "/cart-app.png" });
@@ -658,14 +661,15 @@ let server;
     await page.evaluate(() =>
       Promise.all([
         document.fonts.ready,
-        ...Array.from(document.images).map((img) =>
-          img.complete
+        ...Array.from(document.images).map((img) => {
+          img.loading = "eager";
+          return img.complete
             ? Promise.resolve()
             : new Promise((resolve) => {
                 img.onload = resolve;
                 img.onerror = resolve;
-              }),
-        ),
+              });
+        }),
       ]),
     );
     await page.screenshot({ path: evidence + "/home-app.png" });
@@ -720,14 +724,15 @@ let server;
       await page.evaluate(() =>
         Promise.all([
           document.fonts.ready,
-          ...Array.from(document.images).map((img) =>
-            img.complete
+          ...Array.from(document.images).map((img) => {
+            img.loading = "eager";
+            return img.complete
               ? Promise.resolve()
               : new Promise((resolve) => {
                   img.onload = resolve;
                   img.onerror = resolve;
-                }),
-          ),
+                });
+          }),
         ]),
       );
       if (name === "explore")
