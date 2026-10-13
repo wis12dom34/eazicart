@@ -158,7 +158,10 @@ export default function SellerPage({
               </div>
             </div>
             <div className={styles.actions}>
-              <Link className={styles.messageButton} href="/chat">
+              <Link
+                className={styles.messageButton}
+                href={`/chat?seller=${encodeURIComponent(currentSeller.id)}`}
+              >
                 Message
               </Link>
               <button
