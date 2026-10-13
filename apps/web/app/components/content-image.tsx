@@ -14,6 +14,13 @@ export function ContentImage(props: ImageProps & { src: string }) {
   } catch {
     // Relative assets are handled by Next; data URLs bypass optimization.
   }
+  // SVGs and unsupported sources need no resizing. Preserve their original URLs.
+  if (!optimized || /\.svg(?:$|[?#])/i.test(props.src)) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img {...props} loading={props.loading ?? "lazy"} decoding="async" />
+    );
+  }
   return (
     <Image
       {...props}

@@ -29,7 +29,8 @@ for (const width of [320, 393, 440]) {
     );
     await page.setViewportSize({ width, height: 932 });
     await page.goto("/");
-    const hero = page.locator(".social-home-feature-image");
+    const hero = page.locator(".social-home-feature-image:visible");
+    await expect(hero).toHaveCount(1);
     await expect(hero).toHaveAttribute("src", /\/_next\/image\?/);
     const source = new URL(
       await hero.getAttribute("src"),
