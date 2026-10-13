@@ -275,3 +275,227 @@
     gap: 12px;
   }
 }
+
+/* Home screenshot polish — tighter Apple-style hierarchy and a balanced feature card. */
+.social-home .figma-home-search {
+  height: 46px;
+  margin: 0 16px 8px;
+  border-radius: 14px;
+  background: #f2f2f7;
+  color: #636366;
+  font-size: 16px;
+}
+
+.social-home .figma-home-tabs {
+  height: 40px;
+}
+
+.social-home .figma-home-tabs > * {
+  height: 39px;
+  padding-top: 8px;
+  padding-bottom: 7px;
+  color: #636366;
+  font-size: 15px;
+}
+
+.social-home .figma-home-tabs .active::after {
+  height: 2px;
+}
+
+.social-home-stories {
+  padding: 16px 0 14px;
+}
+
+.social-home-stories .figma-home-section-header {
+  height: 28px;
+  min-height: 28px;
+}
+
+.social-home-stories .figma-home-section-header h2 {
+  font-size: 20px;
+  line-height: 24px;
+  letter-spacing: -0.3px;
+}
+
+.social-home-stories .figma-home-section-header > a {
+  font-size: 14px;
+}
+
+.social-home-stories .figma-home-story-strip {
+  padding: 10px 16px 0;
+  gap: 12px;
+}
+
+.social-home-stories .figma-home-story {
+  width: 64px;
+  min-width: 64px;
+  min-height: 82px;
+  flex-basis: 64px;
+  gap: 6px;
+}
+
+.social-home-stories .figma-home-story-avatar {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  min-height: 58px;
+  border-width: 2px;
+  font-size: 17px;
+}
+
+.social-home-stories .figma-home-story-avatar > img {
+  border-width: 1.5px;
+}
+
+.social-home-stories .figma-home-story strong {
+  width: 64px;
+  max-width: 64px;
+  height: 17px;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.figma-home-story-plus {
+  right: -2px;
+  bottom: -2px;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+  line-height: 14px;
+}
+
+.social-home-feed {
+  padding-top: 12px;
+}
+
+.social-home-feature {
+  width: auto;
+  height: clamp(360px, 108vw, 440px);
+  min-height: 360px;
+  max-height: 440px;
+  margin: 0 12px 18px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 22px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.social-home-feature-image {
+  object-position: center;
+}
+
+.social-home-feature-shade {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.05) 34%,
+    rgba(0, 0, 0, 0.12) 60%,
+    rgba(0, 0, 0, 0.82) 100%
+  );
+}
+
+.social-home-feature-top {
+  top: 12px;
+  left: 12px;
+  right: 12px;
+}
+
+.social-home-feature-seller {
+  max-width: calc(100% - 52px);
+  padding: 5px 9px 5px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+.social-home-feature-seller > span {
+  width: 32px;
+  height: 32px;
+  border-color: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+}
+
+.social-home-feature-seller strong {
+  font-size: 13px;
+  line-height: 17px;
+}
+
+.social-home-feature-seller small {
+  font-size: 10.5px;
+}
+
+.social-home-feature-save {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+.social-home-feature-save svg {
+  width: 21px;
+  height: 21px;
+}
+
+.social-home-feature-copy {
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+}
+
+.social-home-feature-copy > p {
+  max-width: 280px;
+  margin: 0 52px 10px 0;
+  font-size: 12.5px;
+  line-height: 17px;
+  -webkit-line-clamp: 2;
+}
+
+.social-home-product-pill {
+  min-height: 60px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+.social-home-pill-image {
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
+}
+
+.social-home-watch {
+  right: 14px;
+  bottom: 84px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.social-home-section {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+@media (max-width: 360px) {
+  .social-home-feature {
+    margin-inline: 10px;
+    border-radius: 20px;
+  }
+
+  .social-home-stories .figma-home-story {
+    width: 62px;
+    min-width: 62px;
+    flex-basis: 62px;
+  }
+
+  .social-home-stories .figma-home-story strong {
+    width: 62px;
+    max-width: 62px;
+  }
+}
