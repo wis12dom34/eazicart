@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { Icon } from "../components/icon";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { SellerBottomNavigation } from "../components/seller-bottom-navigation";
 import { SideNavigation } from "../components/side-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
@@ -129,7 +130,7 @@ function ProfileContent() {
                   onClick={() => setMenu(true)}
                   aria-label="Open side navigation"
                 >
-                  {auth.user.name[0]?.toUpperCase() || "W"}
+                  <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
                 </button>
                 <div className={styles.identityCopy}>
                   <h2>{auth.user.name}</h2>
