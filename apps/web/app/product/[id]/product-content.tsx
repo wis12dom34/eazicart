@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "../../components/header";
 import { Icon } from "../../components/icon";
+import { ProfileAvatar } from "../../components/profile-avatar";
 import { money } from "../../data";
 import { productsApi } from "../../../lib/api/products";
 import { cartApi } from "../../../lib/api/cart";
@@ -251,7 +252,10 @@ export default function ProductPage({
           aria-label={`View ${product.seller.displayName} seller profile`}
         >
           <span aria-hidden="true">
-            {product.seller.displayName.slice(0, 2).toUpperCase()}
+            <ProfileAvatar
+              userId={product.seller.userId}
+              name={product.seller.displayName}
+            />
           </span>
           <div>
             <strong>{product.seller.displayName}</strong>
