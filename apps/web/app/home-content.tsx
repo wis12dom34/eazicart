@@ -41,9 +41,14 @@ function StoryPreview({ story }: { story: SocialMediaItem }) {
         className="figma-home-story-preview"
         src={story.url}
         muted
+        autoPlay
+        loop
         playsInline
-        preload="metadata"
+        preload="auto"
         aria-hidden="true"
+        onCanPlay={(event) => {
+          void event.currentTarget.play().catch(() => undefined);
+        }}
       />
     );
   }
@@ -54,6 +59,7 @@ function StoryPreview({ story }: { story: SocialMediaItem }) {
       src={story.url}
       alt=""
       aria-hidden="true"
+      draggable={false}
     />
   );
 }
@@ -240,11 +246,13 @@ export default function HomePage({
                 <span
                   className={`figma-home-story-avatar ${stories[auth.user.id] ? "has-story" : ""}`}
                 >
-                  {stories[auth.user.id] ? (
-                    <StoryPreview story={stories[auth.user.id]!} />
-                  ) : (
-                    <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
-                  )}
+                  <span className="figma-home-story-media" aria-hidden="true">
+                    {stories[auth.user.id] ? (
+                      <StoryPreview story={stories[auth.user.id]!} />
+                    ) : (
+                      <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+                    )}
+                  </span>
                   <b className="figma-home-story-plus">+</b>
                 </span>
                 <strong>{storyBusy ? "Uploading…" : "Your story"}</strong>
@@ -270,13 +278,15 @@ export default function HomePage({
                     className={`figma-home-story-avatar ${story ? "has-story" : ""}`}
                     aria-hidden="true"
                   >
-                    {story ? (
-                      <StoryPreview story={story} />
-                    ) : userId ? (
-                      <ProfileAvatar userId={userId} name={seller.displayName} />
-                    ) : (
-                      seller.displayName.slice(0, 2).toUpperCase()
-                    )}
+                    <span className="figma-home-story-media">
+                      {story ? (
+                        <StoryPreview story={story} />
+                      ) : userId ? (
+                        <ProfileAvatar userId={userId} name={seller.displayName} />
+                      ) : (
+                        seller.displayName.slice(0, 2).toUpperCase()
+                      )}
+                    </span>
                   </span>
                   <strong>{seller.displayName}</strong>
                 </Link>
