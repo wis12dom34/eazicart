@@ -660,3 +660,176 @@ test("Reel share keeps external-source Reels inside EaziCart", async ({
     )
     .toBe(`${origin}/reels?reel=${reel.id}`);
 });
+
+const layoutReel = {
+  ...reel,
+  seller: {
+    id: "layout-seller-profile",
+    userId: "layout-seller-user",
+    displayName: "Wick Store",
+  },
+  caption:
+    "Everyday essentials, ready to shop. A longer caption stays clear of the action rail.",
+  product: {
+    id: "layout-product",
+    name: "Everyday essentials",
+    price: "12500",
+    images: [],
+  },
+};
+
+async function mockLayoutReel(page, authenticated = false) {
+  await mockSharedReel(page);
+  await page.route(/\/reels\/feed(?:\?|$)/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [layoutReel],
+        pagination: { nextCursor: null, hasMore: false },
+      }),
+    }),
+  );
+  await page.route(/\/users\/me(?:\?|$)/, (route) =>
+    route.fulfill({
+      status: authenticated ? 200 : 401,
+      contentType: "application/json",
+      body: JSON.stringify(
+        authenticated
+          ? { id: "layout-viewer", name: "Viewer", email: "viewer@example.com" }
+          : { error: { code: "UNAUTHORIZED" } },
+      ),
+    }),
+  );
+  await page.route(/\/auth\/refresh(?:\?|$)/, (route) =>
+    route.fulfill({ status: 401, contentType: "application/json", body: "{}" }),
+  );
+  await page.route(/\/reels\/reel-share-test\/interactions(?:\?|$)/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ data: { liked: false, saved: false } }),
+    }),
+  );
+}
+
+test("Reel creator and actions align above navigation at mobile widths", async ({
+  page,
+}, testInfo) => {
+  await mockLayoutReel(page);
+  await page.goto(`/reels?reel=${reel.id}`);
+  const article = page.getByRole("article", {
+    name: layoutReel.caption,
+    exact: true,
+  });
+  const rail = article.locator('[aria-label="Reel actions"]');
+  const avatar = rail.getByRole("link", {
+    name: "View Wick Store seller profile",
+  });
+  await expect(avatar).toHaveAttribute("href", "/seller/layout-seller-profile");
+  const follow = rail.getByRole("button", {
+    name: "Follow Wick Store",
+    exact: true,
+  });
+  await expect(follow).toBeEnabled();
+  const labels = [
+    "Like reel",
+    "Open reel comments",
+    "Save reel",
+    "Share reel",
+    "Open cart",
+  ];
+  await expect(rail.locator(":scope > button, :scope > a")).toHaveCount(5);
+
+  for (const width of [320, 375, 393, 440]) {
+    await page.setViewportSize({ width, height: 852 });
+    const avatarBox = await avatar.boundingBox();
+    const railBox = await rail.boundingBox();
+    const center = avatarBox.x + avatarBox.width / 2;
+    expect(avatarBox.width).toBe(48);
+    expect(width - railBox.x - railBox.width).toBeCloseTo(16, 0);
+    let previousBottom = avatarBox.y + avatarBox.height;
+    for (const [index, label] of labels.entries()) {
+      const action = rail.locator(":scope > button, :scope > a").nth(index);
+      await expect(action).toHaveAttribute("aria-label", label);
+      const box = await action.boundingBox();
+      const icon = await action.locator("i").boundingBox();
+      const count = await action.locator("span, small").boundingBox();
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.x + box.width / 2).toBeCloseTo(center, 1);
+      expect(icon.x + icon.width / 2).toBeCloseTo(center, 1);
+      expect(count.x + count.width / 2).toBeCloseTo(center, 1);
+      expect(count.y).toBeGreaterThanOrEqual(icon.y + icon.height);
+      expect(box.y).toBeGreaterThan(previousBottom);
+      previousBottom = box.y + box.height;
+    }
+    const badge = await follow.boundingBox();
+    expect(badge.width).toBeGreaterThanOrEqual(44);
+    expect(badge.height).toBeGreaterThanOrEqual(44);
+    expect(badge.x + badge.width / 2).toBeCloseTo(center, 1);
+    const nav = await page
+      .getByRole("navigation", { name: "Customer navigation" })
+      .boundingBox();
+    expect(previousBottom).toBeLessThan(nav.y);
+    const details = await article
+      .getByRole("link", { name: "Wick Store", exact: true })
+      .locator("..")
+      .boundingBox();
+    expect(details.x + details.width).toBeLessThan(railBox.x);
+    expect(details.y + details.height).toBeLessThan(nav.y);
+    await expect(
+      page.getByRole("link", { name: "Reels", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    if (width === 393) {
+      await testInfo.attach("reels-393x852", {
+        body: await page.screenshot(),
+        contentType: "image/png",
+      });
+    }
+  }
+  await follow.click();
+  await expect(page).toHaveURL(
+    new RegExp(`/login\\?next=${encodeURIComponent(`/reels?reel=${reel.id}`)}`),
+  );
+});
+
+test("Reel follow badge reuses seller follow and restores followed state", async ({
+  page,
+}) => {
+  await mockLayoutReel(page, true);
+  let followed = false;
+  const methods = [];
+  await page.route(/\/following(?:\?|$)/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: followed ? [{ sellerId: layoutReel.seller.userId }] : [],
+      }),
+    }),
+  );
+  await page.route(/\/sellers\/layout-seller-user\/follow(?:\?|$)/, (route) => {
+    methods.push(route.request().method());
+    followed = true;
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: "{}",
+    });
+  });
+  await page.goto(`/reels?reel=${reel.id}`);
+  const follow = page.getByRole("button", {
+    name: "Follow Wick Store",
+    exact: true,
+  });
+  await expect(follow).toBeEnabled();
+  await follow.click();
+  await expect(follow).toHaveCount(0);
+  expect(methods).toEqual(["POST"]);
+  await page.reload();
+  await expect(
+    page.getByRole("link", { name: "View Wick Store seller profile" }),
+  ).toBeVisible();
+  await expect(follow).toHaveCount(0);
+});

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { reelsApi, type Reel, type ReelComment } from "../../lib/api/reels";
+import { followsApi } from "../../lib/api/follows";
+import { useRequest } from "../hooks/use-request";
 import { BottomNavigation } from "../components/bottom-navigation";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./reels.module.css";
@@ -333,11 +335,15 @@ function ReelSlide({
   onCountChange,
   authenticated,
   authLoading,
+  following,
+  onFollow,
 }: {
   reel: Reel;
   active: boolean;
   authenticated: boolean;
   authLoading: boolean;
+  following: boolean | null;
+  onFollow: (sellerUserId: string) => Promise<void>;
   onCountChange: (
     reelId: string,
     key: keyof Reel["_count"],
@@ -362,6 +368,7 @@ function ReelSlide({
   >(null);
   const [interactionStateRetryKey, setInteractionStateRetryKey] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
   const closeComments = useCallback(() => setCommentsOpen(false), []);
   const product = reel.product;
   const interactive = !isLegacyReel(reel);
@@ -458,6 +465,25 @@ function ReelSlide({
   const requireAuth = () => {
     const next = `/reels?reel=${encodeURIComponent(reel.id)}`;
     router.push(`/login?next=${encodeURIComponent(next)}`);
+  };
+
+  const followSeller = async () => {
+    if (!reel.seller || followBusy || authLoading) return;
+    if (!authenticated) {
+      requireAuth();
+      return;
+    }
+    setFollowBusy(true);
+    setInteractionStatus(null);
+    try {
+      await onFollow(reel.seller.userId);
+    } catch (error) {
+      setInteractionStatus(
+        error instanceof Error ? error.message : "Unable to follow seller",
+      );
+    } finally {
+      setFollowBusy(false);
+    }
   };
 
   const shareReel = async () => {
@@ -622,19 +648,6 @@ function ReelSlide({
       <div className={styles.details}>
         {reel.seller ? (
           <Link
-            className={styles.avatar}
-            href={`/seller/${reel.seller.id}`}
-            aria-label={`View ${sellerName} seller profile`}
-          >
-            {sellerName.slice(0, 1).toUpperCase()}
-          </Link>
-        ) : (
-          <span className={styles.avatar} aria-hidden="true">
-            {sellerName.slice(0, 1).toUpperCase()}
-          </span>
-        )}
-        {reel.seller ? (
-          <Link
             className={styles.sellerName}
             href={`/seller/${reel.seller.id}`}
           >
@@ -643,18 +656,58 @@ function ReelSlide({
         ) : (
           <strong className={styles.sellerName}>{sellerName}</strong>
         )}
+        {reel.caption ? <p className={styles.caption}>{reel.caption}</p> : null}
+        {product ? (
+          <>
+            <strong className={styles.productName}>
+              {product.name} · {formatNaira(product.price)}
+            </strong>
+            <Link
+              className={styles.viewProduct}
+              href={`/product/${product.id}`}
+            >
+              View Product
+            </Link>
+          </>
+        ) : reel.externalUrl ? (
+          <a
+            className={styles.viewProduct}
+            href={reel.externalUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Original source · View Reel
+          </a>
+        ) : null}
       </div>
 
-      {reel.caption ? <p className={styles.caption}>{reel.caption}</p> : null}
-      {product ? (
-        <strong className={styles.productName}>{product.name}</strong>
-      ) : reel.source !== "EAZICART" ? (
-        <strong className={styles.productName}>
-          From {reel.source.toLowerCase()}
-        </strong>
-      ) : null}
-
-      <div className={styles.actions}>
+      <div className={styles.actions} aria-label="Reel actions">
+        <div className={styles.creatorAction}>
+          {reel.seller ? (
+            <Link
+              className={styles.avatar}
+              href={`/seller/${reel.seller.id}`}
+              aria-label={`View ${sellerName} seller profile`}
+            >
+              {sellerName.slice(0, 1).toUpperCase()}
+            </Link>
+          ) : (
+            <span className={styles.avatar} aria-hidden="true">
+              {sellerName.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          {reel.seller && following === false ? (
+            <button
+              type="button"
+              className={styles.followBadge}
+              aria-label={`Follow ${sellerName}`}
+              disabled={followBusy || authLoading}
+              onClick={() => void followSeller()}
+            >
+              <span aria-hidden="true">+</span>
+            </button>
+          ) : null}
+        </div>
         <button
           className={`${styles.action} ${liked ? styles.likeActive : ""}`}
           disabled={
@@ -747,23 +800,6 @@ function ReelSlide({
         </span>
       ) : null}
 
-      {product ? (
-        <Link className={styles.viewProduct} href={`/product/${product.id}`}>
-          <strong>{formatNaira(product.price)}</strong>
-          <span>View Product</span>
-        </Link>
-      ) : reel.externalUrl ? (
-        <a
-          className={styles.viewProduct}
-          href={reel.externalUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <strong>Original source</strong>
-          <span>View Reel</span>
-        </a>
-      ) : null}
-
       <CommentsSheet
         reel={reel}
         open={commentsOpen}
@@ -781,6 +817,16 @@ function ReelSlide({
 
 export default function ReelsPage() {
   const auth = useAuth();
+  const follows = useRequest(
+    () =>
+      auth.isAuthenticated ? followsApi.list() : Promise.resolve(undefined),
+    [auth.isAuthenticated],
+  );
+  const followSeller = async (sellerUserId: string) => {
+    await followsApi.follow(sellerUserId);
+    // Share the existing follow list across slides from the same creator.
+    await follows.reload();
+  };
   const feedRef = useRef<HTMLDivElement | null>(null);
   const loadingMoreRef = useRef(false);
   const [reels, setReels] = useState<Reel[]>([]);
@@ -935,6 +981,18 @@ export default function ReelsPage() {
               onCountChange={onCountChange}
               authenticated={auth.isAuthenticated}
               authLoading={auth.loading}
+              following={
+                reel.seller?.userId === auth.user?.id
+                  ? true
+                  : !auth.isAuthenticated
+                    ? false
+                    : follows.data
+                      ? follows.data.data.some(
+                          (follow) => follow.sellerId === reel.seller?.userId,
+                        )
+                      : null
+              }
+              onFollow={followSeller}
             />
           ))
         )}
@@ -951,7 +1009,6 @@ export default function ReelsPage() {
         ) : null}
       </div>
 
-      <div className={styles.topShade} />
       <header className={styles.header}>
         <Link href="/" className={styles.back} aria-label="Back to home">
           <img src="/figma/reel-back.svg" width={20} height={20} alt="" />
