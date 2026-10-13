@@ -5,6 +5,12 @@ const PROFILE_MAX_BYTES = 8 * 1024 * 1024;
 const STORY_MAX_BYTES = 50 * 1024 * 1024;
 const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const videoTypes = new Set(["video/mp4", "video/quicktime", "video/webm"]);
+const profilePhotoCache = new Map<
+  string,
+  Promise<SocialMediaItem | null>
+>();
+
+export const PROFILE_PHOTO_EVENT = "eazicart:profile-photo-updated";
 
 export type SocialMediaItem = {
   url: string;
@@ -81,21 +87,48 @@ export async function uploadSocialMedia(
       onUploadProgress: ({ percentage }) => onProgress?.(percentage),
     },
   );
-  return {
+  const item = {
     url: blob.url,
     uploadedAt: new Date().toISOString(),
     contentType: file.type || contentTypeFromName(file.name),
   };
+
+  if (kind === "profile") {
+    profilePhotoCache.set(userId, Promise.resolve(item));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent(PROFILE_PHOTO_EVENT, {
+          detail: { userId, photo: item },
+        }),
+      );
+    }
+  }
+
+  return item;
 }
 
 export async function fetchProfilePhoto(userId: string) {
-  const response = await fetch(
+  const cached = profilePhotoCache.get(userId);
+  if (cached) return cached;
+
+  const request = fetch(
     `/api/social-images/profile?userId=${encodeURIComponent(userId)}`,
     { cache: "no-store" },
-  );
-  if (!response.ok) return null;
-  const payload = (await response.json()) as { data?: SocialMediaItem | null };
-  return payload.data ?? null;
+  )
+    .then(async (response) => {
+      if (!response.ok) return null;
+      const payload = (await response.json()) as {
+        data?: SocialMediaItem | null;
+      };
+      return payload.data ?? null;
+    })
+    .catch(() => {
+      profilePhotoCache.delete(userId);
+      return null;
+    });
+
+  profilePhotoCache.set(userId, request);
+  return request;
 }
 
 export async function fetchStories(userIds: string[]) {
