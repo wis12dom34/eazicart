@@ -59,7 +59,11 @@ export function BottomNavigation({
             aria-current={active ? "page" : undefined}
           >
             <span className={styles.icon}>
-              <Icon name={tab.icon} size={24} />
+              <Icon
+                name={tab.icon}
+                size={26}
+                filled={active && tab.icon !== "search"}
+              />
               {tab.label === "Cart" && !!count && (
                 <b className={styles.badge}>
                   {(count ?? 0) > 99 ? "99+" : count}

@@ -62,6 +62,8 @@ test("shared mobile controls stay readable, tappable and keyboard accessible", a
     expect(iconColor).toBe(
       await cart.evaluate((element) => getComputedStyle(element).color),
     );
+    const activeLuminance = luminance(iconColor);
+    expect(1.05 / (activeLuminance + 0.05)).toBeGreaterThanOrEqual(4.5);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);

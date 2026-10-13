@@ -129,12 +129,46 @@ const paths: Record<string, React.ReactNode> = {
     <path d="M12 2c1 6 4 9 10 10-6 1-9 4-10 10-1-6-4-9-10-10 6-1 9-4 10-10Z" />
   ),
 };
+// Purpose-drawn solid variants keep selection visible without relying on color.
+const filledPaths: Record<string, React.ReactNode> = {
+  home: (
+    <path
+      fillRule="evenodd"
+      d="M12 2.5 2.5 10l1.2 1.5L5 10.5V20a1 1 0 0 0 1 1h4v-7h4v7h4a1 1 0 0 0 1-1v-9.5l1.3 1 1.2-1.5L12 2.5Z"
+    />
+  ),
+  reels: (
+    <>
+      <path d="M6 2.5h12v1.75H6z" />
+      <path
+        fillRule="evenodd"
+        d="M5.5 6a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h13a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-13Zm4.5 4v7l5.5-3.5L10 10Z"
+      />
+    </>
+  ),
+  cart: (
+    <>
+      <path
+        d="M2 3h2.5l2.2 12.2a2 2 0 0 0 2 1.8h9.1a2 2 0 0 0 2-1.6L21.5 7H5.3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.25"
+      />
+      <circle cx="9" cy="20.5" r="1.5" />
+      <circle cx="18" cy="20.5" r="1.5" />
+    </>
+  ),
+  chat: (
+    <path d="M12 3c-5.2 0-9.5 3.6-9.5 8 0 2.2 1.1 4.2 2.9 5.7L4 21l5.1-2.4c.9.3 1.9.4 2.9.4 5.2 0 9.5-3.6 9.5-8S17.2 3 12 3Z" />
+  ),
+};
 export function Icon({
   name,
   size = 24,
   className,
   filled = false,
 }: IconProps) {
+  const solid = filled ? filledPaths[name] : undefined;
   return (
     <svg
       className={className}
@@ -142,14 +176,14 @@ export function Icon({
       height={size}
       viewBox="0 0 24 24"
       fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
+      stroke={solid ? "none" : "currentColor"}
       strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
     >
-      {paths[name] ?? paths.box}
+      {solid ?? paths[name] ?? paths.box}
     </svg>
   );
 }
