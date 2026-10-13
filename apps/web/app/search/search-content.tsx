@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { BottomNavigation } from "../components/bottom-navigation";
 import { Icon } from "../components/icon";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { DiscoveryProductCard } from "../components/discovery-product-card";
 import styles from "../discovery.module.css";
 import { useRequest } from "../hooks/use-request";
@@ -249,7 +250,10 @@ export function SearchContent() {
                   key={seller.id}
                 >
                   <span className={styles.sellerAvatar} aria-hidden="true">
-                    {seller.displayName.slice(0, 2).toUpperCase()}
+                    <ProfileAvatar
+                      userId={seller.userId}
+                      name={seller.displayName}
+                    />
                   </span>
                   <span className={styles.sellerText}>
                     <strong>{seller.displayName}</strong>
