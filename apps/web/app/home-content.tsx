@@ -29,6 +29,38 @@ import { HomeSocialFeed } from "./home-social-feed";
 import { Icon } from "./components/icon";
 import type { ProductList } from "../lib/public-catalog";
 
+function StoryPreview({
+  story,
+  userId,
+  name,
+}: {
+  story?: SocialMediaItem;
+  userId: string;
+  name: string;
+}) {
+  const [failedUrl, setFailedUrl] = useState<string>();
+  if (!story || failedUrl === story.url)
+    return <ProfileAvatar userId={userId} name={name} />;
+
+  if (story.contentType?.startsWith("video/"))
+    return (
+      <video
+        src={`${story.url}#t=0.1`}
+        muted
+        playsInline
+        preload="metadata"
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget;
+          if (Number.isFinite(video.duration) && video.duration > 0)
+            video.currentTime = Math.min(0.1, video.duration / 2);
+        }}
+        onError={() => setFailedUrl(story.url)}
+      />
+    );
+
+  return <img src={story.url} alt="" onError={() => setFailedUrl(story.url)} />;
+}
+
 export default function HomePage({
   initialProducts,
 }: {
@@ -212,7 +244,8 @@ export default function HomePage({
                   className={`figma-home-story-avatar ${stories[auth.user.id] ? "has-story" : ""}`}
                 >
                   <span className="figma-home-story-media" aria-hidden="true">
-                    <ProfileAvatar
+                    <StoryPreview
+                      story={stories[auth.user.id]}
                       userId={auth.user.id}
                       name={auth.user.name}
                     />
@@ -248,7 +281,8 @@ export default function HomePage({
                   >
                     <span className="figma-home-story-media">
                       {userId ? (
-                        <ProfileAvatar
+                        <StoryPreview
+                          story={story}
                           userId={userId}
                           name={seller.displayName}
                         />
