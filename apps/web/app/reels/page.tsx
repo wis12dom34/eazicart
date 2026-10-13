@@ -8,6 +8,7 @@ import { reelsApi, type Reel, type ReelComment } from "../../lib/api/reels";
 import { followsApi } from "../../lib/api/follows";
 import { useRequest } from "../hooks/use-request";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./reels.module.css";
 import { Icon } from "../components/icon";
@@ -275,7 +276,10 @@ function CommentsSheet({
               {comments.map((comment) => (
                 <article key={comment.id} className={styles.comment}>
                   <span className={styles.commentAvatar} aria-hidden="true">
-                    {(comment.user.name || "U").slice(0, 1).toUpperCase()}
+                    <ProfileAvatar
+                      userId={comment.user.id}
+                      name={comment.user.name || "EaziCart user"}
+                    />
                   </span>
                   <div>
                     <strong>{comment.user.name || "EaziCart user"}</strong>
@@ -690,7 +694,10 @@ function ReelSlide({
               href={`/seller/${reel.seller.id}`}
               aria-label={`View ${sellerName} seller profile`}
             >
-              {sellerName.slice(0, 1).toUpperCase()}
+              <ProfileAvatar
+                userId={reel.seller.userId}
+                name={sellerName}
+              />
             </Link>
           ) : (
             <span className={styles.avatar} aria-hidden="true">
