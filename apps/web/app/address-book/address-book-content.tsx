@@ -308,7 +308,8 @@ export function AddressBookContent({
               setError("");
             }}
           >
-            +&nbsp;&nbsp;Add new address
+            <Icon name="plus" size={18} />
+            Add new address
           </button>
         ) : null}
 
