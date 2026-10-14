@@ -9,16 +9,21 @@ import styles from "./side-navigation.module.css";
 import { Icon } from "./icon";
 import { ProfileAvatar } from "./profile-avatar";
 
-const entries = [
+const primaryEntries = [
   ["Profile", "/profile", "user"],
   ["Order History", "/orders", "box"],
   ["Saved Items", "/saved", "heart"],
   ["Payment Methods", "/payment-methods", "card"],
   ["Delivery Addresses", "/address-book", "location"],
   ["My Store", "/seller/store", "store"],
+] as const;
+
+const secondaryEntries = [
   ["Business Insights", "/seller/dashboard", "chart"],
   ["Settings", "/settings", "settings"],
 ] as const;
+
+type Entry = (typeof primaryEntries)[number] | (typeof secondaryEntries)[number];
 
 export function SideNavigation({ onClose }: { onClose: () => void }) {
   const auth = useAuth();
@@ -33,7 +38,6 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     panel.current?.focus({ preventScroll: true });
 
     const key = (event: KeyboardEvent) => {
@@ -72,14 +76,15 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
     .join("")
     .toUpperCase();
 
-  const renderEntry = ([label, href, icon]: (typeof entries)[number]) => (
+  const renderEntry = ([label, href, icon]: Entry) => (
     <Link href={href} onClick={onClose} key={label}>
-      <Icon name={icon} size={22} />
-      <span>{label}</span>
+      <span className={styles.entryIcon} aria-hidden="true">
+        <Icon name={icon} size={24} weight="medium" />
+      </span>
+      <span className={styles.entryLabel}>{label}</span>
       {label === "Order History" && !!orders.data?.data.length ? (
-        <b>{orders.data.data.length}</b>
+        <b className={styles.count}>{orders.data.data.length}</b>
       ) : null}
-      <Icon name="chevron" size={15} />
     </Link>
   );
 
@@ -91,23 +96,16 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
         onClick={onClose}
         tabIndex={-1}
       />
+
       <div
         className={styles.panel}
         ref={panel}
         role="dialog"
         aria-modal="true"
-        aria-label="Side navigation"
+        aria-label="Account navigation"
         tabIndex={-1}
       >
-        <button
-          className={styles.close}
-          aria-label="Close menu"
-          onClick={onClose}
-        >
-          <Icon name="close" size={20} />
-        </button>
-
-        <div className={styles.identity}>
+        <div className={styles.topRow}>
           <div className={styles.avatar}>
             {auth.user ? (
               <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
@@ -115,16 +113,34 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
               initials
             )}
           </div>
-          <div className={styles.identityCopy}>
-            <h2>{name}</h2>
-            {auth.user?.username ? <p>@{auth.user.username}</p> : null}
-            <small>Personal account</small>
-          </div>
+          <button
+            className={styles.close}
+            aria-label="Close menu"
+            onClick={onClose}
+          >
+            <Icon name="close" size={21} weight="medium" />
+          </button>
         </div>
 
+        <div className={styles.identity}>
+          <h2>{name}</h2>
+          {auth.user?.username ? (
+            <p>@{auth.user.username}</p>
+          ) : (
+            <p>Personal account</p>
+          )}
+        </div>
+
+        <div className={styles.rule} aria-hidden="true" />
+
         <nav aria-label="Account navigation">
-          <div className={styles.menuGroup}>{entries.slice(0, 6).map(renderEntry)}</div>
-          <div className={styles.menuGroup}>{entries.slice(6).map(renderEntry)}</div>
+          <div className={styles.menuSection}>
+            {primaryEntries.map(renderEntry)}
+          </div>
+          <div className={styles.sectionRule} aria-hidden="true" />
+          <div className={styles.menuSection}>
+            {secondaryEntries.map(renderEntry)}
+          </div>
         </nav>
 
         <small className={styles.version}>EaziCart · v1.0.0</small>
