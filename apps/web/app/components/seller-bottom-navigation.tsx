@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Icon } from "./icon";
+import { Icon, type IconName } from "./icon";
 import styles from "./seller-bottom-navigation.module.css";
 
 type SellerNavItem = "home" | "products" | "orders" | "storefront" | "profile";
@@ -8,7 +8,7 @@ const items: Array<{
   key: SellerNavItem;
   label: string;
   href: string;
-  icon: string;
+  icon: IconName;
 }> = [
   { key: "home", label: "Home", href: "/seller/dashboard", icon: "home" },
   { key: "products", label: "Products", href: "/seller/products", icon: "box" },
@@ -17,7 +17,7 @@ const items: Array<{
     key: "storefront",
     label: "Storefront",
     href: "/seller/store",
-    icon: "shirt",
+    icon: "store",
   },
   {
     key: "profile",
@@ -40,7 +40,7 @@ export function SellerBottomNavigation({ active }: { active?: SellerNavItem }) {
             aria-current={isActive ? "page" : undefined}
           >
             <span className={styles.icon}>
-              <Icon name={item.icon} size={20} />
+              <Icon name={item.icon} size={22} active={isActive} />
             </span>
             <span>{item.label}</span>
           </Link>
