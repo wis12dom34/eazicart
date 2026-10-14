@@ -67,7 +67,7 @@ export function ProductCard({ product }: { product: Product }) {
           {image ? (
             <img src={image.url} alt={image.altText ?? product.name} />
           ) : (
-            "🛍️"
+            <Icon name="bag" size={40} />
           )}
         </span>
       </Link>
@@ -79,7 +79,7 @@ export function ProductCard({ product }: { product: Product }) {
         disabled={busy}
         onClick={() => void toggleSaved()}
       >
-        <Icon name="heart" size={19} />
+        <Icon name="heart" size={19} active={saved} />
       </button>
       <Link className="product-brand" href={`/seller/${product.seller.id}`}>
         {product.seller.displayName}
