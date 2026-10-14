@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { useAuth } from "../providers/auth-provider";
@@ -7,6 +8,7 @@ import { ordersApi } from "../../lib/api/orders";
 import styles from "./side-navigation.module.css";
 import { Icon } from "./icon";
 import { ProfileAvatar } from "./profile-avatar";
+
 const entries = [
   ["Profile", "/profile", "user"],
   ["Order History", "/orders", "box"],
@@ -17,6 +19,7 @@ const entries = [
   ["Business Insights", "/seller/dashboard", "chart"],
   ["Settings", "/settings", "settings"],
 ] as const;
+
 export function SideNavigation({ onClose }: { onClose: () => void }) {
   const auth = useAuth();
   const panel = useRef<HTMLDivElement>(null);
@@ -25,20 +28,25 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
       auth.isAuthenticated ? ordersApi.list() : Promise.resolve(undefined),
     [auth.isAuthenticated],
   );
+
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panel.current?.querySelector<HTMLButtonElement>("button")?.focus();
+
+    panel.current?.focus({ preventScroll: true });
+
     const key = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
       if (event.key !== "Tab") return;
+
       const nodes = panel.current?.querySelectorAll<HTMLElement>(
         "a[href], button:not([disabled])",
       );
       if (!nodes?.length) return;
-      const first = nodes[0],
-        last = nodes[nodes.length - 1];
+
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last?.focus();
@@ -47,6 +55,7 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
         first?.focus();
       }
     };
+
     document.addEventListener("keydown", key);
     return () => {
       document.body.style.overflow = overflow;
@@ -54,6 +63,7 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
       previous?.focus();
     };
   }, [onClose]);
+
   const name = auth.user?.name ?? "Guest";
   const initials = name
     .split(/\s+/)
@@ -61,6 +71,18 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
     .map((part) => part[0])
     .join("")
     .toUpperCase();
+
+  const renderEntry = ([label, href, icon]: (typeof entries)[number]) => (
+    <Link href={href} onClick={onClose} key={label}>
+      <Icon name={icon} size={22} />
+      <span>{label}</span>
+      {label === "Order History" && !!orders.data?.data.length ? (
+        <b>{orders.data.data.length}</b>
+      ) : null}
+      <Icon name="chevron" size={15} />
+    </Link>
+  );
+
   return (
     <div className={styles.overlay} data-figma-node="560:3187">
       <button
@@ -75,14 +97,16 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-label="Side navigation"
+        tabIndex={-1}
       >
         <button
           className={styles.close}
           aria-label="Close menu"
           onClick={onClose}
         >
-          <Icon name="close" size={22} />
+          <Icon name="close" size={20} />
         </button>
+
         <div className={styles.identity}>
           <div className={styles.avatar}>
             {auth.user ? (
@@ -91,39 +115,19 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
               initials
             )}
           </div>
-          <h2>{name}</h2>
-          {auth.user?.username ? (
-            <p>@{auth.user.username}</p>
-          ) : (
-            <p className={styles.usernameSpace} aria-hidden="true" />
-          )}
-          <small>Personal account</small>
+          <div className={styles.identityCopy}>
+            <h2>{name}</h2>
+            {auth.user?.username ? <p>@{auth.user.username}</p> : null}
+            <small>Personal account</small>
+          </div>
         </div>
+
         <nav aria-label="Account navigation">
-          {entries.map(([label, href, icon], index) => {
-            const content = (
-              <>
-                <Icon name={icon} size={22} />
-                <span>{label}</span>
-                {label === "Order History" && !!orders.data?.data.length ? (
-                  <b>{orders.data.data.length}</b>
-                ) : null}
-                <Icon name="chevron" size={16} />
-              </>
-            );
-            return (
-              <div
-                className={index === 6 ? styles.afterDivider : undefined}
-                key={label}
-              >
-                <Link href={href} onClick={onClose}>
-                  {content}
-                </Link>
-              </div>
-            );
-          })}
+          <div className={styles.menuGroup}>{entries.slice(0, 6).map(renderEntry)}</div>
+          <div className={styles.menuGroup}>{entries.slice(6).map(renderEntry)}</div>
         </nav>
-        <small className={styles.version}>v1.0.0</small>
+
+        <small className={styles.version}>EaziCart · v1.0.0</small>
       </div>
     </div>
   );
