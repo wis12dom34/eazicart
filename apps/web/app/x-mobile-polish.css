@@ -1,0 +1,391 @@
+/*
+ * EaziCart mobile surface polish.
+ * X-inspired density and hierarchy without copying proprietary assets.
+ * Loaded after the existing application styles so this stays presentation-only.
+ */
+
+/* ---------- Home / picture feed ---------- */
+.social-home {
+  --x-ink: #0f1419;
+  --x-muted: #536471;
+  --x-line: #eff3f4;
+  --x-soft: #f7f9f9;
+}
+
+.social-home .social-home-feature {
+  height: clamp(440px, 122vw, 550px);
+  min-height: 440px;
+  max-height: 550px;
+  background: #000;
+  border-bottom: 1px solid var(--x-line);
+}
+
+.social-home .social-home-feature-image {
+  object-fit: cover;
+  object-position: center;
+  background: #000;
+}
+
+.social-home .social-home-feature-shade {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.34) 0%,
+    rgba(0, 0, 0, 0.04) 31%,
+    rgba(0, 0, 0, 0.08) 56%,
+    rgba(0, 0, 0, 0.76) 100%
+  );
+}
+
+.social-home .social-home-feature-top {
+  top: 12px;
+  left: 14px;
+  right: 12px;
+}
+
+.social-home .social-home-feature-seller > span {
+  width: 36px;
+  height: 36px;
+  border-color: rgba(255, 255, 255, 0.72);
+}
+
+.social-home .social-home-feature-save {
+  width: 44px;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.social-home .social-home-feature-copy {
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+}
+
+.social-home .social-home-feature-copy > p {
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 19px;
+}
+
+.social-home .social-home-product-pill {
+  min-height: 60px;
+  padding: 7px 9px 7px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+}
+
+.social-home .social-home-pill-image {
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
+  background: var(--x-soft);
+}
+
+.social-home .social-home-pill-image img {
+  object-fit: cover;
+}
+
+.social-home .social-home-watch {
+  right: 13px;
+  bottom: 92px;
+  width: 44px;
+  min-width: 44px;
+  min-height: 52px;
+  gap: 1px;
+}
+
+.social-home .social-home-watch svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Product imagery should feel like a social feed, not mismatched catalog tiles. */
+.social-home .social-home-product-media,
+.social-home .social-home-nearby-card > div {
+  width: 166px;
+  height: 166px;
+  border-radius: 12px;
+  background: var(--x-soft) !important;
+  box-shadow: inset 0 0 0 1px rgba(15, 20, 25, 0.035);
+}
+
+.social-home .social-home-product-media img,
+.social-home .social-home-nearby-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.social-home .social-home-product-card,
+.social-home .social-home-nearby-card {
+  width: 166px;
+  flex-basis: 166px;
+}
+
+.social-home .social-home-save {
+  top: 7px;
+  right: 7px;
+  width: 40px;
+  height: 40px;
+  border-color: rgba(15, 20, 25, 0.08);
+  background: rgba(255, 255, 255, 0.93);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.social-home .figma-home-product-media {
+  overflow: hidden;
+  background: var(--x-soft);
+}
+
+.social-home .figma-home-product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.social-home .social-home-editorial-media {
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--x-soft);
+}
+
+.social-home .social-home-editorial-media > img {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ---------- Reels ----------
+ * CSS modules are emitted with a stable reels-module prefix by Next/Turbopack.
+ * These selectors intentionally override only the existing Reels module.
+ */
+[class*="reels-module"][class*="__page"] {
+  height: 100vh;
+  height: 100svh;
+  height: 100dvh;
+  background: #000 !important;
+}
+
+[class*="reels-module"][class*="__viewport"] {
+  -webkit-overflow-scrolling: touch;
+  background: #000;
+}
+
+[class*="reels-module"][class*="__slide"] {
+  background: #000 !important;
+}
+
+[class*="reels-module"][class*="__media"] {
+  object-fit: cover !important;
+  object-position: center center;
+  background: #000;
+  transform: translateZ(0);
+}
+
+[class*="reels-module"][class*="__bottomShade"] {
+  height: min(48%, 380px) !important;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.08) 24%,
+    rgba(0, 0, 0, 0.72) 100%
+  ) !important;
+}
+
+[class*="reels-module"][class*="__header"] {
+  top: max(8px, calc(env(safe-area-inset-top) + 6px)) !important;
+  left: max(10px, env(safe-area-inset-left)) !important;
+  right: max(10px, env(safe-area-inset-right)) !important;
+  gap: 6px !important;
+}
+
+[class*="reels-module"][class*="__header"] h1 {
+  font-size: 19px !important;
+  line-height: 24px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.25px;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.36);
+}
+
+[class*="reels-module"][class*="__back"],
+[class*="reels-module"][class*="__search"] {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+[class*="reels-module"][class*="__details"] {
+  left: max(14px, env(safe-area-inset-left)) !important;
+  right: 82px !important;
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  gap: 5px !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.52) !important;
+}
+
+[class*="reels-module"][class*="__sellerName"] {
+  font-size: 15px !important;
+  line-height: 20px !important;
+  font-weight: 700 !important;
+}
+
+[class*="reels-module"][class*="__caption"] {
+  font-size: 14px !important;
+  line-height: 19px !important;
+  -webkit-line-clamp: 3 !important;
+}
+
+[class*="reels-module"][class*="__productName"] {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 12px !important;
+}
+
+[class*="reels-module"][class*="__viewProduct"] {
+  min-height: 40px !important;
+  margin-top: 2px;
+  padding: 0 13px !important;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff !important;
+  text-decoration: none !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+[class*="reels-module"][class*="__actions"] {
+  right: max(10px, env(safe-area-inset-right)) !important;
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  width: 56px !important;
+  gap: 12px !important;
+}
+
+[class*="reels-module"][class*="__creatorAction"] {
+  width: 52px !important;
+  height: 58px !important;
+}
+
+[class*="reels-module"][class*="__avatar"] {
+  width: 44px !important;
+  height: 44px !important;
+  border: 2px solid #fff !important;
+  font-size: 16px !important;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.28);
+}
+
+[class*="reels-module"][class*="__followBadge"] {
+  top: 25px !important;
+}
+
+[class*="reels-module"][class*="__followBadge"] span {
+  width: 20px !important;
+  height: 20px !important;
+  font-size: 17px !important;
+}
+
+[class*="reels-module"][class*="__action"] {
+  width: 52px !important;
+  min-height: 54px !important;
+  height: auto !important;
+  gap: 2px !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.52) !important;
+}
+
+[class*="reels-module"][class*="__action"] i {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+[class*="reels-module"][class*="__action"] svg,
+[class*="reels-module"][class*="__action"] img {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+[class*="reels-module"][class*="__action"] span {
+  font-size: 11px !important;
+  line-height: 14px !important;
+}
+
+[class*="reels-module"][class*="__sheetLayer"] {
+  background: rgba(0, 0, 0, 0.46) !important;
+}
+
+[class*="reels-module"][class*="__commentsSheet"] {
+  border-radius: 20px 20px 0 0 !important;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.2) !important;
+}
+
+[class*="reels-module"][class*="__sheetHeader"] {
+  border-bottom-color: #eff3f4 !important;
+}
+
+[class*="reels-module"][class*="__commentComposer"] {
+  padding-bottom: max(10px, calc(10px + env(safe-area-inset-bottom))) !important;
+}
+
+@media (max-width: 360px) {
+  .social-home .social-home-feature {
+    height: clamp(420px, 128vw, 520px);
+    min-height: 420px;
+  }
+
+  .social-home .social-home-product-media,
+  .social-home .social-home-nearby-card > div,
+  .social-home .social-home-product-card,
+  .social-home .social-home-nearby-card {
+    width: 154px;
+  }
+
+  .social-home .social-home-product-media,
+  .social-home .social-home-nearby-card > div {
+    height: 154px;
+  }
+
+  [class*="reels-module"][class*="__details"] {
+    right: 74px !important;
+  }
+
+  [class*="reels-module"][class*="__actions"] {
+    right: max(6px, env(safe-area-inset-right)) !important;
+  }
+}
+
+@media (max-height: 700px) {
+  [class*="reels-module"][class*="__actions"] {
+    gap: 7px !important;
+  }
+
+  [class*="reels-module"][class*="__action"] i {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  [class*="reels-module"][class*="__action"] svg,
+  [class*="reels-module"][class*="__action"] img {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  [class*="reels-module"][class*="__caption"] {
+    -webkit-line-clamp: 2 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="reels-module"][class*="__media"] {
+    transform: none;
+  }
+}
