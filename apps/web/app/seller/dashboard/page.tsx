@@ -285,7 +285,7 @@ function DashboardContent({ dashboard }: { dashboard: SellerDashboard }) {
               >
                 <strong>{item.label}</strong>
                 <span>
-                  {item.action} <b aria-hidden="true">›</b>
+                  {item.action} <Icon name="chevron" size={16} />
                 </span>
               </Link>
             ))
