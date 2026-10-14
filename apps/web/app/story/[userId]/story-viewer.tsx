@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { ProfileAvatar } from "../../components/profile-avatar";
+import { Icon } from "../../components/icon";
 import { useRouter } from "next/navigation";
 import {
   useCallback,
@@ -384,7 +385,7 @@ export default function StoryViewer({
                   textShadow: "none",
                 }}
               >
-                ✓
+                <Icon name="check" size={10} weight="semibold" />
               </span>
             ) : null}
           </div>
@@ -427,20 +428,7 @@ export default function StoryViewer({
           padding: 0,
         }}
       >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M6 6 18 18M18 6 6 18"
-            stroke="currentColor"
-            strokeWidth="2.25"
-            strokeLinecap="round"
-          />
-        </svg>
+        <Icon name="close" size={22} />
       </button>
 
       {paused ? (
@@ -467,10 +455,7 @@ export default function StoryViewer({
               backdropFilter: "blur(10px)",
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6.5" y="5" width="4" height="14" rx="1" />
-              <rect x="13.5" y="5" width="4" height="14" rx="1" />
-            </svg>
+            <Icon name="pause" size={20} filled />
           </span>
         </div>
       ) : null}
@@ -609,7 +594,7 @@ export default function StoryViewer({
                 : busy
                   ? "Adding…"
                   : added
-                    ? "Added ✓"
+                    ? "Added"
                     : "Add to cart"}
             </button>
           </div>
