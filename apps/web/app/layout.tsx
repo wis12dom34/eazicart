@@ -7,6 +7,7 @@ import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
+import { CustomerDesktopShell } from "./components/customer-desktop-shell";
 import { AuthProvider } from "./providers/auth-provider";
 
 export const metadata: Metadata = {
@@ -43,7 +44,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <CustomerDesktopShell>{children}</CustomerDesktopShell>
+        </AuthProvider>
       </body>
     </html>
   );

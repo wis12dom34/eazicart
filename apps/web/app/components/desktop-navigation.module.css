@@ -1,0 +1,379 @@
+.shell {
+  --desktop-nav-width: 80px;
+  --nav-text: #0f1419;
+  --nav-muted: #536471;
+  --nav-hover: #eff3f4;
+  --nav-active: #fff4eb;
+}
+.sidebar,
+.right {
+  display: none;
+}
+@media (min-width: 768px) {
+  .shell {
+    display: grid;
+    grid-template-columns: var(--desktop-nav-width) minmax(0, 640px);
+    gap: 24px;
+    max-width: 1320px;
+    padding: 0 24px 0 0;
+    margin: 0 auto;
+    min-height: 100dvh;
+    background: white;
+    font-family: Inter, sans-serif;
+  }
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    width: var(--desktop-nav-width);
+    height: 100dvh;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    padding: 12px;
+    border-right: 1px solid var(--border);
+    color: var(--nav-text);
+  }
+  .brand {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+  .brand span {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    color: white;
+    background: var(--brand);
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: clip;
+    scrollbar-width: thin;
+    flex-shrink: 1;
+  }
+  .row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    min-height: 52px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    border-radius: 26px;
+    padding: 0 12px;
+    text-decoration: none;
+    font-size: 20px;
+    line-height: 24px;
+    cursor: pointer;
+    transition:
+      background 160ms,
+      color 160ms;
+  }
+  .row:hover,
+  .account:hover {
+    background: var(--nav-hover);
+  }
+  .active {
+    background: var(--nav-active);
+    font-weight: 600;
+  }
+  .active .icon {
+    color: var(--brand);
+  }
+  .icon {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .badge {
+    position: absolute;
+    bottom: 19px;
+    left: 19px;
+    min-width: 18px;
+    height: 18px;
+    display: grid;
+    place-items: center;
+    padding: 0 3px;
+    border-radius: 9px;
+    background: var(--brand);
+    border: 1px solid white;
+    color: white;
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 700;
+  }
+  .label,
+  .accountCopy,
+  .accountMore {
+    display: none;
+  }
+  .sell {
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    width: 52px;
+    height: 52px;
+    margin: 18px auto 12px;
+    border-radius: 26px;
+    color: white;
+    background: var(--brand);
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      background 160ms,
+      transform 160ms;
+  }
+  .sell:hover {
+    background: var(--brand-pressed);
+  }
+  .sell:active {
+    background: var(--brand-pressed);
+    transform: scale(0.97);
+  }
+  .sell:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .sellIcon {
+    display: flex;
+  }
+  .account {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 60px;
+    margin-top: auto;
+    padding: 8px;
+    border-radius: 28px;
+    text-decoration: none;
+    color: inherit;
+    flex-shrink: 0;
+  }
+  .avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--brand);
+    color: white;
+    font-weight: 700;
+  }
+  .tooltip {
+    display: none;
+    position: fixed;
+    left: calc(max(0px, (100vw - 1320px) / 2) + 76px);
+    z-index: 60;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--nav-text);
+    color: white;
+    font-size: 13px;
+    line-height: 20px;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .row:hover .tooltip,
+  .row:focus-visible .tooltip,
+  .account:hover .tooltip,
+  .account:focus-visible .tooltip,
+  .sell:hover .tooltip,
+  .sell:focus-visible .tooltip {
+    display: block;
+  }
+  .content {
+    min-width: 0;
+  }
+  .content :global(.app-shell) {
+    width: 100%;
+    max-width: 640px;
+    margin: 0;
+  }
+  .content :global(.app-shell.with-nav) {
+    padding-bottom: 32px;
+  }
+  .right {
+    position: sticky;
+    top: 20px;
+    align-self: start;
+    min-width: 0;
+    color: var(--nav-text);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding-bottom: 12px;
+  }
+  .search {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: var(--soft);
+    border-radius: 24px;
+    padding: 0 16px;
+    min-height: 48px;
+  }
+  .search input {
+    border: 0;
+    background: transparent;
+    min-width: 0;
+    width: 100%;
+    font-size: 14px;
+    color: inherit;
+  }
+  .discovery {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    margin-top: 20px;
+  }
+  .discovery h2 {
+    margin: 0 0 18px;
+    font-size: 17px;
+    line-height: 22px;
+  }
+  .discovery p {
+    font-size: 13px;
+    color: var(--nav-muted);
+  }
+  .discovery a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .discovery a:hover strong {
+    text-decoration: underline;
+  }
+  .discoveryRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    min-height: 52px;
+  }
+  .thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: var(--soft);
+    flex-shrink: 0;
+  }
+  .discoveryCopy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 4px;
+  }
+  .discoveryCopy strong {
+    font-size: 14px;
+    line-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .discoveryCopy small {
+    font-size: 12px;
+    color: var(--nav-muted);
+  }
+  .discoveryCopy .price {
+    color: var(--brand-pressed);
+  }
+  .retry {
+    border: 0;
+    background: transparent;
+    color: var(--brand-pressed);
+    padding: 8px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .shell {
+    grid-template-columns: 80px minmax(0, 600px) minmax(240px, 1fr);
+    gap: 24px;
+    padding-right: 24px;
+  }
+  .right {
+    display: block;
+  }
+}
+@media (min-width: 1200px) {
+  .shell {
+    --desktop-nav-width: 260px;
+    grid-template-columns: 260px minmax(0, 640px) minmax(280px, 360px);
+    gap: 24px;
+  }
+  .right {
+    display: block;
+  }
+  .row {
+    justify-content: flex-start;
+  }
+  .label {
+    display: inline;
+  }
+  .sell {
+    width: calc(100% - 8px);
+  }
+  .sellIcon {
+    display: none;
+  }
+  .accountCopy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+  .accountCopy strong {
+    font-size: 15px;
+    line-height: 18px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .accountCopy small {
+    font-size: 14px;
+    line-height: 18px;
+    color: var(--nav-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .accountMore {
+    display: block;
+  }
+  .row .tooltip,
+  .sell .tooltip,
+  .account .tooltip {
+    display: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .sell {
+    transition: none;
+  }
+}

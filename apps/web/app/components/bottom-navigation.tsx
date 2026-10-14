@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
@@ -35,12 +36,20 @@ export function BottomNavigation({
 }) {
   const path = usePathname();
   const auth = useAuth();
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   const cart = useRequest(
     () =>
-      cartCount === undefined && auth.isAuthenticated
+      mobile && cartCount === undefined && auth.isAuthenticated
         ? cartApi.get()
         : Promise.resolve(undefined),
-    [cartCount, auth.isAuthenticated],
+    [mobile, cartCount, auth.isAuthenticated],
   );
   const count =
     cartCount ??

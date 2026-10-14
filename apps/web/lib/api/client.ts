@@ -213,6 +213,14 @@ export async function apiRequest<T>(
       payload.error?.details,
     );
   }
+  if (
+    typeof window !== "undefined" &&
+    options.method &&
+    options.method !== "GET" &&
+    (path.startsWith("/cart") || path.startsWith("/notifications"))
+  ) {
+    window.dispatchEvent(new Event("eazicart:navigation-updated"));
+  }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
