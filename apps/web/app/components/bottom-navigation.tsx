@@ -6,9 +6,14 @@ import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
 import { cartApi } from "../../lib/api/cart";
 import styles from "./bottom-navigation.module.css";
-import { Icon } from "./icon";
+import { Icon, type IconName } from "./icon";
 
-const tabs = [
+const tabs: Array<{
+  href: string;
+  label: string;
+  icon: IconName;
+  paths: string[];
+}> = [
   { href: "/", label: "Home", icon: "home", paths: ["/"] },
   {
     href: "/explore",
@@ -59,11 +64,7 @@ export function BottomNavigation({
             aria-current={active ? "page" : undefined}
           >
             <span className={styles.icon}>
-              <Icon
-                name={tab.icon}
-                size={26}
-                filled={active && tab.icon !== "search"}
-              />
+              <Icon name={tab.icon} size={24} active={active} />
               {tab.label === "Cart" && !!count && (
                 <b className={styles.badge}>
                   {(count ?? 0) > 99 ? "99+" : count}
