@@ -1,3 +1,4 @@
+import { browserSessionTokens } from "./helpers/session.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { markOrderPaid } from "./helpers/paid-order.mjs";
@@ -36,7 +37,7 @@ async function createProduct(request, token, name, price) {
       name,
       price,
       stock: 10,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(response.status()).toBe(201);
@@ -237,10 +238,7 @@ test("seller can confirm and fulfill their own order from the workspace", async 
   await expect(
     page.getByRole("heading", { name: "Fulfillment UI Store", exact: true }),
   ).toBeVisible();
-  const sellerToken = await page.evaluate(() => {
-    const raw = localStorage.getItem("eazicart.auth.tokens");
-    return raw ? JSON.parse(raw).accessToken : null;
-  });
+  const { accessToken: sellerToken } = await browserSessionTokens(page);
   expect(sellerToken).toBeTruthy();
 
   const product = await createProduct(

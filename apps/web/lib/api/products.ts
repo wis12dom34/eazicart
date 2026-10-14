@@ -21,6 +21,13 @@ export type ProductInput = {
   images?: Array<Pick<Image, "url" | "altText" | "position">>;
 };
 
+const imageContentType = (file: File) => {
+  if (file.type) return file.type;
+  if (/\.png$/i.test(file.name)) return "image/png";
+  if (/\.webp$/i.test(file.name)) return "image/webp";
+  return "image/jpeg";
+};
+
 export const productsApi = {
   list: (query: ProductQuery = {}) =>
     apiRequest<{
@@ -31,6 +38,14 @@ export const productsApi = {
     apiRequest<DataResponse<Product>>(`/products/${encodeURIComponent(id)}`),
   sellerList: () =>
     apiRequest<{ data: Product[] }>("/seller/products", { auth: true }),
+  uploadImage: (file: File) =>
+    apiRequest<{ data: { imageUrl: string } }>("/seller/products/media", {
+      method: "POST",
+      auth: true,
+      rawBody: file,
+      headers: { "Content-Type": imageContentType(file) },
+      timeoutMs: 60_000,
+    }),
   create: (input: ProductInput) =>
     apiRequest<DataResponse<Product>>("/products", {
       method: "POST",

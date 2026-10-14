@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -7,18 +6,24 @@ import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
 import { cartApi } from "../../lib/api/cart";
 import styles from "./bottom-navigation.module.css";
+import { Icon, type IconName } from "./icon";
 
-const tabs = [
-  { href: "/", label: "Home", icon: "nav-home", paths: ["/"] },
+const tabs: Array<{
+  href: string;
+  label: string;
+  icon: IconName;
+  paths: string[];
+}> = [
+  { href: "/", label: "Home", icon: "home", paths: ["/"] },
   {
     href: "/explore",
     label: "Explore",
-    icon: "nav-explore",
+    icon: "search",
     paths: ["/explore", "/search", "/category"],
   },
-  { href: "/reels", label: "Reels", icon: "nav-reels", paths: ["/reels"] },
-  { href: "/cart", label: "Cart", icon: "cart-icon", paths: ["/cart"] },
-  { href: "/chat", label: "Chat", icon: "nav-chat", paths: ["/chat"] },
+  { href: "/reels", label: "Reels", icon: "reels", paths: ["/reels"] },
+  { href: "/cart", label: "Cart", icon: "cart", paths: ["/cart"] },
+  { href: "/chat", label: "Chat", icon: "chat", paths: ["/chat"] },
 ];
 
 export function BottomNavigation({
@@ -50,14 +55,6 @@ export function BottomNavigation({
                 ? path === "/"
                 : path === candidate || path.startsWith(`${candidate}/`),
             );
-        const icon =
-          tab.label === "Home" && !active
-            ? "nav-home-inactive"
-            : tab.label === "Cart" && active
-              ? "cart-icon-active"
-              : active && ["Explore", "Reels"].includes(tab.label)
-                ? `${tab.icon}-active`
-                : tab.icon;
         return (
           <Link
             key={tab.href}
@@ -67,7 +64,7 @@ export function BottomNavigation({
             aria-current={active ? "page" : undefined}
           >
             <span className={styles.icon}>
-              <img src={`/figma/${icon}.svg`} alt="" />
+              <Icon name={tab.icon} size={24} active={active} />
               {tab.label === "Cart" && !!count && (
                 <b className={styles.badge}>
                   {(count ?? 0) > 99 ? "99+" : count}

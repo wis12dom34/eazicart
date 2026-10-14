@@ -1,10 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import argon2 from "argon2";
-import type {
-  FastifyInstance,
-  FastifyReply,
-  FastifyRequest,
-} from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
 import type { AppConfig } from "../../config.js";
@@ -122,7 +118,12 @@ export function registerAuth(
 
   const issueSession = async (reply: FastifyReply, userId: string) => {
     const tokens = await issueTokens(userId);
-    setRefreshCookie(reply, tokens.refreshToken, tokens.expiresAt, secureCookie);
+    setRefreshCookie(
+      reply,
+      tokens.refreshToken,
+      tokens.expiresAt,
+      secureCookie,
+    );
     return {
       accessToken: tokens.accessToken,
       // Kept temporarily for backwards compatibility while old web sessions migrate.

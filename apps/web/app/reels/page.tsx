@@ -5,9 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { reelsApi, type Reel, type ReelComment } from "../../lib/api/reels";
+import { followsApi } from "../../lib/api/follows";
+import { useRequest } from "../hooks/use-request";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./reels.module.css";
+import { Icon } from "../components/icon";
 
 const formatNaira = (value: string) =>
   new Intl.NumberFormat("en-NG", {
@@ -43,7 +47,7 @@ function CommentsSheet({
 }) {
   const [comments, setComments] = useState<ReelComment[]>([]);
   const [body, setBody] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadCommentsKey, setReloadCommentsKey] = useState(0);
@@ -220,7 +224,7 @@ function CommentsSheet({
             onClick={onClose}
             aria-label="Close comments"
           >
-            ×
+            <Icon name="close" size={20} />
           </button>
         </div>
 
@@ -272,7 +276,10 @@ function CommentsSheet({
               {comments.map((comment) => (
                 <article key={comment.id} className={styles.comment}>
                   <span className={styles.commentAvatar} aria-hidden="true">
-                    {(comment.user.name || "U").slice(0, 1).toUpperCase()}
+                    <ProfileAvatar
+                      userId={comment.user.id}
+                      name={comment.user.name || "EaziCart user"}
+                    />
                   </span>
                   <div>
                     <strong>{comment.user.name || "EaziCart user"}</strong>
@@ -333,11 +340,15 @@ function ReelSlide({
   onCountChange,
   authenticated,
   authLoading,
+  following,
+  onFollow,
 }: {
   reel: Reel;
   active: boolean;
   authenticated: boolean;
   authLoading: boolean;
+  following: boolean | null;
+  onFollow: (sellerUserId: string) => Promise<void>;
   onCountChange: (
     reelId: string,
     key: keyof Reel["_count"],
@@ -362,6 +373,7 @@ function ReelSlide({
   >(null);
   const [interactionStateRetryKey, setInteractionStateRetryKey] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
   const closeComments = useCallback(() => setCommentsOpen(false), []);
   const product = reel.product;
   const interactive = !isLegacyReel(reel);
@@ -458,6 +470,25 @@ function ReelSlide({
   const requireAuth = () => {
     const next = `/reels?reel=${encodeURIComponent(reel.id)}`;
     router.push(`/login?next=${encodeURIComponent(next)}`);
+  };
+
+  const followSeller = async () => {
+    if (!reel.seller || followBusy || authLoading) return;
+    if (!authenticated) {
+      requireAuth();
+      return;
+    }
+    setFollowBusy(true);
+    setInteractionStatus(null);
+    try {
+      await onFollow(reel.seller.userId);
+    } catch (error) {
+      setInteractionStatus(
+        error instanceof Error ? error.message : "Unable to follow seller",
+      );
+    } finally {
+      setFollowBusy(false);
+    }
   };
 
   const shareReel = async () => {
@@ -597,22 +628,7 @@ function ReelSlide({
               });
           }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="M11 5 6 9H3v6h3l5 4V5Z" />
-            {muted ? (
-              <path d="m16 9 6 6m0-6-6 6" />
-            ) : (
-              <path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" />
-            )}
-          </svg>
+          <Icon name={muted ? "volume-off" : "volume"} size={20} />
           <span>{muted ? "Sound off" : "Sound on"}</span>
         </button>
       ) : null}
@@ -620,19 +636,6 @@ function ReelSlide({
       <div className={styles.bottomShade} />
 
       <div className={styles.details}>
-        {reel.seller ? (
-          <Link
-            className={styles.avatar}
-            href={`/seller/${reel.seller.id}`}
-            aria-label={`View ${sellerName} seller profile`}
-          >
-            {sellerName.slice(0, 1).toUpperCase()}
-          </Link>
-        ) : (
-          <span className={styles.avatar} aria-hidden="true">
-            {sellerName.slice(0, 1).toUpperCase()}
-          </span>
-        )}
         {reel.seller ? (
           <Link
             className={styles.sellerName}
@@ -643,18 +646,60 @@ function ReelSlide({
         ) : (
           <strong className={styles.sellerName}>{sellerName}</strong>
         )}
+        {reel.caption ? <p className={styles.caption}>{reel.caption}</p> : null}
+        {product ? (
+          <>
+            <strong className={styles.productName}>
+              <span>{product.name}</span> · {formatNaira(product.price)}
+            </strong>
+            <Link
+              className={styles.viewProduct}
+              href={`/product/${product.id}`}
+            >
+              View Product
+            </Link>
+          </>
+        ) : reel.externalUrl ? (
+          <a
+            className={styles.viewProduct}
+            href={reel.externalUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Original source · View Reel
+          </a>
+        ) : null}
       </div>
 
-      {reel.caption ? <p className={styles.caption}>{reel.caption}</p> : null}
-      {product ? (
-        <strong className={styles.productName}>{product.name}</strong>
-      ) : reel.source !== "EAZICART" ? (
-        <strong className={styles.productName}>
-          From {reel.source.toLowerCase()}
-        </strong>
-      ) : null}
-
-      <div className={styles.actions}>
+      <div className={styles.actions} aria-label="Reel actions">
+        <div className={styles.creatorAction}>
+          {reel.seller ? (
+            <Link
+              className={styles.avatar}
+              href={`/seller/${reel.seller.id}`}
+              aria-label={`View ${sellerName} seller profile`}
+            >
+              <ProfileAvatar userId={reel.seller.userId} name={sellerName} />
+            </Link>
+          ) : (
+            <span className={styles.avatar} aria-hidden="true">
+              {sellerName.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          {reel.seller && following === false ? (
+            <button
+              type="button"
+              className={styles.followBadge}
+              aria-label={`Follow ${sellerName}`}
+              disabled={followBusy || authLoading}
+              onClick={() => void followSeller()}
+            >
+              <span aria-hidden="true">
+                <Icon name="plus" size={14} weight="semibold" />
+              </span>
+            </button>
+          ) : null}
+        </div>
         <button
           className={`${styles.action} ${liked ? styles.likeActive : ""}`}
           disabled={
@@ -669,19 +714,7 @@ function ReelSlide({
           onClick={() => void toggleLike()}
         >
           <i>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill={liked ? "currentColor" : "none"}
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
-            </svg>
+            <Icon name="heart" size={30} active={liked} />
           </i>
           <span>{formatCount(reel._count.likes)}</span>
         </button>
@@ -692,7 +725,7 @@ function ReelSlide({
           onClick={() => setCommentsOpen(true)}
         >
           <i>
-            <img src="/figma/reel-comment.svg" width={20} height={20} alt="" />
+            <Icon name="chat" size={30} />
           </i>
           <span>{formatCount(reel._count.comments)}</span>
         </button>
@@ -710,7 +743,7 @@ function ReelSlide({
           onClick={() => void toggleSave()}
         >
           <i>
-            <img src="/figma/reel-save.svg" width={20} height={20} alt="" />
+            <Icon name="bookmark" size={30} active={saved} />
           </i>
           <small>{formatCount(reel._count.saves)}</small>
         </button>
@@ -720,13 +753,13 @@ function ReelSlide({
           aria-label="Share reel"
         >
           <i>
-            <img src="/figma/reel-share.svg" width={20} height={20} alt="" />
+            <Icon name="share" size={30} />
           </i>
           <small>Share</small>
         </button>
         <Link className={styles.action} href="/cart" aria-label="Open cart">
           <i>
-            <img src="/figma/reel-cart.svg" width={22} height={22} alt="" />
+            <Icon name="cart" size={30} />
           </i>
           <small>Cart</small>
         </Link>
@@ -747,23 +780,6 @@ function ReelSlide({
         </span>
       ) : null}
 
-      {product ? (
-        <Link className={styles.viewProduct} href={`/product/${product.id}`}>
-          <strong>{formatNaira(product.price)}</strong>
-          <span>View Product</span>
-        </Link>
-      ) : reel.externalUrl ? (
-        <a
-          className={styles.viewProduct}
-          href={reel.externalUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <strong>Original source</strong>
-          <span>View Reel</span>
-        </a>
-      ) : null}
-
       <CommentsSheet
         reel={reel}
         open={commentsOpen}
@@ -781,6 +797,16 @@ function ReelSlide({
 
 export default function ReelsPage() {
   const auth = useAuth();
+  const follows = useRequest(
+    () =>
+      auth.isAuthenticated ? followsApi.list() : Promise.resolve(undefined),
+    [auth.isAuthenticated],
+  );
+  const followSeller = async (sellerUserId: string) => {
+    await followsApi.follow(sellerUserId);
+    // Share the existing follow list across slides from the same creator.
+    await follows.reload();
+  };
   const feedRef = useRef<HTMLDivElement | null>(null);
   const loadingMoreRef = useRef(false);
   const [reels, setReels] = useState<Reel[]>([]);
@@ -935,6 +961,18 @@ export default function ReelsPage() {
               onCountChange={onCountChange}
               authenticated={auth.isAuthenticated}
               authLoading={auth.loading}
+              following={
+                reel.seller?.userId === auth.user?.id
+                  ? true
+                  : !auth.isAuthenticated
+                    ? false
+                    : follows.data
+                      ? follows.data.data.some(
+                          (follow) => follow.sellerId === reel.seller?.userId,
+                        )
+                      : null
+              }
+              onFollow={followSeller}
             />
           ))
         )}
@@ -951,10 +989,9 @@ export default function ReelsPage() {
         ) : null}
       </div>
 
-      <div className={styles.topShade} />
       <header className={styles.header}>
         <Link href="/" className={styles.back} aria-label="Back to home">
-          <img src="/figma/reel-back.svg" width={20} height={20} alt="" />
+          <Icon name="back" size={24} />
         </Link>
         <h1>Reels</h1>
         <Link
@@ -962,7 +999,7 @@ export default function ReelsPage() {
           className={styles.search}
           aria-label="Search products"
         >
-          <img src="/figma/reel-search.svg" width={20} height={20} alt="" />
+          <Icon name="search" size={24} />
         </Link>
       </header>
 

@@ -13,6 +13,7 @@ import { registerOrders } from "./modules/orders/index.js";
 import { registerPaymentConfiguration } from "./modules/payment-configuration/index.js";
 import { registerPayments } from "./modules/payments/index.js";
 import { registerProducts } from "./modules/products/index.js";
+import { registerProductMedia } from "./modules/products/media.js";
 import { registerReels } from "./modules/reels/index.js";
 import { registerReelMedia } from "./modules/reels/media.js";
 import { registerSavedProducts } from "./modules/saved-products/index.js";
@@ -81,6 +82,7 @@ export function buildApp(
   registerSellerSubscriptions(app, dependencies.database);
   registerCategories(app, dependencies.database);
   registerProducts(app, dependencies.database);
+  registerProductMedia(app, config, dependencies.database);
   registerReels(app, dependencies.database);
   registerReelMedia(app, config, dependencies.database);
   registerCart(app, dependencies.database);

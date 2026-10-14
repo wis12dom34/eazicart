@@ -37,7 +37,9 @@ test("Explore exposes only real discovery destinations and catalog data", async 
     "href",
     "/explore?section=sellers",
   );
-  await expect(sections.getByText("Trending", { exact: true })).toHaveCount(0);
+  await expect(
+    sections.getByRole("link", { name: "Trending", exact: true }),
+  ).toHaveAttribute("href", "/explore?section=trending");
   await expect(sections.getByText("Brands", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Map" })).toHaveCount(0);
 

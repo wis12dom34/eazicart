@@ -1,12 +1,17 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
+
 import Link from "next/link";
+import { ContentImage } from "./components/content-image";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import "./home.css";
+import "./home-social-feed.css";
+import "./home-media.css";
 import { BottomNavigation } from "./components/bottom-navigation";
 import { SideNavigation } from "./components/side-navigation";
 import { EmptyState, ErrorState, LoadingState } from "./components/async-state";
+import { ProfileAvatar } from "./components/profile-avatar";
 import { money } from "./data";
 import { useRequest } from "./hooks/use-request";
 import { useAuth } from "./providers/auth-provider";
@@ -15,9 +20,56 @@ import { productsApi } from "../lib/api/products";
 import { notificationsApi } from "../lib/api/notifications";
 import { savedApi } from "../lib/api/saved";
 import type { Product } from "../lib/api/types";
-import { HomeSections } from "./home-sections";
+import {
+  fetchStories,
+  uploadSocialMedia,
+  type SocialMediaItem,
+} from "../lib/social-media";
 import { homeDesignProducts } from "./home-design";
+import { HomeSocialFeed } from "./home-social-feed";
+import { Icon } from "./components/icon";
 import type { ProductList } from "../lib/public-catalog";
+
+function StoryPreview({
+  story,
+  userId,
+  name,
+}: {
+  story?: SocialMediaItem;
+  userId: string;
+  name: string;
+}) {
+  const [failedUrl, setFailedUrl] = useState<string>();
+  if (!story || failedUrl === story.url)
+    return <ProfileAvatar userId={userId} name={name} />;
+
+  if (story.contentType?.startsWith("video/"))
+    return (
+      <video
+        src={`${story.url}#t=0.1`}
+        muted
+        playsInline
+        preload="metadata"
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget;
+          if (Number.isFinite(video.duration) && video.duration > 0)
+            video.currentTime = Math.min(0.1, video.duration / 2);
+        }}
+        onError={() => setFailedUrl(story.url)}
+      />
+    );
+
+  return (
+    <ContentImage
+      src={story.url}
+      alt=""
+      width={58}
+      height={58}
+      sizes="58px"
+      onError={() => setFailedUrl(story.url)}
+    />
+  );
+}
 
 export default function HomePage({
   initialProducts,
@@ -51,19 +103,49 @@ export default function HomePage({
   const [busy, setBusy] = useState<string | null>(null);
   const [localSaved, setLocalSaved] = useState<Record<string, boolean>>({});
   const [feedback, setFeedback] = useState("");
+  const [stories, setStories] = useState<Record<string, SocialMediaItem>>({});
+  const [storyBusy, setStoryBusy] = useState(false);
+  const [storyError, setStoryError] = useState("");
   const closeDrawer = useCallback(() => setDrawer(false), []);
   const items = products.data?.data ?? [];
   const sorted = [...items];
-  const popularItems = sorted.slice(0, 4);
   const activeSellers = Array.from(
     new Map(
       sorted.map((product) => [product.seller.id, product.seller]),
     ).values(),
   ).slice(0, 8);
+  const storyUserIds = Array.from(
+    new Set([
+      ...(auth.user ? [auth.user.id] : []),
+      ...activeSellers
+        .map((seller) => seller.userId)
+        .filter((id): id is string => Boolean(id)),
+    ]),
+  );
+  const storyKey = storyUserIds.join(",");
+
+  useEffect(() => {
+    let active = true;
+    const ids = storyKey ? storyKey.split(",") : [];
+    if (!ids.length) {
+      setStories({});
+      return () => {
+        active = false;
+      };
+    }
+    void fetchStories(ids).then((next) => {
+      if (active) setStories(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [storyKey]);
+
   const isSaved = (id: string) =>
     localSaved[id] ??
     saved.data?.data.some((item) => item.productId === id) ??
     false;
+
   const toggleSaved = async (product: Product) => {
     if (!auth.isAuthenticated) {
       router.push(`/login?next=${encodeURIComponent("/")}`);
@@ -84,19 +166,47 @@ export default function HomePage({
       setBusy(null);
     }
   };
+
+  const uploadStory = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    if (!auth.user) {
+      router.push("/login?next=/");
+      return;
+    }
+
+    setStoryBusy(true);
+    setStoryError("");
+    try {
+      const story = await uploadSocialMedia("story", auth.user.id, file);
+      setStories((current) => ({ ...current, [auth.user!.id]: story }));
+    } catch (error) {
+      setStoryError(
+        error instanceof Error ? error.message : "Could not upload your story",
+      );
+    } finally {
+      setStoryBusy(false);
+    }
+  };
+
   return (
     <main
-      className="app-shell with-nav figma-home"
+      className="app-shell with-nav figma-home social-home"
       data-figma-node="1247:16174"
     >
-      <header className="figma-home-sticky">
+      <header className="figma-home-sticky social-home-sticky">
         <div className="figma-home-header">
           <button
             className="figma-home-avatar"
             aria-label="Open side navigation"
             onClick={() => setDrawer(true)}
           >
-            <img src="/figma/profile.svg" width={36} height={36} alt="" />
+            {auth.user ? (
+              <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+            ) : (
+              <Icon name="user-circle" size={32} />
+            )}
           </button>
           <Link className="figma-home-logo" href="/" aria-label="EaziCart home">
             <img src="/figma/logo.svg" width={27} height={27} alt="" />
@@ -106,7 +216,11 @@ export default function HomePage({
             href="/notifications"
             aria-label="Notifications"
           >
-            <img src="/figma/bell.svg" width={24} height={24} alt="" />
+            <Icon
+              name="bell"
+              size={24}
+              active={Boolean(notifications.data?.meta?.unreadCount)}
+            />
             {notifications.data?.meta?.unreadCount ? (
               <b className="figma-home-notification-count">
                 {notifications.data.meta.unreadCount}
@@ -115,7 +229,7 @@ export default function HomePage({
           </Link>
         </div>
         <Link className="figma-home-search" href="/search">
-          <img src="/figma/search.svg" width={18} height={18} alt="" />
+          <Icon name="search" size={20} />
           <span>Search products, stores or brands</span>
         </Link>
         <nav className="figma-home-tabs" aria-label="Product discovery">
@@ -123,90 +237,116 @@ export default function HomePage({
             For You
           </Link>
           <Link href="/explore?section=trending">Trending</Link>
-          <Link href="/explore?section=categories">Categories</Link>
-          <Link href="/explore?section=sellers">Sellers</Link>
+          <Link href="/explore">Nearby</Link>
+          <Link href="/following">Following</Link>
         </nav>
       </header>
-      {activeSellers.length ? (
-        <section className="figma-home-stories" aria-label="Active sellers">
+
+      {auth.user || activeSellers.length ? (
+        <section
+          className="figma-home-stories social-home-stories"
+          aria-label="Stories"
+        >
           <div className="figma-home-section-header">
-            <h2>
-              <img src="/figma/sparkle.svg" width={15} height={15} alt="" />
-              Sellers
-            </h2>
-            <Link href="/explore?section=sellers">
-              View all <b>›</b>
-            </Link>
+            <h2>Stories</h2>
+            <Link href="/explore?section=sellers">View all</Link>
           </div>
           <div className="figma-home-story-strip">
-            {activeSellers.map((seller) => (
-              <Link
-                className="figma-home-story"
-                href={`/seller/${seller.id}`}
-                key={seller.id}
-              >
-                <span className="figma-home-story-avatar" aria-hidden="true">
-                  {seller.displayName.slice(0, 2).toUpperCase()}
+            {auth.user ? (
+              <label className="figma-home-story figma-home-story-add">
+                <span
+                  className={`figma-home-story-avatar ${stories[auth.user.id] ? "has-story" : ""}`}
+                >
+                  <span className="figma-home-story-media" aria-hidden="true">
+                    <StoryPreview
+                      story={stories[auth.user.id]}
+                      userId={auth.user.id}
+                      name={auth.user.name}
+                    />
+                  </span>
+                  <b className="figma-home-story-plus">
+                    <Icon name="plus" size={14} weight="semibold" />
+                  </b>
                 </span>
-                <strong>{seller.displayName}</strong>
-                {seller._count?.products ? (
-                  <small>{seller._count.products} products</small>
-                ) : null}
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
-      <div className="figma-home-divider" />
-      {popularItems.length ? (
-        <section className="figma-home-popular">
-          <SectionHeader title="Popular products" />
-          <div className="figma-home-popular-strip">
-            {popularItems.map((product) => {
-              const design = homeDesignProducts.find(
-                (d) =>
-                  d.name === product.name &&
-                  d.seller === product.seller.displayName,
-              );
+                <strong>{storyBusy ? "Uploading…" : "Your story"}</strong>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                  onChange={(event) => void uploadStory(event)}
+                  disabled={storyBusy}
+                  aria-label="Upload a story from your gallery"
+                />
+              </label>
+            ) : null}
+            {activeSellers.map((seller) => {
+              const userId = seller.userId;
+              const story = userId ? stories[userId] : undefined;
               return (
                 <Link
-                  className="figma-home-popular-card"
-                  href={`/product/${product.id}`}
-                  key={product.id}
+                  className="figma-home-story"
+                  href={
+                    story && userId
+                      ? `/story/${userId}`
+                      : `/seller/${seller.id}`
+                  }
+                  key={seller.id}
                 >
-                  <div style={{ background: design?.background }}>
-                    {product.images[0] ? (
-                      <img
-                        src={product.images[0].url}
-                        alt={product.images[0].altText ?? product.name}
-                      />
-                    ) : design ? (
-                      <img src={`/figma/${design.image}`} alt={product.name} />
-                    ) : null}
-                  </div>
-                  <strong>{product.name}</strong>
-                  <b>{money(product.price)}</b>
-                  <small>
-                    {product.viewsLabel ??
-                      (product.stock > 0 ? "In stock" : "Out of stock")}
-                  </small>
+                  <span
+                    className={`figma-home-story-avatar ${story ? "has-story" : ""}`}
+                    aria-hidden="true"
+                  >
+                    <span className="figma-home-story-media">
+                      {userId ? (
+                        <StoryPreview
+                          story={story}
+                          userId={userId}
+                          name={seller.displayName}
+                        />
+                      ) : (
+                        seller.displayName.slice(0, 2).toUpperCase()
+                      )}
+                    </span>
+                  </span>
+                  <strong>{seller.displayName}</strong>
                 </Link>
               );
             })}
           </div>
+          {storyError ? (
+            <p className="figma-home-story-upload-error" role="alert">
+              {storyError}
+            </p>
+          ) : null}
         </section>
       ) : null}
-      {popularItems.length ? <div className="figma-home-divider" /> : null}
-      <section className="figma-home-for-you">
-        <SectionHeader title="For you" />
-        {products.loading && !products.data ? (
-          <LoadingState label="Loading products…" />
-        ) : products.error && !products.data ? (
+
+      {products.loading && !products.data ? (
+        <div className="social-home-state">
+          <LoadingState label="Loading your feed…" />
+        </div>
+      ) : products.error && !products.data ? (
+        <div className="social-home-state">
           <ErrorState
             message={products.error}
             retry={() => void products.reload()}
           />
-        ) : sorted.length ? (
+        </div>
+      ) : sorted.length ? (
+        <HomeSocialFeed
+          products={sorted}
+          isSaved={isSaved}
+          busy={busy}
+          onToggleSaved={(product) => void toggleSaved(product)}
+        />
+      ) : (
+        <div className="social-home-state">
+          <EmptyState message="No products are available yet." />
+        </div>
+      )}
+
+      {sorted.length ? (
+        <section className="figma-home-for-you social-home-more-products">
+          <SectionHeader title="More for you" />
           <div className="figma-home-product-grid">
             {sorted.slice(0, 16).map((product) => {
               const design = homeDesignProducts.find(
@@ -224,12 +364,18 @@ export default function HomePage({
                   >
                     <div>
                       {product.images[0] ? (
-                        <img
+                        <ContentImage
+                          width={196}
+                          height={196}
+                          sizes="(max-width: 440px) calc((100vw - 44px) / 2), 198px"
                           src={product.images[0].url}
                           alt={product.images[0].altText ?? product.name}
                         />
                       ) : design ? (
-                        <img
+                        <ContentImage
+                          width={196}
+                          height={196}
+                          sizes="(max-width: 440px) calc((100vw - 44px) / 2), 198px"
                           src={`/figma/${design.image}`}
                           alt={product.name}
                         />
@@ -245,15 +391,10 @@ export default function HomePage({
                     onClick={() => void toggleSaved(product)}
                   >
                     <span>
-                      <img
-                        src={
-                          isSaved(product.id)
-                            ? "/figma/heart-saved.svg"
-                            : "/figma/heart.svg"
-                        }
-                        alt=""
-                        width={18}
-                        height={18}
+                      <Icon
+                        name="heart"
+                        size={20}
+                        active={isSaved(product.id)}
                       />
                     </span>
                   </button>
@@ -273,9 +414,11 @@ export default function HomePage({
                     <strong>{money(product.price)}</strong>
                     <div className="figma-home-product-rating">
                       <span>
-                        {product.stock > 0
-                          ? `${product.stock} in stock`
-                          : "Out of stock"}
+                        {product.soldLabel ??
+                          product.viewsLabel ??
+                          (product.stock > 0
+                            ? `${product.stock} in stock`
+                            : "Out of stock")}
                       </span>
                     </div>
                   </div>
@@ -283,11 +426,9 @@ export default function HomePage({
               );
             })}
           </div>
-        ) : (
-          <EmptyState message="No products are available yet." />
-        )}
-      </section>
-      {sorted.length ? <HomeSections products={sorted} /> : null}
+        </section>
+      ) : null}
+
       {feedback ? (
         <p role="alert" className="figma-home-feedback">
           {feedback}
@@ -303,6 +444,7 @@ export default function HomePage({
     </main>
   );
 }
+
 function SectionHeader({ title }: { title: string }) {
   return (
     <div className="figma-home-section-header">

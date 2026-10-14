@@ -20,7 +20,7 @@ export const products: Product[] = [
     oldPrice: 56000,
     rating: 4.9,
     reviews: 128,
-    image: "👜",
+    image: "",
     color: "#d8c1a8",
   },
   {
@@ -30,7 +30,7 @@ export const products: Product[] = [
     price: 62000,
     rating: 4.8,
     reviews: 84,
-    image: "👚",
+    image: "",
     color: "#d8ddd5",
   },
   {
@@ -40,7 +40,7 @@ export const products: Product[] = [
     price: 35500,
     rating: 4.7,
     reviews: 62,
-    image: "⌚",
+    image: "",
     color: "#eee1cb",
   },
   {
@@ -50,7 +50,7 @@ export const products: Product[] = [
     price: 54000,
     rating: 4.9,
     reviews: 211,
-    image: "👟",
+    image: "",
     color: "#d9dadd",
   },
   {
@@ -60,7 +60,7 @@ export const products: Product[] = [
     price: 18500,
     rating: 4.6,
     reviews: 41,
-    image: "🧣",
+    image: "",
     color: "#d7b0a6",
   },
   {
@@ -70,7 +70,7 @@ export const products: Product[] = [
     price: 27000,
     rating: 4.8,
     reviews: 73,
-    image: "🏺",
+    image: "",
     color: "#c7d2ce",
   },
 ];

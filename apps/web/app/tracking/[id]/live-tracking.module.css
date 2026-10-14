@@ -8,7 +8,7 @@
 }
 .map {
   position: absolute;
-  inset: 0 0 calc(88px + env(safe-area-inset-bottom));
+  inset: 0 0 calc(var(--customer-nav-height) + env(safe-area-inset-bottom));
   overflow: hidden;
   background: #e9eee9;
 }
@@ -276,7 +276,7 @@
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: calc(104px + env(safe-area-inset-bottom));
+  bottom: calc(var(--customer-nav-height) + 16px + env(safe-area-inset-bottom));
   height: 225px;
   padding: 16px 18px;
   border-radius: 28px;

@@ -1,7 +1,9 @@
 .page {
   max-width: 430px;
   min-height: 100svh;
-  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  padding-bottom: calc(
+    var(--customer-nav-height) + env(safe-area-inset-bottom)
+  );
 }
 
 .header {
@@ -237,6 +239,7 @@
 }
 
 .removeButton {
+  color: var(--brand-pressed);
   position: absolute;
   z-index: 3;
   top: 7px;
@@ -258,7 +261,7 @@
   opacity: 0.55;
 }
 
-.removeButton img {
+.removeButton svg {
   display: block;
 }
 

@@ -74,7 +74,7 @@
   position: absolute;
   top: calc(113.33px + var(--address-safe-top-shift));
   right: 0;
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  bottom: calc(var(--customer-nav-height) + env(safe-area-inset-bottom));
   left: 0;
   padding: 0;
   overflow-x: hidden;

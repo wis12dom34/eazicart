@@ -198,7 +198,7 @@
 }
 .checkoutArea {
   position: fixed;
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  bottom: calc(var(--customer-nav-height) + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   width: 100%;

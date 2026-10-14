@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Icon } from "../components/icon";
 import { money } from "../data";
 import { cartApi } from "../../lib/api/cart";
 import { addressesApi } from "../../lib/api/addresses";
@@ -151,7 +152,7 @@ export default function CheckoutPage() {
             <p>Secure checkout</p>
           </div>
           <span className={styles.selected} aria-label="Selected">
-            ✓
+            <Icon name="check" size={18} />
           </span>
         </div>
       </section>
@@ -176,7 +177,8 @@ export default function CheckoutPage() {
                   <strong>{item.product.name}</strong>
                   <span>
                     {item.product.seller.displayName}
-                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty {item.quantity}
+                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty{" "}
+                    {item.quantity}
                   </span>
                 </div>
                 <strong className={styles.itemPrice}>
@@ -244,7 +246,7 @@ function CheckoutShell({ children }: { children: React.ReactNode }) {
     >
       <header className={styles.header}>
         <Link href="/cart" className={styles.back} aria-label="Back to cart">
-          <img src="/figma/back.svg" alt="" width={20} height={20} />
+          <Icon name="back" size={20} />
         </Link>
         <h1>Checkout</h1>
       </header>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProfileAvatar } from "./components/profile-avatar";
 import type { Product } from "../lib/api/types";
 
 export function HomeSections({ products }: { products: Product[] }) {
@@ -73,7 +74,10 @@ export function HomeSections({ products }: { products: Product[] }) {
                 key={seller.id}
               >
                 <b className="figma-home-seller-initial" aria-hidden="true">
-                  {seller.displayName.slice(0, 2).toUpperCase()}
+                  <ProfileAvatar
+                    userId={seller.userId}
+                    name={seller.displayName}
+                  />
                 </b>
                 <div>
                   <strong>{seller.displayName}</strong>

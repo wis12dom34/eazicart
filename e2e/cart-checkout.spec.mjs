@@ -1,3 +1,4 @@
+import { browserSessionTokens } from "./helpers/session.mjs";
 import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
@@ -22,9 +23,7 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(`${web}/`);
 
-  const tokens = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("eazicart.auth.tokens")),
-  );
+  const tokens = await browserSessionTokens(page);
   const headers = { Authorization: `Bearer ${tokens.accessToken}` };
 
   const added = await request.post(`${api}/cart/items`, {
@@ -56,9 +55,11 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   ).toBeVisible();
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
   await expect(
-    page.getByText("Promo codes are not available yet.", { exact: true }),
-  ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Apply" })).toHaveCount(0);
+    page.getByRole("button", {
+      name: "Apply promo code (not available yet)",
+      exact: true,
+    }),
+  ).toBeDisabled();
   await expect(
     page.getByText("Total", { exact: true }).locator(".."),
   ).toContainText("18,500");
@@ -73,7 +74,7 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await expect(
     page.getByText("1 Checkout Street", { exact: false }),
   ).toBeVisible();
-  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
+  await expect(page.getByText("Online payment", { exact: true })).toBeVisible();
   await expect(
     page.getByText("Woven everyday tote", { exact: true }),
   ).toBeVisible();
@@ -89,7 +90,9 @@ test("cart and checkout match the customer flow without fake payment data", asyn
   await expect(
     page.getByRole("button", { name: /Place order/i }),
   ).toBeEnabled();
-  await expect(page.getByText("Secure payment", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Secure checkout", { exact: true }),
+  ).toBeVisible();
 
   await page.getByRole("link", { name: "Change" }).click();
   await expect(page).toHaveURL(/\/address-book\?checkout=1/);

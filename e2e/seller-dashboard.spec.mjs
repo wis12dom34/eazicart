@@ -60,7 +60,7 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
       name: "Seller one dashboard product",
       price: "12500",
       stock: 7,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(sellerOneProduct.status()).toBe(201);
@@ -79,7 +79,7 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
       name: "Seller two dashboard product",
       price: "9000",
       stock: 3,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(sellerTwoProduct.status()).toBe(201);
@@ -204,16 +204,17 @@ test("seller workspace lets an authenticated customer create a store without fak
   await expect(
     page.getByRole("heading", { name: "Seller UI Store", exact: true }),
   ).toBeVisible();
+  const summary = page.getByRole("region", { name: "Seller summary" });
+  await expect(summary.getByText("No verified sales yet")).toBeVisible();
+  for (const metric of ["Orders", "Products", "Customers"]) {
+    await expect(
+      summary
+        .getByRole("article")
+        .filter({ hasText: metric })
+        .locator("strong"),
+    ).toHaveText("0");
+  }
   await expect(
-    page.getByText("Real operational data from your EaziCart store."),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Nothing is estimated or fabricated here."),
-  ).toBeVisible();
-  await expect(page.getByText("No verified sales yet")).toBeVisible();
-  await expect(page.getByText("Not available yet")).toHaveCount(5);
-  await expect(page.getByRole("link", { name: /View store/ })).toHaveAttribute(
-    "href",
-    /^\/seller\//,
-  );
+    page.getByRole("link", { name: "Public store", exact: true }),
+  ).toHaveAttribute("href", /^\/seller\//);
 });

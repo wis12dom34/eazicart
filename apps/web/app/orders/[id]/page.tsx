@@ -5,6 +5,7 @@ import Link from "next/link";
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BottomNavigation } from "../../components/bottom-navigation";
+import { Icon } from "../../components/icon";
 
 import { money } from "../../data";
 import { ordersApi } from "../../../lib/api/orders";
@@ -100,7 +101,7 @@ export default function OrderDetail({
           aria-label="Back to orders"
           className={styles.back}
         >
-          <img src="/figma/back.svg" alt="" width={20} height={20} />
+          <Icon name="back" size={22} />
         </Link>
         <h1>Order Details</h1>
       </header>

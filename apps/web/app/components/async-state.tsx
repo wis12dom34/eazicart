@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Icon } from "./icon";
+import { Icon, type IconName } from "./icon";
 export function LoadingState({ label = "Loading…" }: { label?: string }) {
   return (
-    <section className="state-card" role="status">
+    <section className="state-card loading-state" role="status">
+      <span className="loading-indicator" aria-hidden="true" />
       <p>{label}</p>
     </section>
   );
@@ -19,6 +20,9 @@ export function ErrorState({
       className={`state-card error-state${retry ? " recoverable-error" : ""}`}
       role="alert"
     >
+      <span className="state-icon" aria-hidden="true">
+        <Icon name="error" size={36} />
+      </span>
       {retry ? <h2>Something went wrong</h2> : null}
       <p>{message}</p>
       {retry && (
@@ -37,14 +41,14 @@ export function EmptyState({
 }: {
   message: string;
   title?: string;
-  icon?: string;
+  icon?: IconName;
   action?: { href: string; label: string };
 }) {
   return (
     <section className={`state-card${title ? " rich-state" : ""}`}>
       {icon ? (
-        <span className="state-icon">
-          <Icon name={icon} size={24} />
+        <span className="state-icon" aria-hidden="true">
+          <Icon name={icon} size={36} />
         </span>
       ) : null}
       {title ? <h2>{title}</h2> : null}

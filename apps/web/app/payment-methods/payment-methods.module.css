@@ -71,7 +71,7 @@
   position: absolute;
   top: calc(113.33px + var(--payment-safe-top-shift));
   left: 0;
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  bottom: calc(var(--customer-nav-height) + env(safe-area-inset-bottom));
   width: min(393px, 100%);
   overflow-x: hidden;
   overflow-y: auto;

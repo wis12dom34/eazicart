@@ -1,11 +1,11 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
-import { Icon } from "../components/icon";
+import { Icon, type IconName } from "../components/icon";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { SellerBottomNavigation } from "../components/seller-bottom-navigation";
 import { SideNavigation } from "../components/side-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
@@ -16,16 +16,21 @@ import { ordersApi } from "../../lib/api/orders";
 import { savedApi } from "../../lib/api/saved";
 import styles from "./profile.module.css";
 
-const sellerTools = [
+const sellerTools: Array<{
+  href: string;
+  icon: IconName;
+  label: string;
+  detail: string;
+}> = [
   { href: "/seller/dashboard", icon: "home", label: "Dashboard", detail: "Store overview" },
   { href: "/seller/products", icon: "box", label: "Products", detail: "Catalog and stock" },
   { href: "/seller/orders", icon: "bag", label: "Orders", detail: "Customer orders" },
-  { href: "/seller/store", icon: "shirt", label: "Storefront", detail: "Public store and map" },
+  { href: "/seller/store", icon: "store", label: "Storefront", detail: "Public store and map" },
   { href: "/seller/customers", icon: "users", label: "Customers", detail: "Buyer history" },
-  { href: "/seller/finance", icon: "card", label: "Finance", detail: "Verified sales history" },
+  { href: "/seller/finance", icon: "wallet", label: "Finance", detail: "Verified sales history" },
   { href: "/seller/reels", icon: "reels", label: "Content", detail: "Publish product reels" },
   { href: "/seller/subscription", icon: "sparkle", label: "Subscription", detail: "Seller plans" },
-] as const;
+];
 
 export default function ProfilePage() {
   return (
@@ -57,21 +62,19 @@ function ProfileContent() {
     <main className={`app-shell ${styles.page}`} data-figma-node="19:120">
       <header className={styles.header}>
         <Link href={sellerMode ? "/seller/dashboard" : "/"} aria-label={sellerMode ? "Back to seller dashboard" : "Back to home"}>
-          ‹
+          <Icon name="back" size={22} />
         </Link>
         <h1>{sellerMode ? "Seller profile" : "Profile"}</h1>
       </header>
       <div className={styles.viewport} data-figma-scroll="profile">
-        {auth.loading ? (
-          <LoadingState />
-        ) : !auth.user ? (
+        {auth.loading ? <LoadingState /> : !auth.user ? (
           <SignInState message="Sign in to manage your EaziCart profile." />
         ) : (
           <div className={styles.content}>
             <section className={styles.identity} aria-label={sellerMode ? "Seller profile" : "Customer profile"}>
               <div className={styles.identityRow}>
                 <button className={styles.avatar} onClick={() => setMenu(true)} aria-label="Open side navigation">
-                  {auth.user.name[0]?.toUpperCase() || "W"}
+                  <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
                 </button>
                 <div className={styles.identityCopy}>
                   <h2>{auth.user.name}</h2>
@@ -79,7 +82,7 @@ function ProfileContent() {
                   <small>{sellerMode ? "Seller account" : "Personal account"}</small>
                 </div>
                 <Link href="/settings" className={styles.settings} aria-label="Account settings">
-                  <img src="/figma/profile-settings.svg" alt="" width={24} height={24} />
+                  <Icon name="settings" size={24} />
                 </Link>
               </div>
               <Link className={styles.edit} href="/edit-profile">Edit profile</Link>
@@ -110,25 +113,23 @@ function ProfileContent() {
             {sellerMode ? (
               <section className={styles.sellerWorkspace} aria-label="Seller workspace">
                 <div className={styles.sellerIntro}>
-                  <p>Seller workspace</p>
-                  <h2>Manage your store</h2>
+                  <p>Seller workspace</p><h2>Manage your store</h2>
                   <span>Open the real seller tools already connected to your EaziCart account.</span>
                 </div>
                 <div className={styles.sellerGrid}>
                   {sellerTools.map((tool) => (
                     <Link className={styles.sellerTool} href={tool.href} key={tool.href}>
                       <span className={styles.sellerToolIcon}><Icon name={tool.icon} size={21} /></span>
-                      <strong>{tool.label}</strong>
-                      <small>{tool.detail}</small>
+                      <strong>{tool.label}</strong><small>{tool.detail}</small>
                     </Link>
                   ))}
                 </div>
               </section>
             ) : (
               <section className={styles.activity} aria-label="Your activity">
-                <ProfileRow href="/orders" icon="orders" label="Orders" detail="Track and manage purchases" />
-                <ProfileRow href="/saved" icon="saved" label="Saved" detail="Products you want to revisit" />
-                <ProfileRow href="/following" icon="following" label="Following" detail="Sellers and stores you follow" />
+                <ProfileRow href="/orders" icon="box" label="Orders" detail="Track and manage purchases" />
+                <ProfileRow href="/saved" icon="bookmark" label="Saved" detail="Products you want to revisit" />
+                <ProfileRow href="/following" icon="users" label="Following" detail="Sellers and stores you follow" />
               </section>
             )}
 
@@ -136,14 +137,14 @@ function ProfileContent() {
               <h2>Account</h2>
               {sellerMode ? (
                 <>
-                  <ProfileRow href="/notifications" icon="notifications" label="Notifications" detail="Orders and account activity" />
+                  <ProfileRow href="/notifications" icon="bell" label="Notifications" detail="Orders and account activity" />
                   <ProfileRow href="/settings" icon="settings" label="Account settings" detail="Security and preferences" />
                 </>
               ) : (
                 <>
-                  <ProfileRow href="/address-book" icon="address" label="Address book" detail="Manage delivery addresses" />
-                  <ProfileRow href="/payment-methods" icon="payment" label="Payment methods" detail="Secure online checkout" />
-                  <ProfileRow href="/notifications" icon="notifications" label="Notifications" detail="Orders and account activity" />
+                  <ProfileRow href="/address-book" icon="location" label="Address book" detail="Manage delivery addresses" />
+                  <ProfileRow href="/payment-methods" icon="card" label="Payment methods" detail="Secure online checkout" />
+                  <ProfileRow href="/notifications" icon="bell" label="Notifications" detail="Orders and account activity" />
                 </>
               )}
             </section>
@@ -165,12 +166,12 @@ function ProfileLoadingShell() {
   );
 }
 
-function ProfileRow({ href, icon, label, detail }: { href: string; icon: string; label: string; detail: string }) {
+function ProfileRow({ href, icon, label, detail }: { href: string; icon: IconName; label: string; detail: string }) {
   return (
     <Link href={href} className={styles.row}>
-      <img src={`/figma/profile-${icon}.svg`} width={32} height={32} alt="" />
+      <Icon name={icon} size={24} />
       <span><strong>{label}</strong><small>{detail}</small></span>
-      <img src="/figma/profile-chevron.svg" width={24} height={44} alt="" />
+      <Icon name="chevron" size={20} />
     </Link>
   );
 }

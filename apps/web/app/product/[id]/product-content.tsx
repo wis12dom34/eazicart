@@ -6,130 +6,52 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "../../components/header";
 import { Icon } from "../../components/icon";
+import { ProfileAvatar } from "../../components/profile-avatar";
 import { money } from "../../data";
 import { productsApi } from "../../../lib/api/products";
 import { cartApi } from "../../../lib/api/cart";
 import { savedApi } from "../../../lib/api/saved";
 import { useRequest } from "../../hooks/use-request";
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-} from "../../components/async-state";
+import { EmptyState, ErrorState, LoadingState } from "../../components/async-state";
 import { useAuth } from "../../providers/auth-provider";
 import styles from "./product-detail.module.css";
 import type { Product } from "../../../lib/api/types";
 
-export default function ProductPage({
-  id,
-  initialProduct,
-  initialError = "",
-}: {
-  id: string;
-  initialProduct?: Product;
-  initialError?: string;
-}) {
+export default function ProductPage({ id, initialProduct, initialError = "" }: { id: string; initialProduct?: Product; initialError?: string }) {
   const router = useRouter();
   const auth = useAuth();
-  const result = useRequest(
-    () => productsApi.get(id),
-    [id],
-    initialProduct ? { data: initialProduct } : undefined,
-    initialError,
-  );
+  const result = useRequest(() => productsApi.get(id), [id], initialProduct ? { data: initialProduct } : undefined, initialError);
   const [message, setMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(0);
-  const [busyAction, setBusyAction] = useState<"save" | "cart" | "buy" | null>(
-    null,
-  );
-  const savedItems = useRequest(
-    () =>
-      auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }),
-    [auth.isAuthenticated],
-  );
+  const [busyAction, setBusyAction] = useState<"save" | "cart" | "buy" | null>(null);
+  const savedItems = useRequest(() => auth.isAuthenticated ? savedApi.list() : Promise.resolve({ data: [] }), [auth.isAuthenticated]);
   const [savedOverride, setSavedOverride] = useState<boolean | null>(null);
   const product = result.data?.data;
-  const saved = product
-    ? (savedOverride ??
-      savedItems.data?.data.some((item) => item.productId === product.id) ??
-      false)
-    : false;
+  const saved = product ? (savedOverride ?? savedItems.data?.data.some((item) => item.productId === product.id) ?? false) : false;
 
-  const protectedAction = async (
-    kind: "save" | "cart" | "buy",
-    action: () => Promise<unknown>,
-    success: string,
-  ) => {
-    if (!auth.isAuthenticated) {
-      router.push(`/login?next=/product/${id}`);
-      return;
-    }
-
+  const protectedAction = async (kind: "save" | "cart" | "buy", action: () => Promise<unknown>, success: string) => {
+    if (auth.loading) return;
+    if (!auth.isAuthenticated) { router.push(`/login?next=/product/${id}`); return; }
     if (busyAction) return;
-    setBusyAction(kind);
-    setMessage("");
-    try {
-      await action();
-      setMessage(success);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Action failed");
-    } finally {
-      setBusyAction(null);
-    }
+    setBusyAction(kind); setMessage("");
+    try { await action(); setMessage(success); }
+    catch (e) { setMessage(e instanceof Error ? e.message : "Action failed"); }
+    finally { setBusyAction(null); }
   };
 
-  if (result.loading && !product) {
-    return (
-      <main className="app-shell">
-        <Header title="Product" back="/" />
-        <LoadingState label="Loading product…" />
-      </main>
-    );
-  }
-
-  if (result.error && !product) {
-    return (
-      <main className="app-shell">
-        <Header title="Product" back="/" />
-        <h1>Product details temporarily unavailable</h1>
-        <p>Browse the marketplace while we reconnect to the catalog.</p>
-        <Link href="/explore">Explore products</Link>
-        <ErrorState message={result.error} retry={() => void result.reload()} />
-      </main>
-    );
-  }
-
-  if (!product) {
-    return (
-      <main className="app-shell">
-        <Header title="Product" back="/" />
-        <EmptyState message="Product not found." />
-      </main>
-    );
-  }
+  if (result.loading && !product) return <main className="app-shell"><Header title="Product" back="/" /><LoadingState label="Loading product…" /></main>;
+  if (result.error && !product) return <main className="app-shell"><Header title="Product" back="/" /><h1>Product details temporarily unavailable</h1><p>Browse the marketplace while we reconnect to the catalog.</p><Link href="/explore">Explore products</Link><ErrorState message={result.error} retry={() => void result.reload()} /></main>;
+  if (!product) return <main className="app-shell"><Header title="Product" back="/" /><EmptyState message="Product not found." icon="box" /></main>;
 
   const inStock = product.stock > 0;
-  const imageIndex = Math.min(
-    selectedImage,
-    Math.max(product.images.length - 1, 0),
-  );
+  const imageIndex = Math.min(selectedImage, Math.max(product.images.length - 1, 0));
   const activeImage = product.images[imageIndex];
 
   const shareProduct = async () => {
     const url = `${window.location.origin}/product/${encodeURIComponent(product.id)}`;
-
     try {
-      if (navigator.share) {
-        await navigator.share({ title: product.name, url });
-        return;
-      }
-
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-        setMessage("Product link copied");
-        return;
-      }
-
+      if (navigator.share) { await navigator.share({ title: product.name, url }); return; }
+      if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(url); setMessage("Product link copied"); return; }
       setMessage("Share this page from your browser");
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -139,181 +61,51 @@ export default function ProductPage({
 
   return (
     <main className={`app-shell detail-page ${styles.page}`}>
-      <Header
-        title="Product"
-        back="/"
-        action={
-          <div className={styles.headerActions}>
-            <button
-              className={`icon-button ${styles.headerIconButton}`}
-              aria-label={saved ? "Unsave product" : "Save product"}
-              aria-pressed={saved}
-              disabled={busyAction === "save"}
-              onClick={() =>
-                void protectedAction(
-                  "save",
-                  async () => {
-                    if (saved) await savedApi.remove(id);
-                    else await savedApi.save(id);
-                    setSavedOverride(!saved);
-                  },
-                  saved ? "Removed from saved items" : "Saved",
-                )
-              }
-            >
-              <Icon name="heart" />
-            </button>
-            <button
-              className={`icon-button ${styles.headerIconButton}`}
-              aria-label="Share product"
-              onClick={() => void shareProduct()}
-            >
-              <Icon name="share" />
-            </button>
-          </div>
-        }
-      />
+      <Header title="Product" back="/" action={
+        <div className={styles.headerActions}>
+          <button className={`icon-button ${styles.headerIconButton}`} aria-label={saved ? "Unsave product" : "Save product"} aria-pressed={saved} disabled={auth.loading || busyAction === "save"} onClick={() => void protectedAction("save", async () => { if (saved) await savedApi.remove(id); else await savedApi.save(id); setSavedOverride(!saved); }, saved ? "Removed from saved items" : "Saved") }>
+            <Icon name="heart" size={22} active={saved} />
+          </button>
+          <button className={`icon-button ${styles.headerIconButton}`} aria-label="Share product" onClick={() => void shareProduct()}><Icon name="share" size={22} /></button>
+        </div>
+      } />
 
-      <section
-        className={`detail-image ${styles.media}`}
-        aria-label={`${product.name} product images`}
-      >
-        {activeImage ? (
-          <img
-            className={styles.mediaImage}
-            src={activeImage.url}
-            alt={activeImage.altText ?? product.name}
-            width={430}
-            height={430}
-            fetchPriority="high"
-          />
-        ) : (
-          <span className={styles.mediaFallback} aria-hidden="true">
-            <Icon name="bag" size={56} />
-          </span>
-        )}
-
+      <section className={`detail-image ${styles.media}`} aria-label={`${product.name} product images`}>
+        {activeImage ? <img className={styles.mediaImage} src={activeImage.url} alt={activeImage.altText ?? product.name} width={430} height={430} fetchPriority="high" /> : <span className={styles.mediaFallback} aria-hidden="true"><Icon name="bag" size={56} /></span>}
         {product.images.length > 0 ? (
           <div className={styles.galleryMeta}>
             <div className={styles.galleryDots} aria-label="Product images">
-              {product.images.map((image, index) => (
-                <button
-                  key={image.id ?? `${image.url}-${index}`}
-                  type="button"
-                  className={`${styles.galleryDot} ${
-                    imageIndex === index ? styles.galleryDotActive : ""
-                  }`}
-                  aria-label={`Show product image ${index + 1}`}
-                  aria-pressed={imageIndex === index}
-                  onClick={() => setSelectedImage(index)}
-                />
-              ))}
+              {product.images.map((image, index) => <button key={image.id ?? `${image.url}-${index}`} type="button" className={`${styles.galleryDot} ${imageIndex === index ? styles.galleryDotActive : ""}`} aria-label={`Show product image ${index + 1}`} aria-pressed={imageIndex === index} onClick={() => setSelectedImage(index)} />)}
             </div>
-            <span className={styles.galleryCount} aria-live="polite">
-              {imageIndex + 1} / {product.images.length}
-            </span>
+            <span className={styles.galleryCount} aria-live="polite">{imageIndex + 1} / {product.images.length}</span>
           </div>
         ) : null}
       </section>
 
       <section className={`product-info ${styles.content}`}>
         <h1 className={styles.title}>{product.name}</h1>
-        {result.error ? (
-          <p role="status">
-            Live price and availability could not be refreshed. Try again before
-            purchasing.
-          </p>
-        ) : null}
-        <div className={`price large ${styles.price}`}>
-          <strong>{money(product.price)}</strong>
-        </div>
+        {result.error ? <p role="status">Live price and availability could not be refreshed. Try again before purchasing.</p> : null}
+        <div className={`price large ${styles.price}`}><strong>{money(product.price)}</strong></div>
         <div className={styles.socialProof} aria-label="Product activity">
-          {product.rating ? <span>★ {product.rating}</span> : null}
-          {product.rating && product.soldLabel ? (
-            <i aria-hidden="true">·</i>
-          ) : null}
+          {product.rating ? <span><Icon name="star" size={14} filled /> {product.rating}</span> : null}
+          {product.rating && product.soldLabel ? <i aria-hidden="true">·</i> : null}
           {product.soldLabel ? <span>{product.soldLabel} sold</span> : null}
-          {!product.rating && !product.soldLabel ? (
-            <span>
-              {inStock ? `${product.stock} in stock` : "Out of stock"}
-            </span>
-          ) : null}
+          {!product.rating && !product.soldLabel ? <span>{inStock ? `${product.stock} in stock` : "Out of stock"}</span> : null}
         </div>
-        {!inStock ? (
-          <p className={`${styles.inventory} ${styles.inventoryOut}`}>
-            Out of stock
-          </p>
-        ) : null}
+        {!inStock ? <p className={`${styles.inventory} ${styles.inventoryOut}`}>Out of stock</p> : null}
 
-        <Link
-          href={`/seller/${product.seller.id}`}
-          className={`seller-line ${styles.sellerCard}`}
-          aria-label={`View ${product.seller.displayName} seller profile`}
-        >
-          <span aria-hidden="true">
-            {product.seller.displayName.slice(0, 2).toUpperCase()}
-          </span>
-          <div>
-            <strong>{product.seller.displayName}</strong>
-            <small>
-              {product.seller._count?.products
-                ? `${product.seller._count.products} products`
-                : "View seller profile"}
-            </small>
-          </div>
+        <Link href={`/seller/${product.seller.id}`} className={`seller-line ${styles.sellerCard}`} aria-label={`View ${product.seller.displayName} seller profile`}>
+          <span aria-hidden="true"><ProfileAvatar userId={product.seller.userId} name={product.seller.displayName} /></span>
+          <div><strong>{product.seller.displayName}</strong><small>{product.seller._count?.products ? `${product.seller._count.products} products` : "View seller profile"}</small></div>
         </Link>
-
         <hr className={styles.divider} />
-
-        <section aria-labelledby="about-product">
-          <h3 id="about-product" className={styles.sectionTitle}>
-            About this item
-          </h3>
-          <p className={styles.description}>
-            {product.description || "No description provided."}
-          </p>
-        </section>
-
-        {message && (
-          <p className={styles.status} role="status" aria-live="polite">
-            {message}
-          </p>
-        )}
+        <section aria-labelledby="about-product"><h3 id="about-product" className={styles.sectionTitle}>About this item</h3><p className={styles.description}>{product.description || "No description provided."}</p></section>
+        {message && <p className={styles.status} role="status" aria-live="polite">{message}</p>}
       </section>
 
-      <div
-        className={`sticky-actions ${styles.actions}`}
-        aria-label="Product actions"
-      >
-        <button
-          disabled={!inStock || busyAction !== null || Boolean(result.error)}
-          className={`secondary-button ${styles.actionButton}`}
-          onClick={() =>
-            void protectedAction(
-              "cart",
-              () => cartApi.add(id, 1),
-              "Added to cart",
-            )
-          }
-        >
-          {busyAction === "cart" ? "Adding…" : "Add to Cart"}
-        </button>
-        <button
-          disabled={!inStock || busyAction !== null || Boolean(result.error)}
-          className={`dark-button ${styles.actionButton}`}
-          onClick={() =>
-            void protectedAction(
-              "buy",
-              async () => {
-                await cartApi.add(id, 1);
-                router.push("/checkout");
-              },
-              "",
-            )
-          }
-        >
-          {busyAction === "buy" ? "Preparing…" : "Buy Now"}
-        </button>
+      <div className={`sticky-actions ${styles.actions}`} aria-label="Product actions">
+        <button disabled={auth.loading || !inStock || busyAction !== null || Boolean(result.error)} className={`secondary-button ${styles.actionButton}`} onClick={() => void protectedAction("cart", () => cartApi.add(id, 1), "Added to cart")}>{busyAction === "cart" ? "Adding…" : "Add to Cart"}</button>
+        <button disabled={auth.loading || !inStock || busyAction !== null || Boolean(result.error)} className={`dark-button ${styles.actionButton}`} onClick={() => void protectedAction("buy", async () => { await cartApi.add(id, 1); router.push("/checkout"); }, "")}>{busyAction === "buy" ? "Preparing…" : "Buy Now"}</button>
       </div>
     </main>
   );

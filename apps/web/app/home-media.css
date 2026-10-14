@@ -1,0 +1,524 @@
+.figma-home-product-media > div {
+  width: 100%;
+  height: 196px;
+  padding: 0;
+}
+
+.figma-home-product-media img,
+.social-home-product-media img,
+.social-home-nearby-card img,
+.social-home-poll-products img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.figma-home-avatar {
+  overflow: hidden;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.figma-home-avatar > img {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Home search — compact iOS-style surface. */
+.social-home .figma-home-search {
+  height: 46px;
+  margin: 0 16px 8px;
+  border: 0;
+  border-radius: 14px;
+  background: #f2f2f7;
+  color: #636366;
+  font-size: 16px;
+}
+
+/* Discovery tabs — balanced spacing and a subtle active indicator. */
+.social-home .figma-home-tabs {
+  height: 40px;
+  padding: 0 16px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0;
+  overflow-x: auto;
+  border-top: 0;
+  border-bottom: 1px solid #e5e5ea;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.social-home .figma-home-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.social-home .figma-home-tabs > * {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 0;
+  height: 39px;
+  padding: 8px 10px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #636366;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+
+.social-home .figma-home-tabs .active {
+  color: #1c1c1e;
+  font-weight: 650;
+}
+
+.social-home .figma-home-tabs .active::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: -1px;
+  width: auto;
+  height: 2px;
+  border-radius: 999px;
+  background: #f56300;
+}
+
+/* Figma 1247:16230 — Active Sellers / stories rail. */
+.social-home-stories {
+  height: auto;
+  padding: 6px 0 1px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  overflow: hidden;
+}
+
+.social-home-stories .figma-home-section-header {
+  height: 24px;
+  min-height: 24px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.social-home-stories .figma-home-story-heading {
+  height: 24px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #0f1419;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.social-home-stories .figma-home-story-heading svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  stroke-width: 1.8;
+}
+
+.social-home-stories .figma-home-section-header > a {
+  height: 24px;
+  min-height: 24px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #0866f5;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.social-home-stories .figma-home-section-header > a b {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.social-home-stories .figma-home-section-header > a:active {
+  opacity: 0.62;
+}
+
+.social-home-stories .figma-home-story-strip {
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 6px 5px 0 9px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 9px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.social-home-stories .figma-home-story-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.social-home-stories .figma-home-story {
+  width: 80px;
+  min-width: 80px;
+  height: auto;
+  min-height: 0;
+  flex: 0 0 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  color: #0f1419;
+  text-decoration: none;
+  scroll-snap-align: start;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease;
+}
+
+.social-home-stories .figma-home-story:active {
+  transform: scale(0.97);
+  opacity: 0.82;
+}
+
+/* Figma ring: 66 outer / 62 white inset / 58 media. */
+.social-home-stories .figma-home-story-avatar {
+  position: relative;
+  width: 66px;
+  height: 66px;
+  min-width: 66px;
+  min-height: 66px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border: 0;
+  border-radius: 33px;
+  padding: 2px;
+  background: #d1d5db;
+  color: #0f1419;
+  font-size: 17px;
+  line-height: 1;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+  isolation: isolate;
+}
+
+.social-home-stories .figma-home-story-avatar.has-story {
+  background: linear-gradient(135deg, #ff8a00 0%, #ff6a00 50%, #ffb347 100%);
+}
+
+.social-home-stories .figma-home-story-media {
+  position: relative;
+  z-index: 0;
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  min-height: 62px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 2px;
+  border-radius: 31px;
+  background: #fff;
+  color: #0f1419;
+  line-height: 1;
+}
+
+.social-home-stories .figma-home-story-media > img,
+.social-home-stories .figma-home-story-media > video,
+.social-home-stories .figma-home-story-media .figma-home-story-preview {
+  position: absolute !important;
+  inset: 2px !important;
+  width: 58px !important;
+  height: 58px !important;
+  min-width: 58px !important;
+  min-height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 29px !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  box-sizing: border-box !important;
+  background: #f2f2f7;
+  transform: none !important;
+}
+
+.social-home-stories
+  .figma-home-story-avatar:not(.has-story)
+  .figma-home-story-media
+  > img,
+.social-home-stories
+  .figma-home-story-avatar:not(.has-story)
+  .figma-home-story-media
+  > video,
+.social-home-stories
+  .figma-home-story-avatar:not(.has-story)
+  .figma-home-story-preview {
+  opacity: 0.6;
+}
+
+.social-home-stories .figma-home-story-media > video,
+.social-home-stories video.figma-home-story-preview {
+  pointer-events: none;
+}
+
+.social-home-stories .figma-home-story strong {
+  width: 80px;
+  max-width: 80px;
+  height: 17px;
+  margin: 0;
+  overflow: hidden;
+  color: #0f1419;
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-home-stories .figma-home-story-meta {
+  width: 80px;
+  height: 15px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  color: #536471;
+  font-size: 9.5px;
+  line-height: 15px;
+  font-weight: 400;
+  letter-spacing: -0.05px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.social-home-stories .figma-home-story-meta b {
+  color: #d4a72c;
+  font-size: 9px;
+  line-height: 14px;
+  font-weight: 400;
+}
+
+.social-home-stories .figma-home-story-meta-own {
+  color: #536471;
+}
+
+.figma-home-story-add {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.figma-home-story-add input {
+  display: none;
+}
+
+.figma-home-story-plus {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #f56300;
+  color: #fff;
+  font-size: 16px;
+  line-height: 14px;
+  font-weight: 600;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    sans-serif;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+}
+
+.figma-home-story-upload-error {
+  position: absolute;
+  margin: 4px 16px 0;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* Keep feed spacing separate from the Figma story rail. */
+.social-home-feed {
+  padding-top: 6px;
+  background: #fff;
+}
+
+.social-home-feature {
+  width: auto;
+  height: clamp(360px, 108vw, 440px);
+  min-height: 360px;
+  max-height: 440px;
+  margin: 0 12px 12px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 20px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.035),
+    0 6px 18px rgba(0, 0, 0, 0.07);
+}
+
+.social-home-feature-image {
+  object-position: center;
+}
+
+.social-home-feature-shade {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.05) 34%,
+    rgba(0, 0, 0, 0.12) 60%,
+    rgba(0, 0, 0, 0.82) 100%
+  );
+}
+
+.social-home-feature-top {
+  top: 12px;
+  left: 12px;
+  right: 12px;
+}
+
+.social-home-feature-seller {
+  max-width: calc(100% - 52px);
+  padding: 5px 9px 5px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+.social-home-feature-seller > span {
+  width: 32px;
+  height: 32px;
+  border-color: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+}
+
+.social-home-feature-seller strong {
+  font-size: 13px;
+  line-height: 17px;
+}
+
+.social-home-feature-seller small {
+  font-size: 10.5px;
+}
+
+.social-home-feature-save {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+.social-home-feature-save svg {
+  width: 21px;
+  height: 21px;
+}
+
+.social-home-feature-copy {
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+}
+
+.social-home-feature-copy > p {
+  max-width: 280px;
+  margin: 0 52px 10px 0;
+  font-size: 12.5px;
+  line-height: 17px;
+  -webkit-line-clamp: 2;
+}
+
+.social-home-product-pill {
+  min-height: 60px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+.social-home-pill-image {
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
+}
+
+.social-home-watch {
+  right: 14px;
+  bottom: 84px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.social-home-section {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+@media (max-width: 360px) {
+  .social-home .figma-home-tabs {
+    padding-inline: 10px;
+  }
+
+  .social-home .figma-home-tabs > * {
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+
+  .social-home-stories .figma-home-story-strip {
+    gap: 4px;
+  }
+
+  .social-home-feature {
+    margin-inline: 10px;
+    border-radius: 19px;
+  }
+}
