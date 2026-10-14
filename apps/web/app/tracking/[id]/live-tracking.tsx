@@ -2,6 +2,7 @@
 import Link from "next/link";
 import type { Order } from "../../../lib/api/types";
 import { BottomNavigation } from "../../components/bottom-navigation";
+import { Icon } from "../../components/icon";
 import { mapGeometry } from "./map-geometry";
 import styles from "./live-tracking.module.css";
 
@@ -81,7 +82,7 @@ export function LiveTracking({
           href={`/orders/${order.id}`}
           aria-label="Back to order details"
         >
-          ‹
+          <Icon name="back" size={22} />
         </Link>
         <div>
           <h1>Live delivery</h1>

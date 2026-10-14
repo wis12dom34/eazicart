@@ -216,7 +216,11 @@ export default function HomePage({
             href="/notifications"
             aria-label="Notifications"
           >
-            <Icon name="bell" size={24} />
+            <Icon
+              name="bell"
+              size={24}
+              active={Boolean(notifications.data?.meta?.unreadCount)}
+            />
             {notifications.data?.meta?.unreadCount ? (
               <b className="figma-home-notification-count">
                 {notifications.data.meta.unreadCount}
@@ -260,7 +264,9 @@ export default function HomePage({
                       name={auth.user.name}
                     />
                   </span>
-                  <b className="figma-home-story-plus">+</b>
+                  <b className="figma-home-story-plus">
+                    <Icon name="plus" size={14} weight="semibold" />
+                  </b>
                 </span>
                 <strong>{storyBusy ? "Uploading…" : "Your story"}</strong>
                 <input
@@ -388,7 +394,7 @@ export default function HomePage({
                       <Icon
                         name="heart"
                         size={20}
-                        filled={isSaved(product.id)}
+                        active={isSaved(product.id)}
                       />
                     </span>
                   </button>

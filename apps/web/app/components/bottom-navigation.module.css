@@ -38,20 +38,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
 }
 .icon svg {
   display: block;
   flex: none;
 }
-.active .icon svg {
-  stroke-width: 2.25;
+.active .icon svg:not([fill="currentColor"]) {
+  stroke-width: 2;
 }
 .badge {
   position: absolute;
   top: -3px;
-  left: 14px;
+  left: 13px;
   display: flex;
   align-items: center;
   justify-content: center;

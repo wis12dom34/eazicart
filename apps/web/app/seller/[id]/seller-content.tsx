@@ -184,7 +184,7 @@ export default function SellerPage({
             ) : null}
             {currentSeller.location?.label ? (
               <p className={styles.location}>
-                <span aria-hidden="true">◎</span>
+                <Icon name="location" size={14} />
                 {currentSeller.location.label}
               </p>
             ) : null}
@@ -297,14 +297,14 @@ export default function SellerPage({
                     />
                   ) : (
                     <span className={styles.reelFallback} aria-hidden="true">
-                      ▶
+                      <Icon name="play" size={22} filled />
                     </span>
                   )}
                   <span className={styles.reelTitle}>
                     {reel.caption || reel.product?.name || "Reel"}
                   </span>
                   <span className={styles.reelViews}>
-                    ▶ {compactNumber(reel._count.views)}
+                    <Icon name="play" size={12} filled /> {compactNumber(reel._count.views)}
                   </span>
                 </div>
               </Link>
@@ -388,7 +388,7 @@ function SellerTopbar({
         disabled={!onShare}
         onClick={() => void onShare?.()}
       >
-        <span aria-hidden="true">•••</span>
+        <Icon name="more" size={20} />
       </button>
     </header>
   );

@@ -414,7 +414,7 @@ export default function SellerProductsPage() {
                           )
                         }
                       >
-                        •••
+                        <Icon name="more" size={20} />
                       </button>
                     </div>
                   </div>

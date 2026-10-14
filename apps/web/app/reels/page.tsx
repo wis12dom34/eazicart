@@ -224,7 +224,7 @@ function CommentsSheet({
             onClick={onClose}
             aria-label="Close comments"
           >
-            ×
+            <Icon name="close" size={20} />
           </button>
         </div>
 
@@ -628,22 +628,7 @@ function ReelSlide({
               });
           }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="M11 5 6 9H3v6h3l5 4V5Z" />
-            {muted ? (
-              <path d="m16 9 6 6m0-6-6 6" />
-            ) : (
-              <path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" />
-            )}
-          </svg>
+          <Icon name={muted ? "volume-off" : "volume"} size={20} />
           <span>{muted ? "Sound off" : "Sound on"}</span>
         </button>
       ) : null}
@@ -709,7 +694,9 @@ function ReelSlide({
               disabled={followBusy || authLoading}
               onClick={() => void followSeller()}
             >
-              <span aria-hidden="true">+</span>
+              <span aria-hidden="true">
+                <Icon name="plus" size={14} weight="semibold" />
+              </span>
             </button>
           ) : null}
         </div>
@@ -727,7 +714,7 @@ function ReelSlide({
           onClick={() => void toggleLike()}
         >
           <i>
-            <Icon name="heart" size={30} filled={liked} />
+            <Icon name="heart" size={30} active={liked} />
           </i>
           <span>{formatCount(reel._count.likes)}</span>
         </button>
@@ -756,7 +743,7 @@ function ReelSlide({
           onClick={() => void toggleSave()}
         >
           <i>
-            <Icon name="bookmark" size={30} filled={saved} />
+            <Icon name="bookmark" size={30} active={saved} />
           </i>
           <small>{formatCount(reel._count.saves)}</small>
         </button>

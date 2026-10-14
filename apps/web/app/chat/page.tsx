@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -96,7 +95,7 @@ function ChatScreen() {
                 href="/chat"
                 aria-label="Back to chats"
               >
-                <img src="/figma/chat-notifications/chat-back.svg" alt="" />
+                <Icon name="back" size={22} />
               </Link>
               <Link
                 className="eazicart-chat-store-avatar"
@@ -154,7 +153,7 @@ function ChatScreen() {
                 aria-label="Messaging is not available yet"
                 disabled
               >
-                <span aria-hidden="true">↑</span>
+                <Icon name="send" size={18} />
               </button>
             </div>
           </>
@@ -218,7 +217,7 @@ function ChatScreen() {
             aria-labelledby="chat-empty-title"
           >
             <span className="eazicart-chat-empty-icon" aria-hidden="true">
-              <Icon name="chat" size={28} />
+              <Icon name="chat" size={36} />
             </span>
             <h2 id="chat-empty-title">No stores to message yet</h2>
             <p>Discover a store first, then open Chat from its profile.</p>

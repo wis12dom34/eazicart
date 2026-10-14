@@ -4,6 +4,7 @@
 import { upload } from "@vercel/blob/client";
 import { useState, type ChangeEvent } from "react";
 import { tokenStore } from "../../../lib/api/client";
+import { Icon } from "../../components/icon";
 import styles from "./product-image-picker.module.css";
 
 const MAX_IMAGES = 6;
@@ -146,7 +147,7 @@ export function ProductImagePicker({
               aria-label={`Remove product photo ${index + 1}`}
               onClick={() => removeImage(index)}
             >
-              ×
+              <Icon name="close" size={16} />
             </button>
             {index > 0 ? (
               <button
@@ -163,11 +164,7 @@ export function ProductImagePicker({
 
         {images.length < MAX_IMAGES ? (
           <label className={styles.addPhoto}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.1-1.5h4.8L15.5 5h2A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z" />
-              <circle cx="12" cy="12" r="3.25" />
-              <path d="M18 8h.01" />
-            </svg>
+            <Icon name="camera" size={28} />
             <span>{images.length ? "Add more" : "Choose photos"}</span>
             <small>Photo Library</small>
             <input
