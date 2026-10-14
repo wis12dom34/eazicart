@@ -1,5 +1,8 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 
+import { revalidateTag } from "next/cache";
+import { socialMediaCacheTag } from "../../../../lib/blob-media-cache";
+
 export const runtime = "nodejs";
 
 const PROFILE_MAX_BYTES = 8 * 1024 * 1024;
@@ -67,8 +70,20 @@ export async function POST(request: Request) {
           tokenPayload: JSON.stringify({ userId }),
         };
       },
-      onUploadCompleted: async () => {
-        // Hosted media is resolved directly from its user-scoped Blob path.
+      onUploadCompleted: ({ blob, tokenPayload }) => {
+        const payload = JSON.parse(tokenPayload || "{}") as {
+          userId?: unknown;
+        };
+        const userId = typeof payload.userId === "string" ? payload.userId : "";
+        if (
+          userId &&
+          (blob.pathname.startsWith(`profiles/${userId}/`) ||
+            blob.pathname.startsWith(`stories/${userId}/`))
+        ) {
+          // The signed Blob completion callback invalidates only this user's metadata.
+          revalidateTag(socialMediaCacheTag(userId), { expire: 0 });
+        }
+        return Promise.resolve();
       },
     });
     return Response.json(response);

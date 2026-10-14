@@ -8,7 +8,7 @@ const videoTypes = new Set(["video/mp4", "video/quicktime", "video/webm"]);
 const profilePhotoCache = new Map<string, Promise<SocialMediaItem | null>>();
 const profilePhotoFetchedAt = new Map<string, number>();
 const profilePhotoRequests = new Set<string>();
-const PROFILE_PHOTO_TTL_MS = 30_000;
+const PROFILE_PHOTO_TTL_MS = 5 * 60_000;
 
 export const PROFILE_PHOTO_EVENT = "eazicart:profile-photo-updated";
 export const PROFILE_PHOTO_STORAGE_KEY = "eazicart:profile-photo-refresh";

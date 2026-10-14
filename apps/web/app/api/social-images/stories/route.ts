@@ -1,4 +1,4 @@
-import { list } from "@vercel/blob";
+import { cachedStory } from "../../../../lib/blob-media-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +30,11 @@ export async function GET(request: Request) {
   const cutoff = Date.now() - STORY_TTL_MS;
   const pairs = await Promise.all(
     userIds.map(async (userId) => {
-      const { blobs } = await list({ prefix: `stories/${userId}/`, limit: 50 });
-      const latest = [...blobs]
-        .filter((blob) => new Date(blob.uploadedAt).getTime() >= cutoff)
-        .sort(
-          (a, b) =>
-            new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
-        )[0];
+      const cached = await cachedStory(userId);
+      const latest =
+        cached && new Date(cached.uploadedAt).getTime() >= cutoff
+          ? cached
+          : null;
       return [
         userId,
         latest

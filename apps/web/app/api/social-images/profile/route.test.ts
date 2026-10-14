@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 const { list } = vi.hoisted(() => ({ list: vi.fn() }));
 vi.mock("@vercel/blob", () => ({ list }));
+vi.mock("next/cache", () => ({
+  unstable_cache: (callback: (...args: unknown[]) => unknown) => callback,
+}));
 import { GET } from "./route";
 
 describe("existing profile photo endpoint", () => {

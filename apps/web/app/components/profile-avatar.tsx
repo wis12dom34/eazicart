@@ -67,7 +67,6 @@ export function ProfileAvatar({
     window.addEventListener("storage", onStorage);
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
-    const interval = window.setInterval(refresh, 30_000);
     refresh();
 
     return () => {
@@ -76,7 +75,6 @@ export function ProfileAvatar({
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", refresh);
-      window.clearInterval(interval);
     };
   }, [userId]);
 

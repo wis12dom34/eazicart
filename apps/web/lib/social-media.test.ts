@@ -33,7 +33,7 @@ describe("shared account profile photo", () => {
     ]);
     expect(result.map((p) => p?.url)).toEqual(["/first.jpg", "/first.jpg"]);
     expect(fetch).toHaveBeenCalledTimes(1);
-    vi.advanceTimersByTime(30_001);
+    vi.advanceTimersByTime(300_001);
     expect((await fetchProfilePhoto("seller-user"))?.url).toBe("/latest.jpg");
     expect(fetch).toHaveBeenCalledTimes(2);
   });
@@ -59,7 +59,7 @@ describe("shared account profile photo", () => {
     );
     const { fetchProfilePhoto } = await import("./social-media");
     await fetchProfilePhoto("seller-user");
-    vi.advanceTimersByTime(30_001);
+    vi.advanceTimersByTime(300_001);
     expect((await fetchProfilePhoto("seller-user"))?.url).toBe("/first.jpg");
   });
 
