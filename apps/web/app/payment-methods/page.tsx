@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
 import styles from "./payment-methods.module.css";
 
 export default function PaymentMethods() {
@@ -13,12 +13,7 @@ export default function PaymentMethods() {
           href="/profile"
           aria-label="Back to profile"
         >
-          <img
-            src="/figma/address-select-back.svg"
-            width={10}
-            height={18}
-            alt=""
-          />
+          <Icon name="back" size={22} />
         </Link>
         <h1>Payment Methods</h1>
         <p>See how payments work when you place an EaziCart order.</p>
@@ -38,7 +33,7 @@ export default function PaymentMethods() {
           aria-label="Saved payment methods unavailable"
         >
           <span className={styles.cardIcon} aria-hidden="true">
-            ••
+            <Icon name="card" size={20} />
           </span>
           <span className={styles.methodCopy}>
             <strong>Saved payment methods</strong>

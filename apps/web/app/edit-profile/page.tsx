@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -13,6 +12,7 @@ import {
 
 import { ProfileAvatar } from "../components/profile-avatar";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
 import { LoadingState, SignInState } from "../components/async-state";
 import { useAuth } from "../providers/auth-provider";
 import { usersApi } from "../../lib/api/users";
@@ -100,12 +100,7 @@ export default function EditProfile() {
           href="/profile"
           aria-label="Back to profile"
         >
-          <img
-            src="/figma/address-select-back.svg"
-            width={10}
-            height={18}
-            alt=""
-          />
+          <Icon name="back" size={22} />
         </Link>
         <h1>Edit profile</h1>
       </header>

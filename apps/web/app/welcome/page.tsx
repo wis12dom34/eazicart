@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "../components/icon";
 import { pageMetadata } from "../../lib/seo";
 import styles from "./welcome.module.css";
 
@@ -36,7 +37,7 @@ export default function WelcomePage() {
               <span className={styles.phoneSpeaker} />
               <div className={styles.phoneTopCard}>
                 <span className={styles.bag} />
-                <span className={styles.playSmall}>▶</span>
+                <span className={styles.playSmall}><Icon name="play" size={12} filled /></span>
                 <i />
                 <b />
               </div>
@@ -46,14 +47,14 @@ export default function WelcomePage() {
                 <b />
               </div>
               <div className={styles.phoneActions}>
-                <span>−</span>
+                <span><Icon name="minus" size={14} /></span>
                 <span>—</span>
               </div>
             </div>
 
-            <div className={`${styles.circleTile} ${styles.checkTile}`}>✓</div>
+            <div className={`${styles.circleTile} ${styles.checkTile}`}><Icon name="check" size={20} weight="semibold" /></div>
             <div className={`${styles.circleTile} ${styles.reelTile}`}>
-              <span>▶</span>
+              <span><Icon name="play" size={18} filled /></span>
             </div>
             <div className={`${styles.tile} ${styles.boxTile}`}>
               <span />
