@@ -1,9 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
 import { addressesApi, type AddressInput } from "../../lib/api/addresses";
 import type { Address } from "../../lib/api/types";
 import { useRequest } from "../hooks/use-request";
@@ -290,12 +290,7 @@ export function AddressBookContent({
             href="/profile"
             aria-label="Back to profile"
           >
-            <img
-              src="/figma/address-select-back.svg"
-              width={10}
-              height={18}
-              alt=""
-            />
+            <Icon name="back" size={22} />
           </Link>
           <h1>Address Book</h1>
         </div>
