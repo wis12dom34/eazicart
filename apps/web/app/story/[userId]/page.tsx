@@ -1,8 +1,5 @@
 import { list } from "@vercel/blob";
-import {
-  getPublicProducts,
-  getPublicSeller,
-} from "../../../lib/public-catalog";
+import { getPublicProducts } from "../../../lib/public-catalog";
 import StoryViewer from "./story-viewer";
 
 export const dynamic = "force-dynamic";
@@ -19,14 +16,12 @@ export default async function StoryPage({
   const { userId } = await params;
   const safeUserId = validUserId(userId) ? userId : "";
 
-  const [{ blobs: storyBlobs }, productsResult, sellerResult] =
-    await Promise.all([
-      safeUserId
-        ? list({ prefix: `stories/${safeUserId}/`, limit: 50 })
-        : Promise.resolve({ blobs: [] }),
-      getPublicProducts("limit=100"),
-      getPublicSeller(safeUserId),
-    ]);
+  const [{ blobs: storyBlobs }, productsResult] = await Promise.all([
+    safeUserId
+      ? list({ prefix: `stories/${safeUserId}/`, limit: 50 })
+      : Promise.resolve({ blobs: [] }),
+    getPublicProducts("limit=100"),
+  ]);
 
   const cutoff = Date.now() - STORY_TTL_MS;
   const stories = [...storyBlobs]
@@ -47,10 +42,9 @@ export default async function StoryPage({
           (product) => product.seller.userId === safeUserId,
         )
       : undefined;
-
-  const seller =
-    sellerResult.status === "ok" ? sellerResult.data : sellerProduct?.seller;
+  const seller = sellerProduct?.seller;
   const sellerName = seller?.displayName || "Seller";
+
   if (!stories.length) {
     return (
       <main
@@ -83,19 +77,7 @@ export default async function StoryPage({
       sellerName={sellerName}
       userId={safeUserId}
       sellerId={seller?.id}
-      verified={Boolean(sellerProduct)}
-      product={
-        sellerProduct
-          ? {
-              id: sellerProduct.id,
-              name: sellerProduct.name,
-              price: String(sellerProduct.price),
-              stock: sellerProduct.stock,
-              imageUrl: sellerProduct.images[0]?.url,
-              sellerId: sellerProduct.seller.id,
-            }
-          : undefined
-      }
+      verified={false}
     />
   );
 }
