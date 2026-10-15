@@ -6,12 +6,12 @@
   transform: translateX(-50%);
   width: 100%;
   max-width: 440px;
-  height: calc(var(--customer-nav-height) + env(safe-area-inset-bottom));
+  height: calc(var(--customer-nav-height) + max(24px, env(safe-area-inset-bottom)));
   display: flex;
   align-items: flex-start;
-  padding: 5px 0 calc(4px + env(safe-area-inset-bottom));
+  padding: 5px 0 max(24px, env(safe-area-inset-bottom));
   background: #fff;
-  border-top: 1px solid #e8ecef;
+  border-top: 0;
 }
 .item {
   display: flex;
@@ -30,7 +30,7 @@
   text-decoration: none;
 }
 .active {
-  color: #c2410c;
+  color: #ff6a00;
   font-weight: 600;
 }
 .icon {

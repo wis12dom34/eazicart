@@ -35,6 +35,7 @@ async function requireUser(clientPayload: string | null) {
     method: "GET",
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok)
     throw new Error("Your session expired. Please sign in again.");

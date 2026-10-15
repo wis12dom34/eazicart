@@ -4,8 +4,7 @@ node_modules/
 
 # Build outputs
 .next/
-.next-visual/
-.next-seo/
+.next-*/
 dist/
 build/
 out/

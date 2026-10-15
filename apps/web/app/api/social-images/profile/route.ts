@@ -29,7 +29,11 @@ export async function DELETE(request: Request) {
     const userId = typeof input.userId === "string" ? input.userId.trim() : "";
     const accessToken = typeof input.accessToken === "string" ? input.accessToken.trim() : "";
     if (!validUserId(userId) || !accessToken || !apiBaseUrl) return Response.json({ error: "Unable to remove this profile photo." }, { status: 400 });
-    const auth = await fetch(`${apiBaseUrl}/users/me`, { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
+    const auth = await fetch(`${apiBaseUrl}/users/me`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
     if (!auth.ok) return Response.json({ error: "Your session expired. Please sign in again." }, { status: 401 });
     const user = (await auth.json()) as { id?: unknown };
     if (user.id !== userId) return Response.json({ error: "You can only remove your own profile photo." }, { status: 403 });

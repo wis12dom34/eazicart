@@ -7,7 +7,7 @@ export const SELLER_SUBSCRIPTION_PLANS = {
     title: "Basic",
     subtitle: "Start selling for free.",
     benefits: [
-      "Keep the existing Basic feature limits",
+      "Essential tools to start selling",
       "No card required",
       "Start selling for free",
     ],
@@ -55,10 +55,14 @@ export const PRO_PRICING = {
   },
 } as const;
 
-export function sellerBillingFromQuery(value: string | null): SellerBillingCycle {
+export function sellerBillingFromQuery(
+  value: string | null,
+): SellerBillingCycle {
   return value?.toUpperCase() === "YEARLY" ? "YEARLY" : "MONTHLY";
 }
 
-export function sellerPaymentMethodFromQuery(value: string | null): SellerPaymentMethod {
+export function sellerPaymentMethodFromQuery(
+  value: string | null,
+): SellerPaymentMethod {
   return value?.toUpperCase() === "TRANSFER" ? "TRANSFER" : "CARD";
 }

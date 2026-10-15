@@ -42,3 +42,15 @@
 @media (max-width:390px) { .social-home .figma-home-tabs { padding-inline:8px; } .social-home .figma-home-tabs > * { padding-inline:9px; font-size:13px; } }
 @media (max-width:360px) { .social-home .figma-home-tabs { justify-content:flex-start; } .social-home .figma-home-tabs > * { flex:0 0 auto; padding-inline:10px; } }
 @media (prefers-reduced-motion:reduce) { .social-home .figma-home-search { transition:none; } }
+
+/* Override legacy absolute offsets in the shared Home styles. */
+.social-home .figma-home-header { height:calc(104px + max(0px, env(safe-area-inset-top) - 52px)); }
+.social-home .figma-home-avatar { top:auto; }
+.social-home .figma-home-logo { position:static; flex:none; }
+.social-home .figma-home-bell { position:relative; top:auto; right:auto; }
+.home-header-collapsed .figma-home-header { height:calc(78px + max(0px, env(safe-area-inset-top) - 52px)); }
+.home-header-collapsed .figma-home-search { visibility:hidden; }
+.social-home-stories .figma-home-story-avatar { border-color:#e5e5ea; }
+.social-home-stories .figma-home-story-avatar.has-story { border-color:#ff6b00; }
+.figma-home-story-add input { display:block; position:absolute; width:1px; height:1px; clip-path:inset(50%); overflow:hidden; }
+.figma-home-story-add:focus-within { outline:2px solid var(--focus); outline-offset:-2px; }

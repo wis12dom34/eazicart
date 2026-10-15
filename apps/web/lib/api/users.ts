@@ -3,8 +3,8 @@ import type { DataResponse, User } from "./types";
 
 export type UpdateProfileInput = {
   name: string;
-  username: string;
-  bio: string;
+  username?: string;
+  bio?: string;
 };
 
 export const usersApi = {

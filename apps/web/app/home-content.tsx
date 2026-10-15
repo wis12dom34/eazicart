@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { ContentImage } from "./components/content-image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import "./home.css";
 import "./home-social-feed.css";
 import "./home-media.css";

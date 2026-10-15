@@ -27,9 +27,18 @@ const items: Array<{
   },
 ];
 
-export function SellerBottomNavigation({ active }: { active?: SellerNavItem }) {
+export function SellerBottomNavigation({
+  active,
+  layout = "floating",
+}: {
+  active?: SellerNavItem;
+  layout?: "floating" | "flat";
+}) {
   return (
-    <nav className={styles.nav} aria-label="Seller navigation">
+    <nav
+      className={`${styles.nav} ${layout === "flat" ? styles.flat : ""}`}
+      aria-label="Seller navigation"
+    >
       {items.map((item) => {
         const isActive = item.key === active;
         return (

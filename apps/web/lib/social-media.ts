@@ -47,7 +47,7 @@ function broadcastProfilePhoto(userId: string, photo: SocialMediaItem | null) {
   profilePhotoFetchedAt.set(userId, Date.now());
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(PROFILE_PHOTO_EVENT, { detail: { userId, photo } }));
-  try { window.localStorage.setItem(PROFILE_PHOTO_STORAGE_KEY, JSON.stringify({ userId, at: Date.now() })); } catch {}
+  try { window.localStorage.setItem(PROFILE_PHOTO_STORAGE_KEY, JSON.stringify({ userId, at: Date.now() })); } catch { /* Storage can be unavailable in private browsing. */ }
 }
 
 export async function uploadSocialMedia(kind: "profile" | "story", userId: string, file: File, onProgress?: (percentage: number) => void) {
