@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { SellerBottomNavigation } from "../../../components/seller-bottom-navigation";
 import styles from "./review.module.css";
 
 type Method = "CARD" | "TRANSFER";
 
-export default function SubscriptionReviewPage() {
+function SubscriptionReviewContent() {
   const params = useSearchParams();
   const billing = params.get("billing") === "YEARLY" ? "YEARLY" : "MONTHLY";
   const plan = params.get("plan") === "PRO" ? "Pro" : "Pro";
@@ -28,5 +28,13 @@ export default function SubscriptionReviewPage() {
       <div className={styles.actions}><button type="button" disabled>Continue to secure payment</button><Link href="/seller/subscription?plan=PRO">Back to plans</Link><p>Secure payment is unavailable until the existing backend exposes a verified seller-subscription payment flow. No plan is activated from this screen.</p></div>
       <SellerBottomNavigation />
     </main>
+  );
+}
+
+export default function SubscriptionReviewPage() {
+  return (
+    <Suspense fallback={<main className={styles.page} aria-busy="true" />}>
+      <SubscriptionReviewContent />
+    </Suspense>
   );
 }
