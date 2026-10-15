@@ -6,60 +6,33 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { sellerSubscriptionsApi } from "../../../lib/api/seller-subscriptions";
 import type { SellerPlanCode } from "../../../lib/api/types";
+import {
+  PRO_PRICING,
+  SELLER_SUBSCRIPTION_PLANS,
+  sellerBillingFromQuery,
+  type SellerBillingCycle,
+  type SellerSubscriptionTier,
+} from "../../../lib/seller-subscription-plans";
 import { useAuth } from "../../providers/auth-provider";
 import styles from "./seller-subscription.module.css";
-
-type Tier = "BASIC" | "PRO" | "BUSINESS";
-type Billing = "MONTHLY" | "YEARLY";
-
-const planCopy = {
-  BASIC: {
-    title: "Basic",
-    subtitle: "Start selling for free.",
-    benefits: [
-      "Keep the existing Basic feature limits",
-      "No card required",
-      "Start selling for free",
-    ],
-  },
-  PRO: {
-    title: "Pro",
-    subtitle: "More tools for a growing store.",
-    benefits: [
-      "Unlimited product listings",
-      "Custom storefront & branding",
-      "Priority search placement",
-      "Advanced analytics & insights",
-      "Reels & short video selling",
-      "Bulk order processing",
-      "Verified seller badge",
-      "Dedicated seller support",
-    ],
-  },
-  BUSINESS: {
-    title: "Business",
-    subtitle: "More scale for larger teams.",
-    benefits: [
-      "Business tools are coming soon",
-      "Purchasing is not available yet",
-    ],
-  },
-} as const;
 
 function SubscriptionContent() {
   const params = useSearchParams();
   const auth = useAuth();
   const requested = params.get("plan")?.toUpperCase();
-  const initial: Tier =
+  const initialTier: SellerSubscriptionTier =
     requested === "BASIC" || requested === "BUSINESS" ? requested : "PRO";
-  const [tier, setTier] = useState<Tier>(initial);
-  const [billing, setBilling] = useState<Billing>("MONTHLY");
+  const [tier, setTier] = useState<SellerSubscriptionTier>(initialTier);
+  const [billing, setBilling] = useState<SellerBillingCycle>(() =>
+    sellerBillingFromQuery(params.get("billing")),
+  );
   const [currentPlan, setCurrentPlan] = useState<SellerPlanCode | null>(null);
   const [currentLoading, setCurrentLoading] = useState(false);
-  const plan = planCopy[tier];
+  const plan = SELLER_SUBSCRIPTION_PLANS[tier];
+  const pricing = PRO_PRICING[billing];
   const reviewHref = useMemo(
-    () => `/seller/subscription/review?plan=${tier}&billing=${billing}`,
-    [tier, billing],
+    () => `/seller/subscription/review?plan=PRO&billing=${billing}`,
+    [billing],
   );
 
   useEffect(() => {
@@ -91,31 +64,23 @@ function SubscriptionContent() {
       : currentLoading
         ? "Checking your plan…"
         : currentPlan
-          ? `Current plan: ${planCopy[currentPlan].title}`
+          ? `Current plan: ${SELLER_SUBSCRIPTION_PLANS[currentPlan].title}`
           : "Current plan unavailable";
 
   return (
     <main className={styles.page} data-figma-node="249:408">
-      <Link
-        className={styles.close}
-        href="/profile"
-        aria-label="Close subscription plans"
-      >
+      <Link className={styles.close} href="/profile" aria-label="Close subscription plans">
         ×
       </Link>
       <div className={styles.brand} aria-hidden="true">
         <Image src="/figma/logo.svg" alt="" width={32} height={32} priority />
       </div>
       <header className={styles.hero}>
-        <h1>
-          More for your store.
-          <br />
-          One simple plan.
-        </h1>
+        <h1>More for your store.<br />One simple plan.</h1>
         {auth.isAuthenticated ? (
           <span className={styles.currentPlan}>{currentLabel}</span>
         ) : (
-          <Link href="/login?next=/seller/subscription?plan=PRO">
+          <Link href={`/login?next=${encodeURIComponent(`/seller/subscription?plan=PRO&billing=${billing}`)}`}>
             {currentLabel}
           </Link>
         )}
@@ -123,7 +88,7 @@ function SubscriptionContent() {
 
       <section className={styles.planPanel} aria-label="Seller plans">
         <div className={styles.tabs} role="tablist" aria-label="Subscription tier">
-          {(["BASIC", "PRO", "BUSINESS"] as Tier[]).map((item) => (
+          {(["BASIC", "PRO", "BUSINESS"] as SellerSubscriptionTier[]).map((item) => (
             <button
               key={item}
               type="button"
@@ -132,34 +97,19 @@ function SubscriptionContent() {
               className={tier === item ? styles.activeTab : ""}
               onClick={() => setTier(item)}
             >
-              {planCopy[item].title}
+              {SELLER_SUBSCRIPTION_PLANS[item].title}
             </button>
           ))}
         </div>
         <div className={styles.benefits}>
           <div className={styles.planHeading}>
             <h2>{plan.title}</h2>
-            {tier === "PRO" ? (
-              <span>Most popular</span>
-            ) : tier === "BUSINESS" ? (
-              <span>Coming soon</span>
-            ) : null}
+            {tier === "PRO" ? <span>Most popular</span> : tier === "BUSINESS" ? <span>Coming soon</span> : null}
           </div>
           <p>{plan.subtitle}</p>
-          <strong>
-            {tier === "PRO"
-              ? "Your Pro benefits"
-              : tier === "BASIC"
-                ? "Included with Basic"
-                : "Business"}
-          </strong>
+          <strong>{tier === "PRO" ? "Your Pro benefits" : tier === "BASIC" ? "Included with Basic" : "Business"}</strong>
           <ul>
-            {plan.benefits.map((benefit) => (
-              <li key={benefit}>
-                <span aria-hidden="true">✓</span>
-                {benefit}
-              </li>
-            ))}
+            {plan.benefits.map((benefit) => <li key={benefit}><span aria-hidden="true">✓</span>{benefit}</li>)}
           </ul>
         </div>
       </section>
@@ -168,67 +118,41 @@ function SubscriptionContent() {
         {tier === "PRO" ? (
           <>
             <div className={styles.billingChoices}>
-              <button
-                type="button"
-                className={billing === "MONTHLY" ? styles.selectedBilling : ""}
-                onClick={() => setBilling("MONTHLY")}
-              >
-                <b>₦2,999</b>
-                <span>monthly</span>
-                <small>First 3 months</small>
-              </button>
-              <button
-                type="button"
-                className={billing === "YEARLY" ? styles.selectedBilling : ""}
-                onClick={() => setBilling("YEARLY")}
-              >
-                <b>₦49,900</b>
-                <span>yearly</span>
-                <small>≈ ₦4,158/month</small>
-              </button>
+              {(["MONTHLY", "YEARLY"] as SellerBillingCycle[]).map((cycle) => {
+                const option = PRO_PRICING[cycle];
+                return (
+                  <button
+                    key={cycle}
+                    type="button"
+                    aria-pressed={billing === cycle}
+                    className={billing === cycle ? styles.selectedBilling : ""}
+                    onClick={() => setBilling(cycle)}
+                  >
+                    <b>{option.amountLabel}</b>
+                    <span>{option.shortLabel}</span>
+                    <small>{option.helper}</small>
+                  </button>
+                );
+              })}
             </div>
-            <p className={styles.terms}>
-              {billing === "MONTHLY"
-                ? "₦2,999/month for 3 months, then ₦4,999/month. Cancel anytime."
-                : "₦49,900 billed yearly. The monthly launch offer does not apply."}
-            </p>
-            <Link
-              className={styles.primary}
-              href={auth.isAuthenticated ? reviewHref : `/login?next=${encodeURIComponent(reviewHref)}`}
-            >
+            <p className={styles.terms}>{pricing.terms}{billing === "MONTHLY" ? " Cancel anytime." : ""}</p>
+            <Link className={styles.primary} href={auth.isAuthenticated ? reviewHref : `/login?next=${encodeURIComponent(reviewHref)}`}>
               Upgrade to Pro
             </Link>
-            <small className={styles.paymentNote}>
-              Choose card or bank transfer at checkout.
-              <br />
-              Card renewals and transfer terms appear before payment.
-            </small>
+            <small className={styles.paymentNote}>Choose card or bank transfer at checkout.<br />Card renewals and transfer terms appear before payment.</small>
           </>
         ) : tier === "BASIC" ? (
           <>
-            <div className={styles.freePrice}>
-              <b>Free</b>
-              <span>No card required.</span>
-            </div>
-            <Link
-              className={styles.primary}
-              href={auth.isAuthenticated ? "/seller/dashboard" : "/login?next=/seller/dashboard"}
-            >
+            <div className={styles.freePrice}><b>Free</b><span>No card required.</span></div>
+            <Link className={styles.primary} href={auth.isAuthenticated ? "/seller/dashboard" : `/login?next=${encodeURIComponent("/seller/dashboard")}`}>
               Start selling for free
             </Link>
-            <small className={styles.paymentNote}>
-              Basic bypasses payment and keeps the existing Basic feature limits.
-            </small>
+            <small className={styles.paymentNote}>Basic bypasses payment and keeps the existing Basic feature limits.</small>
           </>
         ) : (
           <>
-            <div className={styles.freePrice}>
-              <b>Coming soon</b>
-              <span>Business cannot be purchased yet.</span>
-            </div>
-            <button className={styles.disabled} type="button" disabled>
-              Business coming soon
-            </button>
+            <div className={styles.freePrice}><b>Coming soon</b><span>Business cannot be purchased yet.</span></div>
+            <button className={styles.disabled} type="button" disabled>Business coming soon</button>
           </>
         )}
       </footer>
@@ -237,9 +161,5 @@ function SubscriptionContent() {
 }
 
 export default function SellerSubscriptionPage() {
-  return (
-    <Suspense fallback={<main className={styles.page} aria-busy="true" />}>
-      <SubscriptionContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<main className={styles.page} aria-busy="true" />}><SubscriptionContent /></Suspense>;
 }
