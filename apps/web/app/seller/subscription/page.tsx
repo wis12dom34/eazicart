@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import styles from "./seller-subscription.module.css";
 
 type Tier = "BASIC" | "PRO" | "BUSINESS";
@@ -14,7 +14,7 @@ const planCopy = {
   BUSINESS: { title: "Business", subtitle: "More scale for larger teams.", benefits: ["Business tools are coming soon", "Purchasing is not available yet"] },
 } as const;
 
-export default function SellerSubscriptionPage() {
+function SubscriptionContent() {
   const params = useSearchParams();
   const requested = params.get("plan")?.toUpperCase();
   const initial: Tier = requested === "BASIC" || requested === "BUSINESS" ? requested : "PRO";
@@ -66,5 +66,13 @@ export default function SellerSubscriptionPage() {
         )}
       </footer>
     </main>
+  );
+}
+
+export default function SellerSubscriptionPage() {
+  return (
+    <Suspense fallback={<main className={styles.page} aria-busy="true" />}>
+      <SubscriptionContent />
+    </Suspense>
   );
 }
