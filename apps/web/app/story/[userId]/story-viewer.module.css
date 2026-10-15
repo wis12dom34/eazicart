@@ -65,12 +65,9 @@
 .identity { min-width:0; flex:1; }
 .nameRow { display:flex; align-items:center; gap:4px; min-width:0; }
 .name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff; font-size:14px; line-height:21px; font-weight:600; }
-.verified { width:14px; height:14px; flex:0 0 14px; display:grid; place-items:center; border-radius:50%; background:#f5c400; color:#111; text-shadow:none; }
+.verified { width:14px; height:14px; flex:0 0 14px; display:grid; place-items:center; color:#f5c400; text-shadow:none; }
 .time { display:block; margin-top:0; color:rgba(255,255,255,.7); font-size:11px; line-height:16px; }
 .close { position:absolute; z-index:6; top:calc(env(safe-area-inset-top, 0px) + 24px); right:0; width:44px; height:44px; display:grid; place-items:center; border:0; background:transparent; color:#fff; padding:0; }
-.tapPrevious,.tapNext { position:absolute; z-index:2; top:112px; bottom:165px; width:50%; border:0; background:transparent; padding:0; }
-.tapPrevious { left:0; }
-.tapNext { right:0; }
 .productCopy { position:absolute; z-index:4; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom, 0px) + 68px); pointer-events:none; text-shadow:0 2px 12px rgba(0,0,0,.48); }
 .productCopy h2 { margin:0; color:#fff; font-size:22px; line-height:33px; font-weight:700; letter-spacing:-.25px; }
 .productCopy p { margin:4px 0 0; color:rgba(255,255,255,.8); font-size:14px; line-height:21px; }
@@ -81,6 +78,7 @@
 .cart:disabled { opacity:.64; }
 .pause { position:absolute; z-index:5; inset:0; display:grid; place-items:center; pointer-events:none; }
 .pause span { width:48px; height:48px; display:grid; place-items:center; border-radius:50%; background:rgba(0,0,0,.34); backdrop-filter:blur(10px); }
+.viewer :focus-visible { outline:2px solid #fff; outline-offset:3px; }
 @media (min-width: 600px) {
   .viewer { left:50%; right:auto; width:min(430px,100vw); transform:translateX(-50%); box-shadow:0 0 0 1px rgba(255,255,255,.08),0 24px 80px rgba(0,0,0,.35); }
 }
