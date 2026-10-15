@@ -83,7 +83,7 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
       {label === "Order History" && !!orders.data?.data.length ? (
         <b className={styles.count}>{orders.data.data.length}</b>
       ) : null}
-      <Icon name="chevron-right" size={14} weight="medium" />
+      <Icon name="chevron" size={14} weight="medium" />
     </Link>
   );
 
