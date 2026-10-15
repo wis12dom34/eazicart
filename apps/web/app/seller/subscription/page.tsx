@@ -1,233 +1,70 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
-import {
-  ErrorState,
-  LoadingState,
-  SignInState,
-} from "../../components/async-state";
-import { Icon } from "../../components/icon";
-import { SellerBottomNavigation } from "../../components/seller-bottom-navigation";
-import { useRequest } from "../../hooks/use-request";
-import { useAuth } from "../../providers/auth-provider";
-import { sellerDashboardApi } from "../../../lib/api/seller-dashboard";
-import { sellerSubscriptionsApi } from "../../../lib/api/seller-subscriptions";
-import type { SellerPlan } from "../../../lib/api/types";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import styles from "./seller-subscription.module.css";
 
+type Tier = "BASIC" | "PRO" | "BUSINESS";
+type Billing = "MONTHLY" | "YEARLY";
+
+const planCopy = {
+  BASIC: { title: "Basic", subtitle: "Start selling for free.", benefits: ["Keep the existing Basic feature limits", "No card required", "Start selling for free"] },
+  PRO: { title: "Pro", subtitle: "More tools for a growing store.", benefits: ["Unlimited product listings", "Custom storefront & branding", "Priority search placement", "Advanced analytics & insights", "Reels & short video selling", "Bulk order processing", "Verified seller badge", "Dedicated seller support"] },
+  BUSINESS: { title: "Business", subtitle: "More scale for larger teams.", benefits: ["Business tools are coming soon", "Purchasing is not available yet"] },
+} as const;
+
 export default function SellerSubscriptionPage() {
-  const auth = useAuth();
-  const profile = useRequest(
-    async () =>
-      auth.isAuthenticated
-        ? sellerDashboardApi.profile()
-        : Promise.resolve(undefined),
-    [auth.isAuthenticated],
-  );
-  const plans = useRequest(
-    async () =>
-      profile.data?.data
-        ? sellerSubscriptionsApi.plans()
-        : Promise.resolve(undefined),
-    [profile.data?.data?.id],
-  );
-  const current = useRequest(
-    async () =>
-      profile.data?.data
-        ? sellerSubscriptionsApi.current()
-        : Promise.resolve(undefined),
-    [profile.data?.data?.id],
-  );
+  const params = useSearchParams();
+  const requested = params.get("plan")?.toUpperCase();
+  const initial: Tier = requested === "BASIC" || requested === "BUSINESS" ? requested : "PRO";
+  const [tier, setTier] = useState<Tier>(initial);
+  const [billing, setBilling] = useState<Billing>("MONTHLY");
+  const plan = planCopy[tier];
+  const reviewHref = useMemo(() => `/seller/subscription/review?plan=${tier}&billing=${billing}`, [tier, billing]);
 
-  if (auth.loading || (auth.isAuthenticated && profile.loading))
-    return (
-      <PageState>
-        <LoadingState label="Loading subscription settings…" />
-      </PageState>
-    );
-  if (!auth.user)
-    return (
-      <PageState>
-        <SignInState message="Sign in to manage your seller subscription." />
-      </PageState>
-    );
-  if (profile.error)
-    return (
-      <PageState>
-        <ErrorState
-          message={profile.error}
-          retry={() => void profile.reload()}
-        />
-      </PageState>
-    );
-  if (!profile.data?.data)
-    return (
-      <PageState>
-        <section className={styles.emptyCard}>
-          <h1>Create your seller profile first</h1>
-          <p>
-            Subscriptions are attached to your existing EaziCart seller profile.
-          </p>
-          <Link className={styles.primaryLink} href="/seller/dashboard">
-            Start selling
-          </Link>
-        </section>
-      </PageState>
-    );
-  if (plans.loading || current.loading)
-    return (
-      <PageState>
-        <LoadingState label="Loading plans…" />
-      </PageState>
-    );
-  if (plans.error || current.error || !plans.data || !current.data)
-    return (
-      <PageState>
-        <ErrorState
-          message={
-            plans.error ||
-            current.error ||
-            "Subscription settings are unavailable."
-          }
-          retry={() => {
-            void plans.reload();
-            void current.reload();
-          }}
-        />
-      </PageState>
-    );
-
-  const subscription = current.data.data.subscription;
   return (
-    <PageState>
-      <section className={styles.hero}>
-        <p className={styles.eyebrow}>Seller subscription</p>
-        <h1>Plans built for your store</h1>
-        <p>
-          Basic, Pro and Business are stored in EaziCart&apos;s live plan
-          catalog. Pricing and limits remain unavailable until real values are
-          configured.
-        </p>
-      </section>
-      <section
-        className={styles.currentCard}
-        aria-labelledby="current-plan-title"
-      >
-        <div>
-          <p className={styles.eyebrow}>Current plan</p>
-          <h2 id="current-plan-title">
-            {subscription ? subscription.plan.name : "No active subscription"}
-          </h2>
-        </div>
-        <span className={styles.statusBadge}>
-          {subscription
-            ? subscription.status.replaceAll("_", " ")
-            : "NOT SUBSCRIBED"}
-        </span>
-      </section>
-      <section
-        className={styles.planSection}
-        aria-labelledby="available-plans-title"
-      >
-        <div className={styles.sectionHeading}>
-          <div>
-            <p className={styles.eyebrow}>Available plans</p>
-            <h2 id="available-plans-title">Choose when pricing is published</h2>
-          </div>
-          <span>{plans.data.data.length} plans</span>
-        </div>
-        <div className={styles.planGrid}>
-          {plans.data.data.map((plan) => (
-            <PlanCard key={plan.code} plan={plan} />
+    <main className={styles.page} data-figma-node="249:408">
+      <Link className={styles.close} href="/profile" aria-label="Close subscription plans">×</Link>
+      <div className={styles.brand} aria-hidden="true">⌁</div>
+      <header className={styles.hero}>
+        <h1>More for your store.<br />One simple plan.</h1>
+        <Link href="/seller/subscription/current">View your current plan</Link>
+      </header>
+
+      <section className={styles.planPanel} aria-label="Seller plans">
+        <div className={styles.tabs} role="tablist" aria-label="Subscription tier">
+          {(["BASIC", "PRO", "BUSINESS"] as Tier[]).map((item) => (
+            <button key={item} type="button" role="tab" aria-selected={tier === item} className={tier === item ? styles.activeTab : ""} onClick={() => setTier(item)}>
+              {planCopy[item].title}
+            </button>
           ))}
         </div>
+        <div className={styles.benefits}>
+          <div className={styles.planHeading}><h2>{plan.title}</h2>{tier === "PRO" ? <span>Most popular</span> : tier === "BUSINESS" ? <span>Coming soon</span> : null}</div>
+          <p>{plan.subtitle}</p>
+          <strong>{tier === "PRO" ? "Your Pro benefits" : tier === "BASIC" ? "Included with Basic" : "Business"}</strong>
+          <ul>{plan.benefits.map((benefit) => <li key={benefit}><span aria-hidden="true">✓</span>{benefit}</li>)}</ul>
+        </div>
       </section>
-      <section className={styles.notice}>
-        <Icon name="info" size={19} />
-        <p>
-          Subscription checkout is intentionally disabled until plan pricing,
-          limits and billing rules are approved and published.
-        </p>
-      </section>
-    </PageState>
-  );
-}
 
-function PageState({ children }: { children: ReactNode }) {
-  return (
-    <main className={`app-shell ${styles.page}`}>
-      <Header />
-      {children}
-      <SellerBottomNavigation />
+      <footer className={styles.purchase}>
+        {tier === "PRO" ? (
+          <>
+            <div className={styles.billingChoices}>
+              <button type="button" className={billing === "MONTHLY" ? styles.selectedBilling : ""} onClick={() => setBilling("MONTHLY")}><b>₦2,999</b><span>monthly</span><small>First 3 months</small></button>
+              <button type="button" className={billing === "YEARLY" ? styles.selectedBilling : ""} onClick={() => setBilling("YEARLY")}><b>₦49,900</b><span>yearly</span><small>≈ ₦4,158/month</small></button>
+            </div>
+            <p className={styles.terms}>{billing === "MONTHLY" ? "₦2,999/month for 3 months, then ₦4,999/month. Cancel anytime." : "₦49,900 billed yearly. The monthly launch offer does not apply."}</p>
+            <Link className={styles.primary} href={reviewHref}>Upgrade to Pro</Link>
+            <small className={styles.paymentNote}>Choose card or bank transfer at checkout.<br />Card renewals and transfer terms appear before payment.</small>
+          </>
+        ) : tier === "BASIC" ? (
+          <><div className={styles.freePrice}><b>Free</b><span>No card required.</span></div><Link className={styles.primary} href="/seller/dashboard">Start selling for free</Link><small className={styles.paymentNote}>Basic bypasses payment and keeps the existing Basic feature limits.</small></>
+        ) : (
+          <><div className={styles.freePrice}><b>Coming soon</b><span>Business cannot be purchased yet.</span></div><button className={styles.disabled} type="button" disabled>Business coming soon</button></>
+        )}
+      </footer>
     </main>
   );
-}
-function Header() {
-  return (
-    <header className={styles.topbar}>
-      <Link
-        className={styles.back}
-        href="/seller/dashboard"
-        aria-label="Back to seller dashboard"
-      >
-        <Icon name="back" size={22} />
-      </Link>
-      <span>Subscription</span>
-    </header>
-  );
-}
-function PlanCard({ plan }: { plan: SellerPlan }) {
-  return (
-    <article className={styles.planCard}>
-      <div className={styles.planTopline}>
-        <div>
-          <p className={styles.planCode}>{plan.code}</p>
-          <h3>{plan.name}</h3>
-        </div>
-        <span className={plan.published ? styles.liveBadge : styles.draftBadge}>
-          {plan.published ? "Published" : "Not published"}
-        </span>
-      </div>
-      <div className={styles.price}>
-        {plan.monthlyPrice ? (
-          <>
-            <strong>
-              ₦{Number(plan.monthlyPrice).toLocaleString("en-NG")}
-            </strong>
-            <span>/ month</span>
-          </>
-        ) : (
-          <strong>Pricing not configured</strong>
-        )}
-      </div>
-      <dl className={styles.planDetails}>
-        <PlanDetail label="Products" value={formatLimit(plan.productLimit)} />
-        <PlanDetail
-          label="Advanced analytics"
-          value={
-            plan.advancedAnalytics === null
-              ? "Not configured"
-              : plan.advancedAnalytics
-                ? "Included"
-                : "Not included"
-          }
-        />
-      </dl>
-      <button className={styles.disabledButton} type="button" disabled>
-        {plan.purchasable ? "Checkout not enabled yet" : "Not available yet"}
-      </button>
-    </article>
-  );
-}
-function PlanDetail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  );
-}
-function formatLimit(limit: number | null) {
-  return limit === null ? "Not configured" : limit.toLocaleString("en-NG");
 }
