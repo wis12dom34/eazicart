@@ -12,12 +12,7 @@ const PROFILE_PHOTO_TTL_MS = 30_000;
 
 export const PROFILE_PHOTO_EVENT = "eazicart:profile-photo-updated";
 export const PROFILE_PHOTO_STORAGE_KEY = "eazicart:profile-photo-refresh";
-
-export type SocialMediaItem = {
-  url: string;
-  uploadedAt: string;
-  contentType?: string;
-};
+export type SocialMediaItem = { url: string; uploadedAt: string; contentType?: string };
 
 function contentTypeFromName(value: string) {
   const pathname = value.split(/[?#]/, 1)[0]?.toLowerCase() ?? "";
@@ -29,12 +24,8 @@ function contentTypeFromName(value: string) {
   if (/\.jpe?g$/.test(pathname)) return "image/jpeg";
   return undefined;
 }
-
 function safeFileName(file: File) {
-  const cleaned = file.name
-    .normalize("NFKD")
-    .replace(/[^a-zA-Z0-9._-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  const cleaned = file.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
   if (cleaned) return cleaned;
   if (file.type === "video/quicktime") return "story.mov";
   if (file.type === "video/mp4") return "story.mp4";
@@ -43,102 +34,57 @@ function safeFileName(file: File) {
   if (file.type === "image/webp") return "photo.webp";
   return "photo.jpg";
 }
-
 function validateMedia(kind: "profile" | "story", file: File) {
-  const image =
-    imageTypes.has(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
-  const video =
-    videoTypes.has(file.type) || /\.(mp4|mov|webm)$/i.test(file.name);
-
-  if (kind === "profile" && !image)
-    throw new Error("Choose a JPG, PNG or WebP profile photo.");
-  if (kind === "story" && !image && !video)
-    throw new Error("Choose a photo or video from your gallery.");
-
+  const image = imageTypes.has(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+  const video = videoTypes.has(file.type) || /\.(mp4|mov|webm)$/i.test(file.name);
+  if (kind === "profile" && !image) throw new Error("Choose a JPG, PNG or WebP profile photo.");
+  if (kind === "story" && !image && !video) throw new Error("Choose a photo or video from your gallery.");
   const maxBytes = kind === "profile" ? PROFILE_MAX_BYTES : STORY_MAX_BYTES;
-  if (file.size > maxBytes)
-    throw new Error(
-      kind === "profile"
-        ? "Choose a profile photo smaller than 8 MB."
-        : "Choose a story smaller than 50 MB.",
-    );
+  if (file.size > maxBytes) throw new Error(kind === "profile" ? "Choose a profile photo smaller than 8 MB." : "Choose a story smaller than 50 MB.");
+}
+function broadcastProfilePhoto(userId: string, photo: SocialMediaItem | null) {
+  profilePhotoCache.set(userId, Promise.resolve(photo));
+  profilePhotoFetchedAt.set(userId, Date.now());
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(PROFILE_PHOTO_EVENT, { detail: { userId, photo } }));
+  try { window.localStorage.setItem(PROFILE_PHOTO_STORAGE_KEY, JSON.stringify({ userId, at: Date.now() })); } catch {}
 }
 
-export async function uploadSocialMedia(
-  kind: "profile" | "story",
-  userId: string,
-  file: File,
-  onProgress?: (percentage: number) => void,
-) {
+export async function uploadSocialMedia(kind: "profile" | "story", userId: string, file: File, onProgress?: (percentage: number) => void) {
   validateMedia(kind, file);
   const accessToken = tokenStore.get()?.accessToken;
-  if (!accessToken)
-    throw new Error("Please sign in again before uploading media.");
-
+  if (!accessToken) throw new Error("Please sign in again before uploading media.");
   const folder = kind === "profile" ? "profiles" : "stories";
-  const blob = await upload(
-    `${folder}/${userId}/${Date.now()}-${safeFileName(file)}`,
-    file,
-    {
-      access: "public",
-      handleUploadUrl: "/api/social-images/upload",
-      clientPayload: JSON.stringify({ accessToken }),
-      contentType: file.type || undefined,
-      multipart: file.size > 4 * 1024 * 1024,
-      onUploadProgress: ({ percentage }) => onProgress?.(percentage),
-    },
-  );
-  const item = {
-    url: blob.url,
-    uploadedAt: new Date().toISOString(),
-    contentType: file.type || contentTypeFromName(file.name),
-  };
-
-  if (kind === "profile") {
-    profilePhotoCache.set(userId, Promise.resolve(item));
-    profilePhotoFetchedAt.set(userId, Date.now());
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent(PROFILE_PHOTO_EVENT, {
-          detail: { userId, photo: item },
-        }),
-      );
-      // This is only an invalidation signal. Photos remain in the existing
-      // user-scoped Blob folder, never in browser storage.
-      try {
-        window.localStorage.setItem(
-          PROFILE_PHOTO_STORAGE_KEY,
-          JSON.stringify({ userId, at: Date.now() }),
-        );
-      } catch {
-        // Same-tab updates still work when browser storage is unavailable.
-      }
-    }
-  }
-
+  const blob = await upload(`${folder}/${userId}/${Date.now()}-${safeFileName(file)}`, file, {
+    access: "public", handleUploadUrl: "/api/social-images/upload", clientPayload: JSON.stringify({ accessToken }),
+    contentType: file.type || undefined, multipart: file.size > 4 * 1024 * 1024,
+    onUploadProgress: ({ percentage }) => onProgress?.(percentage),
+  });
+  const item = { url: blob.url, uploadedAt: new Date().toISOString(), contentType: file.type || contentTypeFromName(file.name) };
+  if (kind === "profile") broadcastProfilePhoto(userId, item);
   return item;
+}
+
+export async function removeProfilePhoto(userId: string) {
+  const accessToken = tokenStore.get()?.accessToken;
+  if (!accessToken) throw new Error("Please sign in again before removing your photo.");
+  const response = await fetch("/api/social-images/profile", {
+    method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, accessToken }),
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(payload?.error || "Could not remove profile photo");
+  }
+  broadcastProfilePhoto(userId, null);
 }
 
 export async function fetchProfilePhoto(userId: string) {
   const cached = profilePhotoCache.get(userId);
-  if (
-    cached &&
-    (profilePhotoRequests.has(userId) ||
-      Date.now() - (profilePhotoFetchedAt.get(userId) ?? 0) <
-        PROFILE_PHOTO_TTL_MS)
-  )
-    return cached;
-
-  const request: Promise<SocialMediaItem | null> = fetch(
-    `/api/social-images/profile?userId=${encodeURIComponent(userId)}`,
-    { cache: "no-store", signal: AbortSignal.timeout(10_000) },
-  )
+  if (cached && (profilePhotoRequests.has(userId) || Date.now() - (profilePhotoFetchedAt.get(userId) ?? 0) < PROFILE_PHOTO_TTL_MS)) return cached;
+  const request: Promise<SocialMediaItem | null> = fetch(`/api/social-images/profile?userId=${encodeURIComponent(userId)}`, { cache: "no-store", signal: AbortSignal.timeout(10_000) })
     .then(async (response) => {
       if (!response.ok) throw new Error("Could not load profile photo");
-      const payload = (await response.json()) as {
-        data?: SocialMediaItem | null;
-      };
-      // An upload can finish while an older read is still in flight.
+      const payload = (await response.json()) as { data?: SocialMediaItem | null };
       const current = profilePhotoCache.get(userId);
       if (current && current !== request) return current;
       return payload.data ?? null;
@@ -147,42 +93,20 @@ export async function fetchProfilePhoto(userId: string) {
       const current = profilePhotoCache.get(userId);
       if (current && current !== request) return current;
       if (profilePhotoCache.get(userId) === request) {
-        if (cached) profilePhotoCache.set(userId, cached);
-        else profilePhotoCache.delete(userId);
+        if (cached) profilePhotoCache.set(userId, cached); else profilePhotoCache.delete(userId);
         profilePhotoFetchedAt.delete(userId);
       }
       return cached ?? null;
     })
     .finally(() => profilePhotoRequests.delete(userId));
-
-  profilePhotoCache.set(userId, request);
-  profilePhotoFetchedAt.set(userId, Date.now());
-  profilePhotoRequests.add(userId);
+  profilePhotoCache.set(userId, request); profilePhotoFetchedAt.set(userId, Date.now()); profilePhotoRequests.add(userId);
   return request;
 }
-
-export function invalidateProfilePhoto(userId: string) {
-  profilePhotoFetchedAt.delete(userId);
-}
-
+export function invalidateProfilePhoto(userId: string) { profilePhotoFetchedAt.delete(userId); }
 export async function fetchStories(userIds: string[]) {
   if (!userIds.length) return {} as Record<string, SocialMediaItem>;
-  const response = await fetch(
-    `/api/social-images/stories?userIds=${encodeURIComponent(userIds.join(","))}`,
-    { cache: "no-store" },
-  );
+  const response = await fetch(`/api/social-images/stories?userIds=${encodeURIComponent(userIds.join(","))}`, { cache: "no-store" });
   if (!response.ok) return {} as Record<string, SocialMediaItem>;
-  const payload = (await response.json()) as {
-    data?: Record<string, SocialMediaItem>;
-  };
-  const stories = payload.data ?? {};
-  return Object.fromEntries(
-    Object.entries(stories).map(([userId, story]) => [
-      userId,
-      {
-        ...story,
-        contentType: story.contentType || contentTypeFromName(story.url),
-      },
-    ]),
-  ) as Record<string, SocialMediaItem>;
+  const payload = (await response.json()) as { data?: Record<string, SocialMediaItem> };
+  return Object.fromEntries(Object.entries(payload.data ?? {}).map(([userId, story]) => [userId, { ...story, contentType: story.contentType || contentTypeFromName(story.url) }])) as Record<string, SocialMediaItem>;
 }
