@@ -30,6 +30,14 @@ enum SellerFulfillmentStatus {
   FULFILLED
   CANCELLED
 }
+enum DeliveryTrackingStatus {
+  ASSIGNED
+  PICKED_UP
+  ON_THE_WAY
+  ARRIVING_SOON
+  DELIVERED
+  CANCELLED
+}
 enum SellerPlanCode {
   BASIC
   PRO
@@ -243,11 +251,35 @@ model SellerFulfillment {
   sellerId String
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  deliveryTracking DeliveryTracking?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([orderId, sellerId])
   @@index([sellerId, status])
   @@index([orderId])
+}
+
+model DeliveryTracking {
+  id String @id @default(cuid())
+  fulfillmentId String @unique
+  status DeliveryTrackingStatus @default(ASSIGNED)
+  riderName String?
+  riderPhone String?
+  vehicleLabel String?
+  latitude Float?
+  longitude Float?
+  heading Float?
+  speedMps Float?
+  accuracyMeters Float?
+  etaSeconds Int?
+  distanceMeters Int?
+  locationUpdatedAt DateTime?
+  active Boolean @default(true)
+  fulfillment SellerFulfillment @relation(fields: [fulfillmentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([active, locationUpdatedAt])
+  @@index([status, updatedAt])
 }
 
 model SellerPlan {
