@@ -1,13 +1,9 @@
-import { list } from "@vercel/blob";
-import {
-  getPublicProducts,
-  getPublicSeller,
-} from "../../../lib/public-catalog";
+import { listActiveStories } from "../../../lib/story-storage";
+import { getPublicProducts } from "../../../lib/public-catalog";
 import StoryViewer from "./story-viewer";
 
 export const dynamic = "force-dynamic";
 
-const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const validUserId = (value: string) => /^[a-zA-Z0-9_-]{8,80}$/.test(value);
 const videoFile = (url: string) => /\.(mp4|mov|webm)(?:\?|$)/i.test(url);
 
@@ -19,27 +15,16 @@ export default async function StoryPage({
   const { userId } = await params;
   const safeUserId = validUserId(userId) ? userId : "";
 
-  const [{ blobs: storyBlobs }, productsResult, sellerResult] =
-    await Promise.all([
-      safeUserId
-        ? list({ prefix: `stories/${safeUserId}/`, limit: 50 })
-        : Promise.resolve({ blobs: [] }),
-      getPublicProducts("limit=100"),
-      getPublicSeller(safeUserId),
-    ]);
+  const [storyBlobs, productsResult] = await Promise.all([
+    safeUserId ? listActiveStories(safeUserId) : Promise.resolve([]),
+    getPublicProducts("limit=100"),
+  ]);
 
-  const cutoff = Date.now() - STORY_TTL_MS;
-  const stories = [...storyBlobs]
-    .filter((blob) => new Date(blob.uploadedAt).getTime() >= cutoff)
-    .sort(
-      (a, b) =>
-        new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime(),
-    )
-    .map((blob) => ({
-      url: blob.url,
-      uploadedAt: new Date(blob.uploadedAt).toISOString(),
-      isVideo: videoFile(blob.url),
-    }));
+  const stories = storyBlobs.map((blob) => ({
+    url: blob.url,
+    uploadedAt: new Date(blob.uploadedAt).toISOString(),
+    isVideo: videoFile(blob.url),
+  }));
 
   const sellerProduct =
     productsResult.status === "ok"
@@ -47,10 +32,9 @@ export default async function StoryPage({
           (product) => product.seller.userId === safeUserId,
         )
       : undefined;
-
-  const seller =
-    sellerResult.status === "ok" ? sellerResult.data : sellerProduct?.seller;
+  const seller = sellerProduct?.seller;
   const sellerName = seller?.displayName || "Seller";
+
   if (!stories.length) {
     return (
       <main
@@ -83,19 +67,7 @@ export default async function StoryPage({
       sellerName={sellerName}
       userId={safeUserId}
       sellerId={seller?.id}
-      verified={Boolean(sellerProduct)}
-      product={
-        sellerProduct
-          ? {
-              id: sellerProduct.id,
-              name: sellerProduct.name,
-              price: String(sellerProduct.price),
-              stock: sellerProduct.stock,
-              imageUrl: sellerProduct.images[0]?.url,
-              sellerId: sellerProduct.seller.id,
-            }
-          : undefined
-      }
+      verified={false}
     />
   );
 }

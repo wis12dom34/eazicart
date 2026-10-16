@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useRequest } from "../hooks/use-request";
 import { useAuth } from "../providers/auth-provider";
@@ -18,7 +19,7 @@ const tabs: Array<{
   {
     href: "/explore",
     label: "Explore",
-    icon: "search",
+    icon: "explore",
     paths: ["/explore", "/search", "/category"],
   },
   { href: "/reels", label: "Reels", icon: "reels", paths: ["/reels"] },
@@ -42,6 +43,43 @@ export function BottomNavigation({
         : Promise.resolve(undefined),
     [cartCount, auth.isAuthenticated],
   );
+
+  useEffect(() => {
+    if (path !== "/reels") return;
+
+    const enableReelSound = () => {
+      const soundButtons = Array.from(
+        document.querySelectorAll<HTMLButtonElement>(
+          'button[aria-label="Turn Reel sound on"]',
+        ),
+      );
+
+      soundButtons.forEach((button) => button.click());
+      window.localStorage.setItem("eazicart-reels-sound", "on");
+    };
+
+    const restoreSoundPreference = () => {
+      if (window.localStorage.getItem("eazicart-reels-sound") !== "on") return;
+      enableReelSound();
+    };
+
+    restoreSoundPreference();
+    document.addEventListener("pointerdown", enableReelSound, {
+      once: true,
+      capture: true,
+    });
+    document.addEventListener("touchstart", enableReelSound, {
+      once: true,
+      capture: true,
+      passive: true,
+    });
+
+    return () => {
+      document.removeEventListener("pointerdown", enableReelSound, true);
+      document.removeEventListener("touchstart", enableReelSound, true);
+    };
+  }, [path]);
+
   const count =
     cartCount ??
     cart.data?.data.items.reduce((total, item) => total + item.quantity, 0);

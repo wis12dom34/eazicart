@@ -18,6 +18,9 @@
   font-weight: 600;
   line-height: 24px;
 }
+.desktopSubtitle {
+  display: none;
+}
 .back {
   position: absolute;
   left: 4px;
@@ -246,4 +249,27 @@
   height: 100%;
   border-radius: inherit;
   object-fit: contain;
+}
+
+@media (min-width: 1360px) {
+  .page { max-width: none; width: auto; min-height: 100dvh; padding: 28px 30px 120px; box-sizing: border-box; }
+  .header { height: 86px; }
+  .header h1 { position: static; margin: 0; font-size: 22px; line-height: 28px; }
+  .desktopSubtitle { display: block; margin: 7px 0 0; color: #666b75; font-size: 12px; line-height: 17px; }
+  .back { display: none; }
+  .section, .summary { padding: 0; margin: 0 0 24px; }
+  .section h2, .summary h2 { margin: 0 0 10px; font-size: 15px; line-height: 20px; }
+  .addressCard, .paymentCard { min-height: 68px; padding: 14px 16px; box-sizing: border-box; border: 1px solid #e5e8ec; border-radius: 14px; background: #f8f9fa; }
+  .addressCard a { top: 12px; right: 16px; min-height: 44px; color: #ff5c0f; }
+  .selected { right: 18px; top: 23px; color: #ff5c0f; }
+  .items { gap: 10px; }
+  .item { min-height: 84px; border-color: #e5e8ec; border-radius: 14px; }
+  .itemThumb { width: 78px; height: 78px; top: 2px; left: 2px; }
+  .itemCopy { padding: 17px 130px 12px 96px; }
+  .itemPrice { right: 18px; top: 32px; }
+  .summary { padding: 18px; border-radius: 16px; background: #f8f9fa; }
+  .summary .total { margin-top: 8px; }
+  .placeArea { position: fixed; left: max(calc((100vw - 1440px) / 2 + 248px), 248px); bottom: 0; width: 712px; max-width: calc(100vw - 248px - 480px); height: 96px; padding: 20px 30px; border: 0; border-top: 1px solid #e5e8ec; background: rgba(255,255,255,.98); box-sizing: border-box; }
+  .placeButton { height: 52px; border-radius: 26px; }
+  .formError { position: absolute; bottom: 74px; left: 30px; }
 }

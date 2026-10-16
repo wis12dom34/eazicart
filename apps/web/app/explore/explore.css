@@ -472,3 +472,155 @@
 .figma-explore-favourite[aria-pressed="true"] {
   color: var(--brand-pressed);
 }
+
+@media (min-width: 1360px) {
+  .figma-explore {
+    max-width: none;
+    width: 100%;
+    height: auto;
+    min-height: 1024px;
+    padding: 0;
+  }
+  .figma-explore-viewport {
+    height: auto;
+    min-height: 1024px;
+    overflow: visible;
+    padding: 0 30px 48px;
+  }
+  .figma-explore-header,
+  .figma-explore-logo,
+  .figma-explore-notifications,
+  .figma-explore-map,
+  .figma-explore + nav {
+    display: none;
+  }
+  .figma-explore-title {
+    height: auto;
+    margin: 0 -30px;
+    padding: 20px 30px 8px;
+    border-bottom: 0;
+    font-size: 21px;
+    line-height: 26px;
+    font-weight: 600;
+  }
+  .figma-explore-title::after {
+    content: "Discover products, sellers and trends";
+    display: block;
+    margin-top: 3px;
+    color: #666b75;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 400;
+  }
+  .figma-explore-sticky {
+    position: static;
+    margin: 0 -30px;
+    padding: 16px 30px 0;
+    border-top: 1px solid #e5e8ec;
+    background: #fff;
+  }
+  .figma-explore-search {
+    height: 44px;
+    margin: 0 32px 18px 0;
+    border-radius: 22px;
+    background: #f8f9fa;
+  }
+  .figma-explore-tabs {
+    height: 42px;
+    padding: 0;
+    border: 0;
+    gap: 10px;
+  }
+  .figma-explore-tabs a {
+    min-height: 34px;
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 17px;
+    background: #f8f9fa;
+    color: #0f1113;
+    font-size: 11px;
+  }
+  .figma-explore-tabs a[aria-current="page"] {
+    background: #fff0e5;
+    color: #ff5c0f;
+  }
+  .figma-explore-tabs a[aria-current="page"]::after {
+    display: none;
+  }
+  .figma-explore-products {
+    margin: 20px 0 0;
+  }
+  .figma-explore-products h2 {
+    font-size: 15px;
+  }
+  .figma-explore-grid {
+    grid-template-columns: repeat(2, minmax(0, 300px));
+    gap: 20px 16px;
+    height: auto;
+    margin-top: 18px;
+  }
+  .figma-explore-product,
+  .figma-explore-product:nth-child(2) {
+    height: 204px;
+    border-radius: 18px;
+    background: #fff;
+  }
+  .figma-explore-product-media {
+    inset: 10px 10px 74px;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #f8f9fa;
+  }
+  .figma-explore-card-seller {
+    display: none;
+  }
+  .figma-explore-product-name {
+    bottom: 38px;
+    height: auto;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .figma-explore-product > strong {
+    bottom: 15px;
+    color: #ff5c0f;
+    font-size: 12px;
+    line-height: 15px;
+  }
+  .figma-explore-favourite {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+  }
+  .figma-explore-reels {
+    margin: 32px 0 0;
+    height: auto;
+  }
+  .figma-explore-sellers {
+    margin: 36px 0 0;
+  }
+  .figma-explore-seller-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .figma-explore-seller-strip > * {
+    flex: none;
+    width: 620px;
+    height: 46px;
+    border: 1px solid #e5e8ec;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    padding: 6px 10px;
+  }
+  .figma-explore-seller-strip i {
+    width: 32px;
+    height: 32px;
+    margin: 0 14px 0 0;
+  }
+  .figma-explore-seller-strip strong {
+    margin: 0;
+    font-size: 12px;
+  }
+}

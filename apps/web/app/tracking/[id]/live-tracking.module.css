@@ -496,3 +496,13 @@
     width: 90px;
   }
 }
+
+@media (min-width: 1360px) {
+  .page { position: relative; max-width: none; width: 100%; height: 100dvh; min-height: 720px; margin: 0; }
+  .map { inset: 0; }
+  .illustration { left: calc(50% - 215px); }
+  .header { top: 28px; left: 28px; right: 28px; }
+  .back { display: none; }
+  .card { left: 28px; right: 28px; bottom: 28px; height: 225px; }
+  .page > nav { display: none; }
+}

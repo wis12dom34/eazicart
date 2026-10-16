@@ -1,5 +1,27 @@
 import type { ReactNode } from "react";
 
+// Original Reicon artwork exported from the current EaziCart Figma file.
+// External SVG masks preserve the source geometry and inherit each control's color.
+const reiconAssets: Partial<
+  Record<IconName, { outline: string; filled?: string }>
+> = {
+  home: { outline: "home-outline", filled: "home-filled" },
+  explore: { outline: "explore-outline", filled: "explore-filled" },
+  reels: { outline: "reels-outline", filled: "reels-filled" },
+  cart: { outline: "cart-outline", filled: "cart-filled" },
+  chat: { outline: "chat-outline", filled: "chat-filled" },
+  user: { outline: "profile-outline" },
+  "user-circle": { outline: "profile-outline" },
+  search: { outline: "source-search" },
+  bell: { outline: "bell-outline" },
+  more: { outline: "more-outline" },
+  heart: { outline: "heart-outline" },
+  message: { outline: "message-outline" },
+  share: { outline: "share-outline" },
+  bookmark: { outline: "bookmark-outline" },
+  bag: { outline: "bag-outline" },
+};
+
 const outlinePaths = {
   home: (
     <>
@@ -27,7 +49,9 @@ const outlinePaths = {
       <circle cx="18" cy="20.25" r="1.25" />
     </>
   ),
-  chat: <path d="M12 3.25c-5.1 0-9.25 3.45-9.25 7.75 0 2.2 1.1 4.2 2.9 5.65L4.5 20.75l4.75-2.2c.9.25 1.8.4 2.75.4 5.1 0 9.25-3.45 9.25-7.75S17.1 3.25 12 3.25Z" />,
+  chat: (
+    <path d="M12 3.25c-5.1 0-9.25 3.45-9.25 7.75 0 2.2 1.1 4.2 2.9 5.65L4.5 20.75l4.75-2.2c.9.25 1.8.4 2.75.4 5.1 0 9.25-3.45 9.25-7.75S17.1 3.25 12 3.25Z" />
+  ),
   message: <path d="M4 4.5h16v12H8l-4 3v-15Z" />,
   bag: (
     <>
@@ -71,7 +95,9 @@ const outlinePaths = {
       <path d="M9.75 20.5a2.5 2.5 0 0 0 4.5 0" />
     </>
   ),
-  heart: <path d="M20.5 5a5.25 5.25 0 0 0-7.45 0L12 6.05 10.95 5A5.25 5.25 0 0 0 3.5 12.4L12 20.75l8.5-8.35A5.25 5.25 0 0 0 20.5 5Z" />,
+  heart: (
+    <path d="M20.5 5a5.25 5.25 0 0 0-7.45 0L12 6.05 10.95 5A5.25 5.25 0 0 0 3.5 12.4L12 20.75l8.5-8.35A5.25 5.25 0 0 0 20.5 5Z" />
+  ),
   share: (
     <>
       <path d="M12 15V3.25m-4.25 4L12 3l4.25 4.25" />
@@ -88,7 +114,9 @@ const outlinePaths = {
   "chevron-down": <path d="m5.75 9.25 6.25 6.25 6.25-6.25" />,
   back: <path d="m14.75 18.25-6.25-6.25 6.25-6.25" />,
   filter: <path d="M4 7h16M7 12h10M10 17h4" />,
-  star: <path d="m12 3 2.8 5.65 6.2.9-4.5 4.4 1.05 6.2L12 17.2l-5.55 2.95 1.05-6.2L3 9.55l6.2-.9L12 3Z" />,
+  star: (
+    <path d="m12 3 2.8 5.65 6.2.9-4.5 4.4 1.05 6.2L12 17.2l-5.55 2.95 1.05-6.2L3 9.55l6.2-.9L12 3Z" />
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   minus: <path d="M5 12h14" />,
   check: <path d="m5 12.25 4 4L19 6.5" />,
@@ -136,7 +164,9 @@ const outlinePaths = {
     </>
   ),
   shirt: <path d="m8 4-5 4 3 4 2-1v10h8V11l2 1 3-4-5-4c-1 2-7 2-8 0Z" />,
-  sparkle: <path d="M12 2.5c1 5.75 3.75 8.5 9.5 9.5-5.75 1-8.5 3.75-9.5 9.5-1-5.75-3.75-8.5-9.5-9.5 5.75-1 8.5-3.75 9.5-9.5Z" />,
+  sparkle: (
+    <path d="M12 2.5c1 5.75 3.75 8.5 9.5 9.5-5.75 1-8.5 3.75-9.5 9.5-1-5.75-3.75-8.5-9.5-9.5 5.75-1 8.5-3.75 9.5-9.5Z" />
+  ),
   play: <path d="m9 6.75 9 5.25-9 5.25V6.75Z" />,
   pause: <path d="M8.5 6v12M15.5 6v12" />,
   volume: (
@@ -232,14 +262,18 @@ const outlinePaths = {
     </>
   ),
   send: <path d="m3 11 18-8-8 18-2-8-8-2Z" />,
-  paperclip: <path d="m8.5 12.5 6.25-6.25a3.2 3.2 0 0 1 4.5 4.5L11 19a5 5 0 0 1-7-7l8-8" />,
+  paperclip: (
+    <path d="m8.5 12.5 6.25-6.25a3.2 3.2 0 0 1 4.5 4.5L11 19a5 5 0 0 1-7-7l8-8" />
+  ),
   microphone: (
     <>
       <rect x="9" y="3" width="6" height="11" rx="3" />
       <path d="M6 11a6 6 0 0 0 12 0M12 17v4m-4 0h8" />
     </>
   ),
-  phone: <path d="M7 3.5 10 8 8 10c1.5 3 3 4.5 6 6l2-2 4.5 3c-.5 2.5-2 4-4.5 4-6.5-1.5-11.5-6.5-13-13 0-2.5 1.5-4 4-4.5Z" />,
+  phone: (
+    <path d="M7 3.5 10 8 8 10c1.5 3 3 4.5 6 6l2-2 4.5 3c-.5 2.5-2 4-4.5 4-6.5-1.5-11.5-6.5-13-13 0-2.5 1.5-4 4-4.5Z" />
+  ),
   video: (
     <>
       <rect x="3" y="6" width="12" height="12" rx="2" />
@@ -289,7 +323,7 @@ const outlinePaths = {
   ),
 } satisfies Record<string, ReactNode>;
 
-export type IconName = keyof typeof outlinePaths;
+export type IconName = keyof typeof outlinePaths | "explore";
 export type IconWeight = "regular" | "medium" | "semibold";
 export type IconState = "default" | "active" | "disabled";
 
@@ -306,26 +340,57 @@ type IconProps = {
 };
 
 const filledPaths: Partial<Record<IconName, ReactNode>> = {
-  home: <path d="M12 2.5 2.5 10l1.25 1.55L5 10.55V20a1 1 0 0 0 1 1h4v-7h4v7h4a1 1 0 0 0 1-1v-9.45l1.25 1 1.25-1.55L12 2.5Z" />,
-  reels: <path fillRule="evenodd" d="M6 2.5h12v1.75H6V2.5ZM5.75 6A3.25 3.25 0 0 0 2.5 9.25v8.5A3.25 3.25 0 0 0 5.75 21h12.5a3.25 3.25 0 0 0 3.25-3.25v-8.5A3.25 3.25 0 0 0 18.25 6H5.75ZM10 10v7l5.5-3.5L10 10Z" />,
+  home: (
+    <path d="M12 2.5 2.5 10l1.25 1.55L5 10.55V20a1 1 0 0 0 1 1h4v-7h4v7h4a1 1 0 0 0 1-1v-9.45l1.25 1 1.25-1.55L12 2.5Z" />
+  ),
+  reels: (
+    <path
+      fillRule="evenodd"
+      d="M6 2.5h12v1.75H6V2.5ZM5.75 6A3.25 3.25 0 0 0 2.5 9.25v8.5A3.25 3.25 0 0 0 5.75 21h12.5a3.25 3.25 0 0 0 3.25-3.25v-8.5A3.25 3.25 0 0 0 18.25 6H5.75ZM10 10v7l5.5-3.5L10 10Z"
+    />
+  ),
   cart: (
     <>
       <path d="M5.2 7h16l-1.65 7.9a2 2 0 0 1-1.95 1.6H8.8a2 2 0 0 1-1.95-1.65L5.2 7Z" />
-      <path d="M2.5 3.5h2.25l.65 3.5" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M2.5 3.5h2.25l.65 3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
       <circle cx="9" cy="20.25" r="1.5" />
       <circle cx="18" cy="20.25" r="1.5" />
     </>
   ),
-  chat: <path d="M12 3.25c-5.1 0-9.25 3.45-9.25 7.75 0 2.2 1.1 4.2 2.9 5.65L4.5 20.75l4.75-2.2c.9.25 1.8.4 2.75.4 5.1 0 9.25-3.45 9.25-7.75S17.1 3.25 12 3.25Z" />,
-  heart: <path d="M20.5 5a5.25 5.25 0 0 0-7.45 0L12 6.05 10.95 5A5.25 5.25 0 0 0 3.5 12.4L12 20.75l8.5-8.35A5.25 5.25 0 0 0 20.5 5Z" />,
+  chat: (
+    <path d="M12 3.25c-5.1 0-9.25 3.45-9.25 7.75 0 2.2 1.1 4.2 2.9 5.65L4.5 20.75l4.75-2.2c.9.25 1.8.4 2.75.4 5.1 0 9.25-3.45 9.25-7.75S17.1 3.25 12 3.25Z" />
+  ),
+  heart: (
+    <path d="M20.5 5a5.25 5.25 0 0 0-7.45 0L12 6.05 10.95 5A5.25 5.25 0 0 0 3.5 12.4L12 20.75l8.5-8.35A5.25 5.25 0 0 0 20.5 5Z" />
+  ),
   bookmark: <path d="M6.25 3.25h11.5v17.5L12 17l-5.75 3.75V3.25Z" />,
-  star: <path d="m12 2.75 2.9 5.9 6.5.95-4.7 4.55 1.1 6.45L12 17.5l-5.8 3.05 1.1-6.4-4.7-4.55 6.5-.95L12 2.75Z" />,
-  bell: <path d="M18.25 9.5a6.25 6.25 0 0 0-12.5 0c0 6.5-2.75 6.75-2.75 8.75h18c0-2-2.75-2.25-2.75-8.75ZM9.5 20.25h5a2.5 2.5 0 0 1-5 0Z" />,
-  user: <path d="M12 3.75A4.25 4.25 0 1 1 12 12a4.25 4.25 0 0 1 0-8.25ZM4 21a8 8 0 0 1 16 0H4Z" />,
+  star: (
+    <path d="m12 2.75 2.9 5.9 6.5.95-4.7 4.55 1.1 6.45L12 17.5l-5.8 3.05 1.1-6.4-4.7-4.55 6.5-.95L12 2.75Z" />
+  ),
+  bell: (
+    <path d="M18.25 9.5a6.25 6.25 0 0 0-12.5 0c0 6.5-2.75 6.75-2.75 8.75h18c0-2-2.75-2.25-2.75-8.75ZM9.5 20.25h5a2.5 2.5 0 0 1-5 0Z" />
+  ),
+  user: (
+    <path d="M12 3.75A4.25 4.25 0 1 1 12 12a4.25 4.25 0 0 1 0-8.25ZM4 21a8 8 0 0 1 16 0H4Z" />
+  ),
   bag: <path d="M5 8.25h14l1 12.5H4l1-12.5ZM9 8.25h6V6a3 3 0 0 0-6 0v2.25Z" />,
-  box: <path d="m4 7 8-4 8 4-8 4-8-4Zm0 2 7 3.5V21l-7-3.5V9Zm9 3.5L20 9v8.5L13 21v-8.5Z" />,
-  store: <path d="M5.25 3h13.5l2 6.5a2.75 2.75 0 0 1-5.5 0 2.75 2.75 0 0 1-5.5 0 2.75 2.75 0 0 1-5.5 0L5.25 3ZM4.25 12.5v8.25h15.5V12.5a4 4 0 0 1-4.5-.75 4 4 0 0 1-6.5 0 4 4 0 0 1-4.5.75Z" />,
-  "check-circle": <path fillRule="evenodd" d="M12 2.75a9.25 9.25 0 1 0 0 18.5 9.25 9.25 0 0 0 0-18.5Zm4.65 6.1-5.3 6.1a1 1 0 0 1-1.48.04L7.2 12.3l1.4-1.4 1.9 1.9 4.65-5.35 1.5 1.4Z" />,
+  box: (
+    <path d="m4 7 8-4 8 4-8 4-8-4Zm0 2 7 3.5V21l-7-3.5V9Zm9 3.5L20 9v8.5L13 21v-8.5Z" />
+  ),
+  store: (
+    <path d="M5.25 3h13.5l2 6.5a2.75 2.75 0 0 1-5.5 0 2.75 2.75 0 0 1-5.5 0 2.75 2.75 0 0 1-5.5 0L5.25 3ZM4.25 12.5v8.25h15.5V12.5a4 4 0 0 1-4.5-.75 4 4 0 0 1-6.5 0 4 4 0 0 1-4.5.75Z" />
+  ),
+  "check-circle": (
+    <path
+      fillRule="evenodd"
+      d="M12 2.75a9.25 9.25 0 1 0 0 18.5 9.25 9.25 0 0 0 0-18.5Zm4.65 6.1-5.3 6.1a1 1 0 0 1-1.48.04L7.2 12.3l1.4-1.4 1.9 1.9 4.65-5.35 1.5 1.4Z"
+    />
+  ),
 };
 
 const weightStroke: Record<IconWeight, number> = {
@@ -346,8 +411,53 @@ export function Icon({
 }: IconProps) {
   const selected = active || state === "active";
   const solid = filled || selected ? filledPaths[name] : undefined;
-  const effectiveWeight = selected && !solid && weight === "regular" ? "semibold" : weight;
+  const effectiveWeight =
+    selected && !solid && weight === "regular" ? "semibold" : weight;
   const labelled = Boolean(accessibilityLabel);
+
+  const asset = reiconAssets[name];
+  // Preserve existing filled action states where Figma supplies only the outline.
+  const artwork =
+    filled || selected
+      ? (asset?.filled ?? (solid ? undefined : asset?.outline))
+      : asset?.outline;
+  if (artwork) {
+    const source = `url("/figma/reicon/${artwork}.svg")`;
+    // Navigation uses a 22px glyph centered in its existing 24px icon box.
+    const maskSize = ["home", "explore", "reels", "cart", "chat"].includes(name)
+      ? "91.6667% 91.6667%"
+      : ["heart", "message", "share", "bookmark"].includes(name)
+        ? "90% 90%"
+        : "100% 100%";
+    return (
+      <svg
+        className={className}
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden={labelled ? undefined : true}
+        aria-label={accessibilityLabel}
+        role={labelled ? "img" : undefined}
+        focusable="false"
+        data-reicon={artwork}
+        style={{
+          flexShrink: 0,
+          maskImage: source,
+          WebkitMaskImage: source,
+          maskSize,
+          WebkitMaskSize: maskSize,
+          maskRepeat: "no-repeat",
+          WebkitMaskRepeat: "no-repeat",
+          maskPosition: "center",
+          WebkitMaskPosition: "center",
+          opacity: state === "disabled" ? 0.42 : undefined,
+        }}
+      >
+        <rect width="24" height="24" />
+      </svg>
+    );
+  }
 
   return (
     <svg
@@ -366,7 +476,7 @@ export function Icon({
       focusable="false"
       style={state === "disabled" ? { opacity: 0.42 } : undefined}
     >
-      {solid ?? outlinePaths[name]}
+      {solid ?? outlinePaths[name === "explore" ? "search" : name]}
     </svg>
   );
 }

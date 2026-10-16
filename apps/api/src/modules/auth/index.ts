@@ -26,7 +26,13 @@ const registration = credentials.extend({
   name: z.string().trim().min(2).max(100),
 });
 const refreshBody = z.object({ refreshToken: z.string().min(1).optional() });
-const publicUser = ({ id, email, name }: StoredUser) => ({ id, email, name });
+const publicUser = ({ id, email, name, username, bio }: StoredUser) => ({
+  id,
+  email,
+  name,
+  username: username ?? null,
+  bio: bio ?? null,
+});
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 

@@ -1,10 +1,31 @@
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors.js";
 import type { AuthStore } from "./auth/store.js";
-import type { PrismaClient } from "@eazicart/database";
+import { Prisma, type PrismaClient } from "@eazicart/database";
 import { z } from "zod";
 import { requireDatabase, userId } from "./shared.js";
 import argon2 from "argon2";
+
+const profileInput = z.object({
+  name: z.string().trim().min(2).max(100),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(
+      /^[a-z0-9_]{3,30}$/,
+      "Username must be 3–30 letters, numbers or underscores",
+    )
+    .optional(),
+  bio: z.string().trim().max(160).optional(),
+});
+const publicProfile = {
+  id: true,
+  email: true,
+  name: true,
+  username: true,
+  bio: true,
+} as const;
 
 export function registerUsers(
   app: FastifyInstance,
@@ -19,24 +40,47 @@ export function registerUsers(
         ? await store.findUserById(request.userId)
         : undefined;
       if (!user) throw new AppError(404, "USER_NOT_FOUND", "User not found");
-      return { id: user.id, email: user.email, name: user.name };
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        username: user.username ?? null,
+        bio: user.bio ?? null,
+      };
     },
   );
+
   app.patch(
     "/users/me",
     { preHandler: (request) => app.authenticate(request) },
     async (request) => {
-      const input = z
-        .object({ name: z.string().trim().min(2).max(100) })
-        .parse(request.body);
-      const data = await requireDatabase(database).user.update({
-        where: { id: userId(request) },
-        data: input,
-        select: { id: true, email: true, name: true },
-      });
-      return { data };
+      const input = profileInput.parse(request.body);
+      try {
+        const data = await requireDatabase(database).user.update({
+          where: { id: userId(request) },
+          data: {
+            name: input.name,
+            username: input.username,
+            bio: input.bio === undefined ? undefined : input.bio || null,
+          },
+          select: publicProfile,
+        });
+        return { data };
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        )
+          throw new AppError(
+            409,
+            "USERNAME_IN_USE",
+            "That username is already taken",
+          );
+        throw error;
+      }
     },
   );
+
   app.post(
     "/users/me/password",
     { preHandler: (request) => app.authenticate(request) },

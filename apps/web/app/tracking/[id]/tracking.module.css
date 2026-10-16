@@ -210,10 +210,33 @@
   color: #fff;
 }
 
-@media (min-width: 700px) {
+@media (min-width: 700px) and (max-width: 1359px) {
   .page {
     max-width: 470px;
     margin: 0 auto;
     box-shadow: 0 0 0 1px rgba(10, 10, 13, 0.04);
   }
+}
+
+@media (min-width: 1360px) {
+  .page {
+    max-width: none;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 28px 30px 72px;
+    box-shadow: none;
+  }
+  .page > nav { display: none; }
+  .header { display: block; padding: 0; }
+  .header h1 { font-size: 22px; line-height: 28px; }
+  .back { display: none; }
+  .orderId { margin-top: 6px; padding-bottom: 20px; border-bottom: 1px solid #e5e8ed; font-size: 12px; }
+  .summaryCard { margin-top: 20px; padding: 16px 18px; border-radius: 14px; background: #f8f9fa; }
+  .progressSection { margin-top: 24px; padding: 18px; border: 1px solid #e5e8ed; border-radius: 16px; }
+  .progressSection h2 { font-size: 15px; }
+  .timeline { gap: 26px; }
+  .unavailable { margin-top: 18px; border-radius: 14px; }
+  .actions { margin-top: 20px; }
+  .secondaryAction,
+  .primaryAction { min-height: 46px; border-radius: 23px; font-size: 13px; }
 }

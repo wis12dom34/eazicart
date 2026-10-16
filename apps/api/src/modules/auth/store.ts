@@ -2,6 +2,8 @@ export interface StoredUser {
   id: string;
   email: string;
   name: string;
+  username?: string | null;
+  bio?: string | null;
   passwordHash: string;
 }
 
