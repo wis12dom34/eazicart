@@ -127,7 +127,12 @@ function SubscriptionContent() {
             ),
           )}
         </div>
-        <div className={styles.benefits}>
+        <div
+          className={styles.benefits}
+          role="region"
+          aria-label={`${plan.title} plan benefits`}
+          tabIndex={0}
+        >
           <div className={styles.planHeading}>
             <h2>{plan.title}</h2>
             {tier === "PRO" ? (
