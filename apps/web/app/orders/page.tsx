@@ -242,7 +242,7 @@ function OrderFilters({
 }: {
   filter: OrderFilter;
   setFilter: (value: OrderFilter) => void;
-  className: string;
+  className?: string;
 }) {
   return (
     <div className={className} role="group" aria-label="Filter orders">
