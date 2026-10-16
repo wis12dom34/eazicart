@@ -12,6 +12,37 @@ for (const viewport of [
   }) => {
     await page.setViewportSize(viewport);
     await page.goto("/seller/subscription?plan=PRO");
+
+    if (viewport.width >= 1360) {
+      await expect(
+        page.getByRole("heading", { name: "Choose your plan", exact: true }),
+      ).toBeVisible();
+      const upgrade = page.getByRole("link", {
+        name: "Upgrade to Pro",
+        exact: true,
+      });
+      await expect(upgrade).toBeInViewport();
+      await expect(
+        page
+          .getByRole("region", { name: "Pro plan benefits", exact: true })
+          .getByText("Verified seller badge", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Start free", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Business coming soon", exact: true }),
+      ).toBeDisabled();
+      const footer = await page.locator("main footer").boundingBox();
+      expect(footer.y + footer.height).toBeLessThanOrEqual(viewport.height);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      return;
+    }
+
     const upgrade = page.getByRole("link", {
       name: "Upgrade to Pro",
       exact: true,
