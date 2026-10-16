@@ -18,7 +18,7 @@ const tabs: Array<{
   {
     href: "/explore",
     label: "Explore",
-    icon: "search",
+    icon: "explore",
     paths: ["/explore", "/search", "/category"],
   },
   { href: "/reels", label: "Reels", icon: "reels", paths: ["/reels"] },
