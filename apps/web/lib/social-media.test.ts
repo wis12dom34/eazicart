@@ -100,16 +100,84 @@ describe("shared account profile photo", () => {
     );
   });
 
-  it("deduplicates cross-tab invalidation while a refresh is pending", async () => {
-    const fetch = vi.fn().mockResolvedValue(response("/latest.jpg"));
+  it("supersedes a pending read when another tab changes the photo", async () => {
+    let finishOldRead!: (value: Response) => void;
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            finishOldRead = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(response("/latest.jpg"));
     vi.stubGlobal("fetch", fetch);
     const { fetchProfilePhoto, invalidateProfilePhoto } =
       await import("./social-media");
     const first = fetchProfilePhoto("seller-user");
     invalidateProfilePhoto("seller-user");
     const second = fetchProfilePhoto("seller-user");
+    finishOldRead(response("/old.jpg"));
     expect((await first)?.url).toBe("/latest.jpg");
     expect((await second)?.url).toBe("/latest.jpg");
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not restore a photo removed in another tab", async () => {
+    let finishOldRead!: (value: Response) => void;
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            finishOldRead = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(Response.json({ data: null }));
+    vi.stubGlobal("fetch", fetch);
+    const media = await import("./social-media");
+    const oldRead = media.fetchProfilePhoto("seller-user");
+    media.invalidateProfilePhoto("seller-user");
+    expect(await media.fetchProfilePhoto("seller-user")).toBeNull();
+    finishOldRead(response("/removed.jpg"));
+    expect(await oldRead).toBeNull();
+    expect(await media.fetchProfilePhoto("seller-user")).toBeNull();
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("discards the superseded read even when the fresh read fails", async () => {
+    let finishOldRead!: (value: Response) => void;
+    const fetch = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            finishOldRead = resolve;
+          }),
+      )
+      .mockRejectedValueOnce(new Error("offline"));
+    vi.stubGlobal("fetch", fetch);
+    const media = await import("./social-media");
+    const oldRead = media.fetchProfilePhoto("seller-user");
+    media.invalidateProfilePhoto("seller-user");
+    expect(await media.fetchProfilePhoto("seller-user")).toBeNull();
+    finishOldRead(response("/stale.jpg"));
+    expect(await oldRead).toBeNull();
+  });
+
+  it("retains the last completed photo if an invalidated refresh fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(response("/known.jpg"))
+        .mockRejectedValueOnce(new Error("offline")),
+    );
+    const media = await import("./social-media");
+    await media.fetchProfilePhoto("seller-user");
+    media.invalidateProfilePhoto("seller-user");
+    expect((await media.fetchProfilePhoto("seller-user"))?.url).toBe(
+      "/known.jpg",
+    );
   });
 });

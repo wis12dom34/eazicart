@@ -7,7 +7,7 @@ const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const videoTypes = new Set(["video/mp4", "video/quicktime", "video/webm"]);
 const profilePhotoCache = new Map<string, Promise<SocialMediaItem | null>>();
 const profilePhotoFetchedAt = new Map<string, number>();
-const profilePhotoRequests = new Set<string>();
+const profilePhotoRequests = new Map<string, Promise<SocialMediaItem | null>>();
 const PROFILE_PHOTO_TTL_MS = 30_000;
 
 export const PROFILE_PHOTO_EVENT = "eazicart:profile-photo-updated";
@@ -87,22 +87,34 @@ export async function fetchProfilePhoto(userId: string) {
       const payload = (await response.json()) as { data?: SocialMediaItem | null };
       const current = profilePhotoCache.get(userId);
       if (current && current !== request) return current;
+      if (profilePhotoRequests.get(userId) !== request) return null;
       return payload.data ?? null;
     })
     .catch(() => {
       const current = profilePhotoCache.get(userId);
       if (current && current !== request) return current;
+      if (profilePhotoRequests.get(userId) !== request) return null;
       if (profilePhotoCache.get(userId) === request) {
         if (cached) profilePhotoCache.set(userId, cached); else profilePhotoCache.delete(userId);
         profilePhotoFetchedAt.delete(userId);
       }
       return cached ?? null;
     })
-    .finally(() => profilePhotoRequests.delete(userId));
-  profilePhotoCache.set(userId, request); profilePhotoFetchedAt.set(userId, Date.now()); profilePhotoRequests.add(userId);
+    .finally(() => {
+      if (profilePhotoRequests.get(userId) === request) profilePhotoRequests.delete(userId);
+    });
+  profilePhotoCache.set(userId, request); profilePhotoFetchedAt.set(userId, Date.now()); profilePhotoRequests.set(userId, request);
   return request;
 }
-export function invalidateProfilePhoto(userId: string) { profilePhotoFetchedAt.delete(userId); }
+export function invalidateProfilePhoto(userId: string) {
+  profilePhotoFetchedAt.delete(userId);
+  // A read already in flight predates the cross-tab change. Start a fresh read
+  // instead of reusing it, and prevent it from later restoring stale media.
+  if (profilePhotoRequests.has(userId)) {
+    profilePhotoCache.delete(userId);
+    profilePhotoRequests.delete(userId);
+  }
+}
 export async function fetchStories(userIds: string[]) {
   if (!userIds.length) return {} as Record<string, SocialMediaItem>;
   try {
