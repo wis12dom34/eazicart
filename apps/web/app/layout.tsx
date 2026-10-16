@@ -5,32 +5,22 @@ import { brandDescription, siteOrigin } from "../lib/seo";
 import "./styles.css";
 import "./x-mobile-polish.css";
 import "./responsive-mobile.css";
+import "./gesture-mobile.css";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import { AuthProvider } from "./providers/auth-provider";
+import { MobileGestureNavigation } from "./components/mobile-gesture-navigation";
 
 export const metadata: Metadata = {
   metadataBase: siteOrigin() ? new URL(siteOrigin()!) : undefined,
-  title: {
-    default: "EaziCart | The Operating System for Modern Businesses",
-    template: "%s | EaziCart",
-  },
+  title: { default: "EaziCart | The Operating System for Modern Businesses", template: "%s | EaziCart" },
   description: brandDescription,
   applicationName: "EaziCart",
   robots: { index: false, follow: true },
-  openGraph: {
-    title: "EaziCart | The Operating System for Modern Businesses",
-    description: brandDescription,
-    siteName: "EaziCart",
-    type: "website",
-  },
-  twitter: {
-    card: "summary",
-    title: "EaziCart",
-    description: brandDescription,
-  },
+  openGraph: { title: "EaziCart | The Operating System for Modern Businesses", description: brandDescription, siteName: "EaziCart", type: "website" },
+  twitter: { card: "summary", title: "EaziCart", description: brandDescription },
   icons: { icon: "/figma/logo.svg" },
 };
 
@@ -42,13 +32,13 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <MobileGestureNavigation>{children}</MobileGestureNavigation>
+        </AuthProvider>
       </body>
     </html>
   );
