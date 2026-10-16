@@ -1,8 +1,7 @@
-import { list } from "@vercel/blob";
+import { listActiveStories } from "../../../../lib/story-storage";
 
 export const dynamic = "force-dynamic";
 
-const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const validUserId = (value: string) => /^[a-zA-Z0-9_-]{8,80}$/.test(value);
 
 function contentTypeFromPathname(pathname: string) {
@@ -27,30 +26,32 @@ export async function GET(request: Request) {
     ),
   ).slice(0, 12);
 
-  const cutoff = Date.now() - STORY_TTL_MS;
-  const pairs = await Promise.all(
-    userIds.map(async (userId) => {
-      const { blobs } = await list({ prefix: `stories/${userId}/`, limit: 50 });
-      const latest = [...blobs]
-        .filter((blob) => new Date(blob.uploadedAt).getTime() >= cutoff)
-        .sort(
-          (a, b) =>
-            new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
-        )[0];
-      return [
-        userId,
-        latest
-          ? {
-              url: latest.url,
-              uploadedAt: latest.uploadedAt,
-              contentType: contentTypeFromPathname(latest.pathname),
-            }
-          : null,
-      ] as const;
-    }),
-  );
+  try {
+    const now = Date.now();
+    const pairs = await Promise.all(
+      userIds.map(async (userId) => {
+        const stories = await listActiveStories(userId, now);
+        const latest = stories.at(-1);
+        return [
+          userId,
+          latest
+            ? {
+                url: latest.url,
+                uploadedAt: latest.uploadedAt,
+                contentType: contentTypeFromPathname(latest.pathname),
+              }
+            : null,
+        ] as const;
+      }),
+    );
 
-  return Response.json({
-    data: Object.fromEntries(pairs.filter(([, story]) => Boolean(story))),
-  });
+    return Response.json({
+      data: Object.fromEntries(pairs.filter(([, story]) => Boolean(story))),
+    });
+  } catch {
+    return Response.json(
+      { error: "Stories are temporarily unavailable." },
+      { status: 503 },
+    );
+  }
 }

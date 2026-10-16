@@ -1,10 +1,9 @@
-import { list } from "@vercel/blob";
+import { listActiveStories } from "../../../lib/story-storage";
 import { getPublicProducts } from "../../../lib/public-catalog";
 import StoryViewer from "./story-viewer";
 
 export const dynamic = "force-dynamic";
 
-const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const validUserId = (value: string) => /^[a-zA-Z0-9_-]{8,80}$/.test(value);
 const videoFile = (url: string) => /\.(mp4|mov|webm)(?:\?|$)/i.test(url);
 
@@ -16,25 +15,16 @@ export default async function StoryPage({
   const { userId } = await params;
   const safeUserId = validUserId(userId) ? userId : "";
 
-  const [{ blobs: storyBlobs }, productsResult] = await Promise.all([
-    safeUserId
-      ? list({ prefix: `stories/${safeUserId}/`, limit: 50 })
-      : Promise.resolve({ blobs: [] }),
+  const [storyBlobs, productsResult] = await Promise.all([
+    safeUserId ? listActiveStories(safeUserId) : Promise.resolve([]),
     getPublicProducts("limit=100"),
   ]);
 
-  const cutoff = Date.now() - STORY_TTL_MS;
-  const stories = [...storyBlobs]
-    .filter((blob) => new Date(blob.uploadedAt).getTime() >= cutoff)
-    .sort(
-      (a, b) =>
-        new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime(),
-    )
-    .map((blob) => ({
-      url: blob.url,
-      uploadedAt: new Date(blob.uploadedAt).toISOString(),
-      isVideo: videoFile(blob.url),
-    }));
+  const stories = storyBlobs.map((blob) => ({
+    url: blob.url,
+    uploadedAt: new Date(blob.uploadedAt).toISOString(),
+    isVideo: videoFile(blob.url),
+  }));
 
   const sellerProduct =
     productsResult.status === "ok"

@@ -105,8 +105,20 @@ export async function fetchProfilePhoto(userId: string) {
 export function invalidateProfilePhoto(userId: string) { profilePhotoFetchedAt.delete(userId); }
 export async function fetchStories(userIds: string[]) {
   if (!userIds.length) return {} as Record<string, SocialMediaItem>;
-  const response = await fetch(`/api/social-images/stories?userIds=${encodeURIComponent(userIds.join(","))}`, { cache: "no-store" });
-  if (!response.ok) return {} as Record<string, SocialMediaItem>;
-  const payload = (await response.json()) as { data?: Record<string, SocialMediaItem> };
-  return Object.fromEntries(Object.entries(payload.data ?? {}).map(([userId, story]) => [userId, { ...story, contentType: story.contentType || contentTypeFromName(story.url) }])) as Record<string, SocialMediaItem>;
+  try {
+    const response = await fetch(
+      `/api/social-images/stories?userIds=${encodeURIComponent(userIds.join(","))}`,
+      { cache: "no-store", signal: AbortSignal.timeout(10_000) },
+    );
+    if (!response.ok) return {} as Record<string, SocialMediaItem>;
+    const payload = (await response.json()) as { data?: Record<string, SocialMediaItem> };
+    return Object.fromEntries(
+      Object.entries(payload.data ?? {}).map(([userId, story]) => [userId, {
+        ...story, contentType: story.contentType || contentTypeFromName(story.url),
+      }]),
+    ) as Record<string, SocialMediaItem>;
+  } catch {
+    // An optional stories request must not reject Home's rendering effect.
+    return {} as Record<string, SocialMediaItem>;
+  }
 }
