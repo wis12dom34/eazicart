@@ -1,0 +1,50 @@
+@media (pointer: coarse) {
+  html, body { overscroll-behavior-x: none; }
+  .figma-home-story-strip,
+  .social-home-product-rail,
+  [data-horizontal-scroll],
+  [data-gesture-gallery] { touch-action: pan-x pan-y; }
+
+  main[data-figma-node="223:51"] article { position: relative; }
+  main[data-figma-node="223:51"] article::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 82px;
+    height: 82px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.72);
+    transition: opacity 160ms ease, transform 240ms cubic-bezier(.2,.8,.2,1);
+    z-index: 12;
+  }
+  main[data-figma-node="223:51"] article.gesture-heart-pop::after {
+    content: "♥";
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 70px;
+    line-height: 1;
+    text-shadow: 0 3px 18px rgb(0 0 0 / .32);
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  main[data-figma-node="223:51"] article.gesture-play-pop::after,
+  main[data-figma-node="223:51"] article.gesture-pause-pop::after {
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: rgb(0 0 0 / .42);
+    color: white;
+    font-size: 34px;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  main[data-figma-node="223:51"] article.gesture-play-pop::after { content: "▶"; padding-left: 5px; }
+  main[data-figma-node="223:51"] article.gesture-pause-pop::after { content: "Ⅱ"; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main, main[data-figma-node="223:51"] article::after { transition-duration: 1ms !important; }
+}
