@@ -102,7 +102,7 @@ export default function OrdersPage() {
                         key={order.id}
                       >
                         <div className={styles.thumb}>
-                          {image ? (
+                          {image?.url ? (
                             <ContentImage
                               src={image.url}
                               alt={image.altText || firstItem?.productName || ""}
@@ -171,7 +171,7 @@ export default function OrdersPage() {
                   return (
                     <article className={styles.desktopOrderCard} key={order.id}>
                       <div className={styles.desktopThumb}>
-                        {image ? (
+                        {image?.url ? (
                           <ContentImage
                             src={image.url}
                             alt={image.altText || firstItem?.productName || ""}
