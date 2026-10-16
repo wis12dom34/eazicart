@@ -4,6 +4,7 @@ import { brandDescription, siteOrigin } from "../lib/seo";
 
 import "./styles.css";
 import "./x-mobile-polish.css";
+import "./responsive-mobile.css";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -34,6 +35,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
   colorScheme: "light",
   themeColor: "#ffffff",
 };
