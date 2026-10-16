@@ -1,0 +1,269 @@
+/* Shared responsive safety layer. Presentation-only: no route, data, or business-logic changes. */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-width: 0;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 560px;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+.app-shell.with-nav {
+  padding-bottom: calc(
+    var(--customer-nav-height) + env(safe-area-inset-bottom) + 16px
+  );
+}
+
+/* Home/FYP: let content define height and keep action rows inside narrow screens. */
+.social-home,
+.social-home-feed,
+.social-product-post,
+.social-price-drop,
+.social-shoppable-reel,
+.social-home-section,
+.social-home-fresh {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.social-product-post,
+.social-price-drop,
+.social-shoppable-reel {
+  height: auto;
+  padding-inline: clamp(10px, 4vw, 16px);
+}
+
+.social-product-header,
+.social-price-header,
+.social-reel-header {
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
+}
+
+.social-product-identity,
+.social-price-identity,
+.social-reel-header > a {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.social-product-identity > div,
+.social-price-identity > div,
+.social-reel-header > a > div {
+  min-width: 0;
+}
+
+.social-product-identity strong,
+.social-product-identity small,
+.social-price-identity strong,
+.social-price-identity small,
+.social-reel-header strong,
+.social-reel-header small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-product-header-actions,
+.social-price-header-actions,
+.social-reel-header > button {
+  flex: 0 0 auto;
+}
+
+.social-product-caption {
+  height: auto;
+  min-height: 0;
+  overflow-wrap: anywhere;
+}
+
+.social-product-media,
+.social-price-media {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+.social-product-media > a,
+.social-price-media > a,
+.social-product-media img,
+.social-price-media img {
+  width: 100%;
+  height: 100%;
+}
+
+.social-product-media img,
+.social-price-media img {
+  object-fit: cover;
+}
+
+.social-product-chip,
+.social-price-product {
+  left: 12px;
+  right: 12px;
+  width: auto;
+  max-width: calc(100% - 24px);
+  min-width: 0;
+}
+
+.social-product-chip > a,
+.social-price-product > a,
+.social-reel-product > a {
+  min-width: 0;
+}
+
+.social-product-chip strong,
+.social-price-product strong,
+.social-reel-product strong {
+  max-width: 100%;
+}
+
+.social-product-actions,
+.social-price-actions {
+  width: 100%;
+  min-width: 0;
+  gap: 6px;
+}
+
+.social-product-actions > div,
+.social-price-actions > div {
+  min-width: 0;
+  gap: clamp(6px, 3vw, 12px);
+}
+
+.social-product-actions button,
+.social-product-actions a,
+.social-price-actions button,
+.social-price-actions a {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.social-reel-preview {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  max-height: min(72dvh, 620px);
+}
+
+.social-reel-copy {
+  left: 12px;
+  right: 76px;
+  width: auto;
+  max-width: none;
+  overflow-wrap: anywhere;
+}
+
+.social-reel-product {
+  left: 12px;
+  right: 76px;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+}
+
+.social-home-fresh,
+.social-home-seller-list,
+.social-home-product-rail {
+  padding-inline: clamp(10px, 4vw, 16px);
+}
+
+.social-home-fresh-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px clamp(10px, 4vw, 16px);
+}
+
+.social-home-fresh-card,
+.social-home-product-card,
+.social-home-nearby-card {
+  min-width: 0;
+}
+
+.social-home-fresh-image,
+.social-home-product-media,
+.social-home-nearby-card > div {
+  max-width: 100%;
+}
+
+.social-home-product-rail {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.social-home-product-rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* Reels already uses dvh; these guards keep overlays inside the actual viewport. */
+[class*="reels-module"][class*="__page"],
+[class*="reels-module"][class*="__viewport"],
+[class*="reels-module"][class*="__slide"] {
+  width: 100%;
+  max-width: 100vw;
+}
+
+[class*="reels-module"][class*="__page"] {
+  min-height: 100dvh;
+}
+
+[class*="reels-module"][class*="__details"] {
+  min-width: 0;
+  max-width: calc(100% - 92px);
+}
+
+@media (max-width: 359px) {
+  .social-product-post,
+  .social-price-drop,
+  .social-shoppable-reel {
+    padding-inline: 10px;
+  }
+
+  .social-product-header-actions button:first-child,
+  .social-price-header-actions button:first-child {
+    min-width: 50px;
+    padding-inline: 8px;
+  }
+
+  .social-reel-copy,
+  .social-reel-product {
+    right: 68px;
+  }
+
+  .social-home-fresh-grid {
+    gap: 10px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .figma-home-sticky {
+    position: relative;
+  }
+
+  .social-reel-preview {
+    max-height: none;
+  }
+}
