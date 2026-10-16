@@ -3,7 +3,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "../providers/auth-provider";
 import { Icon, type IconName } from "./icon";
+import { ProfileAvatar } from "./profile-avatar";
 import styles from "./desktop-customer-shell.module.css";
 
 type NavigationEntry = {
@@ -53,6 +55,7 @@ export function DesktopCustomerShell({
   rail?: ReactNode;
 }) {
   const pathname = usePathname();
+  const auth = useAuth();
 
   return (
     <div className={styles.shell}>
@@ -79,6 +82,30 @@ export function DesktopCustomerShell({
             );
           })}
         </nav>
+
+        {auth.user ? (
+          <Link className={styles.accountCard} href="/profile">
+            <span className={styles.accountAvatar}>
+              <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+            </span>
+            <span className={styles.accountCopy}>
+              <strong>{auth.user.name}</strong>
+              <small>
+                {auth.user.username ? `@${auth.user.username}` : auth.user.email}
+              </small>
+            </span>
+          </Link>
+        ) : !auth.loading ? (
+          <Link className={styles.accountCard} href="/login">
+            <span className={styles.signedOutAvatar} aria-hidden="true">
+              <Icon name="user" size={20} />
+            </span>
+            <span className={styles.accountCopy}>
+              <strong>Sign in</strong>
+              <small>Access your account</small>
+            </span>
+          </Link>
+        ) : null}
       </aside>
 
       <div className={styles.content}>{children}</div>
@@ -90,6 +117,37 @@ export function DesktopCustomerShell({
         </Link>
         {rail}
       </aside>
+    </div>
+  );
+}
+
+export function CustomerDesktopRail() {
+  return (
+    <div className={styles.customerRail}>
+      <h2>What’s happening</h2>
+      <nav className={styles.quickCard} aria-label="EaziCart quick links">
+        <Link href="/explore">
+          <small>Discover</small>
+          <strong>Explore products</strong>
+          <span>Find products and sellers across EaziCart.</span>
+        </Link>
+        <Link href="/saved">
+          <small>Your account</small>
+          <strong>Saved items</strong>
+          <span>Return to products you saved for later.</span>
+        </Link>
+        <Link href="/orders">
+          <small>Purchases</small>
+          <strong>Order history</strong>
+          <span>Track current orders and review past purchases.</span>
+        </Link>
+      </nav>
+      <section className={styles.supportCard}>
+        <h3>Need help?</h3>
+        <p>Open support for an account, payment, seller or delivery issue.</p>
+        <Link href="/chat">Contact support</Link>
+      </section>
+      <p className={styles.railLegal}>Terms · Privacy · Help · © EaziCart</p>
     </div>
   );
 }
