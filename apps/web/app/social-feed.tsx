@@ -41,9 +41,12 @@ export function SocialFeed({ products }: { products: Product[] }) {
         <div>
           <p className="social-feed-eyebrow">DISCOVER TOGETHER</p>
           <h2 id="social-feed-title">Community feed</h2>
-          <p>Products worth talking about, from sellers on EaziCart.</p>
+          <p>Discover products, meet sellers, and find your next favourite.</p>
         </div>
-        <Link href="/explore">Explore</Link>
+        <div className="social-feed-heading-links">
+          <Link href="/reels">Watch Reels <span aria-hidden="true">▶</span></Link>
+          <Link href="/explore">Explore</Link>
+        </div>
       </div>
 
       <div className="social-feed-posts">
@@ -55,11 +58,9 @@ export function SocialFeed({ products }: { products: Product[] }) {
           );
           const isLiked = Boolean(liked[product.id]);
           const caption =
-            index % 3 === 0
-              ? `A closer look at ${product.name}. What do you think?`
-              : index % 3 === 1
-                ? `On your wishlist? Discover the details and price on EaziCart.`
-                : `A find from ${product.seller.displayName}. Save it for later or share it with a friend.`;
+            product.reel?.caption?.trim() ||
+            product.description?.trim() ||
+            `Discover ${product.name} from ${product.seller.displayName} on EaziCart.`;
 
           return (
             <article className="social-feed-post" key={product.id}>
@@ -71,7 +72,7 @@ export function SocialFeed({ products }: { products: Product[] }) {
                   <Link href={`/seller/${product.seller.id}`}>
                     {product.seller.displayName}
                   </Link>
-                  <span>Seller post · Product spotlight</span>
+                  <span>Seller storefront · Product spotlight</span>
                 </div>
                 <span className="social-feed-post-menu" aria-hidden="true">•••</span>
               </div>
@@ -133,14 +134,7 @@ export function SocialFeed({ products }: { products: Product[] }) {
                   <span aria-hidden="true">↗</span>
                   {shared === product.id ? "Link copied" : "Share"}
                 </button>
-                <button
-                  type="button"
-                  className="social-feed-save"
-                  onClick={() => void shareProduct(product)}
-                  aria-label={`Share ${product.name}`}
-                >
-                  •••
-                </button>
+
               </div>
             </article>
           );
