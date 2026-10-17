@@ -126,6 +126,7 @@ export default function HomePage({
           <Link href="/explore?section=trending">Trending</Link>
           <Link href="/explore?section=categories">Categories</Link>
           <Link href="/explore?section=sellers">Sellers</Link>
+          <Link href="/reels">Reels</Link>
         </nav>
       </header>
       {activeSellers.length ? (
