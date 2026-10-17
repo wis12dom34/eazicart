@@ -17,6 +17,7 @@ import { savedApi } from "../lib/api/saved";
 import type { Product } from "../lib/api/types";
 import { HomeSections } from "./home-sections";
 import { homeDesignProducts } from "./home-design";
+import { SocialFeed } from "./social-feed";
 import type { ProductList } from "../lib/public-catalog";
 
 export default function HomePage({
@@ -125,6 +126,7 @@ export default function HomePage({
           <Link href="/explore?section=trending">Trending</Link>
           <Link href="/explore?section=categories">Categories</Link>
           <Link href="/explore?section=sellers">Sellers</Link>
+          <Link href="/reels">Reels</Link>
         </nav>
       </header>
       {activeSellers.length ? (
@@ -157,6 +159,8 @@ export default function HomePage({
           </div>
         </section>
       ) : null}
+      <div className="figma-home-divider" />
+      <SocialFeed products={sorted} />
       <div className="figma-home-divider" />
       {popularItems.length ? (
         <section className="figma-home-popular">
