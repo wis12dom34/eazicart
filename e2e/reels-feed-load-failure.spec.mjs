@@ -75,3 +75,56 @@ test("failed initial Reel feed can be retried without a request loop", async ({
   await expect(retryButton).toHaveCount(0);
   expect(feedAttempts).toBe(2);
 });
+
+test("Home-feed Reel loading exposes retry after a failed request", async ({
+  page,
+}) => {
+  let feedAttempts = 0;
+
+  await page.route(/\/reels\/feed(?:\?|$)/, async (route) => {
+    feedAttempts += 1;
+    if (feedAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            code: "REELS_UNAVAILABLE",
+            message: "Unable to load reels right now",
+          },
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [],
+        pagination: { nextCursor: null, hasMore: false },
+      }),
+    });
+  });
+
+  await page.goto("/");
+  const sentinel = page.getByTestId("social-home-reels-sentinel");
+  await expect(sentinel).toHaveCount(1);
+  await sentinel.scrollIntoViewIfNeeded();
+
+  const retryButton = page.getByRole("button", {
+    name: "Retry videos",
+    exact: true,
+  });
+  await expect(retryButton).toBeVisible();
+  expect(feedAttempts).toBe(1);
+
+  await retryButton.click();
+  await expect(retryButton).toHaveCount(0);
+  await expect(
+    page.getByText("Videos couldn’t load. Check your connection and try again.", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect.poll(() => feedAttempts).toBe(2);
+});
