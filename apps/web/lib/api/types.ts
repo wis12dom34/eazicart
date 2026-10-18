@@ -30,8 +30,16 @@ export type Seller = {
   userId: string;
   displayName: string;
   bio?: string | null;
-  user?: { id: string; name: string };
+  user?: { id: string; name: string; username?: string | null; createdAt?: string };
+  username?: string | null;
+  joinedAt?: string;
   followerCount?: number;
+  followingCount?: number;
+  createdAt?: string;
+  rating?: number | null;
+  reviewCount?: number;
+  soldCount?: number;
+  fastResponse?: boolean;
   _count?: { products: number };
   location?: SellerMapLocation;
 };
@@ -47,8 +55,10 @@ export type Product = {
   stock: number;
   active?: boolean;
   images: Image[];
+  imageCount?: number;
   category: Category;
   seller: Seller & { user?: { id: string; name: string } };
+  social?: { likes: number; comments: number; liked: boolean };
 };
 export type CartItem = {
   variantLabel?: string;
@@ -283,3 +293,23 @@ export type Tokens = {
 export type AuthResponse = { user: User; tokens: Tokens };
 export type DataResponse<T> = { data: T };
 export type ListResponse<T> = { data: T[] };
+
+export type OrderFulfillmentProgress = {
+  orderId: string;
+  paymentConfirmed: boolean;
+  fulfillments: Array<{
+    id: string;
+    status: SellerFulfillmentStatus;
+    createdAt: string;
+    updatedAt: string;
+    seller: { id: string; displayName: string };
+    events: Array<{
+      id: string;
+      status: SellerFulfillmentStatus;
+      createdAt: string;
+    }>;
+  }>;
+  capabilities: { liveLocation: false; carrierTracking: false };
+};
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
