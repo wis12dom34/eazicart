@@ -46,7 +46,9 @@ function ContentImageSource(props: ContentImageProps) {
     optimized =
       url.protocol === "https:" &&
       !url.port &&
-      (url.hostname.endsWith(".public.blob.vercel-storage.com") ||
+      ((url.hostname === "eazicart.com" &&
+        (url.pathname.startsWith("/api/products/media/") ||
+          url.pathname.startsWith("/api/social/media/file/"))) ||
         (url.hostname === "images.unsplash.com" &&
           url.pathname.startsWith("/photo-")));
   } catch {
@@ -74,3 +76,5 @@ function ContentImageSource(props: ContentImageProps) {
     />
   );
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
