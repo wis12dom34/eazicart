@@ -95,6 +95,14 @@ model User {
   reelSaves ReelSave[]
   reelViews ReelView[]
   reelComments ReelComment[]
+  socialMedia SocialMedia[]
+  productLikes ProductLike[]
+  productComments ProductComment[]
+  productCommentLikes ProductCommentLike[]
+  buyerConversations ChatConversation[] @relation("ChatBuyer")
+  sentMessages ChatMessage[]
+  reviews ProductReview[]
+  productFeedEvents ProductFeedEvent[]
 }
 
 model RefreshToken {
@@ -120,6 +128,7 @@ model SellerProfile {
   campaigns Campaign[]
   reels Reel[]
   mapLocation SellerMapLocation?
+  conversations ChatConversation[]
 }
 
 model SellerMapLocation {
@@ -158,6 +167,10 @@ model Product {
   savedBy SavedProduct[]
   campaigns Campaign[]
   reels Reel[]
+  likes ProductLike[]
+  comments ProductComment[]
+  reviews ProductReview[]
+  feedEvents ProductFeedEvent[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([active, createdAt])
@@ -217,6 +230,7 @@ model OrderItem {
   productId String
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
+  review ProductReview?
 }
 
 model Payment {
@@ -247,6 +261,7 @@ model SellerFulfillment {
   seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  events SellerFulfillmentEvent[]
   @@unique([orderId, sellerId])
   @@index([sellerId, status])
   @@index([orderId])
@@ -426,3 +441,129 @@ model ReelComment {
   updatedAt DateTime @updatedAt
   @@index([reelId, createdAt])
 }
+
+model SocialMedia {
+  id          String   @id @default(cuid())
+  kind        String
+  url         String
+  contentType String
+  storageName String   @unique
+  expiresAt   DateTime?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, kind, createdAt])
+  @@index([kind, expiresAt])
+}
+
+model ProductFeedEvent {
+  id String @id @default(cuid())
+  kind String
+  dwellMs Int @default(0)
+  userId String
+  productId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+  @@index([userId, productId, createdAt])
+  @@index([productId, kind, createdAt])
+}
+
+model ProductLike {
+  userId String
+  productId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([userId, productId])
+  @@index([productId])
+}
+
+model ProductComment {
+  id String @id @default(cuid())
+  body String
+  mediaUrl String?
+  mediaType String?
+  parentId String?
+  parent ProductComment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies ProductComment[] @relation("CommentReplies")
+  userId String
+  productId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  likes ProductCommentLike[]
+  createdAt DateTime @default(now())
+  @@index([productId, createdAt, id])
+  @@index([userId])
+  @@index([parentId, createdAt, id])
+}
+
+model ProductCommentLike {
+  userId String
+  commentId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment ProductComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([userId, commentId])
+  @@index([commentId])
+}
+
+model ChatConversation {
+  id String @id @default(cuid())
+  buyerId String
+  sellerId String
+  buyer User @relation("ChatBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+  lastMessageAt DateTime?
+  createdAt DateTime @default(now())
+  @@unique([buyerId, sellerId])
+  @@index([buyerId, lastMessageAt])
+  @@index([sellerId, lastMessageAt])
+}
+
+model ChatMessage {
+  id String @id @default(cuid())
+  body String
+  conversationId String
+  senderId String
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  readAt DateTime?
+  @@index([conversationId, createdAt, id])
+  @@index([conversationId, readAt])
+  @@index([senderId, createdAt])
+}
+
+
+model ProductReview {
+  id String @id @default(cuid())
+  rating Int
+  body String
+  userId String
+  productId String
+  orderItemId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([productId, createdAt, id])
+  @@index([userId, createdAt, id])
+}
+
+
+model SellerFulfillmentEvent {
+  id String @id @default(cuid())
+  fulfillmentId String
+  status SellerFulfillmentStatus
+  fulfillment SellerFulfillment @relation(fields: [fulfillmentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([fulfillmentId, status])
+  @@index([fulfillmentId, createdAt, id])
+}
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
