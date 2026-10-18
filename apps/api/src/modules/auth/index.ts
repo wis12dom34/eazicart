@@ -207,6 +207,28 @@ export function registerAuth(
     };
   });
 
+  // Restore both the access token and public user in one round trip. This is
+  // used by the web app on startup so it does not need refresh -> /users/me.
+  app.post("/auth/session", async (request, reply) => {
+    const refreshToken = requestRefreshToken(request);
+    if (!refreshToken)
+      throw new AppError(
+        401,
+        "INVALID_REFRESH_TOKEN",
+        "The refresh token is invalid or expired",
+      );
+    const userId = await store.consumeRefreshToken(hashToken(refreshToken));
+    if (!userId)
+      throw new AppError(
+        401,
+        "INVALID_REFRESH_TOKEN",
+        "The refresh token is invalid or expired",
+      );
+    const user = await store.findUserById(userId);
+    if (!user) throw new AppError(404, "USER_NOT_FOUND", "User not found");
+    return { user: publicUser(user), tokens: await issueSession(reply, userId) };
+  });
+
   app.post("/auth/refresh", async (request, reply) => {
     const refreshToken = requestRefreshToken(request);
     if (!refreshToken)
@@ -238,3 +260,5 @@ declare module "fastify" {
     authenticate(request: FastifyRequest): Promise<void>;
   }
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
