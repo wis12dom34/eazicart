@@ -6,10 +6,6 @@ import "./styles.css";
 import "./x-mobile-polish.css";
 import "./responsive-mobile.css";
 import "./gesture-mobile.css";
-import "@fontsource/inter/400.css";
-import "@fontsource/inter/500.css";
-import "@fontsource/inter/600.css";
-import "@fontsource/inter/700.css";
 import { AuthProvider } from "./providers/auth-provider";
 import { MobileGestureNavigation } from "./components/mobile-gesture-navigation";
 
@@ -43,3 +39,5 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     </html>
   );
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
