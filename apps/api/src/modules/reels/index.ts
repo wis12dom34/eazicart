@@ -10,6 +10,7 @@ const feedQuery = z.object({
   source: z.enum(["EAZICART", "YOUTUBE", "TIKTOK", "PARTNER"]).optional(),
   productId: z.string().min(1).optional(),
   reelId: z.string().min(1).optional(),
+  sellerId: z.string().min(1).optional(),
 });
 
 const commentsQuery = z.object({
@@ -129,7 +130,11 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
 
   const requirePublishedReel = async (reelId: string) => {
     const reel = await db().reel.findFirst({
-      where: { id: reelId, status: "PUBLISHED" },
+      where: {
+        id: reelId,
+        status: "PUBLISHED",
+        OR: [{ productId: null }, { product: { active: true } }],
+      },
       select: { id: true },
     });
     if (!reel) throw new AppError(404, "REEL_NOT_FOUND", "Reel not found");
@@ -138,12 +143,16 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
 
   app.get("/reels/feed", async (request) => {
     const query = feedQuery.parse(request.query);
+    if (request.headers.authorization) await app.authenticate(request);
+    const uid = request.userId;
     const cursor = query.cursor ? decodeCursor(query.cursor) : null;
     const where: Prisma.ReelWhereInput = {
       status: "PUBLISHED",
+      AND: [{ OR: [{ productId: null }, { product: { active: true } }] }],
       source: query.source,
       productId: query.productId,
       id: query.reelId,
+      sellerId: query.sellerId,
       OR: cursor
         ? [
             { publishedAt: { lt: new Date(cursor.publishedAt) } },
@@ -163,17 +172,73 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
     });
 
     const hasMore = rows.length > query.limit;
-    const items = hasMore ? rows.slice(0, query.limit) : rows;
-    const last = items.at(-1);
+    const chronologicalRows = hasMore ? rows.slice(0, query.limit) : rows;
+    const cursorLast = chronologicalRows.at(-1);
+    let rankedRows = chronologicalRows;
+    if (uid && !cursor && !query.reelId && !query.productId && !query.sellerId) {
+      const [likes, saves, views, follows, productBehavior, purchases] = await Promise.all([
+        db().reelLike.findMany({ where: { userId: uid, createdAt: { gte: new Date(Date.now() - 90 * 86400000) } }, select: { reelId: true, createdAt: true, reel: { select: { sellerId: true, product: { select: { categoryId: true } } } } }, orderBy: { createdAt: "desc" }, take: 300 }),
+        db().reelSave.findMany({ where: { userId: uid, createdAt: { gte: new Date(Date.now() - 180 * 86400000) } }, select: { reelId: true, createdAt: true, reel: { select: { sellerId: true, product: { select: { categoryId: true } } } } }, orderBy: { createdAt: "desc" }, take: 300 }),
+        db().reelView.findMany({ where: { userId: uid, createdAt: { gte: new Date(Date.now() - 30 * 86400000) } }, select: { reelId: true, watchMs: true, completed: true, createdAt: true, reel: { select: { sellerId: true, product: { select: { categoryId: true } } } } }, orderBy: { createdAt: "desc" }, take: 1000 }),
+        db().follow.findMany({ where: { followerId: uid }, select: { sellerId: true } }),
+        db().productFeedEvent.findMany({ where: { userId: uid, createdAt: { gte: new Date(Date.now() - 30 * 86400000) } }, select: { kind: true, dwellMs: true, createdAt: true, product: { select: { categoryId: true, sellerId: true } } }, orderBy: { createdAt: "desc" }, take: 1000 }),
+        db().orderItem.findMany({ where: { order: { userId: uid, status: { in: ["CONFIRMED", "FULFILLED"] }, payment: { status: "SUCCESS" }, createdAt: { gte: new Date(Date.now() - 180 * 86400000) } } }, select: { product: { select: { categoryId: true, sellerId: true } } }, take: 300 }),
+      ]);
+      const categoryAffinity = new Map<string, number>();
+      const sellerAffinity = new Map<string, number>();
+      const seen = new Set<string>();
+      const addAffinity = (sellerId: string | null, categoryId: string | undefined, weight: number) => {
+        if (sellerId) sellerAffinity.set(sellerId, (sellerAffinity.get(sellerId) ?? 0) + weight);
+        if (categoryId) categoryAffinity.set(categoryId, (categoryAffinity.get(categoryId) ?? 0) + weight);
+      };
+      const decay = (createdAt: Date, halfLifeDays: number) => {
+        const ageDays = Math.max(0, (Date.now() - createdAt.getTime()) / 86400000);
+        return Math.exp(-Math.LN2 * ageDays / halfLifeDays);
+      };
+      for (const x of likes) {
+        seen.add(x.reelId);
+        addAffinity(x.reel.sellerId, x.reel.product?.categoryId, 2 * decay(x.createdAt, 14));
+      }
+      for (const x of saves) {
+        seen.add(x.reelId);
+        addAffinity(x.reel.sellerId, x.reel.product?.categoryId, 3 * decay(x.createdAt, 30));
+      }
+      for (const x of views) {
+        seen.add(x.reelId);
+        const base = x.completed ? 4 : Math.min(3, x.watchMs / 10000);
+        const weight = base * decay(x.createdAt, 7);
+        if (weight >= 0.25) addAffinity(x.reel.sellerId, x.reel.product?.categoryId, weight);
+      }
+      for (const x of productBehavior) {
+        const base = x.kind === "NOT_INTERESTED" ? -2 : x.kind === "ADD_TO_CART" ? 5 : x.kind === "SHARE" ? 3 : x.kind === "OPEN" ? 1.5 : x.kind === "DWELL" ? Math.min(3, x.dwellMs / 10000) : 0.25;
+        const ageDays = Math.max(0, (Date.now() - x.createdAt.getTime()) / 86400000);
+        const weight = base * Math.exp(-Math.LN2 * ageDays / (x.kind === "NOT_INTERESTED" ? 21 : 7));
+        addAffinity(x.product.sellerId, x.product.categoryId, weight);
+      }
+      for (const x of purchases) addAffinity(x.product.sellerId, x.product.categoryId, 8);
+      const followed = new Set(follows.map((x) => x.sellerId));
+      const now = Date.now();
+      rankedRows = [...chronologicalRows].sort((a, b) => {
+        const score = (r: typeof a) => {
+          const ageHours = Math.max(0, (now - r.publishedAt.getTime()) / 3600000);
+          const freshness = 10 * Math.exp(-ageHours / 168);
+          const engagement = r._count.likes * 2 + r._count.saves * 3 + r._count.comments * 2 + Math.min(8, Math.log1p(r._count.views));
+          const category = r.product?.categoryId ? (categoryAffinity.get(r.product.categoryId) ?? 0) * 2 : 0;
+          const seller = r.sellerId ? (sellerAffinity.get(r.sellerId) ?? 0) * 1.5 + (r.seller?.userId && followed.has(r.seller.userId) ? 12 : 0) : 0;
+          return freshness + engagement + category + seller + (seen.has(r.id) ? -5 : 3);
+        };
+        return score(b) - score(a) || b.publishedAt.getTime() - a.publishedAt.getTime();
+      });
+    }
 
     return {
-      data: items.map(serializeReel),
+      data: rankedRows.map(serializeReel),
       pagination: {
         nextCursor:
-          hasMore && last
+          hasMore && cursorLast
             ? encodeCursor({
-                publishedAt: last.publishedAt.toISOString(),
-                id: last.id,
+                publishedAt: cursorLast.publishedAt.toISOString(),
+                id: cursorLast.id,
               })
             : null,
         hasMore,
@@ -394,3 +459,5 @@ export function registerReels(app: FastifyInstance, client?: PrismaClient) {
     return reply.code(201).send({ data });
   });
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
