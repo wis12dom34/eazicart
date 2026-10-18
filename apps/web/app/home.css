@@ -4,5 +4,3 @@
 @media(min-width:1100px){.figma-home-header{display:none}.figma-home-search{display:none}.figma-home-sticky{padding-top:0}.figma-home-tabs{min-height:53px;padding-inline:20px;align-items:flex-end}.figma-home-tabs>*{min-height:52px;padding:15px 14px 13px}}
 
 @media(min-width:1100px){.desktop-home-shell .figma-home{max-width:none!important;margin:0!important}}
-
-[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
