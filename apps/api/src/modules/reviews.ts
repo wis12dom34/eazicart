@@ -317,5 +317,3 @@ export function registerReviews(app: FastifyInstance, client?: PrismaClient) {
     return reply.header("Cache-Control", "private, no-store").code(204).send();
   });
 }
-
-[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
