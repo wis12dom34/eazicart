@@ -139,5 +139,3 @@ export function useProductSocial(
   };
   return { data, loading, busy, error, toggleLike };
 }
-
-[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
