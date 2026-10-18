@@ -94,6 +94,10 @@ export function registerCart(app: FastifyInstance, client?: PrismaClient) {
       create: { cartId: cart.id, productId: product.id, quantity },
       update: { quantity },
     });
+    // Recommendation telemetry must never make a successful cart mutation fail.
+    void db().productFeedEvent.create({
+      data: { userId: userId(request), productId: product.id, kind: "ADD_TO_CART" },
+    }).catch((error) => request.log.warn({ error, productId: product.id }, "Failed to record feed add-to-cart signal"));
     const result = await db().cart.findUniqueOrThrow({
       where: { id: cart.id },
       include: { items: { include: itemInclude } },
@@ -140,3 +144,5 @@ export function registerCart(app: FastifyInstance, client?: PrismaClient) {
     return reply.code(204).send();
   });
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
