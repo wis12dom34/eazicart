@@ -1,10 +1,6 @@
-import { Suspense } from "react";
-import { connection } from "next/server";
-import { getPublicProducts } from "../lib/public-catalog";
+import { getPublicFeed } from "../lib/public-catalog";
 import { pageMetadata } from "../lib/seo";
 import HomeContent from "./home-content";
-import { LoadingState } from "./components/async-state";
-import { BottomNavigation } from "./components/bottom-navigation";
 
 export const metadata = pageMetadata(
   "Shop products",
@@ -12,10 +8,12 @@ export const metadata = pageMetadata(
   "/",
   { index: false },
 );
-async function HomeFeed() {
-  await connection();
-  // Only the public catalog is cached. Home still refreshes it in the browser.
-  const products = await getPublicProducts("limit=100", 15);
+
+export default async function HomePage() {
+  // Render the cached public FYP directly into the first HTML response.
+  // Avoid a Suspense fallback here: on mobile it made the feed visibly swap
+  // from a loading shell to the real posts even though the feed is cached.
+  const products = await getPublicFeed(40, 30);
   return (
     <HomeContent
       initialProducts={products.status === "ok" ? products.data : undefined}
@@ -23,19 +21,4 @@ async function HomeFeed() {
   );
 }
 
-export default function HomePage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="app-shell with-nav figma-home social-home">
-          <div className="social-home-state">
-            <LoadingState label="Loading your feed…" />
-          </div>
-          <BottomNavigation />
-        </main>
-      }
-    >
-      <HomeFeed />
-    </Suspense>
-  );
-}
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
