@@ -358,6 +358,9 @@ function ReelSlide({
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const viewedRef = useRef(false);
+  const watchStartedAtRef = useRef<number | null>(null);
+  const watchMsRef = useRef(0);
+  const completedRef = useRef(false);
   const [muted, setMuted] = useState(true);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [interactionStatus, setInteractionStatus] = useState<string | null>(
@@ -395,30 +398,30 @@ function ReelSlide({
   }, [active]);
 
   useEffect(() => {
-    if (!active || !interactive || !authenticated || viewedRef.current) return;
-    let retryTimeout: number | null = null;
-    let cancelled = false;
-    let attempts = 0;
+    if (!interactive || !authenticated) return;
+    const video = videoRef.current;
+    if (!video) return;
 
-    const recordView = () => {
-      if (cancelled || viewedRef.current) return;
-      attempts += 1;
-      void reelsApi
-        .view(reel.id, 1500, false)
-        .then(() => {
-          viewedRef.current = true;
-        })
-        .catch(() => {
-          if (cancelled || viewedRef.current || attempts >= 2) return;
-          retryTimeout = window.setTimeout(recordView, 1500);
-        });
+    const flushWatch = () => {
+      if (watchStartedAtRef.current !== null) {
+        watchMsRef.current += Math.max(0, Date.now() - watchStartedAtRef.current);
+        watchStartedAtRef.current = null;
+      }
+      const watchMs = Math.min(300000, Math.round(watchMsRef.current));
+      if (watchMs < 1500 && !completedRef.current) return;
+      void reelsApi.view(reel.id, watchMs, completedRef.current).catch(() => undefined);
+      watchMsRef.current = 0;
+      completedRef.current = false;
+      viewedRef.current = true;
     };
+    const onEnded = () => { completedRef.current = true; flushWatch(); };
+    video.addEventListener("ended", onEnded);
+    if (active) watchStartedAtRef.current = Date.now();
+    else flushWatch();
 
-    const timeout = window.setTimeout(recordView, 1500);
     return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
-      if (retryTimeout !== null) window.clearTimeout(retryTimeout);
+      video.removeEventListener("ended", onEnded);
+      flushWatch();
     };
   }, [active, authenticated, interactive, reel.id]);
 
@@ -838,6 +841,7 @@ export default function ReelsPage() {
       limit: reelId ? 1 : 8,
       productId: reelId ? undefined : (productId ?? undefined),
       reelId: reelId ?? undefined,
+      authenticated: auth.isAuthenticated,
     });
     setReels((current) => {
       if (!cursor) return response.data;
@@ -849,7 +853,7 @@ export default function ReelsPage() {
     });
     setNextCursor(response.pagination.nextCursor);
     setHasMore(response.pagination.hasMore);
-  }, []);
+  }, [auth.isAuthenticated]);
 
   useEffect(() => {
     let mounted = true;
@@ -1007,3 +1011,5 @@ export default function ReelsPage() {
     </main>
   );
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
