@@ -7,5 +7,3 @@ CREATE TABLE "ProductCommentLike" (
   CONSTRAINT "ProductCommentLike_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "ProductComment"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX "ProductCommentLike_commentId_idx" ON "ProductCommentLike"("commentId");
-
-[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
