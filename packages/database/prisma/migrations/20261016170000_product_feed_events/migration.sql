@@ -12,5 +12,3 @@ CREATE TABLE "ProductFeedEvent" (
 CREATE INDEX "ProductFeedEvent_userId_createdAt_idx" ON "ProductFeedEvent"("userId", "createdAt");
 CREATE INDEX "ProductFeedEvent_userId_productId_createdAt_idx" ON "ProductFeedEvent"("userId", "productId", "createdAt");
 CREATE INDEX "ProductFeedEvent_productId_kind_createdAt_idx" ON "ProductFeedEvent"("productId", "kind", "createdAt");
-
-[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
