@@ -15,7 +15,7 @@ const mapLocationBody = z.object({
   visible: z.boolean().default(true),
 });
 const include = {
-  user: { select: { id: true, name: true } },
+  user: { select: { id: true, name: true, username: true, createdAt: true } },
   _count: { select: { products: { where: { active: true } } } },
 };
 const paymentVisibility = (sellerId: string) => ({
@@ -47,12 +47,35 @@ export function registerSellerProfiles(
       include,
     });
     if (!data) throw new AppError(404, "SELLER_NOT_FOUND", "Seller not found");
+    const [followerCount, followingCount, reviewSummary, sold] = await Promise.all([
+      db().follow.count({ where: { sellerId: data.userId } }),
+      db().follow.count({ where: { followerId: data.userId } }),
+      db().productReview.aggregate({
+        where: { product: { sellerId: data.id } },
+        _count: { _all: true },
+        _avg: { rating: true },
+      }),
+      db().orderItem.aggregate({
+        where: {
+          product: { sellerId: data.id },
+          order: { status: "FULFILLED", payment: { status: "SUCCESS" } },
+        },
+        _sum: { quantity: true },
+      }),
+    ]);
     return {
       data: {
         ...data,
-        followerCount: await db().follow.count({
-          where: { sellerId: data.userId },
-        }),
+        username: data.user.username ?? null,
+        joinedAt: data.user.createdAt,
+        followerCount,
+        followingCount,
+        rating: reviewSummary._avg.rating,
+        reviewCount: reviewSummary._count._all,
+        soldCount: sold._sum.quantity ?? 0,
+        // Keep this factual: only advertise fast response once response-time
+        // telemetry exists. The UI omits the label when this is false.
+        fastResponse: false,
       },
     };
   });
@@ -281,3 +304,5 @@ export function registerSellerProfiles(
     };
   });
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
