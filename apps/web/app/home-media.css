@@ -14,8 +14,11 @@
   object-position: center;
 }
 
-body:has(.social-home) {
-  overflow-x: clip;
+/* Keep Home compatible with iOS WebKit first paint. Avoid :has() on body and
+   overflow:clip here; the shared responsive layer already prevents horizontal
+   overflow without making the document root depend on descendant matching. */
+body {
+  overflow-x: hidden;
 }
 
 .social-home-sticky {
@@ -423,6 +426,10 @@ body:has(.social-home) {
   padding-bottom: 24px;
 }
 
+/* Keep feed sections in the normal paint tree. Media remains lazy-loaded, so
+   this avoids WebKit blank-paint/compositing failures without restoring eager
+   network work. */
+
 @media (max-width: 359px) {
   .social-home .figma-home-header {
     padding-inline: 10px;
@@ -450,3 +457,7 @@ body:has(.social-home) {
     transition: none;
   }
 }
+
+/* Price-drop stays in the normal paint tree for iOS WebKit reliability. */
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
