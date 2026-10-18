@@ -187,11 +187,8 @@ const assertTransition = (current: string, next: string) => {
     );
 };
 
-const sellerPaymentVisibility = (sellerId: string) => ({
-  OR: [
-    { payment: { status: "SUCCESS" as const } },
-    { payment: null, fulfillments: { some: { sellerId } } },
-  ],
+const sellerPaymentVisibility = () => ({
+  payment: { status: "SUCCESS" as const, paidAt: { not: null } },
 });
 
 export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
@@ -214,7 +211,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     const rows = await db().order.findMany({
       where: {
         fulfillments: { some: { sellerId: seller.id } },
-        ...sellerPaymentVisibility(seller.id),
+        ...sellerPaymentVisibility(),
       },
       include: sellerOrderInclude(seller.id),
       orderBy: { createdAt: "desc" },
@@ -230,7 +227,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
       where: {
         id,
         fulfillments: { some: { sellerId: seller.id } },
-        ...sellerPaymentVisibility(seller.id),
+        ...sellerPaymentVisibility(),
       },
       include: sellerOrderInclude(seller.id),
     });
@@ -242,32 +239,79 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     const { id } = z.object({ id: z.string() }).parse(r.params);
     const { status } = fulfillmentBody.parse(r.body);
     const seller = await sellerForRequest(db(), userId(r));
-    const current = await db().sellerFulfillment.findUnique({
-      where: { orderId_sellerId: { orderId: id, sellerId: seller.id } },
-      include: {
-        order: { select: { payment: { select: { status: true } } } },
-      },
-    });
-    if (!current) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
-    if (current.order.payment && current.order.payment.status !== "SUCCESS")
-      throw new AppError(
-        409,
-        "PAYMENT_NOT_CONFIRMED",
-        "Seller fulfillment cannot start before payment is confirmed",
+    try {
+      const row = await db().$transaction(
+        async (tx) => {
+          const current = await tx.sellerFulfillment.findUnique({
+            where: { orderId_sellerId: { orderId: id, sellerId: seller.id } },
+            include: {
+              seller: { select: { displayName: true } },
+              order: {
+                select: {
+                  userId: true,
+                  payment: { select: { status: true, paidAt: true } },
+                },
+              },
+            },
+          });
+          if (!current)
+            throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+          if (
+            current.order.payment?.status !== "SUCCESS" ||
+            !current.order.payment.paidAt
+          )
+            throw new AppError(
+              409,
+              "PAYMENT_NOT_CONFIRMED",
+              "Seller fulfillment cannot start before payment is confirmed",
+            );
+          assertTransition(current.status, status);
+          if (current.status !== status) {
+            const changed = await tx.sellerFulfillment.updateMany({
+              where: { id: current.id, status: current.status },
+              data: { status },
+            });
+            if (changed.count !== 1)
+              throw new AppError(
+                409,
+                "FULFILLMENT_CHANGED",
+                "Fulfillment changed. Refresh the order and try again.",
+              );
+            await tx.sellerFulfillmentEvent.create({
+              data: { fulfillmentId: current.id, status },
+            });
+            await tx.notification.create({
+              data: {
+                userId: current.order.userId,
+                type: "ORDER",
+                title: "Seller fulfillment updated",
+                body: `${current.seller.displayName} marked their part of your order as ${status.toLowerCase()}.`,
+              },
+            });
+          }
+          const result = await tx.order.findUnique({
+            where: { id },
+            include: sellerOrderInclude(seller.id),
+          });
+          if (!result)
+            throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+          return result;
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );
-    assertTransition(current.status, status);
-    if (current.status !== status) {
-      await db().sellerFulfillment.update({
-        where: { id: current.id },
-        data: { status },
-      });
+      return { data: sellerOrderOutput(row) };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        ["P2034", "P2002"].includes(error.code)
+      )
+        throw new AppError(
+          409,
+          "FULFILLMENT_CHANGED",
+          "Fulfillment changed. Refresh the order and try again.",
+        );
+      throw error;
     }
-    const row = await db().order.findUnique({
-      where: { id },
-      include: sellerOrderInclude(seller.id),
-    });
-    if (!row) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
-    return { data: sellerOrderOutput(row) };
   });
 
   app.get("/seller/customers", auth, async (r) => {
@@ -275,7 +319,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     const rows = await db().order.findMany({
       where: {
         items: { some: { product: { sellerId: seller.id } } },
-        ...sellerPaymentVisibility(seller.id),
+        ...sellerPaymentVisibility(),
       },
       select: sellerCustomerSelect(seller.id),
       orderBy: { createdAt: "desc" },
@@ -300,7 +344,7 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
       where: {
         userId: id,
         items: { some: { product: { sellerId: seller.id } } },
-        ...sellerPaymentVisibility(seller.id),
+        ...sellerPaymentVisibility(),
       },
       select: sellerCustomerSelect(seller.id),
       orderBy: { createdAt: "desc" },
@@ -385,3 +429,5 @@ export function registerOrders(app: FastifyInstance, client?: PrismaClient) {
     return reply.code(201).send({ data: output(created) });
   });
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
