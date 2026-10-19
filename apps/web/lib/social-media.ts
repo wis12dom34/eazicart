@@ -78,6 +78,27 @@ export async function removeProfilePhoto(userId: string) {
   broadcastProfilePhoto(userId, null);
 }
 
+export async function fetchProfilePhotos(userIds: string[]) {
+  const ids = Array.from(new Set(userIds.filter(Boolean))).slice(0, 50);
+  if (!ids.length) return {} as Record<string, SocialMediaItem>;
+  try {
+    const payload = await apiRequest<{ data?: Record<string, SocialMediaItem> }>(
+      "/social/profiles",
+      { query: { userIds: ids.join(",") }, cache: "force-cache", timeoutMs: 10_000 },
+    );
+    const now = Date.now();
+    const data = payload.data ?? {};
+    for (const userId of ids) {
+      const photo = data[userId] ?? null;
+      profilePhotoCache.set(userId, Promise.resolve(photo));
+      profilePhotoFetchedAt.set(userId, now);
+    }
+    return data;
+  } catch {
+    return {} as Record<string, SocialMediaItem>;
+  }
+}
+
 export async function fetchProfilePhoto(userId: string) {
   const cached = profilePhotoCache.get(userId);
   if (cached && (profilePhotoRequests.has(userId) || Date.now() - (profilePhotoFetchedAt.get(userId) ?? 0) < PROFILE_PHOTO_TTL_MS)) return cached;
