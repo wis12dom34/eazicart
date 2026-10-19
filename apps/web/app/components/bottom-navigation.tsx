@@ -30,9 +30,13 @@ const tabs: Array<{
 export function BottomNavigation({
   cartCount,
   activeHref,
+  deferCartFetch = false,
+  prefetch = false,
 }: {
   cartCount?: number;
   activeHref?: string;
+  deferCartFetch?: boolean;
+  prefetch?: boolean;
 }) {
   const path = usePathname();
   const auth = useAuth();
@@ -97,6 +101,7 @@ export function BottomNavigation({
           <Link
             key={tab.href}
             href={tab.href}
+            prefetch={prefetch}
             aria-label={tab.label}
             className={`${styles.item} ${active ? styles.active : ""}`}
             aria-current={active ? "page" : undefined}
