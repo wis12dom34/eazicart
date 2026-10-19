@@ -117,6 +117,36 @@ export const getPublicProducts = cache(
     }
   },
 );
+export const getPublicFeed = cache(
+  async (limit = 40, revalidate = 30): Promise<PublicResult<ProductList>> => {
+    const result = await publicFetch<{
+      data: Product[];
+      pagination?: { nextCursor: string | null; hasMore: boolean };
+    }>(`/feed/products?limit=${Math.max(1, Math.min(limit, 100))}`, revalidate);
+    if (result.status !== "ok") return result;
+    try {
+      const data = result.data.data
+        .filter((p) => p.active !== false)
+        .map(publicProduct);
+      return {
+        status: "ok",
+        data: {
+          data,
+          pagination: {
+            page: 1,
+            limit,
+            total: data.length,
+            pages: 1,
+            nextCursor: result.data.pagination?.nextCursor ?? null,
+            hasMore: result.data.pagination?.hasMore ?? false,
+          },
+        },
+      };
+    } catch {
+      return { status: "unavailable" };
+    }
+  },
+);
 export const getPublicCategories = cache(
   async (): Promise<PublicResult<Category[]>> => {
     const result = await publicFetch<{ data: Category[] }>("/categories");
