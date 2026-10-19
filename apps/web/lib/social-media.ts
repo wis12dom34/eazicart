@@ -51,7 +51,7 @@ function broadcastProfilePhoto(userId: string, photo: SocialMediaItem | null) {
   try { window.localStorage.setItem(PROFILE_PHOTO_STORAGE_KEY, JSON.stringify({ userId, at: Date.now() })); } catch { /* Storage can be unavailable in private browsing. */ }
 }
 
-export async function uploadSocialMedia(kind: "profile" | "story", userId: string, file: File, onProgress?: (percentage: number) => void) {
+export async function uploadSocialMedia(kind: "profile" | "story" | "comment", userId: string, file: File, onProgress?: (percentage: number) => void) {
   validateMedia(kind, file);
   const accessToken = tokenStore.get()?.accessToken;
   if (!accessToken) throw new Error("Please sign in again before uploading media.");
