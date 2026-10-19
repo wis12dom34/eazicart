@@ -29,6 +29,21 @@ const imageContentType = (file: File) => {
 };
 
 export const productsApi = {
+  feedEvent: (
+    productId: string,
+    kind: "VIEW" | "OPEN" | "DWELL" | "SHARE" | "NOT_INTERESTED",
+    dwellMs = 0,
+  ) =>
+    apiRequest<void>(`/feed/products/${productId}/event`, {
+      method: "POST",
+      auth: true,
+      body: { kind, dwellMs },
+    }),
+  feed: (limit = 100, authenticated = false, cursor?: string) =>
+    apiRequest<{
+      data: Product[];
+      pagination: { nextCursor: string | null; hasMore: boolean };
+    }>("/feed/products", { query: { limit, cursor }, auth: authenticated }),
   list: (query: ProductQuery = {}) =>
     apiRequest<{
       data: Product[];
