@@ -122,7 +122,7 @@ export const getPublicFeed = cache(
     const result = await publicFetch<{
       data: Product[];
       pagination?: { nextCursor: string | null; hasMore: boolean };
-    }>(`/feed/products?limit=${Math.max(1, Math.min(limit, 100))}`, revalidate);
+    }>(`/products?limit=${Math.max(1, Math.min(limit, 100))}`, revalidate);
     if (result.status !== "ok") return result;
     try {
       const data = result.data.data
