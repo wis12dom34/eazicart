@@ -15,7 +15,8 @@
     "@fontsource/inter": "4.5.15",
     "next": "^16.0.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "@vercel/blob": "^2.8.2"
   },
   "devDependencies": {
     "@eazicart/config": "workspace:*",
