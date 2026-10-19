@@ -3,9 +3,6 @@ import type { NextConfig } from "next";
 const apiProxyTarget = process.env.EAZICART_PUBLIC_API_URL?.replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
-  // Version every production asset request. This prevents iOS Safari from
-  // combining long-lived JS/CSS from an older deployment with fresh HTML.
-  deploymentId: "eazi-prev-20261019-02",
   // Isolate screenshot runs from a developer's running Next server.
   devIndicators: false,
   distDir: process.env.EAZICART_TEST_DIST_DIR || ".next",
