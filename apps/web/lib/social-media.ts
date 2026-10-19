@@ -35,7 +35,7 @@ function safeFileName(file: File) {
   if (file.type === "image/webp") return "photo.webp";
   return "photo.jpg";
 }
-function validateMedia(kind: "profile" | "story", file: File) {
+function validateMedia(kind: "profile" | "story" | "comment", file: File) {
   const image = imageTypes.has(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
   const video = videoTypes.has(file.type) || /\.(mp4|mov|webm)$/i.test(file.name);
   if (kind === "profile" && !image) throw new Error("Choose a JPG, PNG or WebP profile photo.");
