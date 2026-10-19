@@ -5,7 +5,7 @@ export type PublicResult<T> =
   { status: "ok"; data: T } | { status: "missing" } | { status: "unavailable" };
 export type ProductList = {
   data: Product[];
-  pagination: { page: number; limit: number; total: number; pages: number };
+  pagination: { page: number; limit: number; total: number; pages: number; nextCursor: string | null; hasMore: boolean };
 };
 
 async function publicFetch<T>(
