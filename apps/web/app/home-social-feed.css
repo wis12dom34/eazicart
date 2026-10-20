@@ -180,3 +180,11 @@ body:has(.feed-comments-layer){overflow:hidden!important;touch-action:none}
 .feed-comments-list article nav .is-liked{color:#ff6b00}.feed-comments-list article nav span{color:#8a8e94;font-size:10px;font-weight:600}
 
 .feed-comment-reply-context{display:block;margin:1px 0 3px;color:#777b81;font-size:10px;font-weight:600}
+
+/* Figma 3250:20945 — keep the Reel caption over the lower video area. */
+.social-shoppable-reel{position:relative}
+.social-reel-header{height:60px}
+.social-reel-meta{position:absolute;z-index:3;left:28px;right:92px;top:calc(8px + 60px + 480px - 76px);padding:0;align-items:flex-end;gap:8px;pointer-events:none}
+.social-reel-copy{min-width:0;flex:1;max-height:54px;margin:0;padding:5px 6px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;border-radius:8px;color:#fff;background:rgba(0,0,0,.55);font-size:13px;line-height:18px;pointer-events:auto}
+.social-reel-meta>a{flex:none;height:30px;padding:6px 9px;border-radius:999px;background:rgba(255,245,237,.96);line-height:18px;pointer-events:auto}
+@media(max-width:380px){.social-reel-meta{right:84px;top:calc(8px + 60px + min(68vh,560px) - 76px)}}
