@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Icon } from "./icon";
+import { Icon, type IconName } from "./icon";
 export function ProfileMenuItem({
   href,
   icon,
@@ -7,7 +7,7 @@ export function ProfileMenuItem({
   detail,
 }: {
   href: string;
-  icon: string;
+  icon: IconName;
   label: string;
   detail?: string;
 }) {

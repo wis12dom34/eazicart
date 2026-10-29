@@ -10,6 +10,28 @@ permissions:
   contents: read
 
 jobs:
+  mobile-comments-keyboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
+          run_install: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+      - name: Install mobile browsers
+        run: pnpm exec playwright install --with-deps chromium webkit
+      - name: Guard mobile comments keyboard with isolated DOM fixture
+        run: pnpm exec playwright test --config=playwright.feed-keyboard-regression.config.mjs
+
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -30,6 +52,7 @@ jobs:
       JWT_SECRET: ci-only-secret-not-for-deployment-at-least-32-characters
       ALLOW_DEMO_SEED: "true"
       NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+      EAZICART_PUBLIC_API_URL: http://localhost:3001
       WEB_ORIGIN: http://localhost:3000
 
     steps:

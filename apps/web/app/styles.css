@@ -1,13 +1,14 @@
 :root {
+  --customer-nav-height: 64px;
   color-scheme: light;
-  --ink: #111214;
-  --muted: #71747b;
-  --border: #e8e8e6;
-  --soft: #f7f7f5;
+  --ink: #1c1c1e;
+  --muted: #636366;
+  --border: #e5e5ea;
+  --soft: #f5f5f7;
   --blue: #1769e0;
   --brand: #f97316;
   --brand-pressed: #ea580c;
-  --focus: #f97316;
+  --focus: #c2410c;
 }
 * {
   box-sizing: border-box;
@@ -19,16 +20,11 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background: #f5f5f3;
+  background: #f5f5f7;
 }
 body {
   color: var(--ink);
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -44,11 +40,15 @@ a {
 button {
   color: inherit;
 }
+button,
+a {
+  touch-action: manipulation;
+}
 button:disabled {
   cursor: not-allowed;
 }
 :where(a, button, input, textarea, select):focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--focus) 55%, transparent);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 .app-shell {
@@ -174,13 +174,28 @@ button:disabled {
   padding: 0 22px;
 }
 .dark-button {
-  background: var(--brand);
-  border-color: var(--brand);
+  background: var(--ink);
+  border-color: var(--ink);
   color: white;
 }
 .dark-button:hover {
-  background: var(--brand-pressed);
-  border-color: var(--brand-pressed);
+  background: #2c2c2e;
+  border-color: #2c2c2e;
+}
+.dark-button,
+.secondary-button,
+.state-action,
+.error-retry {
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+.dark-button:active,
+.secondary-button:active,
+.state-action:active,
+.error-retry:active {
+  opacity: 0.8;
+  transform: scale(0.98);
 }
 .secondary-button {
   background: white;
@@ -270,9 +285,51 @@ button:disabled {
 .state-card .compact {
   margin-top: 12px;
 }
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.loading-state p {
+  margin: 0;
+}
+.loading-indicator {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border: 2px solid var(--border);
+  border-top-color: var(--muted);
+  border-radius: 50%;
+  animation: loading-turn 800ms linear infinite;
+}
+@keyframes loading-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-indicator {
+    animation: none;
+  }
+}
+@media (pointer: coarse) {
+  .app-shell
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not(
+      [type="range"]
+    ):not([type="color"]):not([type="submit"]):not([type="button"]):not(
+      [type="file"]
+    ),
+  body .app-shell textarea,
+  body .app-shell select {
+    font-size: 16px;
+  }
+}
 .state-card.rich-state {
   box-sizing: border-box;
-  width: 100%;
+  width: calc(100% - 32px);
   max-width: 374px;
   min-height: 188px;
   margin: 24px auto;
@@ -301,8 +358,8 @@ button:disabled {
 .rich-state p {
   margin: 5px 0 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 1.5;
 }
 .state-action {
   display: inline-flex;
@@ -312,7 +369,7 @@ button:disabled {
   margin-top: 14px;
   padding: 0 14px;
   border-radius: 999px;
-  background: var(--brand);
+  background: var(--ink);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
@@ -323,7 +380,7 @@ button:disabled {
 }
 .state-card.recoverable-error {
   box-sizing: border-box;
-  width: 100%;
+  width: calc(100% - 32px);
   max-width: 374px;
   min-height: 126px;
   margin: 24px auto;
@@ -343,8 +400,8 @@ button:disabled {
 .recoverable-error p {
   margin: 6px 0 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 1.5;
 }
 .error-retry {
   display: inline-flex;

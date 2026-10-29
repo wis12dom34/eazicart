@@ -1,0 +1,17 @@
+@media (pointer: coarse) {
+  html, body { overscroll-behavior-x: none; }
+  .figma-home-story-strip,.social-home-product-rail,[data-horizontal-scroll],[data-gesture-gallery] { touch-action: pan-x pan-y; }
+  main[data-figma-node="223:51"] article { position: relative; }
+  main[data-figma-node="223:51"] article::after { content:"";position:absolute;left:50%;top:50%;width:82px;height:82px;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.72);transition:opacity 160ms ease,transform 240ms cubic-bezier(.2,.8,.2,1);z-index:12; }
+  main[data-figma-node="223:51"] article.gesture-heart-pop::after { content:"♥";display:grid;place-items:center;color:white;font-size:70px;line-height:1;text-shadow:0 3px 18px rgb(0 0 0/.32);opacity:1;transform:translate(-50%,-50%) scale(1); }
+  main[data-figma-node="223:51"] article.gesture-play-pop::after,main[data-figma-node="223:51"] article.gesture-pause-pop::after { display:grid;place-items:center;border-radius:999px;background:rgb(0 0 0/.42);color:white;font-size:34px;opacity:1;transform:translate(-50%,-50%) scale(1); }
+  main[data-figma-node="223:51"] article.gesture-play-pop::after { content:"▶";padding-left:5px; }
+  main[data-figma-node="223:51"] article.gesture-pause-pop::after { content:"Ⅱ"; }
+  .gesture-product-quick { position:fixed;z-index:1000;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));width:min(calc(100% - 24px),420px);transform:translateX(-50%);display:grid;gap:1px;padding:6px;border-radius:20px;background:rgb(245 245 247/.96);box-shadow:0 18px 50px rgb(0 0 0/.22);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);animation:gesture-sheet-in 180ms cubic-bezier(.2,.8,.2,1); }
+  .gesture-product-quick button { appearance:none;border:0;background:#fff;min-height:52px;padding:0 18px;font:600 16px/1 Inter,system-ui,sans-serif;color:#111; }
+  .gesture-product-quick button:first-child { border-radius:15px 15px 4px 4px; }
+  .gesture-product-quick button:nth-child(2) { border-radius:4px; }
+  .gesture-product-quick button:last-child { margin-top:5px;border-radius:4px 4px 15px 15px;color:#6b7280; }
+  @keyframes gesture-sheet-in { from { opacity:0;transform:translate(-50%,18px) scale(.98); } to { opacity:1;transform:translate(-50%,0) scale(1); } }
+}
+@media (prefers-reduced-motion: reduce) { main,main[data-figma-node="223:51"] article::after,.gesture-product-quick { transition-duration:1ms!important;animation-duration:1ms!important; } }

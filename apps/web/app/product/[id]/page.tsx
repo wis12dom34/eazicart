@@ -3,9 +3,14 @@ import { getPublicProduct } from "../../../lib/public-catalog";
 import { pageMetadata } from "../../../lib/seo";
 import { productSchema, breadcrumbs } from "../../../lib/catalog-schema";
 import { StructuredData } from "../../components/structured-data";
+import {
+  CustomerDesktopRail,
+  DesktopCustomerShell,
+} from "../../components/desktop-customer-shell";
 import ProductContent from "./product-content";
 
 type Props = { params: Promise<{ id: string }> };
+
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
   const result = await getPublicProduct(id);
@@ -21,6 +26,7 @@ export async function generateMetadata({ params }: Props) {
     { index: Boolean(product), catalog: true, image: product?.images[0]?.url },
   );
 }
+
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
   const result = await getPublicProduct(id);
@@ -30,27 +36,23 @@ export default async function ProductPage({ params }: Props) {
   const trail = product
     ? breadcrumbs([
         { name: "EaziCart", path: "/landing" },
-        {
-          name: product.category.name,
-          path: `/category/${encodeURIComponent(product.category.slug)}`,
-        },
+        { name: product.category.name, path: `/category/${encodeURIComponent(product.category.slug)}` },
         { name: product.name, path: `/product/${encodeURIComponent(id)}` },
       ])
     : undefined;
+
   return (
     <>
       {schema ? <StructuredData data={schema} /> : null}
       {trail ? <StructuredData data={trail} /> : null}
-      <ProductContent
-        key={id}
-        id={id}
-        initialProduct={product}
-        initialError={
-          product
-            ? ""
-            : "The catalog is temporarily unavailable. Please try again."
-        }
-      />
+      <DesktopCustomerShell activeHref="/explore" rail={<CustomerDesktopRail />}>
+        <ProductContent
+          key={id}
+          id={id}
+          initialProduct={product}
+          initialError={product ? "" : "The catalog is temporarily unavailable. Please try again."}
+        />
+      </DesktopCustomerShell>
     </>
   );
 }

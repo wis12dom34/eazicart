@@ -212,8 +212,25 @@ let server;
     let continuationFixture = false;
     let authLoginMode = "success";
     let failCartUpdate = false;
-    await page.route("http://localhost:3001/**", async (r) => {
-      const path = new URL(r.request().url()).pathname;
+    const apiRequests =
+      /http:\/\/(?:localhost:3001\/|127\.0\.0\.1:3100\/api\/)/;
+    await page.route(apiRequests, async (r) => {
+      const path = new URL(r.request().url()).pathname.replace(
+        /^\/api(?=\/)/,
+        "",
+      );
+
+      if (path === "/auth/refresh")
+        return r.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            tokens: {
+              accessToken: "sandbox",
+              expiresAt: "2099-01-01T00:00:00.000Z",
+            },
+          }),
+        });
 
       if (path === "/auth/login") {
         if (authLoginMode === "slow")
@@ -432,14 +449,16 @@ let server;
     await page.evaluate(() =>
       Promise.all([
         document.fonts.ready,
-        ...Array.from(document.images).map((img) =>
-          img.complete
+        ...Array.from(document.images).map((img) => {
+          // Full-page QA captures must request offscreen lazy images too.
+          img.loading = "eager";
+          return img.complete
             ? Promise.resolve()
             : new Promise((resolve) => {
                 img.onload = resolve;
                 img.onerror = resolve;
-              }),
-        ),
+              });
+        }),
       ]),
     );
     await page.screenshot({ path: evidence + "/product-app.png" });
@@ -486,14 +505,15 @@ let server;
     await page.evaluate(() =>
       Promise.all([
         document.fonts.ready,
-        ...Array.from(document.images).map((img) =>
-          img.complete
+        ...Array.from(document.images).map((img) => {
+          img.loading = "eager";
+          return img.complete
             ? Promise.resolve()
             : new Promise((resolve) => {
                 img.onload = resolve;
                 img.onerror = resolve;
-              }),
-        ),
+              });
+        }),
       ]),
     );
     await page.screenshot({ path: evidence + "/cart-app.png" });
@@ -528,7 +548,7 @@ let server;
       await page.locator(`[data-figma-node="${node}"]`).waitFor();
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({ path: evidence + `/${name}-app.png` });
-      for (const width of [360, 375, 390, 440]) {
+      for (const width of [320, 360, 375, 390, 440]) {
         await page.setViewportSize({ width, height: 932 });
         await page.screenshot({ path: evidence + `/${name}-app-${width}.png` });
         if (
@@ -641,14 +661,15 @@ let server;
     await page.evaluate(() =>
       Promise.all([
         document.fonts.ready,
-        ...Array.from(document.images).map((img) =>
-          img.complete
+        ...Array.from(document.images).map((img) => {
+          img.loading = "eager";
+          return img.complete
             ? Promise.resolve()
             : new Promise((resolve) => {
                 img.onload = resolve;
                 img.onerror = resolve;
-              }),
-        ),
+              });
+        }),
       ]),
     );
     await page.screenshot({ path: evidence + "/home-app.png" });
@@ -703,14 +724,15 @@ let server;
       await page.evaluate(() =>
         Promise.all([
           document.fonts.ready,
-          ...Array.from(document.images).map((img) =>
-            img.complete
+          ...Array.from(document.images).map((img) => {
+            img.loading = "eager";
+            return img.complete
               ? Promise.resolve()
               : new Promise((resolve) => {
                   img.onload = resolve;
                   img.onerror = resolve;
-                }),
-          ),
+                });
+          }),
         ]),
       );
       if (name === "explore")
@@ -810,12 +832,23 @@ let server;
     await page.getByRole("radio").filter({ hasText: "WORK" }).click();
     await page.getByRole("link", { name: "Use selected address" }).click();
     await page.waitForURL("**/checkout?addressId=work");
-    await page.getByText(workAddress.line1, { exact: true }).waitFor();
+    await page
+      .getByText(
+        [workAddress.line1, workAddress.city, workAddress.region].join(", "),
+        {
+          exact: true,
+        },
+      )
+      .waitFor();
     await page.getByRole("link", { name: "Change", exact: true }).click();
     await page.getByRole("radio").filter({ hasText: "HOME" }).click();
     await page.getByRole("link", { name: "Use selected address" }).click();
     await page.waitForURL("**/checkout?addressId=address");
-    await page.getByText(address.line1, { exact: true }).waitFor();
+    await page
+      .getByText([address.line1, address.city, address.region].join(", "), {
+        exact: true,
+      })
+      .waitFor();
     await page
       .getByRole("button", { name: "Place order", exact: true })
       .click();
@@ -854,7 +887,7 @@ let server;
       .click();
     await page.waitForURL("**/orders/design-order");
     await page
-      .getByRole("link", { name: "Track package", exact: true })
+      .getByRole("link", { name: "Track delivery", exact: true })
       .click();
     await page.waitForURL("**/tracking/design-order");
     paymentStatus = "PENDING";
@@ -967,6 +1000,101 @@ let server;
     await page.getByRole("button", { name: "Cancel", exact: true }).click();
     await page.getByRole("button", { name: "Edit Home", exact: true }).click();
     await captureState("checkout-address-edit", "212:70");
+
+    // Canonical Chat/Notification continuation. These are isolated visual
+    // fixtures; the frontend still uses only its existing APIs.
+    const chatSeller = {
+      id: "nike",
+      userId: "nike-user",
+      displayName: "Nike Official",
+    };
+    await page.route("**/api/sellers/nike", (r) =>
+      r.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ data: chatSeller }),
+      }),
+    );
+    await page.route("**/api/social-images/profile?**", (r) =>
+      r.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ data: null }),
+      }),
+    );
+    await page.goto("http://127.0.0.1:3100/chat?seller=nike");
+    await page.locator(".eazicart-chat-store-copy strong").waitFor();
+    await captureState("chat", "62:2");
+    let notificationMode = "loaded";
+    let releaseNotifications;
+    const notificationFixture = [
+      {
+        id: "visual-order",
+        type: "ORDER",
+        title: "Your order is on the way",
+        body: "Nike Air Max 90 · Order #EC-2051",
+        createdAt: new Date(Date.now() - 120000).toISOString(),
+        readAt: null,
+      },
+      {
+        id: "visual-message",
+        type: "SOCIAL",
+        title: "Nike Official replied",
+        body: "“Yes, your size is available.”",
+        createdAt: new Date(Date.now() - 1080000).toISOString(),
+        readAt: null,
+      },
+      {
+        id: "visual-promo",
+        type: "SYSTEM",
+        title: "Price drop on a saved item",
+        body: "Club Hoodie is now ₦72,000",
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        readAt: new Date().toISOString(),
+      },
+      {
+        id: "visual-delivered",
+        type: "ORDER",
+        title: "Order delivered",
+        body: "Oversized Blazer · Tap to review",
+        createdAt: new Date(Date.now() - 90000000).toISOString(),
+        readAt: new Date().toISOString(),
+      },
+    ];
+    await page.route("**/api/notifications", async (r) => {
+      if (notificationMode === "loading")
+        await new Promise((resolve) => {
+          releaseNotifications = resolve;
+        });
+      if (notificationMode === "error")
+        return r.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({
+            error: { code: "UNAVAILABLE", message: "Unavailable" },
+          }),
+        });
+      const data = notificationMode === "empty" ? [] : notificationFixture;
+      return r.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          data,
+          meta: { unreadCount: data.filter((n) => !n.readAt).length },
+        }),
+      });
+    });
+    await page.goto("http://127.0.0.1:3100/notifications");
+    await captureState("notifications", "32:2");
+    notificationMode = "empty";
+    await page.reload();
+    await captureState("notifications-empty", "229:50");
+    notificationMode = "error";
+    await page.reload();
+    await captureState("notifications-error", "229:116");
+    notificationMode = "loading";
+    await page.reload();
+    await page.getByRole("status", { name: "Loading notifications" }).waitFor();
+    await captureState("notifications-loading", "229:76");
+    notificationMode = "empty";
+    if (releaseNotifications) releaseNotifications();
 
     await page.goto("http://127.0.0.1:3100/login");
     await captureContinuation(

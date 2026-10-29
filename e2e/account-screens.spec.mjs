@@ -22,20 +22,12 @@ test("edit profile and address book use real supported account data", async ({
   await expect(
     page.getByRole("heading", { name: "Edit profile", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Photo uploads unavailable", { exact: true }),
-  ).toBeVisible();
   await expect(page.getByRole("button", { name: "Change photo" })).toHaveCount(
     0,
   );
-  await expect(page.getByLabel("Username")).not.toBeDisabled();
-  await expect(page.getByLabel("Username")).toHaveAttribute("readonly", "");
-  await expect(page.getByLabel("Username")).toHaveValue("Not available yet");
-  await expect(page.getByLabel("Phone number")).not.toBeDisabled();
-  await expect(page.getByLabel("Phone number")).toHaveAttribute("readonly", "");
-  await expect(page.getByLabel("Phone number")).toHaveValue(
-    "Not available yet",
-  );
+  await expect(page.getByLabel("Username")).toBeVisible();
+  await expect(page.getByLabel("Bio")).toBeVisible();
+  await expect(page.getByLabel("Phone number")).toHaveCount(0);
   await expect(page.getByLabel("Email address")).not.toBeDisabled();
   await expect(page.getByLabel("Email address")).toHaveAttribute(
     "readonly",
@@ -45,6 +37,10 @@ test("edit profile and address book use real supported account data", async ({
   await expectCustomerNavigation(page);
 
   await page.getByLabel("Full name").fill("Updated Account Customer");
+  await page
+    .getByLabel("Username")
+    .fill(`account_${randomUUID().replaceAll("-", "").slice(0, 16)}`);
+  await page.getByLabel("Bio").fill("A customer profile bio");
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page).toHaveURL(`${web}/profile`);
   await expect(

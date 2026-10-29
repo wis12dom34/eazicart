@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -6,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
+import { ProfileAvatar } from "../components/profile-avatar";
 import { DiscoveryProductCard } from "../components/discovery-product-card";
 import styles from "../discovery.module.css";
 import { useRequest } from "../hooks/use-request";
@@ -64,10 +65,12 @@ export function SearchContent() {
       : filter === "sellers"
         ? sellerMatches.length
         : productTotal + sellerMatches.length;
-  const loading = products.loading || sellers.loading;
-  const error = products.error || sellers.error;
   const showProducts = filter !== "sellers";
   const showSellers = filter !== "products";
+  const loading =
+    (showProducts && products.loading) || (showSellers && sellers.loading);
+  const error =
+    (showProducts && products.error) || (showSellers && sellers.error);
   const hasVisibleResults =
     (showProducts && productRows.length > 0) ||
     (showSellers && sellerMatches.length > 0);
@@ -113,19 +116,24 @@ export function SearchContent() {
           aria-label="Back to Explore"
         >
           <span aria-hidden="true">
-            <img src="/figma/back.svg" width={20} height={20} alt="" />
+            <Icon name="back" size={22} />
           </span>
         </Link>
         <h1>Search</h1>
       </header>
 
       <form className={styles.searchField} action="/search">
+        {filter !== "all" ? (
+          <input type="hidden" name="filter" value={filter} />
+        ) : null}
         <span aria-hidden="true">
-          <img src="/figma/explore-search.svg" width={20} height={20} alt="" />
+          <Icon name="search" size={20} />
         </span>
         <input
           key={search}
           name="search"
+          type="search"
+          enterKeyHint="search"
           defaultValue={search}
           aria-label="Search products and sellers"
           placeholder="Search products and sellers"
@@ -133,7 +141,13 @@ export function SearchContent() {
       </form>
 
       <p className={styles.searchCount} aria-live="polite">
-        {loading ? "Searching…" : `${resultCount} results`}
+        {loading
+          ? "Searching…"
+          : error
+            ? "Search unavailable"
+            : resultCount === 1
+              ? "1 result"
+              : `${resultCount} results`}
       </p>
 
       <nav className={styles.searchFilters} aria-label="Search filters">
@@ -172,8 +186,8 @@ export function SearchContent() {
             <button
               type="button"
               onClick={() => {
-                void products.reload();
-                void sellers.reload();
+                if (showProducts) void products.reload();
+                if (showSellers) void sellers.reload();
               }}
             >
               Try again
@@ -236,7 +250,10 @@ export function SearchContent() {
                   key={seller.id}
                 >
                   <span className={styles.sellerAvatar} aria-hidden="true">
-                    {seller.displayName.slice(0, 2).toUpperCase()}
+                    <ProfileAvatar
+                      userId={seller.userId}
+                      name={seller.displayName}
+                    />
                   </span>
                   <span className={styles.sellerText}>
                     <strong>{seller.displayName}</strong>

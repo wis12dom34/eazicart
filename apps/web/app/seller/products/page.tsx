@@ -2,8 +2,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { EmptyState, ErrorState, LoadingState, SignInState } from "../../components/async-state";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SignInState,
+} from "../../components/async-state";
 import { Icon } from "../../components/icon";
 import { SellerBottomNavigation } from "../../components/seller-bottom-navigation";
 import { useRequest } from "../../hooks/use-request";
@@ -13,9 +18,12 @@ import { categoriesApi } from "../../../lib/api/categories";
 import { productsApi, type ProductInput } from "../../../lib/api/products";
 import { sellerDashboardApi } from "../../../lib/api/seller-dashboard";
 import type { Category, Product } from "../../../lib/api/types";
+import { ProductImagePicker } from "./product-image-picker";
 import styles from "./seller-products.module.css";
 
 type ProductFilter = "all" | "active" | "low-stock" | "drafts";
+
+const hostedImage = (url: string) => /^https?:\/\//i.test(url);
 
 const formString = (form: FormData, key: string) => {
   const value = form.get(key);
@@ -28,9 +36,13 @@ const productPayload = (
 ): ProductInput => {
   const name = formString(form, "name");
   const description = formString(form, "description");
-  const imageUrl = formString(form, "imageUrl");
-  const images = imageUrl
-    ? [{ url: imageUrl, altText: name, position: 0 }]
+  const imageUrls = form
+    .getAll("imageUrls")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter((value) => hostedImage(value));
+  const images = imageUrls.length
+    ? imageUrls.map((url, position) => ({ url, altText: name, position }))
     : options.clearImageWhenBlank
       ? []
       : undefined;
@@ -56,19 +68,27 @@ export default function SellerProductsPage() {
   const [filter, setFilter] = useState<ProductFilter>("all");
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("add") === "1") setAdding(true);
+    if (new URLSearchParams(window.location.search).get("add") === "1")
+      setAdding(true);
   }, []);
 
   const profile = useRequest(
-    async () => auth.isAuthenticated ? sellerDashboardApi.profile() : Promise.resolve(undefined),
+    async () =>
+      auth.isAuthenticated
+        ? sellerDashboardApi.profile()
+        : Promise.resolve(undefined),
     [auth.isAuthenticated],
   );
   const inventory = useRequest(
-    async () => profile.data?.data ? productsApi.sellerList() : Promise.resolve(undefined),
+    async () =>
+      profile.data?.data
+        ? productsApi.sellerList()
+        : Promise.resolve(undefined),
     [profile.data?.data?.id],
   );
   const categories = useRequest(
-    async () => profile.data?.data ? categoriesApi.list() : Promise.resolve(undefined),
+    async () =>
+      profile.data?.data ? categoriesApi.list() : Promise.resolve(undefined),
     [profile.data?.data?.id],
   );
 
@@ -81,37 +101,53 @@ export default function SellerProductsPage() {
     setSubmitting(true);
     setActionError("");
     try {
-      await productsApi.create(productPayload(new FormData(event.currentTarget)));
+      await productsApi.create(
+        productPayload(new FormData(event.currentTarget)),
+      );
       setAdding(false);
       await reloadInventory();
     } catch (value) {
-      setActionError(value instanceof Error ? value.message : "Unable to create product");
+      setActionError(
+        value instanceof Error ? value.message : "Unable to create product",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
-  const updateProduct = async (event: FormEvent<HTMLFormElement>, productId: string) => {
+  const updateProduct = async (
+    event: FormEvent<HTMLFormElement>,
+    productId: string,
+  ) => {
     event.preventDefault();
     setSubmitting(true);
     setActionError("");
     try {
       await productsApi.update(
         productId,
-        productPayload(new FormData(event.currentTarget), { clearImageWhenBlank: true }),
+        productPayload(new FormData(event.currentTarget), {
+          clearImageWhenBlank: true,
+        }),
       );
       setEditingId(null);
       setActionMenuId(null);
       await reloadInventory();
     } catch (value) {
-      setActionError(value instanceof Error ? value.message : "Unable to update product");
+      setActionError(
+        value instanceof Error ? value.message : "Unable to update product",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   const deactivateProduct = async (product: Product) => {
-    if (!window.confirm(`Deactivate ${product.name}? It will stop appearing in the public store.`)) return;
+    if (
+      !window.confirm(
+        `Deactivate ${product.name}? It will stop appearing in the public store.`,
+      )
+    )
+      return;
     setSubmitting(true);
     setActionError("");
     try {
@@ -120,7 +156,9 @@ export default function SellerProductsPage() {
       setActionMenuId(null);
       await reloadInventory();
     } catch (value) {
-      setActionError(value instanceof Error ? value.message : "Unable to deactivate product");
+      setActionError(
+        value instanceof Error ? value.message : "Unable to deactivate product",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -137,31 +175,56 @@ export default function SellerProductsPage() {
   if (auth.loading || (auth.isAuthenticated && profile.loading)) {
     return shell(<LoadingState label="Loading your seller products…" />);
   }
-  if (!auth.user) return shell(<SignInState message="Sign in to manage your seller products." />);
+  if (!auth.user)
+    return shell(
+      <SignInState message="Sign in to manage your seller products." />,
+    );
   if (profile.error) {
-    return shell(<ErrorState message={profile.error} retry={() => void profile.reload()} />);
+    return shell(
+      <ErrorState
+        message={profile.error}
+        retry={() => void profile.reload()}
+      />,
+    );
   }
   if (!profile.data?.data) {
     return shell(
       <section className={styles.setupPrompt}>
-        <div className={styles.setupIcon}><Icon name="bag" size={24} /></div>
+        <div className={styles.setupIcon}>
+          <Icon name="bag" size={24} />
+        </div>
         <p className={styles.eyebrow}>Seller account required</p>
         <h1>Create your store before adding products</h1>
-        <p>Your seller profile keeps inventory ownership tied to your account.</p>
-        <Link className={styles.primaryLink} href="/seller/dashboard">Open seller workspace</Link>
+        <p>
+          Your seller profile keeps inventory ownership tied to your account.
+        </p>
+        <Link className={styles.primaryLink} href="/seller/dashboard">
+          Open seller workspace
+        </Link>
       </section>,
     );
   }
   if (
-    inventory.loading || categories.loading ||
-    (!inventory.data && !inventory.error) || (!categories.data && !categories.error)
+    inventory.loading ||
+    categories.loading ||
+    (!inventory.data && !inventory.error) ||
+    (!categories.data && !categories.error)
   ) {
     return shell(<LoadingState label="Loading inventory…" />);
   }
-  if (inventory.error || categories.error || !inventory.data || !categories.data) {
+  if (
+    inventory.error ||
+    categories.error ||
+    !inventory.data ||
+    !categories.data
+  ) {
     return shell(
       <ErrorState
-        message={inventory.error || categories.error || "Seller inventory is unavailable."}
+        message={
+          inventory.error ||
+          categories.error ||
+          "Seller inventory is unavailable."
+        }
         retry={() => {
           void inventory.reload();
           void categories.reload();
@@ -177,12 +240,14 @@ export default function SellerProductsPage() {
 
   const normalizedQuery = query.trim().toLowerCase();
   const filteredProducts = products.filter((product) => {
-    const matchesQuery = !normalizedQuery ||
+    const matchesQuery =
+      !normalizedQuery ||
       product.name.toLowerCase().includes(normalizedQuery) ||
       product.category.name.toLowerCase().includes(normalizedQuery);
     if (!matchesQuery) return false;
     if (filter === "active") return product.active !== false;
-    if (filter === "low-stock") return product.active !== false && product.stock <= 5;
+    if (filter === "low-stock")
+      return product.active !== false && product.stock <= 5;
     if (filter === "drafts") return product.active === false;
     return true;
   });
@@ -191,7 +256,10 @@ export default function SellerProductsPage() {
     <main className={`app-shell ${styles.page}`}>
       <SellerProductsHeader />
 
-      <section className={styles.catalogControls} aria-label="Product search and filters">
+      <section
+        className={styles.catalogControls}
+        aria-label="Product search and filters"
+      >
         <label className={styles.searchField}>
           <Icon name="search" size={17} />
           <input
@@ -201,7 +269,11 @@ export default function SellerProductsPage() {
             aria-label="Search products"
           />
         </label>
-        <div className={styles.filterRow} role="group" aria-label="Filter products">
+        <div
+          className={styles.filterRow}
+          role="group"
+          aria-label="Filter products"
+        >
           {[
             ["all", "All"],
             ["active", "Active"],
@@ -209,7 +281,9 @@ export default function SellerProductsPage() {
             ["drafts", "Drafts"],
           ].map(([value, label]) => (
             <button
-              className={filter === value ? styles.activeFilter : styles.filterButton}
+              className={
+                filter === value ? styles.activeFilter : styles.filterButton
+              }
               type="button"
               key={value}
               onClick={() => setFilter(value as ProductFilter)}
@@ -225,13 +299,22 @@ export default function SellerProductsPage() {
         <SummaryCard label="Total products" value={products.length} />
         <SummaryCard label="Active" value={activeProducts.length} />
         <SummaryCard label="Inactive" value={inactiveProducts} />
-        <SummaryCard label="Units in stock" value={products.reduce((sum, product) => sum + product.stock, 0)} />
+        <SummaryCard
+          label="Units in stock"
+          value={products.reduce((sum, product) => sum + product.stock, 0)}
+        />
       </section>
 
       {adding ? (
-        <section className={styles.formCard} aria-labelledby="add-product-title">
+        <section
+          className={styles.formCard}
+          aria-labelledby="add-product-title"
+        >
           <div className={styles.sectionHeading}>
-            <div><p className={styles.eyebrow}>New listing</p><h2 id="add-product-title">Add product</h2></div>
+            <div>
+              <p className={styles.eyebrow}>New listing</p>
+              <h2 id="add-product-title">Add product</h2>
+            </div>
           </div>
           <ProductForm
             categories={categoryOptions}
@@ -242,11 +325,21 @@ export default function SellerProductsPage() {
         </section>
       ) : null}
 
-      {actionError ? <p className={styles.actionError} role="alert">{actionError}</p> : null}
+      {actionError ? (
+        <p className={styles.actionError} role="alert">
+          {actionError}
+        </p>
+      ) : null}
 
-      <section className={styles.inventorySection} aria-labelledby="inventory-title">
+      <section
+        className={styles.inventorySection}
+        aria-labelledby="inventory-title"
+      >
         <div className={styles.sectionHeading}>
-          <div><p className={styles.eyebrow}>Catalog management</p><h2 id="inventory-title">Your inventory</h2></div>
+          <div>
+            <p className={styles.eyebrow}>Catalog management</p>
+            <h2 id="inventory-title">Your inventory</h2>
+          </div>
           <span>{filteredProducts.length.toLocaleString()} shown</span>
         </div>
 
@@ -255,20 +348,38 @@ export default function SellerProductsPage() {
             <EmptyState message="No seller products yet. Add your first product to start your store." />
           </div>
         ) : !filteredProducts.length ? (
-          <div className={styles.filteredEmpty}>No products match this search or filter.</div>
+          <div className={styles.filteredEmpty}>
+            No products match this search or filter.
+          </div>
         ) : (
           <div className={styles.productList}>
             {filteredProducts.map((product) => {
-              const lowStock = product.active !== false && product.stock > 0 && product.stock <= 5;
-              const outOfStock = product.active !== false && product.stock === 0;
+              const lowStock =
+                product.active !== false &&
+                product.stock > 0 &&
+                product.stock <= 5;
+              const outOfStock =
+                product.active !== false && product.stock === 0;
               const draft = product.active === false;
-              const status = draft ? "Draft" : outOfStock ? "Out of stock" : lowStock ? "Low stock" : "Active";
+              const image = product.images.find((item) =>
+                hostedImage(item.url),
+              );
+              const status = draft
+                ? "Draft"
+                : outOfStock
+                  ? "Out of stock"
+                  : lowStock
+                    ? "Low stock"
+                    : "Active";
               return (
                 <article className={styles.productCard} key={product.id}>
                   <div className={styles.productMain}>
                     <div className={styles.productImage}>
-                      {product.images[0] ? (
-                        <img src={product.images[0].url} alt={product.images[0].altText || product.name} />
+                      {image ? (
+                        <img
+                          src={image.url}
+                          alt={image.altText || product.name}
+                        />
                       ) : (
                         <Icon name="box" size={28} />
                       )}
@@ -285,28 +396,40 @@ export default function SellerProductsPage() {
                           {status}
                         </span>
                       </div>
-                      <div className={`${styles.stockLabel} ${lowStock || outOfStock ? styles.stockWarning : ""}`}>
-                        {draft ? "Draft" : `${product.stock.toLocaleString()} in stock`}
+                      <div
+                        className={`${styles.stockLabel} ${lowStock || outOfStock ? styles.stockWarning : ""}`}
+                      >
+                        {draft
+                          ? "Draft"
+                          : `${product.stock.toLocaleString()} in stock`}
                       </div>
                       <button
                         className={styles.moreButton}
                         type="button"
                         aria-label={`Manage ${product.name}`}
                         aria-expanded={actionMenuId === product.id}
-                        onClick={() => setActionMenuId((current) => current === product.id ? null : product.id)}
+                        onClick={() =>
+                          setActionMenuId((current) =>
+                            current === product.id ? null : product.id,
+                          )
+                        }
                       >
-                        •••
+                        <Icon name="more" size={20} />
                       </button>
                     </div>
                   </div>
 
-                  <div className={`${styles.productActions} ${actionMenuId === product.id ? styles.productActionsOpen : ""}`}>
+                  <div
+                    className={`${styles.productActions} ${actionMenuId === product.id ? styles.productActionsOpen : ""}`}
+                  >
                     <button
                       className={styles.secondaryButton}
                       type="button"
                       disabled={submitting}
                       onClick={() => {
-                        setEditingId((current) => current === product.id ? null : product.id);
+                        setEditingId((current) =>
+                          current === product.id ? null : product.id,
+                        );
                         setAdding(false);
                         setActionError("");
                         setActionMenuId(null);
@@ -316,7 +439,12 @@ export default function SellerProductsPage() {
                     </button>
                     {product.active !== false ? (
                       <>
-                        <Link className={styles.secondaryLink} href={`/product/${product.id}`}>View</Link>
+                        <Link
+                          className={styles.secondaryLink}
+                          href={`/product/${product.id}`}
+                        >
+                          View
+                        </Link>
                         <button
                           className={styles.dangerButton}
                           type="button"
@@ -336,7 +464,9 @@ export default function SellerProductsPage() {
                         categories={categoryOptions}
                         submitLabel="Save changes"
                         submitting={submitting}
-                        onSubmit={(event) => void updateProduct(event, product.id)}
+                        onSubmit={(event) =>
+                          void updateProduct(event, product.id)
+                        }
                       />
                     </div>
                   ) : null}
@@ -349,7 +479,11 @@ export default function SellerProductsPage() {
 
       <aside className={styles.note}>
         <strong>About deactivation</strong>
-        <p>Deactivated products stay visible here for your records but are removed from public product listings. This action does not delete order history.</p>
+        <p>
+          Deactivated products stay visible here for your records but are
+          removed from public product listings. This action does not delete
+          order history.
+        </p>
       </aside>
 
       <button
@@ -374,7 +508,11 @@ export default function SellerProductsPage() {
 function SellerProductsHeader() {
   return (
     <header className={styles.topbar}>
-      <Link className={styles.back} href="/seller/dashboard" aria-label="Back to seller dashboard">
+      <Link
+        className={styles.back}
+        href="/seller/dashboard"
+        aria-label="Back to seller dashboard"
+      >
         <Icon name="back" size={22} />
       </Link>
       <div className={styles.headerCopy}>
@@ -386,7 +524,12 @@ function SellerProductsHeader() {
 }
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
-  return <article className={styles.summaryCard}><span>{label}</span><strong>{value.toLocaleString()}</strong></article>;
+  return (
+    <article className={styles.summaryCard}>
+      <span>{label}</span>
+      <strong>{value.toLocaleString()}</strong>
+    </article>
+  );
 }
 
 function ProductForm({
@@ -402,40 +545,91 @@ function ProductForm({
   submitting: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const [imageUploading, setImageUploading] = useState(false);
+
   return (
     <form className={styles.productForm} onSubmit={onSubmit}>
       <label className={styles.field}>
         <span>Product name</span>
-        <input name="name" required minLength={2} maxLength={160} defaultValue={product?.name || ""} placeholder="Product name" />
+        <input
+          name="name"
+          required
+          minLength={2}
+          maxLength={160}
+          defaultValue={product?.name || ""}
+          placeholder="Product name"
+        />
       </label>
       <div className={styles.formGrid}>
         <label className={styles.field}>
           <span>Price (NGN)</span>
-          <input name="price" required type="number" inputMode="decimal" min={0} max={9999999999.99} step="0.01" defaultValue={product?.price || ""} placeholder="25000" />
+          <input
+            name="price"
+            required
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={9999999999.99}
+            step="0.01"
+            defaultValue={product?.price || ""}
+            placeholder="25000"
+          />
         </label>
         <label className={styles.field}>
           <span>Stock</span>
-          <input name="stock" required type="number" min={0} step={1} defaultValue={product?.stock ?? 0} />
+          <input
+            name="stock"
+            required
+            type="number"
+            min={0}
+            step={1}
+            defaultValue={product?.stock ?? 0}
+          />
         </label>
       </div>
       <label className={styles.field}>
         <span>Category</span>
-        <select name="categoryId" required defaultValue={product?.category.id || categories[0]?.id || ""} disabled={!categories.length}>
-          {!categories.length ? <option value="">No categories available</option> : null}
-          {categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}
+        <select
+          name="categoryId"
+          required
+          defaultValue={product?.category.id || categories[0]?.id || ""}
+          disabled={!categories.length}
+        >
+          {!categories.length ? (
+            <option value="">No categories available</option>
+          ) : null}
+          {categories.map((category) => (
+            <option value={category.id} key={category.id}>
+              {category.name}
+            </option>
+          ))}
         </select>
       </label>
       <label className={styles.field}>
         <span>Description</span>
-        <textarea name="description" rows={4} maxLength={5000} defaultValue={product?.description || ""} placeholder="Describe the product" />
+        <textarea
+          name="description"
+          rows={4}
+          maxLength={5000}
+          defaultValue={product?.description || ""}
+          placeholder="Describe the product"
+        />
       </label>
-      <label className={styles.field}>
-        <span>Image URL</span>
-        <input name="imageUrl" type="url" defaultValue={product?.images[0]?.url || ""} placeholder="https://example.com/product.jpg" />
-        <small>Optional. Use a real hosted product image URL; no image is fabricated by EaziCart.</small>
-      </label>
-      <button className={styles.submitButton} type="submit" disabled={submitting || !categories.length}>
-        {submitting ? "Saving…" : submitLabel}
+      <ProductImagePicker
+        initialUrls={product?.images.map((image) => image.url) ?? []}
+        disabled={submitting}
+        onUploadingChange={setImageUploading}
+      />
+      <button
+        className={styles.submitButton}
+        type="submit"
+        disabled={submitting || imageUploading || !categories.length}
+      >
+        {imageUploading
+          ? "Uploading photos…"
+          : submitting
+            ? "Saving…"
+            : submitLabel}
       </button>
     </form>
   );

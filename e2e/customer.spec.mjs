@@ -1,3 +1,4 @@
+import { browserSessionTokens } from "./helpers/session.mjs";
 import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
@@ -68,13 +69,21 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(`${web}/`);
 
-  await page.goto("/explore");
+  // Follow the app's links so document reloads do not cancel cookie rotation.
+  await page
+    .getByRole("navigation", { name: "Customer navigation" })
+    .getByRole("link", { name: "Explore", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Explore", exact: true }),
   ).toBeVisible();
-  await page.goto("/category/fashion");
+  await page
+    .getByRole("navigation", { name: "Explore sections" })
+    .getByRole("link", { name: "Categories", exact: true })
+    .click();
+  await page.getByRole("link", { name: "Fashion", exact: true }).click();
   await expect(page.getByText("Woven everyday tote").first()).toBeVisible();
-  await page.goto(`/product/${productId}`);
+  await page.locator(`a[href="/product/${productId}"]`).first().click();
   await expect(
     page.getByRole("heading", { name: "Woven everyday tote" }),
   ).toBeVisible();
@@ -142,10 +151,10 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.goto("/following");
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
   const followingSections = page.getByRole("navigation", {
-    name: "Following sections",
+    name: "Saved sections",
   });
   await expect(
-    followingSections.getByText("Following", { exact: true }),
+    followingSections.getByText("Sellers", { exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await expect(
     followingSections.getByText("Recommended", { exact: true }),
@@ -174,12 +183,8 @@ test("customer journey persists in PostgreSQL without payment", async ({
   ).toContainText("1 Demo Street");
 
   await page.goto("/checkout");
-  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
-  const accessToken = await page.evaluate(() => {
-    const stored = localStorage.getItem("eazicart.auth.tokens");
-    if (!stored) throw new Error("Missing auth tokens");
-    return JSON.parse(stored).accessToken;
-  });
+  await expect(page.getByText("Online payment", { exact: true })).toBeVisible();
+  const { accessToken } = await browserSessionTokens(page);
   const orderHeaders = { Authorization: `Bearer ${accessToken}` };
   const addresses = await request.get(`${api}/addresses`, {
     headers: orderHeaders,
@@ -224,9 +229,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await expect(
     populatedCounts.getByRole("link", { name: "1 Following" }),
   ).toBeVisible();
-  await page
-    .getByRole("link", { name: /Reviews Your ratings and feedback/ })
-    .click();
+  await page.goto("/reviews");
   await expect(page).toHaveURL(`${web}/reviews`);
   await expect(
     page.getByRole("heading", { name: "Reviews are not available yet" }),
@@ -270,17 +273,32 @@ test("customer journey persists in PostgreSQL without payment", async ({
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
 
-  // Force an expired access token and verify the actual refresh endpoint.
-  await page.evaluate(() => {
-    const key = "eazicart.auth.tokens";
-    const tokens = JSON.parse(localStorage.getItem(key));
-    tokens.accessToken = "expired-token";
-    localStorage.setItem(key, JSON.stringify(tokens));
+  // Reject one protected request and verify cookie-based refresh restores it.
+  let refreshResponses = 0;
+  page.on("response", (response) => {
+    if (
+      response.url().endsWith("/api/auth/refresh") &&
+      response.status() === 200
+    )
+      refreshResponses += 1;
   });
+  await page.route(
+    "**/api/users/me",
+    (route) =>
+      route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: { code: "UNAUTHORIZED", message: "Expired access token" },
+        }),
+      }),
+    { times: 1 },
+  );
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
+  expect(refreshResponses).toBeGreaterThan(0);
   await page.getByRole("link", { name: "Account settings" }).click();
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL(`${web}/login`);
@@ -354,4 +372,36 @@ test("API trusts database prices and enforces CORS and ownership", async ({
       origin === web ? origin : undefined,
     );
   }
+});
+
+test("product actions wait for session restoration before accepting input", async ({
+  page,
+}) => {
+  let releaseSession;
+  const sessionReady = new Promise((resolve) => {
+    releaseSession = resolve;
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await sessionReady;
+    await route.fulfill({
+      json: {
+        id: "qa-session-user",
+        name: "QA Customer",
+        email: "qa@eazicart.invalid",
+      },
+    });
+  });
+  await page.route(/\/saved(?:\?|$)/, (route) =>
+    route.fulfill({ json: { data: [] } }),
+  );
+  await page.goto(`/product/${productId}`);
+  const buttons = [
+    page.getByRole("button", { name: "Save product", exact: true }),
+    page.getByRole("button", { name: "Add to Cart", exact: true }),
+    page.getByRole("button", { name: "Buy Now", exact: true }),
+  ];
+  for (const button of buttons) await expect(button).toBeDisabled();
+  releaseSession();
+  for (const button of buttons) await expect(button).toBeEnabled();
+  await expect(page).toHaveURL(`${web}/product/${productId}`);
 });

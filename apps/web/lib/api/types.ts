@@ -3,7 +3,8 @@ export type User = {
   id: string;
   email: string;
   name: string;
-  username?: string;
+  username?: string | null;
+  bio?: string | null;
 };
 export type Image = {
   id?: string;

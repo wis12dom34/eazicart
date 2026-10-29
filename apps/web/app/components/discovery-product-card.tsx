@@ -22,6 +22,15 @@ const searchSizes = [
   styles.searchCard300,
 ];
 
+const hostedImage = (url: string) => /^https?:\/\//i.test(url);
+const fillGridImage = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  objectPosition: "center",
+} as const;
+
 export function DiscoveryProductCard({
   product,
   variant = "default",
@@ -30,7 +39,7 @@ export function DiscoveryProductCard({
   saving = false,
   onToggleSaved,
 }: DiscoveryProductCardProps) {
-  const image = product.images[0];
+  const image = product.images.find((item) => hostedImage(item.url));
 
   if (variant === "search") {
     const sizeClass = searchSizes[searchPosition % searchSizes.length];
@@ -42,7 +51,7 @@ export function DiscoveryProductCard({
           aria-label={`View ${product.name}`}
         />
         <div className={styles.searchProductMedia} aria-hidden="true">
-          {image ? <img src={image.url} alt="" /> : null}
+          {image ? <img src={image.url} alt="" style={fillGridImage} /> : null}
         </div>
         <Link
           className={styles.searchProductSeller}
@@ -68,12 +77,7 @@ export function DiscoveryProductCard({
             disabled={saving}
             onClick={onToggleSaved}
           >
-            <img
-              src={saved ? "/figma/heart-saved.svg" : "/figma/heart.svg"}
-              width={18}
-              height={18}
-              alt=""
-            />
+            <Icon name="heart" size={20} filled={saved} />
           </button>
         ) : null}
       </article>
@@ -88,7 +92,11 @@ export function DiscoveryProductCard({
         aria-label={`View ${product.name}`}
       >
         {image ? (
-          <img src={image.url} alt={image.altText ?? product.name} />
+          <img
+            src={image.url}
+            alt={image.altText ?? product.name}
+            style={fillGridImage}
+          />
         ) : (
           <Icon name="bag" size={30} />
         )}

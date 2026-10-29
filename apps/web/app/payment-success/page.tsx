@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -12,6 +11,7 @@ import {
   SignInState,
 } from "../components/async-state";
 import { money } from "../data";
+import { Icon } from "../components/icon";
 import { orderStatusLabel, multiplyMoney } from "../orders/order-utils";
 import styles from "./success.module.css";
 
@@ -53,13 +53,7 @@ export default function PaymentSuccess() {
   if (!data || !payment) return null;
   return (
     <main className={`app-shell ${styles.page}`} data-figma-node="156:2">
-      <img
-        className={styles.illustration}
-        src="/figma/success.svg"
-        alt=""
-        width={72}
-        height={72}
-      />
+      <Icon className={styles.illustration} name="check-circle" size={72} filled />
       <h1>Order confirmed</h1>
       <p className={styles.subtitle}>
         Your order has been placed successfully.

@@ -5,6 +5,9 @@ import { AppError } from "../../errors.js";
 import { money, protectedRoute, requireDatabase, userId } from "../shared.js";
 
 const params = z.object({ id: z.string().min(1) });
+const publicImageUrl = z.url().refine((value) => /^https?:\/\//i.test(value), {
+  message: "Product image URLs must use http or https",
+});
 const productBody = z.object({
   name: z.string().trim().min(2).max(160),
   description: z.string().trim().max(5000).nullable().optional(),
@@ -14,7 +17,7 @@ const productBody = z.object({
   images: z
     .array(
       z.object({
-        url: z.url(),
+        url: publicImageUrl,
         altText: z.string().max(300).optional(),
         position: z.number().int().min(0).optional(),
       }),
