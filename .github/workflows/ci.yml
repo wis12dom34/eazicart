@@ -84,7 +84,10 @@ jobs:
         run: pnpm build
 
       - name: Install browser
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium webkit
+
+      - name: Guard mobile comments keyboard with isolated DOM fixture
+        run: pnpm exec playwright test e2e/feed-comments-keyboard-dismissal.spec.mjs --project=mobile-chromium
 
       - name: Real customer flow against PostgreSQL
         run: pnpm test:e2e
