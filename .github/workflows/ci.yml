@@ -93,6 +93,7 @@ jobs:
         run: pnpm exec playwright test e2e/feed-comments-keyboard-dismissal.spec.mjs --config playwright.feed-keyboard-regression.config.mjs
 
       - name: Real customer flow against PostgreSQL
+        timeout-minutes: 12
         run: pnpm test:e2e
 
       - name: Generate Figma verification captures
