@@ -6,6 +6,14 @@ import { fileURLToPath } from 'node:url';
 // Resizing the viewport is NOT an emulation of a physical iOS keyboard.
 const css = readFileSync(fileURLToPath(new URL('../apps/web/app/home-social-feed.css', import.meta.url)), 'utf8');
 
+// Fail explicitly when the target branch does not contain the comments sheet styles.
+// Do not make the synthetic fixture pass by substituting unrelated test-only CSS.
+test('mobile comments sheet styles are present in the tested branch', () => {
+  for (const selector of ['.feed-comments-layer', '.feed-comments-sheet', '.feed-comments-list']) {
+    expect(css, `Missing ${selector} in home-social-feed.css`).toContain(selector);
+  }
+});
+
 for (const width of [320, 393, 430]) {
   test(`comments composer preserves draft and scroll after simulated keyboard dismissal at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 852 });
