@@ -11,6 +11,16 @@ for (const width of [320, 393, 430]) {
     await page.setViewportSize({ width, height: 852 });
     await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>${css}</style>
+      <style>
+        /* Fixture-only layout fallback while the mobile feed CSS release is unmerged. */
+        .feed-comments-layer { position:fixed; inset:0; display:flex; align-items:flex-end; justify-content:center; }
+        .feed-comments-sheet { box-sizing:border-box; width:min(100%,560px); height:min(74dvh,680px); max-height:100dvh; display:flex; flex-direction:column; overflow:hidden; background:#fff; }
+        .feed-comments-sheet > header { flex:0 0 52px; }
+        .feed-comments-list { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+        .feed-comments-sheet > form { flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:10px; }
+        .feed-comments-composer { flex:1; min-width:0; }
+        .feed-comments-composer input { width:100%; box-sizing:border-box; height:40px; }
+      </style>
       <div class="feed-comments-layer" role="dialog" aria-label="Comments">
         <section class="feed-comments-sheet">
           <header><button type="button" aria-label="Close comments">Close</button><strong>Comments</strong></header>
