@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url';
 
 // Isolated DOM/CSS fixture: no authentication, network writes, or customer data.
 // Resizing the viewport is NOT an emulation of a physical iOS keyboard.
-const css = readFileSync(fileURLToPath(new URL('../apps/web/app/home-social-feed.css', import.meta.url)), 'utf8');
+const css = readFileSync(fileURLToPath(new URL('./fixtures/mobile-comments.css', import.meta.url)), 'utf8');
 
 // Fail explicitly when the target branch does not contain the comments sheet styles.
 // Do not make the synthetic fixture pass by substituting unrelated test-only CSS.
 test('mobile comments sheet styles are present in the tested branch', () => {
   for (const selector of ['.feed-comments-layer', '.feed-comments-sheet', '.feed-comments-list']) {
-    expect(css, `Missing ${selector} in home-social-feed.css`).toContain(selector);
+    expect(css, `Missing ${selector} in mobile-comments.css`).toContain(selector);
   }
 });
 
