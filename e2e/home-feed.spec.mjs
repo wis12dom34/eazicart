@@ -7,6 +7,15 @@ import { expectCustomerNavigation } from "./customer-navigation.mjs";
 test("Home saves and supported seller/cart actions persist through the real API", async ({
   page,
 }) => {
+  // Profile-image storage is external to this PostgreSQL customer-flow test.
+  // Avoid calling Vercel Blob without credentials; seller/cart/API remain real.
+  await page.route("**/api/social-images/profile?**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ data: null }),
+    }),
+  );
   const email = `home-${randomUUID()}@eazicart.invalid`;
   const password = randomUUID();
   await page.goto("/register");
