@@ -38,7 +38,8 @@ export function SideNavigation({ onClose }: { onClose: () => void }) {
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panel.current?.focus({ preventScroll: true });
+    // Start on the first actionable control so Shift+Tab wraps within the dialog.
+    panel.current?.querySelector<HTMLElement>("button:not([disabled])")?.focus({ preventScroll: true });
 
     const key = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
