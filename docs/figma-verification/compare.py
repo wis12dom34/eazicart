@@ -40,6 +40,11 @@ for reference in sorted(captures.glob("*-reference.png")):
     }
 
 continuation_names = [
+    "chat",
+    "notifications",
+    "notifications-empty",
+    "notifications-loading",
+    "notifications-error",
     "saved",
     "following",
     "reviews-history",

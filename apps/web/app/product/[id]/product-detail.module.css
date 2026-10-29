@@ -254,7 +254,7 @@
   color: #a0a2a6;
 }
 
-@media (min-width: 560px) {
+@media (min-width: 560px) and (max-width: 1359px) {
   .content {
     padding-inline: 24px;
   }
@@ -269,8 +269,123 @@
     transition: none;
   }
 }
+
 .galleryDot {
   width: 44px;
   height: 44px;
   margin-inline: -7px;
+}
+
+@media (min-width: 1360px) {
+  .page {
+    max-width: none !important;
+    width: 100%;
+    min-height: 1024px;
+    display: grid;
+    grid-template-columns: 360px minmax(0, 272px);
+    grid-template-rows: 76px 440px auto;
+    column-gap: 20px;
+    align-content: start;
+    padding: 0 30px 50px !important;
+  }
+
+  .page :global(.app-header) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    position: static !important;
+    height: 76px;
+    padding: 0;
+    border-bottom: 1px solid #e5e8ec;
+    display: flex;
+    align-items: center;
+  }
+
+  .page :global(.app-header) > a {
+    display: none;
+  }
+
+  .page :global(.app-header) h1 {
+    font-size: 21px;
+    line-height: 26px;
+    font-weight: 600;
+  }
+
+  .headerActions {
+    margin-left: auto;
+  }
+
+  .media {
+    grid-column: 1;
+    grid-row: 2;
+    width: 360px;
+    height: 440px;
+    aspect-ratio: auto;
+    margin-top: 28px;
+    border: 0;
+    border-radius: 20px;
+    background: #f8f9fa !important;
+  }
+
+  .media::after {
+    display: none;
+  }
+
+  .galleryMeta {
+    bottom: 8px;
+  }
+
+  .content {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 28px 0 0;
+    min-width: 0;
+  }
+
+  .title {
+    font-size: 22px !important;
+    line-height: 27px;
+  }
+
+  .price {
+    margin-top: 26px;
+    color: #ff5c0f;
+    font-size: 23px;
+  }
+
+  .socialProof {
+    margin-top: 10px;
+    font-size: 11px;
+  }
+
+  .sellerCard {
+    margin-top: 28px;
+    background: #fff;
+  }
+
+  .divider {
+    margin: 18px 0;
+  }
+
+  .description {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .actions {
+    grid-column: 2;
+    grid-row: 3;
+    position: static !important;
+    align-self: start;
+    display: grid !important;
+    padding: 18px 0 0 !important;
+    border: 0;
+    box-shadow: none;
+    background: #fff;
+    backdrop-filter: none;
+  }
+
+  .actionButton {
+    min-height: 44px;
+    border-radius: 22px;
+  }
 }

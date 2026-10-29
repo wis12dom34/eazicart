@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -8,6 +7,8 @@ import { BottomNavigation } from "../components/bottom-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./settings.module.css";
+import { ProfileAvatar } from "../components/profile-avatar";
+import { Icon } from "../components/icon";
 
 export default function SettingsPage() {
   const auth = useAuth();
@@ -26,12 +27,7 @@ export default function SettingsPage() {
           href="/profile"
           aria-label="Back to profile"
         >
-          <img
-            src="/figma/address-select-back.svg"
-            width={10}
-            height={18}
-            alt=""
-          />
+          <Icon name="back" size={22} />
         </Link>
         <h1>Account Settings</h1>
       </header>
@@ -48,7 +44,9 @@ export default function SettingsPage() {
                 className={styles.identityCard}
                 aria-label="Account identity"
               >
-                <div className={styles.avatar} aria-hidden="true" />
+                <div className={styles.avatar} aria-hidden="true">
+                  <ProfileAvatar userId={auth.user.id} name={auth.user.name} />
+                </div>
                 <div className={styles.identityCopy}>
                   <strong>{auth.user.name}</strong>
                   <span>
@@ -120,7 +118,7 @@ function SettingLink({
         <strong>{label}</strong>
         <span>{detail}</span>
       </span>
-      <img src="/figma/profile-chevron.svg" width={24} height={44} alt="" />
+      <Icon name="chevron" size={20} />
     </Link>
   );
 }

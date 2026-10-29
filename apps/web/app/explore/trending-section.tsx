@@ -8,6 +8,7 @@ import {
   ErrorState,
   LoadingState,
 } from "../components/async-state";
+import { Icon } from "../components/icon";
 
 export function TrendingSection({
   reels,
@@ -25,13 +26,12 @@ export function TrendingSection({
     .slice(0, 12);
 
   return (
-    <section
-      className="figma-explore-reels"
-      aria-labelledby="explore-trending"
-    >
+    <section className="figma-explore-reels" aria-labelledby="explore-trending">
       <div>
         <h2 id="explore-trending">Trending now</h2>
-        <Link href="/reels">View all ›</Link>
+        <Link href="/reels">
+          View all <Icon name="chevron" size={14} />
+        </Link>
       </div>
       {loading ? (
         <LoadingState label="Loading trending products…" />
@@ -47,16 +47,16 @@ export function TrendingSection({
             >
               {reel.thumbnailUrl || reel.product?.images[0]?.url ? (
                 <img
-                  src={
-                    reel.thumbnailUrl ?? reel.product?.images[0]?.url ?? ""
-                  }
+                  src={reel.thumbnailUrl ?? reel.product?.images[0]?.url ?? ""}
                   alt=""
                 />
               ) : (
                 <i />
               )}
               <strong>{reel.caption || reel.product?.name || "Reel"}</strong>
-              <span>▶ {reel._count.views}</span>
+              <span>
+                <Icon name="play" size={12} filled /> {reel._count.views}
+              </span>
             </Link>
           ))}
         </div>

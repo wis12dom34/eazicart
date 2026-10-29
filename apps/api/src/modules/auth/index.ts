@@ -1,10 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import argon2 from "argon2";
-import type {
-  FastifyInstance,
-  FastifyReply,
-  FastifyRequest,
-} from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
 import type { AppConfig } from "../../config.js";
@@ -30,7 +26,13 @@ const registration = credentials.extend({
   name: z.string().trim().min(2).max(100),
 });
 const refreshBody = z.object({ refreshToken: z.string().min(1).optional() });
-const publicUser = ({ id, email, name }: StoredUser) => ({ id, email, name });
+const publicUser = ({ id, email, name, username, bio }: StoredUser) => ({
+  id,
+  email,
+  name,
+  username: username ?? null,
+  bio: bio ?? null,
+});
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 
@@ -122,7 +124,12 @@ export function registerAuth(
 
   const issueSession = async (reply: FastifyReply, userId: string) => {
     const tokens = await issueTokens(userId);
-    setRefreshCookie(reply, tokens.refreshToken, tokens.expiresAt, secureCookie);
+    setRefreshCookie(
+      reply,
+      tokens.refreshToken,
+      tokens.expiresAt,
+      secureCookie,
+    );
     return {
       accessToken: tokens.accessToken,
       // Kept temporarily for backwards compatibility while old web sessions migrate.

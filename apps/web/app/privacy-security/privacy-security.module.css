@@ -26,14 +26,12 @@
   cursor: pointer;
 }
 
-.back img {
-  display: block;
-}
+.back img { display: block; }
 
 .menu {
   position: absolute;
   top: 0;
-  bottom: calc(88px + env(safe-area-inset-bottom));
+  bottom: calc(var(--customer-nav-height) + env(safe-area-inset-bottom));
   left: 0;
   width: min(393px, 100%);
   overflow-x: hidden;
@@ -41,9 +39,7 @@
   scrollbar-width: none;
 }
 
-.menu::-webkit-scrollbar {
-  display: none;
-}
+.menu::-webkit-scrollbar { display: none; }
 
 .menu h1 {
   position: absolute;
@@ -87,15 +83,8 @@
   color: #6b707a;
 }
 
-.privacyTitle {
-  top: calc(403.97px + var(--privacy-safe-top-shift));
-  color: #6b707a;
-}
-
-.dangerTitle {
-  top: calc(700.09px + var(--privacy-safe-top-shift));
-  color: #db2e33;
-}
+.privacyTitle { top: calc(403.97px + var(--privacy-safe-top-shift)); color: #6b707a; }
+.dangerTitle { top: calc(700.09px + var(--privacy-safe-top-shift)); color: #db2e33; }
 
 .securityRow,
 .privacyRow {
@@ -109,24 +98,10 @@
   text-align: left;
 }
 
-.securityRow {
-  height: 56.665px;
-  padding: 0;
-  border-radius: 14.623px;
-}
-
-.passwordRow {
-  top: calc(171.82px + var(--privacy-safe-top-shift));
-  cursor: pointer;
-}
-
-.twoStepRow {
-  top: calc(243.11px + var(--privacy-safe-top-shift));
-}
-
-.activityRow {
-  top: calc(314.4px + var(--privacy-safe-top-shift));
-}
+.securityRow { height: 56.665px; padding: 0; border-radius: 14.623px; }
+.passwordRow { top: calc(171.82px + var(--privacy-safe-top-shift)); cursor: pointer; }
+.twoStepRow { top: calc(243.11px + var(--privacy-safe-top-shift)); }
+.activityRow { top: calc(314.4px + var(--privacy-safe-top-shift)); }
 
 .securityRow > span {
   position: absolute;
@@ -137,59 +112,16 @@
 }
 
 .securityRow strong,
-.securityRow small {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.securityRow strong {
-  color: #0a0a0d;
-  font-size: 12.795px;
-  font-weight: 600;
-  line-height: normal;
-}
-
-.securityRow small {
-  margin-top: 6.2px;
-  color: #6b707a;
-  font-size: 10.053px;
-  font-weight: 400;
-  line-height: normal;
-}
-
-.passwordRow > img {
-  position: absolute;
-  top: 6.33px;
-  right: 8.5px;
-  display: block;
-}
-
-.disabledRow {
-  cursor: not-allowed;
-}
-
-.privacyRow {
-  height: 49.353px;
-  border-radius: 12.795px;
-}
-
-.visibilityRow {
-  top: calc(431.39px + var(--privacy-safe-top-shift));
-}
-
-.recommendationsRow {
-  top: calc(495.36px + var(--privacy-safe-top-shift));
-}
-
-.blockedRow {
-  top: calc(559.34px + var(--privacy-safe-top-shift));
-}
-
-.downloadRow {
-  top: calc(623.32px + var(--privacy-safe-top-shift));
-}
+.securityRow small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.securityRow strong { color: #0a0a0d; font-size: 12.795px; font-weight: 600; line-height: normal; }
+.securityRow small { margin-top: 6.2px; color: #6b707a; font-size: 10.053px; font-weight: 400; line-height: normal; }
+.passwordRow > img { position: absolute; top: 6.33px; right: 8.5px; display: block; }
+.disabledRow { cursor: not-allowed; }
+.privacyRow { height: 49.353px; border-radius: 12.795px; }
+.visibilityRow { top: calc(431.39px + var(--privacy-safe-top-shift)); }
+.recommendationsRow { top: calc(495.36px + var(--privacy-safe-top-shift)); }
+.blockedRow { top: calc(559.34px + var(--privacy-safe-top-shift)); }
+.downloadRow { top: calc(623.32px + var(--privacy-safe-top-shift)); }
 
 .privacyRow strong {
   position: absolute;
@@ -234,109 +166,53 @@
   cursor: not-allowed;
 }
 
-.stateWrap {
-  position: absolute;
-  top: calc(92px + var(--privacy-safe-top-shift));
-  left: 20px;
-  right: 20px;
-}
+.stateWrap { position: absolute; top: calc(92px + var(--privacy-safe-top-shift)); left: 20px; right: 20px; }
 
 .passwordPanel {
   position: absolute;
   top: calc(69.46px + var(--privacy-safe-top-shift));
   right: 21.93px;
-  bottom: calc(104px + env(safe-area-inset-bottom));
+  bottom: calc(var(--customer-nav-height) + 16px + env(safe-area-inset-bottom));
   left: 21.93px;
   overflow-y: auto;
   padding-bottom: 28px;
 }
 
-.passwordPanel h1 {
-  margin: 0;
-  color: #0a0a0d;
-  font-size: 25.591px;
-  font-weight: 700;
-  line-height: normal;
-}
-
-.passwordPanel > p {
-  margin: 8px 0 20px;
-  color: #6b707a;
-  font-size: 12px;
-  line-height: 17px;
-}
-
-.passwordPanel form {
-  display: grid;
-  gap: 16px;
-}
-
-.field {
-  display: grid;
-  gap: 8px;
-}
-
-.field span {
-  color: #0a0a0d;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.field input {
-  width: 100%;
-  height: 52px;
-  padding: 0 14px;
-  border: 1px solid #e5e8ed;
-  border-radius: 14px;
-  outline: 0;
-  font-size: 15px;
-}
-
-.field input:focus {
-  border-color: #aeb4bd;
-  box-shadow: 0 0 0 3px #0d73f214;
-}
-
-.error {
-  margin: 0;
-  color: #d92d20;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.updateButton {
-  height: 54px;
-  margin-top: 8px;
-  border: 0;
-  border-radius: 16px;
-  background: #0a0a0d;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.updateButton:disabled {
-  cursor: wait;
-  opacity: 0.7;
-}
+.passwordPanel h1 { margin: 0; color: #0a0a0d; font-size: 25.591px; font-weight: 700; line-height: normal; }
+.passwordPanel > p { margin: 8px 0 20px; color: #6b707a; font-size: 12px; line-height: 17px; }
+.passwordPanel form { display: grid; gap: 16px; }
+.field { display: grid; gap: 8px; }
+.field span { color: #0a0a0d; font-size: 13px; font-weight: 600; }
+.field input { width: 100%; height: 52px; padding: 0 14px; border: 1px solid #e5e8ed; border-radius: 14px; outline: 0; font-size: 15px; }
+.field input:focus { border-color: #aeb4bd; box-shadow: 0 0 0 3px #0d73f214; }
+.error { margin: 0; color: #d92d20; font-size: 13px; line-height: 18px; }
+.updateButton { height: 54px; margin-top: 8px; border: 0; border-radius: 16px; background: #0a0a0d; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+.updateButton:disabled { cursor: wait; opacity: 0.7; }
 
 @media (max-width: 392px) {
-  .privacyRow small {
-    left: auto;
-    right: 16px;
-    max-width: 82px;
-    text-align: right;
-  }
-
-  .privacyRow strong {
-    right: 106px;
-  }
+  .privacyRow small { left: auto; right: 16px; max-width: 82px; text-align: right; }
+  .privacyRow strong { right: 106px; }
 }
 
-@media (min-width: 700px) {
-  .page {
-    margin: 0 auto;
-    box-shadow: 0 0 0 1px rgba(10, 10, 13, 0.04);
-  }
+@media (min-width: 700px) and (max-width: 1359px) {
+  .page { margin: 0 auto; box-shadow: 0 0 0 1px rgba(10, 10, 13, 0.04); }
+}
+
+@media (min-width: 1360px) {
+  .page { position: relative; max-width: none; height: 100dvh; min-height: 760px; overflow: hidden; }
+  .back { display: none; }
+  .menu { position: absolute; inset: 0; width: 100%; padding: 28px; overflow-y: auto; }
+  .menu h1 { position: static; font-size: 24px; line-height: 30px; }
+  .subtitle { position: static; margin-top: 6px; font-size: 13px; }
+  .securityTitle { position: static; margin: 30px 0 10px; font-size: 12px; letter-spacing: .02em; }
+  .securityRow { position: relative; left: auto; right: auto; top: auto; width: 100%; height: 68px; border-radius: 16px; }
+  .securityRow > span { top: 14px; left: 18px; }
+  .securityRow strong { font-size: 14px; }
+  .securityRow small { font-size: 12px; }
+  .passwordPanel { position: absolute; top: 28px; right: 28px; bottom: 28px; left: 28px; padding: 0; max-width: 560px; }
+  .passwordPanel h1 { font-size: 24px; }
+  .passwordPanel > p { font-size: 13px; margin-bottom: 24px; }
+  .field input { height: 50px; border-radius: 12px; }
+  .updateButton { width: max-content; min-width: 160px; height: 46px; padding: 0 22px; border-radius: 23px; background: #ff5c0f; }
+  .stateWrap { top: 96px; left: 28px; right: 28px; }
 }

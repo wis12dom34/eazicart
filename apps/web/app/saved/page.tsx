@@ -164,12 +164,7 @@ export default function SavedPage() {
                         aria-busy={isRemoving}
                         aria-pressed="true"
                       >
-                        <img
-                          src="/figma/heart-saved.svg"
-                          width={18}
-                          height={18}
-                          alt=""
-                        />
+                        <Icon name="heart" size={20} filled />
                       </button>
                     </article>
                   );

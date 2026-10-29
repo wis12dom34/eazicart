@@ -1,3 +1,4 @@
+import { browserSessionTokens } from "./helpers/session.mjs";
 import { expectCustomerNavigation } from "./customer-navigation.mjs";
 import { test, expect } from "@playwright/test";
 import { randomUUID } from "node:crypto";
@@ -29,18 +30,16 @@ test("payment settings stay honest and notifications use live account data", asy
     page.getByRole("button", { name: /Add payment method/ }),
   ).toHaveCount(0);
   await expect(
-    page.getByText("Card storage is not available yet", {
+    page.getByText("Cards and wallet balances are not stored in EaziCart yet", {
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
+  await expect(page.getByText("Online payment", { exact: true })).toBeVisible();
   await expect(page.getByText(/Balance ₦86,400/)).toHaveCount(0);
   await expect(page.getByText(/Visa •••• 2048/)).toHaveCount(0);
   await expectCustomerNavigation(page);
 
-  const tokens = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("eazicart.auth.tokens")),
-  );
+  const tokens = await browserSessionTokens(page);
   const headers = { Authorization: `Bearer ${tokens.accessToken}` };
   const address = await request.post(`${api}/addresses`, {
     headers,
@@ -77,9 +76,9 @@ test("payment settings stay honest and notifications use live account data", asy
   const filters = page.getByLabel("Notification filters");
   await filters.getByRole("button", { name: "Orders" }).click();
   await expect(page.getByText("Order received", { exact: true })).toBeVisible();
-  await filters.getByRole("button", { name: "Social" }).click();
+  await filters.getByRole("button", { name: "Messages" }).click();
   await expect(
-    page.getByRole("heading", { name: "No social notifications" }),
+    page.getByRole("heading", { name: "No message notifications" }),
   ).toBeVisible();
   await filters.getByRole("button", { name: "All" }).click();
 

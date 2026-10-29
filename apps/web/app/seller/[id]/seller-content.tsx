@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProductGrid } from "../../components/product-card";
 import { ErrorState, LoadingState } from "../../components/async-state";
+import { BottomNavigation } from "../../components/bottom-navigation";
+import { ProfileAvatar } from "../../components/profile-avatar";
 import { Icon } from "../../components/icon";
 import { sellersApi } from "../../../lib/api/sellers";
 import { followsApi } from "../../../lib/api/follows";
@@ -15,6 +17,12 @@ import styles from "./seller-profile.module.css";
 import type { Product, Seller } from "../../../lib/api/types";
 
 type SellerTab = "products" | "reels" | "reviews" | "about";
+
+const compactNumber = (value: number) =>
+  new Intl.NumberFormat("en", {
+    notation: value >= 1000 ? "compact" : "standard",
+    maximumFractionDigits: 1,
+  }).format(value);
 
 export default function SellerPage({
   id,
@@ -47,8 +55,12 @@ export default function SellerPage({
     initialError,
   );
   const reels = useRequest(() => reelsApi.feed({ limit: 20 }), [id]);
-  const count = useRequest(
+  const followerCountRequest = useRequest(
     () => followsApi.count(seller.data?.data.userId ?? id),
+    [seller.data?.data.userId, id],
+  );
+  const followingCountRequest = useRequest(
+    () => followsApi.followingCount(seller.data?.data.userId ?? id),
     [seller.data?.data.userId, id],
   );
   const [message, setMessage] = useState("");
@@ -62,21 +74,25 @@ export default function SellerPage({
 
   if (seller.loading && !seller.data) {
     return (
-      <main className={`app-shell ${styles.page}`}>
-        <SellerBackLink />
+      <main className={`app-shell with-nav ${styles.page}`}>
+        <SellerTopbar title="Seller" />
         <LoadingState />
+        <BottomNavigation activeHref="/explore" />
       </main>
     );
   }
 
   if (!seller.data) {
     return (
-      <main className={`app-shell ${styles.page}`}>
-        <SellerBackLink />
-        <h1>Store details temporarily unavailable</h1>
-        <p>Browse other products while we reconnect to this storefront.</p>
-        <Link href="/explore">Explore products</Link>
-        <ErrorState message={seller.error || "Seller not found"} />
+      <main className={`app-shell with-nav ${styles.page}`}>
+        <SellerTopbar title="Seller" />
+        <section className={styles.errorPage}>
+          <h1>Store details temporarily unavailable</h1>
+          <p>Browse other products while we reconnect to this storefront.</p>
+          <Link href="/explore">Explore products</Link>
+          <ErrorState message={seller.error || "Seller not found"} />
+        </section>
+        <BottomNavigation activeHref="/explore" />
       </main>
     );
   }
@@ -88,14 +104,8 @@ export default function SellerPage({
     (reel) => reel.seller?.id === id || reel.product?.seller.id === id,
   );
   const followerCount =
-    count.data?.data.count ?? currentSeller.followerCount ?? 0;
-  const initials = currentSeller.displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+    followerCountRequest.data?.data.count ?? currentSeller.followerCount ?? 0;
+  const followingCount = followingCountRequest.data?.data.count ?? 0;
 
   const follow = async () => {
     if (!auth.isAuthenticated) {
@@ -108,7 +118,7 @@ export default function SellerPage({
       if (following) await followsApi.unfollow(currentSeller.userId);
       else await followsApi.follow(currentSeller.userId);
       await follows.reload();
-      await count.reload();
+      await followerCountRequest.reload();
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Unable to update follow",
@@ -116,44 +126,89 @@ export default function SellerPage({
     }
   };
 
+  const shareStore = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: currentSeller.displayName, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setMessage("Store link copied");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setMessage("Unable to share this store right now");
+    }
+  };
+
   return (
-    <main className={`app-shell ${styles.page}`}>
-      <SellerBackLink />
+    <main className={`app-shell with-nav ${styles.page}`}>
+      <SellerTopbar title={currentSeller.displayName} onShare={shareStore} />
 
-      <section className={styles.intro}>
-        <h1>{currentSeller.displayName}</h1>
-        <p>Seller storefront</p>
-      </section>
-
-      <section className={styles.summaryCard} aria-label="Seller summary">
-        <div className={styles.avatar} aria-hidden="true">
-          {initials || "S"}
-        </div>
-        <div className={styles.summaryContent}>
-          <div className={styles.summaryHeading}>
-            <h2>{currentSeller.displayName}</h2>
-            <button
-              className={`${styles.followButton} ${following ? styles.following : ""}`}
-              type="button"
-              disabled={auth.loading || follows.loading}
-              aria-pressed={following}
-              onClick={() => void follow()}
-            >
-              {following ? "Following" : "Follow"}
-            </button>
+      <section className={styles.storefrontHeader} aria-label="Seller profile">
+        <div className={styles.cover} aria-hidden="true" />
+        <div className={styles.profileBody}>
+          <div className={styles.profileTopRow}>
+            <div className={styles.storyRing}>
+              <div className={styles.avatar}>
+                <ProfileAvatar
+                  userId={currentSeller.userId}
+                  name={currentSeller.displayName}
+                />
+              </div>
+            </div>
+            <div className={styles.actions}>
+              <Link
+                className={styles.messageButton}
+                href={`/chat?seller=${encodeURIComponent(currentSeller.id)}`}
+              >
+                Message
+              </Link>
+              <button
+                className={`${styles.followButton} ${following ? styles.following : ""}`}
+                type="button"
+                disabled={auth.loading || follows.loading}
+                aria-pressed={following}
+                onClick={() => void follow()}
+              >
+                {following ? "Following" : "Follow"}
+              </button>
+            </div>
           </div>
-          <p className={styles.metrics}>
-            {followerCount} {followerCount === 1 ? "follower" : "followers"} ·{" "}
-            {productCount} {productCount === 1 ? "product" : "products"}
-          </p>
-          {currentSeller.bio ? (
-            <p className={styles.bio}>{currentSeller.bio}</p>
-          ) : null}
+
+          <div className={styles.identity}>
+            <h1>{currentSeller.displayName}</h1>
+            <p className={styles.handle}>Seller storefront</p>
+            {currentSeller.bio ? (
+              <p className={styles.bio}>{currentSeller.bio}</p>
+            ) : null}
+            {currentSeller.location?.label ? (
+              <p className={styles.location}>
+                <Icon name="location" size={14} />
+                {currentSeller.location.label}
+              </p>
+            ) : null}
+          </div>
+
+          <div className={styles.socialStats} aria-label="Seller social stats">
+            <span>
+              <strong>{compactNumber(followingCount)}</strong> Following
+            </span>
+            <span>
+              <strong>{compactNumber(followerCount)}</strong> Followers
+            </span>
+          </div>
+
+          <div className={styles.performance} aria-label="Store activity">
+            <span>{compactNumber(productCount)} Products</span>
+            <span>{compactNumber(sellerReels.length)} Reels</span>
+            <span>On EaziCart</span>
+          </div>
         </div>
       </section>
 
       {message ? (
-        <p className={styles.alert} role="alert">
+        <p className={styles.alert} role="status">
           {message}
         </p>
       ) : null}
@@ -190,16 +245,12 @@ export default function SellerPage({
       </div>
 
       <section
-        className={styles.panel}
+        className={`${styles.panel} ${styles.productsPanel}`}
         id="seller-products-panel"
         role="tabpanel"
         aria-labelledby="seller-products-tab"
         hidden={activeTab !== "products"}
       >
-        <div className={styles.panelHeader}>
-          <h2>Products</h2>
-          <span>{productCount} available</span>
-        </div>
         {products.loading && !products.data ? (
           <LoadingState />
         ) : products.error && !products.data ? (
@@ -223,12 +274,6 @@ export default function SellerPage({
         aria-labelledby="seller-reels-tab"
         hidden={activeTab !== "reels"}
       >
-        <div className={styles.panelHeader}>
-          <h2>Reels</h2>
-          {sellerReels.length ? (
-            <span>{sellerReels.length} available</span>
-          ) : null}
-        </div>
         {reels.loading ? (
           <LoadingState label="Loading reels…" />
         ) : reels.error ? (
@@ -251,13 +296,17 @@ export default function SellerPage({
                       alt=""
                     />
                   ) : (
-                    <span aria-hidden="true">Play</span>
+                    <span className={styles.reelFallback} aria-hidden="true">
+                      <Icon name="play" size={22} filled />
+                    </span>
                   )}
+                  <span className={styles.reelTitle}>
+                    {reel.caption || reel.product?.name || "Reel"}
+                  </span>
+                  <span className={styles.reelViews}>
+                    <Icon name="play" size={12} filled /> {compactNumber(reel._count.views)}
+                  </span>
                 </div>
-                <strong>{reel.caption || reel.product?.name || "Reel"}</strong>
-                <small>
-                  {reel._count.views} views · {reel._count.comments} comments
-                </small>
               </Link>
             ))}
           </div>
@@ -267,6 +316,19 @@ export default function SellerPage({
             <p>This seller has not published any Reels.</p>
           </div>
         )}
+      </section>
+
+      <section
+        className={styles.panel}
+        id="seller-reviews-panel"
+        role="tabpanel"
+        aria-labelledby="seller-reviews-tab"
+        hidden={activeTab !== "reviews"}
+      >
+        <div className={styles.emptyCard}>
+          <h2>Reviews</h2>
+          <p>Seller reviews are not available yet.</p>
+        </div>
       </section>
 
       <section
@@ -283,39 +345,51 @@ export default function SellerPage({
           </p>
           <div className={styles.aboutStats}>
             <div>
-              <strong>{followerCount}</strong>
-              <span>{followerCount === 1 ? "Follower" : "Followers"}</span>
+              <strong>{compactNumber(followerCount)}</strong>
+              <span>Followers</span>
             </div>
             <div>
-              <strong>{productCount}</strong>
-              <span>{productCount === 1 ? "Product" : "Products"}</span>
+              <strong>{compactNumber(productCount)}</strong>
+              <span>Products</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section
-        className={styles.panel}
-        id="seller-reviews-panel"
-        role="tabpanel"
-        aria-labelledby="seller-reviews-tab"
-        hidden={activeTab !== "reviews"}
-      >
-        <div className={styles.emptyCard}>
-          <h2>Reviews</h2>
-          <p>Seller reviews are not available yet.</p>
-        </div>
-      </section>
+      <BottomNavigation activeHref="/explore" />
     </main>
   );
 }
 
-function SellerBackLink() {
+function SellerTopbar({
+  title,
+  onShare,
+}: {
+  title: string;
+  onShare?: () => Promise<void>;
+}) {
   return (
     <header className={styles.topbar}>
       <Link className={styles.back} href="/explore" aria-label="Go back">
-        <Icon name="back" />
+        <Icon name="back" size={20} />
       </Link>
+      <strong className={styles.topbarTitle}>{title}</strong>
+      <Link
+        className={styles.searchButton}
+        href={`/search?q=${encodeURIComponent(title)}`}
+        aria-label={`Search ${title}`}
+      >
+        <Icon name="search" size={20} />
+      </Link>
+      <button
+        className={styles.moreButton}
+        type="button"
+        aria-label="Share store"
+        disabled={!onShare}
+        onClick={() => void onShare?.()}
+      >
+        <Icon name="more" size={20} />
+      </button>
     </header>
   );
 }

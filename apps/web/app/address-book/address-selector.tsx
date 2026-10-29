@@ -1,9 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import Link from "next/link";
 import { useState } from "react";
 import type { Address } from "../../lib/api/types";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
 import styles from "./address-selector.module.css";
 
 export function AddressSelector({
@@ -35,7 +35,7 @@ export function AddressSelector({
           }
           aria-label="Back to checkout"
         >
-          <img src="/figma/address-select-back.svg" alt="" />
+          <Icon name="back" size={22} />
         </Link>
         <h1>Delivery address</h1>
         <p>Choose where this order should be delivered.</p>
@@ -67,7 +67,11 @@ export function AddressSelector({
                   .filter(Boolean)
                   .join(" · ")}
               </p>
-              {address.isDefault ? <b>✓ Default</b> : null}
+              {address.isDefault ? (
+                <b>
+                  <Icon name="check" size={15} /> Default
+                </b>
+              ) : null}
             </button>
             <button
               type="button"
@@ -81,7 +85,7 @@ export function AddressSelector({
         ))}
       </section>
       <button type="button" className={styles.add} onClick={onAdd}>
-        + Add new address
+        <Icon name="plus" size={18} /> Add new address
       </button>
       {selected ? (
         <Link

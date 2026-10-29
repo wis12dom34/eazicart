@@ -8,7 +8,14 @@ export class PrismaAuthStore implements AuthStore {
     return (
       (await this.database.user.findUnique({
         where: { email },
-        select: { id: true, email: true, name: true, passwordHash: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          username: true,
+          bio: true,
+          passwordHash: true,
+        },
       })) ?? undefined
     );
   }
@@ -17,7 +24,14 @@ export class PrismaAuthStore implements AuthStore {
     return (
       (await this.database.user.findUnique({
         where: { id },
-        select: { id: true, email: true, name: true, passwordHash: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          username: true,
+          bio: true,
+          passwordHash: true,
+        },
       })) ?? undefined
     );
   }
@@ -30,7 +44,14 @@ export class PrismaAuthStore implements AuthStore {
     try {
       return await this.database.user.create({
         data: input,
-        select: { id: true, email: true, name: true, passwordHash: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          username: true,
+          bio: true,
+          passwordHash: true,
+        },
       });
     } catch (error) {
       if (

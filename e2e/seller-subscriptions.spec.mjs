@@ -84,12 +84,11 @@ test("seller subscription catalog is real, private and unpriced until configured
   expect((await current.json()).data).toEqual({ subscription: null });
 });
 
-test("seller subscription screen exposes no fake pricing or purchase action", async ({
+test("subscription pricing, navigation and payment availability follow the current plans", async ({
   page,
 }) => {
   const email = `subscription-ui-${randomUUID()}@eazicart.invalid`;
   const password = `subscription-ui-${randomUUID()}`;
-
   await page.goto("/register");
   await page.getByLabel("Full name").fill("Subscription UI Owner");
   await page.getByLabel("Email address").fill(email);
@@ -98,32 +97,57 @@ test("seller subscription screen exposes no fake pricing or purchase action", as
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL("http://localhost:3000/");
 
-  await page.goto("/seller/dashboard");
-  await page.getByLabel("Store name").fill("Subscription UI Store");
-  await page.getByRole("button", { name: "Create seller profile" }).click();
+  await page.goto("/seller/subscription?plan=PRO&billing=MONTHLY");
   await expect(
-    page.getByRole("heading", { name: "Subscription UI Store", exact: true }),
+    page.getByRole("heading", {
+      name: "More for your store. One simple plan.",
+    }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Subscription" }).click();
-  await expect(page).toHaveURL("http://localhost:3000/seller/subscription");
-
+  await page.getByRole("button", { name: /₦49,900 yearly/ }).click();
+  await expect(page).toHaveURL(/billing=YEARLY/);
   await expect(
-    page.getByRole("heading", { name: "Plans built for your store" }),
-  ).toBeVisible();
-  await expect(page.getByText("No active subscription")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Basic" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Pro" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Business" })).toBeVisible();
-  await expect(page.getByText("Pricing not configured")).toHaveCount(3);
-  await expect(page.getByText("Not configured", { exact: true })).toHaveCount(
-    9,
+    page.getByRole("button", { name: /₦49,900 yearly/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.goBack();
+  await expect(
+    page.getByRole("button", { name: /₦2,999 monthly/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.goForward();
+  await page.getByRole("link", { name: "Upgrade to Pro", exact: true }).click();
+  await expect(page).toHaveURL(/review\?plan=PRO&billing=YEARLY/);
+  await expect(page.getByLabel("Subscription summary")).toContainText(
+    "₦49,900",
   );
   await expect(
-    page.getByRole("button", { name: "Not available yet" }),
-  ).toHaveCount(3);
-  for (const button of await page
-    .getByRole("button", { name: "Not available yet" })
-    .all()) {
-    await expect(button).toBeDisabled();
-  }
+    page.getByText(
+      "₦49,900 billed yearly. The monthly launch offer does not apply.",
+    ),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /Payment method/ }).click();
+  await page
+    .getByRole("button", { name: /Bank transfer Manual renewal/ })
+    .click();
+  await expect(page).toHaveURL(/method=TRANSFER/);
+  await expect(
+    page.getByRole("button", { name: /Payment method/ }),
+  ).toContainText("Bank transfer");
+  await expect(
+    page.getByRole("button", { name: "Continue to secure payment" }),
+  ).toBeDisabled();
+  await page.getByRole("link", { name: "Back to plans", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: /₦49,900 yearly/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("link", { name: "Upgrade to Pro", exact: true }).click();
+  await expect(page).toHaveURL(/method=TRANSFER/);
+  await page.getByRole("link", { name: "Back to plans", exact: true }).click();
+  await page.getByRole("tab", { name: "Basic", exact: true }).click();
+  await expect(page.getByText("Free", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Start selling for free" }),
+  ).toHaveAttribute("href", "/seller/dashboard");
+  await page.getByRole("tab", { name: "Business", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Business coming soon" }),
+  ).toBeDisabled();
 });

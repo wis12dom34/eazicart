@@ -186,16 +186,26 @@ export const reelsApi = {
     reelId: string,
     params: { cursor?: string; limit?: number } = {},
   ): Promise<ReelCommentsResponse> => {
-    const response = await apiRequest<Partial<ReelCommentsResponse>>(
-      `/reels/${reelId}/comments`,
-      {
-        query: { cursor: params.cursor, limit: params.limit ?? 30 },
-      },
-    );
-    return {
-      data: response.data ?? [],
-      pagination: response.pagination ?? { nextCursor: null, hasMore: false },
-    };
+    try {
+      const response = await apiRequest<Partial<ReelCommentsResponse>>(
+        `/reels/${reelId}/comments`,
+        {
+          query: { cursor: params.cursor, limit: params.limit ?? 30 },
+        },
+      );
+      return {
+        data: response.data ?? [],
+        pagination:
+          response.pagination ?? { nextCursor: null, hasMore: false },
+      };
+    } catch {
+      // Do not block the composer just because comment history failed to load.
+      // Posting still uses the authenticated POST endpoint and will surface its own error.
+      return {
+        data: [],
+        pagination: { nextCursor: null, hasMore: false },
+      };
+    }
   },
   comment: (reelId: string, body: string) =>
     apiRequest<{ data: ReelComment }>(`/reels/${reelId}/comments`, {

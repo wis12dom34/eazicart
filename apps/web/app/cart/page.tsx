@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
 import { money } from "../data";
 import type { CartItem } from "../../lib/api/types";
 import { cartApi } from "../../lib/api/cart";
@@ -77,8 +78,8 @@ export default function CartPage() {
         <div className={styles.statePage}>
           <h1>Cart</h1>
           <section className={styles.emptyHero}>
-            <div className={styles.emptyIcon}>
-              <img src="/figma/cart-empty.svg" width={24} height={24} alt="" />
+            <div className={styles.emptyIcon} aria-hidden="true">
+              <Icon name="cart" size={42} />
             </div>
             <h2>Your cart is empty</h2>
             <p>Discover products from sellers you follow and trust.</p>
@@ -242,7 +243,7 @@ export default function CartPage() {
                     : mutate(() => cartApi.update(item.id, item.quantity - 1)))
                 }
               >
-                −
+                <Icon name="minus" size={18} />
               </button>
               <span>{item.quantity}</span>
               <button
@@ -253,7 +254,7 @@ export default function CartPage() {
                   void mutate(() => cartApi.update(item.id, item.quantity + 1))
                 }
               >
-                +
+                <Icon name="plus" size={18} />
               </button>
             </div>
           </article>
@@ -324,14 +325,14 @@ function CartHeader() {
   return (
     <header className={styles.header}>
       <Link className={styles.headerButton} href="/" aria-label="Back to home">
-        <img src="/figma/back.svg" alt="" />
+        <Icon name="back" size={22} />
       </Link>
       <Link
         className={styles.headerAction}
         href="/saved"
         aria-label="Saved products"
       >
-        <img src="/figma/cart-heart.svg" alt="" />
+        <Icon name="bookmark" size={22} />
       </Link>
     </header>
   );

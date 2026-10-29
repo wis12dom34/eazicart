@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -8,6 +7,7 @@ import { useState, type FormEvent } from "react";
 import { usersApi } from "../../lib/api/users";
 import { LoadingState, SignInState } from "../components/async-state";
 import { BottomNavigation } from "../components/bottom-navigation";
+import { Icon } from "../components/icon";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./privacy-security.module.css";
 
@@ -63,12 +63,7 @@ export default function PrivacySecurityPage() {
             setError("");
           }}
         >
-          <img
-            src="/figma/address-select-back.svg"
-            width={10}
-            height={18}
-            alt=""
-          />
+          <Icon name="back" size={22} />
         </button>
       ) : (
         <Link
@@ -76,12 +71,7 @@ export default function PrivacySecurityPage() {
           href="/settings"
           aria-label="Back to account settings"
         >
-          <img
-            src="/figma/address-select-back.svg"
-            width={10}
-            height={18}
-            alt=""
-          />
+          <Icon name="back" size={22} />
         </Link>
       )}
 
@@ -124,7 +114,7 @@ function PrivacyMenu({ onChangePassword }: { onChangePassword: () => void }) {
           <strong>Change password</strong>
           <small>Update your account password</small>
         </span>
-        <img src="/figma/profile-chevron.svg" width={24} height={44} alt="" />
+        <Icon name="chevron" size={20} />
       </button>
     </div>
   );

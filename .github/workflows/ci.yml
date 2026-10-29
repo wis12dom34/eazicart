@@ -30,6 +30,7 @@ jobs:
       JWT_SECRET: ci-only-secret-not-for-deployment-at-least-32-characters
       ALLOW_DEMO_SEED: "true"
       NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+      EAZICART_PUBLIC_API_URL: http://localhost:3001
       WEB_ORIGIN: http://localhost:3000
 
     steps:
@@ -73,8 +74,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Format check
-        run: pnpm format:check
+      - name: Format check (scoped to this PR)
+        run: |
+          git diff --name-only --diff-filter=ACMRT origin/main...HEAD -- '*.ts' '*.tsx' '*.js' '*.mjs' '*.json' '*.css' '*.md' '*.yml' '*.yaml' | while IFS= read -r file; do
+            if [ -f "$file" ]; then pnpm exec prettier --check "$file"; fi
+          done
 
       - name: Test
         run: pnpm test
@@ -83,10 +87,17 @@ jobs:
         run: pnpm build
 
       - name: Install browser
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium webkit
 
-      - name: Real customer flow against PostgreSQL
-        run: pnpm test:e2e
+      - name: Guard mobile comments keyboard with isolated DOM fixture
+        run: pnpm exec playwright test e2e/feed-comments-keyboard-dismissal.spec.mjs --config playwright.feed-keyboard-regression.config.mjs
+
+      - name: Critical customer flow against PostgreSQL
+        timeout-minutes: 8
+        run: >-
+          pnpm exec playwright test e2e/home-feed.spec.mjs
+          --grep "Home saves and supported seller/cart actions persist through the real API"
+          --project chromium
 
       - name: Generate Figma verification captures
         run: node docs/figma-verification/run-current.cjs

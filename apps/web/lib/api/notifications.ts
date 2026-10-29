@@ -7,10 +7,13 @@ export const notificationsApi = {
       { auth: true },
     ),
   read: (id: string) =>
-    apiRequest(`/notifications/${encodeURIComponent(id)}/read`, {
-      method: "PATCH",
-      auth: true,
-    }),
+    apiRequest<{ data: Notification }>(
+      `/notifications/${encodeURIComponent(id)}/read`,
+      {
+        method: "PATCH",
+        auth: true,
+      },
+    ),
   readAll: () =>
     apiRequest<{ data: { updated: number } }>("/notifications/read-all", {
       method: "PATCH",
