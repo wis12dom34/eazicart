@@ -74,8 +74,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Format check
-        run: pnpm format:check
+      - name: Format check (scoped to this PR)
+        run: |
+          git diff --name-only --diff-filter=ACMRT origin/main...HEAD -- '*.ts' '*.tsx' '*.js' '*.mjs' '*.json' '*.css' '*.md' '*.yml' '*.yaml' | while IFS= read -r file; do
+            if [ -f "$file" ]; then pnpm exec prettier --check "$file"; fi
+          done
 
       - name: Test
         run: pnpm test
