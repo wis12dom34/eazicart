@@ -50,7 +50,9 @@ export function LoginContent() {
       <Link
         className={styles.brand}
         href={sellerFlow ? "/landing" : "/welcome"}
-        aria-label={sellerFlow ? "Back to EaziCart business" : "Back to EaziCart welcome"}
+        aria-label={
+          sellerFlow ? "Back to EaziCart business" : "Back to EaziCart welcome"
+        }
       >
         EaziCart
       </Link>
