@@ -253,11 +253,11 @@ test("seller workspace renders seller-only order list and detail", async ({
     page.getByRole("heading", { name: "Seller Orders UI Store", exact: true }),
   ).toBeVisible();
 
-  const token = await page.evaluate(() => {
-    const raw = localStorage.getItem("eazicart.auth.tokens");
-    return raw ? JSON.parse(raw).accessToken : null;
+  const login = await request.post(`${api}/auth/login`, {
+    data: { email, password },
   });
-  expect(token).toBeTruthy();
+  expect(login.status()).toBe(200);
+  const token = (await login.json()).tokens.accessToken;
 
   const product = await createProduct(
     request,
