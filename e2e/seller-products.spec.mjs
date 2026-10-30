@@ -221,7 +221,9 @@ test("seller can create edit and deactivate a product from the workspace", async
   productCard = page
     .getByRole("article")
     .filter({ hasText: "UI Inventory Product" });
-  await expect(productCard.getByText("Draft", { exact: true }).first()).toBeVisible();
+  await expect(
+    productCard.getByText("Draft", { exact: true }).first(),
+  ).toBeVisible();
   await expect(
     productCard.getByRole("button", { name: "Deactivate" }),
   ).toHaveCount(0);
