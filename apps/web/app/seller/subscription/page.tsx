@@ -231,5 +231,3 @@ function PlanDetail({ label, value }: { label: string; value: string }) {
 function formatLimit(limit: number | null) {
   return limit === null ? "Not configured" : limit.toLocaleString("en-NG");
 }
-
-[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
