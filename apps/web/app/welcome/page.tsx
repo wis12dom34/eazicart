@@ -63,7 +63,9 @@ export default function WelcomePage() {
 
         <section className={styles.intro}>
           <h2>Shop. Discover. Connect.</h2>
-          <p>A social commerce experience built around real sellers and products.</p>
+          <p>
+            A social commerce experience built around real sellers and products.
+          </p>
         </section>
 
         <div className={styles.actions}>

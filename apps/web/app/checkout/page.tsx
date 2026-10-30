@@ -176,7 +176,8 @@ export default function CheckoutPage() {
                   <strong>{item.product.name}</strong>
                   <span>
                     {item.product.seller.displayName}
-                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty {item.quantity}
+                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty{" "}
+                    {item.quantity}
                   </span>
                 </div>
                 <strong className={styles.itemPrice}>

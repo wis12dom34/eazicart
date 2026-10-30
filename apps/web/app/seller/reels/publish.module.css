@@ -57,7 +57,9 @@
   font-weight: 400;
   min-height: 44px;
 }
-.form textarea { resize: vertical; }
+.form textarea {
+  resize: vertical;
+}
 .upload {
   border: 1px dashed #cfd9de;
   background: #f7f8f8;
@@ -88,12 +90,25 @@
   cursor: pointer;
   width: 100%;
 }
-.primary:disabled { opacity: 0.5; cursor: default; }
-.error { color: #a52b1b; }
-.success { display: grid; gap: 16px; padding-top: 24px; }
+.primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.error {
+  color: #a52b1b;
+}
+.success {
+  display: grid;
+  gap: 16px;
+  padding-top: 24px;
+}
 .success h2,
-.success p { margin: 0; }
+.success p {
+  margin: 0;
+}
 
 @media (min-width: 761px) {
-  .page { padding-bottom: 48px; }
+  .page {
+    padding-bottom: 48px;
+  }
 }

@@ -29,19 +29,22 @@ test("payment settings stay honest and notifications use live account data", asy
     page.getByRole("button", { name: /Add payment method/ }),
   ).toHaveCount(0);
   await expect(
-    page.getByText("Card storage is not available yet", {
+    page.getByText("Cards and wallet balances are not stored in EaziCart yet", {
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
+  await expect(page.getByText("Online payment", { exact: true })).toBeVisible();
   await expect(page.getByText(/Balance ₦86,400/)).toHaveCount(0);
   await expect(page.getByText(/Visa •••• 2048/)).toHaveCount(0);
   await expectCustomerNavigation(page);
 
-  const tokens = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("eazicart.auth.tokens")),
-  );
-  const headers = { Authorization: `Bearer ${tokens.accessToken}` };
+  const login = await request.post(`${api}/auth/login`, {
+    data: { email, password },
+  });
+  expect(login.status()).toBe(200);
+  const headers = {
+    Authorization: `Bearer ${(await login.json()).tokens.accessToken}`,
+  };
   const address = await request.post(`${api}/addresses`, {
     headers,
     data: {

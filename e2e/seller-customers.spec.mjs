@@ -38,7 +38,7 @@ async function createProduct(request, token, name, price, stock = 10) {
       name,
       price,
       stock,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(response.status()).toBe(201);
@@ -235,11 +235,12 @@ test("seller workspace renders customer list and privacy-safe detail", async ({
     }),
   ).toBeVisible();
 
-  const token = await page.evaluate(() => {
-    const raw = localStorage.getItem("eazicart.auth.tokens");
-    return raw ? JSON.parse(raw).accessToken : null;
+  const login = await request.post(`${api}/auth/login`, {
+    data: { email, password },
   });
-  expect(token).toBeTruthy();
+  expect(login.status()).toBe(200);
+  const accessToken = (await login.json()).tokens.accessToken;
+  const token = accessToken;
 
   const product = await createProduct(
     request,

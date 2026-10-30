@@ -25,10 +25,7 @@ export function TrendingSection({
     .slice(0, 12);
 
   return (
-    <section
-      className="figma-explore-reels"
-      aria-labelledby="explore-trending"
-    >
+    <section className="figma-explore-reels" aria-labelledby="explore-trending">
       <div>
         <h2 id="explore-trending">Trending now</h2>
         <Link href="/reels">View all ›</Link>
@@ -47,9 +44,7 @@ export function TrendingSection({
             >
               {reel.thumbnailUrl || reel.product?.images[0]?.url ? (
                 <img
-                  src={
-                    reel.thumbnailUrl ?? reel.product?.images[0]?.url ?? ""
-                  }
+                  src={reel.thumbnailUrl ?? reel.product?.images[0]?.url ?? ""}
                   alt=""
                 />
               ) : (

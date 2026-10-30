@@ -28,7 +28,8 @@ export default defineConfig({
       command: "pnpm --filter @eazicart/api start",
       url: "http://localhost:3001/health",
       reuseExistingServer: false,
-      env: { NODE_ENV: "test" },
+      // Enable API error logs during browser tests so failures are diagnosable.
+      env: { NODE_ENV: "development" },
     },
     {
       command: "pnpm --filter @eazicart/web start",
