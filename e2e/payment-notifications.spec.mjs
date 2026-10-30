@@ -42,7 +42,9 @@ test("payment settings stay honest and notifications use live account data", asy
     data: { email, password },
   });
   expect(login.status()).toBe(200);
-  const headers = { Authorization: `Bearer ${(await login.json()).tokens.accessToken}` };
+  const headers = {
+    Authorization: `Bearer ${(await login.json()).tokens.accessToken}`,
+  };
   const address = await request.post(`${api}/addresses`, {
     headers,
     data: {
