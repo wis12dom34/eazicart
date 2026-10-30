@@ -212,8 +212,8 @@ let server;
     let continuationFixture = false;
     let authLoginMode = "success";
     let failCartUpdate = false;
-    await page.route("http://localhost:3001/**", async (r) => {
-      const path = new URL(r.request().url()).pathname;
+    const mockApi = async (r) => {
+      const path = new URL(r.request().url()).pathname.replace(/^\/api(?=\/)/, "");
 
       if (path === "/auth/login") {
         if (authLoginMode === "slow")
@@ -426,7 +426,9 @@ let server;
         contentType: "application/json",
         body: JSON.stringify(data),
       });
-    });
+    };
+    await page.route("http://localhost:3001/**", mockApi);
+    await page.route("http://127.0.0.1:3100/api/**", mockApi);
     await page.goto("http://127.0.0.1:3100/product/nike-air-max-90");
     await page.locator('[data-figma-node="8:54"]').waitFor();
     await page.evaluate(() =>
