@@ -30,6 +30,7 @@ jobs:
       JWT_SECRET: ci-only-secret-not-for-deployment-at-least-32-characters
       ALLOW_DEMO_SEED: "true"
       NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+      EAZICART_PUBLIC_API_URL: http://localhost:3001
       WEB_ORIGIN: http://localhost:3000
 
     steps:
