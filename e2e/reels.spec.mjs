@@ -73,25 +73,33 @@ test("save sign-in preserves the exact Reel return path", async ({ page }) => {
 
 test("authenticated Reel hydrates liked and saved state", async ({ page }) => {
   let interactionsAuthorization = "";
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "eazicart.auth.tokens",
-      JSON.stringify({
-        accessToken: "reels-e2e-access",
-        refreshToken: "reels-e2e-refresh",
-        expiresAt: "2099-01-01T00:00:00.000Z",
-      }),
-    );
-  });
-  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+  let sessionRestored = false;
+  await page.route(/\/auth\/refresh(?:\?|$)/, async (route) => {
+    sessionRestored = true;
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        id: "reels-e2e-user",
-        email: "reels@example.com",
-        name: "Reels Tester",
+        tokens: {
+          accessToken: "reels-e2e-access",
+          expiresAt: "2099-01-01T00:00:00.000Z",
+        },
       }),
+    });
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    await route.fulfill({
+      status: sessionRestored ? 200 : 401,
+      contentType: "application/json",
+      body: JSON.stringify(
+        sessionRestored
+          ? {
+              id: "reels-e2e-user",
+              email: "reels@example.com",
+              name: "Reels Tester",
+            }
+          : { error: { code: "UNAUTHORIZED", message: "Sign in required" } },
+      ),
     });
   });
   await page.route(
@@ -120,6 +128,7 @@ test("authenticated Reel hydrates liked and saved state", async ({ page }) => {
   });
   await expect(unlikeButton).toHaveAttribute("aria-pressed", "true");
   await expect(unsaveButton).toHaveAttribute("aria-pressed", "true");
+  expect(sessionRestored).toBe(true);
   expect(interactionsAuthorization).toBe("Bearer reels-e2e-access");
 });
 
