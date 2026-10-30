@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { EmptyState, ErrorState, LoadingState, SignInState } from "../../components/async-state";
 import { Icon } from "../../components/icon";
 import { SellerBottomNavigation } from "../../components/seller-bottom-navigation";
