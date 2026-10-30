@@ -204,11 +204,12 @@ test("seller workspace lets an authenticated customer create a store without fak
   await expect(
     page.getByRole("heading", { name: "Seller UI Store", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("region", { name: "Seller summary" })).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Seller summary" }),
+  ).toBeVisible();
   await expect(page.getByText("No verified sales yet")).toBeVisible();
   await expect(page.getByText("No urgent store tasks")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Public store" })).toHaveAttribute(
-    "href",
-    /^\/seller\//,
-  );
+  await expect(
+    page.getByRole("link", { name: "Public store" }),
+  ).toHaveAttribute("href", /^\/seller\//);
 });

@@ -308,7 +308,9 @@ test("seller finance screen shows verified-only empty state and no fake payout b
     page.getByRole("heading", { name: "Verified sales only" }),
   ).toBeVisible();
   await expect(page.getByText("No verified paid sales yet")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Payouts are not enabled yet" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Payouts are not enabled yet" }),
+  ).toBeVisible();
   await expect(page.getByText("No verified sales to show yet.")).toBeVisible();
   await expect(page.getByRole("button")).toHaveCount(0);
 });
