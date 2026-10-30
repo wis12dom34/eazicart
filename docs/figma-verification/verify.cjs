@@ -213,7 +213,10 @@ let server;
     let authLoginMode = "success";
     let failCartUpdate = false;
     const mockApi = async (r) => {
-      const path = new URL(r.request().url()).pathname.replace(/^\/api(?=\/)/, "");
+      const path = new URL(r.request().url()).pathname.replace(
+        /^\/api(?=\/)/,
+        "",
+      );
 
       if (path === "/auth/login") {
         if (authLoginMode === "slow")
