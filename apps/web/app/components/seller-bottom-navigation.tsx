@@ -13,8 +13,18 @@ const items: Array<{
   { key: "home", label: "Home", href: "/seller/dashboard", icon: "home" },
   { key: "products", label: "Products", href: "/seller/products", icon: "box" },
   { key: "orders", label: "Orders", href: "/seller/orders", icon: "bag" },
-  { key: "storefront", label: "Storefront", href: "/seller/store", icon: "shirt" },
-  { key: "profile", label: "Profile", href: "/profile?mode=seller", icon: "user" },
+  {
+    key: "storefront",
+    label: "Storefront",
+    href: "/seller/store",
+    icon: "shirt",
+  },
+  {
+    key: "profile",
+    label: "Profile",
+    href: "/profile?mode=seller",
+    icon: "user",
+  },
 ];
 
 export function SellerBottomNavigation({ active }: { active?: SellerNavItem }) {
@@ -39,3 +49,5 @@ export function SellerBottomNavigation({ active }: { active?: SellerNavItem }) {
     </nav>
   );
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]

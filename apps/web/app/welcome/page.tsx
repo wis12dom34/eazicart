@@ -63,7 +63,9 @@ export default function WelcomePage() {
 
         <section className={styles.intro}>
           <h2>Shop. Discover. Connect.</h2>
-          <p>A social commerce experience built around real sellers and products.</p>
+          <p>
+            A social commerce experience built around real sellers and products.
+          </p>
         </section>
 
         <div className={styles.actions}>
@@ -78,3 +80,5 @@ export default function WelcomePage() {
     </main>
   );
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]

@@ -50,7 +50,9 @@ export function LoginContent() {
       <Link
         className={styles.brand}
         href={sellerFlow ? "/landing" : "/welcome"}
-        aria-label={sellerFlow ? "Back to EaziCart business" : "Back to EaziCart welcome"}
+        aria-label={
+          sellerFlow ? "Back to EaziCart business" : "Back to EaziCart welcome"
+        }
       >
         EaziCart
       </Link>
@@ -131,3 +133,5 @@ export function LoginContent() {
     </main>
   );
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]

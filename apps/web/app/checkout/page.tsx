@@ -176,7 +176,8 @@ export default function CheckoutPage() {
                   <strong>{item.product.name}</strong>
                   <span>
                     {item.product.seller.displayName}
-                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty {item.quantity}
+                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty{" "}
+                    {item.quantity}
                   </span>
                 </div>
                 <strong className={styles.itemPrice}>
@@ -252,3 +253,5 @@ function CheckoutShell({ children }: { children: React.ReactNode }) {
     </main>
   );
 }
+
+[executed on device: vmi3669743 (56b0f049-b731-45a8-b548-6a3c5f84f286)]
