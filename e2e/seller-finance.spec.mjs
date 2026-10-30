@@ -43,7 +43,7 @@ async function createProduct(request, token, name, price) {
       name,
       price,
       stock: 10,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(response.status()).toBe(201);
