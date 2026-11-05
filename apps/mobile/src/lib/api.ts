@@ -9,6 +9,8 @@ import type {
   Product,
   ReelCommentsPage,
   ReelsPage,
+  StoryPreviewResponse,
+  StoryListResponse,
 } from "./types";
 
 const configuredUrl: string =
@@ -234,6 +236,14 @@ export const api = {
         body: { watchMs, completed, idempotencyKey },
       },
     ),
+  storyPreviews: (userIds: string[]) => {
+    const ids = [...new Set(userIds.filter(Boolean))].slice(0, 12);
+    return request<StoryPreviewResponse>(
+      `/social/stories?${qs({ userIds: ids.join(",") })}`,
+    );
+  },
+  storiesForUser: (userId: string) =>
+    request<StoryListResponse>(`/social/stories/${encodeURIComponent(userId)}`),
   comment: (id: string, body: string) =>
     request<unknown>(`/products/${encodeURIComponent(id)}/comments`, {
       method: "POST",

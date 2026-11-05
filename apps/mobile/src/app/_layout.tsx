@@ -38,6 +38,10 @@ export default function RootLayout() {
               name="register"
               options={{ title: "Create account", presentation: "modal" }}
             />
+            <Stack.Screen
+              name="story/[userId]"
+              options={{ headerShown: false, presentation: "fullScreenModal" }}
+            />
             <Stack.Screen name="product/[id]" options={{ title: "Product" }} />
             <Stack.Screen
               name="product/[id]/comments"
