@@ -13,7 +13,15 @@ Date: 2026-11-05. Development only; not deployed.
 
 ## Verified
 
-Run `pnpm --filter @eazicart/mobile test`, `typecheck`, `lint`, `test:live:read-only`, and Expo iOS/Android exports. Do not treat bundle exports as physical device validation.
+- `pnpm --filter @eazicart/mobile test`: 12 unit/API-contract tests passed.
+- `pnpm --filter @eazicart/mobile typecheck`: passed.
+- `pnpm --filter @eazicart/mobile lint`: passed.
+- `pnpm --filter @eazicart/mobile test:live:read-only`: passed using production GET-only API requests.
+- `pnpm --filter @eazicart/mobile export:android`: passed; native JavaScript/Hermes bundle exported.
+- `pnpm --filter @eazicart/mobile export:ios`: passed; native JavaScript/Hermes bundle exported.
+- `pnpm exec prettier --check apps/mobile/src apps/mobile/tests apps/mobile/PHASE2_STORIES_REPORT.md`: passed (generated export metadata excluded).
+- Validated story viewer safe-area positioning and press-and-hold timing at source level.
+- No physical device, native runtime, FPS, memory, or gesture tests were performed; bundle exports are not installable app binaries.
 
 ## Deferred
 
