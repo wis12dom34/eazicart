@@ -69,3 +69,31 @@ export type CommentPage = {
   pagination: { nextCursor: string | null; hasMore: boolean };
 };
 export type SavedItem = { productId: string };
+
+export type ReelSource = "EAZICART" | "YOUTUBE" | "TIKTOK" | "PARTNER";
+export type Reel = {
+  id: string;
+  source: ReelSource;
+  caption?: string | null;
+  videoUrl?: string | null;
+  thumbnailUrl?: string | null;
+  externalUrl?: string | null;
+  seller?: Seller | null;
+  product?: Product | null;
+  _count: { likes: number; saves: number; views: number; comments: number };
+};
+export type ReelsPage = {
+  data: Reel[];
+  pagination: { nextCursor: string | null; hasMore: boolean };
+};
+export type ReelComment = {
+  id: string;
+  reelId: string;
+  body: string;
+  createdAt: string;
+  user: { id: string; name: string };
+};
+export type ReelCommentsPage = {
+  data: ReelComment[];
+  pagination: { nextCursor: string | null; hasMore: boolean };
+};
