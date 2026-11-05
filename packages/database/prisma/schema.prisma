@@ -84,6 +84,7 @@ model User {
   sellerProfile SellerProfile?
   cart Cart?
   orders Order[]
+  orderIdempotencyRequests OrderIdempotency[]
   addresses Address[]
   savedProducts SavedProduct[]
   following Follow[] @relation("Follower")
@@ -201,9 +202,24 @@ model Order {
   items OrderItem[]
   fulfillments SellerFulfillment[]
   payment Payment?
+  idempotencyRequest OrderIdempotency?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([userId, createdAt])
+}
+
+// Additive candidate: never deploy migration without explicit approval.
+model OrderIdempotency {
+  buyerId String
+  key String
+  addressId String
+  expectedTotal Decimal @db.Decimal(12, 2)
+  orderId String @unique
+  createdAt DateTime @default(now())
+  buyer User @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@id([buyerId, key])
 }
 
 model OrderItem {
