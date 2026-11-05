@@ -31,6 +31,16 @@ export default function ProfileScreen() {
             Your existing EaziCart account is connected.
           </Text>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="View shops you follow"
+            style={styles.followingLink}
+            onPress={() => router.push("/following")}
+          >
+            <Ionicons name="people-outline" color={colors.orange} size={23} />
+            <Text style={styles.followingText}>Shops you follow</Text>
+            <Ionicons name="chevron-forward" color={colors.muted} size={20} />
+          </Pressable>
+          <Pressable
             style={styles.secondary}
             accessibilityRole="button"
             onPress={() =>
@@ -136,4 +146,17 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   secondaryText: { fontWeight: "700", color: colors.ink },
+  followingLink: {
+    flexDirection: "row",
+    minHeight: 58,
+    alignSelf: "stretch",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+  },
+  followingText: { flex: 1, color: colors.ink, fontWeight: "700" },
 });

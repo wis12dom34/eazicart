@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScreenState } from "../../components/ScreenState";
+import { FollowButton } from "../../components/FollowButton";
 import { api } from "../../lib/api";
 import type { Product } from "../../lib/types";
 import { colors } from "../../theme";
@@ -49,6 +50,7 @@ export default function SellerScreen() {
             </Text>
           </View>
           <Text style={styles.title}>{info.displayName}</Text>
+          <FollowButton sellerUserId={info.userId} />
           {info.bio ? <Text style={styles.bio}>{info.bio}</Text> : null}
           <View style={styles.stats}>
             <Text style={styles.stat}>{info.followerCount ?? 0} followers</Text>

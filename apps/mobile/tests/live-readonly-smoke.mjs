@@ -34,6 +34,13 @@ if (feed.data.length) {
     "/sellers/" + encodeURIComponent(featured.seller.id) + "/products",
   );
   assert.ok(Array.isArray(sellerProducts.data));
+  const sellerUserId = featured.seller.userId;
+  if (sellerUserId) {
+    const count = await get(
+      "/sellers/" + encodeURIComponent(sellerUserId) + "/followers/count",
+    );
+    assert.ok(Number.isInteger(count.data?.count) && count.data.count >= 0);
+  }
 }
 if (feed.data.length) {
   const sellerUid = feed.data[0]?.seller?.userId;

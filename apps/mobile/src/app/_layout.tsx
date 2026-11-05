@@ -42,6 +42,7 @@ export default function RootLayout() {
               name="story/[userId]"
               options={{ headerShown: false, presentation: "fullScreenModal" }}
             />
+            <Stack.Screen name="following" options={{ title: "Following" }} />
             <Stack.Screen name="product/[id]" options={{ title: "Product" }} />
             <Stack.Screen
               name="product/[id]/comments"

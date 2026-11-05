@@ -11,6 +11,8 @@ import type {
   ReelsPage,
   StoryPreviewResponse,
   StoryListResponse,
+  FollowingResponse,
+  FollowerCountResponse,
 } from "./types";
 
 const configuredUrl: string =
@@ -166,6 +168,22 @@ export const api = {
     request<{ data: Seller }>(`/sellers/${encodeURIComponent(id)}`),
   sellerProducts: (id: string) =>
     request<{ data: Product[] }>(`/sellers/${encodeURIComponent(id)}/products`),
+  following: () =>
+    request<FollowingResponse>("/following", { auth: "required" }),
+  followSeller: (sellerUserId: string) =>
+    request<unknown>(`/sellers/${encodeURIComponent(sellerUserId)}/follow`, {
+      method: "POST",
+      auth: "required",
+    }),
+  unfollowSeller: (sellerUserId: string) =>
+    request<void>(`/sellers/${encodeURIComponent(sellerUserId)}/follow`, {
+      method: "DELETE",
+      auth: "required",
+    }),
+  followerCount: (sellerUserId: string) =>
+    request<FollowerCountResponse>(
+      `/sellers/${encodeURIComponent(sellerUserId)}/followers/count`,
+    ),
   saved: () =>
     request<{ data: SavedItem[] }>("/saved-products", { auth: "required" }),
   save: (id: string) =>

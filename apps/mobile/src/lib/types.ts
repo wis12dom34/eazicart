@@ -106,3 +106,15 @@ export type StoryMedia = {
 };
 export type StoryPreviewResponse = { data: Record<string, StoryMedia> };
 export type StoryListResponse = { data: StoryMedia[] };
+
+export type FollowRecord = {
+  followerId: string;
+  sellerId: string;
+  seller: {
+    id: string;
+    name: string;
+    sellerProfile?: Seller | null;
+  };
+};
+export type FollowingResponse = { data: FollowRecord[] };
+export type FollowerCountResponse = { data: { count: number } };
