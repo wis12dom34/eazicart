@@ -20,14 +20,16 @@ Status: Development branch only; no web/API/database changes or deployment.
 - DELETE /sellers/:sellerUserId/follow (authenticated)
 - GET /sellers/:sellerUserId/followers/count (public)
 
-## Test and review
+## Verified checks
 
-- Run pnpm --filter @eazicart/mobile lint
-- Run pnpm --filter @eazicart/mobile typecheck
-- Run pnpm --filter @eazicart/mobile test
-- Run pnpm --filter @eazicart/mobile test:live:read-only
-- Run pnpm --filter @eazicart/mobile export:android / export:ios
-- Run pnpm exec prettier --check apps/mobile/src apps/mobile/tests apps/mobile/PHASE2_FOLLOWS_REPORT.md
+- `pnpm --filter @eazicart/mobile lint`: passed.
+- `pnpm --filter @eazicart/mobile typecheck`: passed.
+- `pnpm --filter @eazicart/mobile test`: 17/17 mocked API-contract tests passed.
+- `pnpm --filter @eazicart/mobile test:live:read-only`: passed (GET requests only, including follower counts).
+- Expo Android Hermes JavaScript bundle export: passed.
+- Expo iOS Hermes JavaScript bundle export: passed.
+- Prettier source and tests formatting checks: passed.
+- Bundle exports are not signed or device-installable binaries.
 
 ## Not verified on device
 
