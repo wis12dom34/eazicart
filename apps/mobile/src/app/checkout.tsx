@@ -17,6 +17,7 @@ import {
   formatNaira,
   hasCartChanged,
 } from "../lib/commerce";
+import { NATIVE_CHECKOUT_BLOCK_REASON } from "../lib/checkout-safety";
 import { useAuth } from "../providers/auth";
 import { colors } from "../theme";
 
@@ -198,10 +199,8 @@ export default function CheckoutScreen() {
           color={colors.orange}
         />
         <Text style={styles.warningText}>
-          Payment and order creation are intentionally disabled in this
-          milestone. The existing backend still exposes a Paystack payment
-          initializer; the native KoraPay checkout must be reviewed before
-          activation.
+          {NATIVE_CHECKOUT_BLOCK_REASON} No payment or order will be initiated
+          from this screen.
         </Text>
       </View>
       {notice ? (
