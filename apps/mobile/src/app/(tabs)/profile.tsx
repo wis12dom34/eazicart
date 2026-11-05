@@ -41,6 +41,24 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" color={colors.muted} size={20} />
           </Pressable>
           <Pressable
+            style={styles.followingLink}
+            accessibilityRole="button"
+            onPress={() => router.push("/orders")}
+          >
+            <Ionicons name="receipt-outline" color={colors.orange} size={23} />
+            <Text style={styles.followingText}>Your orders</Text>
+            <Ionicons name="chevron-forward" color={colors.muted} size={20} />
+          </Pressable>
+          <Pressable
+            style={styles.followingLink}
+            accessibilityRole="button"
+            onPress={() => router.push("/addresses")}
+          >
+            <Ionicons name="location-outline" color={colors.orange} size={23} />
+            <Text style={styles.followingText}>Delivery addresses</Text>
+            <Ionicons name="chevron-forward" color={colors.muted} size={20} />
+          </Pressable>
+          <Pressable
             style={styles.secondary}
             accessibilityRole="button"
             onPress={() =>

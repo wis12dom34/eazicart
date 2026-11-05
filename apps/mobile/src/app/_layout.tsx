@@ -43,6 +43,15 @@ export default function RootLayout() {
               options={{ headerShown: false, presentation: "fullScreenModal" }}
             />
             <Stack.Screen name="following" options={{ title: "Following" }} />
+            <Stack.Screen
+              name="addresses"
+              options={{ title: "Delivery addresses" }}
+            />
+            <Stack.Screen
+              name="checkout"
+              options={{ title: "Checkout review" }}
+            />
+            <Stack.Screen name="orders" options={{ title: "Order history" }} />
             <Stack.Screen name="product/[id]" options={{ title: "Product" }} />
             <Stack.Screen
               name="product/[id]/comments"

@@ -13,6 +13,10 @@ import type {
   StoryListResponse,
   FollowingResponse,
   FollowerCountResponse,
+  Cart,
+  Address,
+  AddressInput,
+  OrderSummary,
 } from "./types";
 
 const configuredUrl: string =
@@ -184,6 +188,41 @@ export const api = {
     request<FollowerCountResponse>(
       `/sellers/${encodeURIComponent(sellerUserId)}/followers/count`,
     ),
+  cart: () => request<{ data: Cart }>("/cart", { auth: "required" }),
+  cartAdd: (productId: string, quantity: number) =>
+    request<{ data: Cart }>("/cart/items", {
+      auth: "required",
+      method: "POST",
+      body: { productId, quantity },
+    }),
+  cartUpdate: (itemId: string, quantity: number) =>
+    request<{ data: Cart }>(`/cart/items/${encodeURIComponent(itemId)}`, {
+      auth: "required",
+      method: "PATCH",
+      body: { quantity },
+    }),
+  cartRemove: (itemId: string) =>
+    request<void>(`/cart/items/${encodeURIComponent(itemId)}`, {
+      auth: "required",
+      method: "DELETE",
+    }),
+  cartClear: () =>
+    request<void>("/cart", { auth: "required", method: "DELETE" }),
+  addresses: () =>
+    request<{ data: Address[] }>("/addresses", { auth: "required" }),
+  createAddress: (address: AddressInput) =>
+    request<{ data: Address }>("/addresses", {
+      auth: "required",
+      method: "POST",
+      body: address,
+    }),
+  deleteAddress: (id: string) =>
+    request<void>(`/addresses/${encodeURIComponent(id)}`, {
+      auth: "required",
+      method: "DELETE",
+    }),
+  orders: () =>
+    request<{ data: OrderSummary[] }>("/orders", { auth: "required" }),
   saved: () =>
     request<{ data: SavedItem[] }>("/saved-products", { auth: "required" }),
   save: (id: string) =>

@@ -39,6 +39,7 @@ export type Product = {
   originalPrice?: string | null;
   discountPercent?: number | null;
   stock: number;
+  active?: boolean;
   images: ProductImage[];
   imageCount?: number;
   viewsLabel?: string;
@@ -118,3 +119,45 @@ export type FollowRecord = {
 };
 export type FollowingResponse = { data: FollowRecord[] };
 export type FollowerCountResponse = { data: { count: number } };
+
+export type CartItem = {
+  id: string;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+  product: Product;
+  variantLabel?: string | null;
+};
+export type Cart = {
+  id: string;
+  items: CartItem[];
+  subtotal: string;
+  total: string;
+  delivery?: string | null;
+  serviceFee?: string | null;
+};
+export type Address = {
+  id: string;
+  label?: string | null;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  region: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+};
+export type AddressInput = Omit<Address, "id">;
+export type OrderSummary = {
+  id: string;
+  status: string;
+  createdAt: string;
+  total: string;
+  items: Array<{
+    id: string;
+    productName: string;
+    quantity: number;
+    unitPrice: string;
+  }>;
+  address: Address;
+};

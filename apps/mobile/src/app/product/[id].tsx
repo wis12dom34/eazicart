@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { ScreenState } from "../../components/ScreenState";
+import { AddToCartButton } from "../../components/AddToCartButton";
 import { api } from "../../lib/api";
 import { colors } from "../../theme";
 
@@ -139,9 +140,10 @@ export default function ProductDetails() {
           <Ionicons name="share-social-outline" size={19} color="white" />
           <Text style={styles.shareText}>Share product</Text>
         </Pressable>
+        <AddToCartButton productId={product.id} stock={product.stock} />
         <Text style={styles.phase}>
-          Cart and checkout will be enabled after native payment-flow review in
-          Phase 3.
+          Cart management and checkout review are available. Online payment is
+          disabled until the KoraPay production backend is verified.
         </Text>
       </View>
     </ScrollView>
