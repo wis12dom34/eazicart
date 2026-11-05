@@ -7,6 +7,8 @@ import type {
   SavedItem,
   Seller,
   Product,
+  ReelCommentsPage,
+  ReelsPage,
 } from "./types";
 
 const configuredUrl: string =
@@ -187,6 +189,50 @@ export const api = {
   comments: (id: string, cursor?: string | null) =>
     request<CommentPage>(
       `/products/${encodeURIComponent(id)}/comments?${qs({ cursor: cursor ?? undefined, limit: 20 })}`,
+    ),
+
+  reelsFeed: (cursor?: string | null, signedIn = false) =>
+    request<ReelsPage>(
+      `/reels/feed?${qs({ limit: 8, cursor: cursor ?? undefined })}`,
+      { auth: signedIn ? "optional" : "none" },
+    ),
+  reelInteractions: (id: string) =>
+    request<{ data: { liked: boolean; saved: boolean } }>(
+      `/reels/${encodeURIComponent(id)}/interactions`,
+      { auth: "required" },
+    ),
+  reelLike: (id: string, liked: boolean) =>
+    request<{ data: { liked: boolean; count: number } }>(
+      `/reels/${encodeURIComponent(id)}/like`,
+      { method: liked ? "DELETE" : "POST", auth: "required" },
+    ),
+  reelSave: (id: string, saved: boolean) =>
+    request<{ data: { saved: boolean; count: number } }>(
+      `/reels/${encodeURIComponent(id)}/save`,
+      { method: saved ? "DELETE" : "POST", auth: "required" },
+    ),
+  reelComments: (id: string, cursor?: string | null) =>
+    request<ReelCommentsPage>(
+      `/reels/${encodeURIComponent(id)}/comments?${qs({ limit: 20, cursor: cursor ?? undefined })}`,
+    ),
+  reelComment: (id: string, body: string) =>
+    request<{ data: { id: string } }>(
+      `/reels/${encodeURIComponent(id)}/comments`,
+      { method: "POST", auth: "required", body: { body } },
+    ),
+  reelView: (
+    id: string,
+    watchMs: number,
+    completed: boolean,
+    idempotencyKey: string,
+  ) =>
+    request<{ data: { id: string } }>(
+      `/reels/${encodeURIComponent(id)}/views`,
+      {
+        method: "POST",
+        auth: "required",
+        body: { watchMs, completed, idempotencyKey },
+      },
     ),
   comment: (id: string, body: string) =>
     request<unknown>(`/products/${encodeURIComponent(id)}/comments`, {

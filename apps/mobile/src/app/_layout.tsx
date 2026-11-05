@@ -44,6 +44,10 @@ export default function RootLayout() {
               options={{ title: "Comments" }}
             />
             <Stack.Screen
+              name="reel/[id]/comments"
+              options={{ title: "Reel comments" }}
+            />
+            <Stack.Screen
               name="seller/[id]"
               options={{ title: "Storefront" }}
             />

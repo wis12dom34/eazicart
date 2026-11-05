@@ -40,6 +40,7 @@ export default function TabLayout() {
         name="reels"
         options={{
           title: "Reels",
+          tabBarStyle: { display: "none" },
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="play-circle-outline"

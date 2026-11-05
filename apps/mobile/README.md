@@ -12,8 +12,12 @@ Only the refresh token is persisted, via Expo SecureStore. Access tokens live in
 
 ## Milestone scope
 
-Home feed (real cursor pagination), existing-account login/registration/session restoration, product details/gallery, public search, seller storefronts, product Likes, Saves, comments and native sharing. Reels, stories, seller tools, cart and checkout are intentionally deferred.
+Home feed (real cursor pagination), existing-account login/registration/session restoration, product details/gallery, public search, seller storefronts, product Likes, Saves, comments and native sharing. Native Reels now uses the existing live feed with Expo video playback, pagination, actions, comments and idempotent authenticated view tracking. Stories, seller tools, cart and checkout are intentionally deferred.
 
 ## Release safety
 
 Do not deploy apps to stores or modify the existing live web/API without explicit approval. This is an isolated development branch, not a production build.
+
+## Phase 2 Reels
+
+See [PHASE2_REELS_REPORT.md](./PHASE2_REELS_REPORT.md) for implemented functionality, tests, and device-testing limitations.
