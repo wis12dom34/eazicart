@@ -97,3 +97,12 @@ export type ReelCommentsPage = {
   data: ReelComment[];
   pagination: { nextCursor: string | null; hasMore: boolean };
 };
+
+export type StoryMedia = {
+  id: string;
+  url: string;
+  uploadedAt: string;
+  contentType?: string;
+};
+export type StoryPreviewResponse = { data: Record<string, StoryMedia> };
+export type StoryListResponse = { data: StoryMedia[] };

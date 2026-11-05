@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { ProductCard } from "../../components/ProductCard";
+import { StoryRail } from "../../components/StoryRail";
 import { ScreenState } from "../../components/ScreenState";
 import { api } from "../../lib/api";
 import type { Product } from "../../lib/types";
@@ -41,6 +42,14 @@ export default function HomeScreen() {
     savedQuery.data?.data.map((item) => item.productId) ?? [],
   );
   const products = feed.data?.pages.flatMap((page) => page.data) ?? [];
+  const sellerIds = new Set<string>();
+  const featuredSellers = products.flatMap((product) => {
+    const seller = product.seller;
+    if (!seller.userId || sellerIds.has(seller.userId) || sellerIds.size >= 12)
+      return [];
+    sellerIds.add(seller.userId);
+    return [seller];
+  });
   const onSaveChange = (id: string, isSaved: boolean) => {
     cache.setQueryData<{ data: { productId: string }[] }>(
       ["saved", user?.id],
@@ -91,6 +100,7 @@ export default function HomeScreen() {
               onSaveChange={onSaveChange}
             />
           )}
+          ListHeaderComponent={<StoryRail sellers={featuredSellers} />}
           initialNumToRender={4}
           maxToRenderPerBatch={5}
           windowSize={7}

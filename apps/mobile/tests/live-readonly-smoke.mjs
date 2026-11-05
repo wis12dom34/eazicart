@@ -35,6 +35,17 @@ if (feed.data.length) {
   );
   assert.ok(Array.isArray(sellerProducts.data));
 }
+if (feed.data.length) {
+  const sellerUid = feed.data[0]?.seller?.userId;
+  if (sellerUid) {
+    const previews = await get(
+      "/social/stories?userIds=" + encodeURIComponent(sellerUid),
+    );
+    assert.ok(previews.data && typeof previews.data === "object");
+    const list = await get("/social/stories/" + encodeURIComponent(sellerUid));
+    assert.ok(Array.isArray(list.data));
+  }
+}
 const search = await get("/products?limit=2&page=1");
 assert.ok(Array.isArray(search.data));
 console.log("PASS: EaziCart production read-only API contract smoke checks");
