@@ -17,6 +17,8 @@ import {
   type AuditReport,
   type AuditState,
   currentAuditPreviewBase,
+  afterAuditCsvShare,
+  isValidAuditStagingToken,
   makeAuditPreviewClient,
 } from "../lib/admin-audit-preview";
 import { colors } from "../theme";
@@ -41,6 +43,7 @@ export default function AdminAuditPreviewScreen() {
   const [claims, setClaims] = useState<AuditClaim[]>([]);
   const [probe, setProbe] = useState<AuditProbe | null>(null);
   const [csvCursor, setCsvCursor] = useState<string | null>(null);
+  const [csvExhausted, setCsvExhausted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const client = useMemo(
@@ -113,12 +116,13 @@ export default function AdminAuditPreviewScreen() {
         />
         <Pressable
           accessibilityRole="button"
-          disabled={draftToken.trim().length < 12}
+          disabled={!isValidAuditStagingToken(draftToken)}
           style={[
             styles.primary,
-            draftToken.trim().length < 12 && styles.disabled,
+            !isValidAuditStagingToken(draftToken) && styles.disabled,
           ]}
           onPress={() => {
+            if (!isValidAuditStagingToken(draftToken)) return;
             setStagingToken(draftToken.trim());
             setDraftToken("");
           }}
@@ -150,7 +154,7 @@ export default function AdminAuditPreviewScreen() {
   };
 
   const shareCsvPage = async () => {
-    if (!client || exporting) return;
+    if (!client || exporting || csvExhausted) return;
     setExporting(true);
     try {
       const page = await client.csvPage(
@@ -159,11 +163,18 @@ export default function AdminAuditPreviewScreen() {
       );
       // React Native core Share shares CSV TEXT, not a downloaded .csv file.
       // Explicit interaction only: never auto-share sensitive audit references.
-      await Share.share({
+      const result = await Share.share({
         title: "Isolated EaziCart admin audit (CSV text)",
         message: page.csv,
       });
-      setCsvCursor(page.nextCursor);
+      const next = afterAuditCsvShare(
+        result.action === Share.sharedAction,
+        page.hasMore,
+        page.nextCursor,
+      );
+      if (!next.advance) return;
+      setCsvCursor(next.nextCursor);
+      setCsvExhausted(next.exhausted);
       if (page.hasMore) {
         Alert.alert(
           "More records available",
@@ -192,6 +203,7 @@ export default function AdminAuditPreviewScreen() {
             setClaims([]);
             setProbe(null);
             setCsvCursor(null);
+            setCsvExhausted(false);
             setError(null);
           }}
           style={styles.signout}
@@ -254,6 +266,7 @@ export default function AdminAuditPreviewScreen() {
                 onPress={() => {
                   setFilter(value);
                   setCsvCursor(null);
+                  setCsvExhausted(false);
                   setProbe(null);
                 }}
                 style={[styles.filter, filter === value && styles.activeFilter]}
@@ -340,18 +353,20 @@ export default function AdminAuditPreviewScreen() {
           ) : null}
           <Pressable
             accessibilityRole="button"
-            disabled={exporting}
+            disabled={exporting || csvExhausted}
             onPress={() => {
               void shareCsvPage();
             }}
             style={styles.primary}
           >
             <Text style={styles.primaryText}>
-              {exporting
-                ? "Preparing…"
-                : csvCursor
-                  ? "Share next CSV page (text)"
-                  : "Share first CSV page (text)"}
+              {csvExhausted
+                ? "All CSV pages shared"
+                : exporting
+                  ? "Preparing…"
+                  : csvCursor
+                    ? "Share next CSV page (text)"
+                    : "Share first CSV page (text)"}
             </Text>
           </Pressable>
           <Text style={styles.footnote}>

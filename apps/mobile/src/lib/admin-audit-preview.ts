@@ -91,10 +91,30 @@ export function currentAuditPreviewBase() {
   );
 }
 
+/** Credentials remain memory-only; reject whitespace and oversized inputs. */
+/** A dismissed device share sheet must never advance the export cursor. */
+export function afterAuditCsvShare(
+  shared: boolean,
+  hasMore: boolean,
+  nextCursor: string | null,
+): { advance: boolean; exhausted: boolean; nextCursor: string | null } {
+  return {
+    advance: shared,
+    exhausted: shared && !hasMore,
+    nextCursor: shared && hasMore ? nextCursor : null,
+  };
+}
+
+export function isValidAuditStagingToken(value: string): boolean {
+  const token = value.trim();
+  return token.length >= 12 && token.length <= 4096 && !/\s/.test(token);
+}
+
 export function makeAuditPreviewClient(
   base: string,
   stagingToken: string,
   fetcher: typeof fetch = fetch,
+  timeoutMs = 15_000,
 ) {
   // A release build must never create a finance-audit client, even if this
   // function is invoked directly through an unexpected navigation path.
@@ -109,7 +129,7 @@ export function makeAuditPreviewClient(
     throw new AuditPreviewError(0, "An isolated staging API is required.");
   const approvedOrigin = new URL(safeBase).origin;
   const token = stagingToken.trim();
-  if (!token || token.length < 12 || token.length > 4096 || /\s/.test(token))
+  if (!isValidAuditStagingToken(token))
     throw new AuditPreviewError(
       401,
       "A separate staging administrator token is required.",
@@ -121,16 +141,58 @@ export function makeAuditPreviewClient(
         0,
         "Only read-only reconciliation endpoints are available.",
       );
-    const response = await fetcher(safeBase + path, {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + token,
-        Accept: "application/json, text/csv",
+    if (signal?.aborted)
+      throw new AuditPreviewError(499, "Staging request cancelled.");
+    const controller = new AbortController();
+    let rejectStopped!: (error: AuditPreviewError) => void;
+    const stopped = new Promise<never>(
+      (_, reject: (reason: AuditPreviewError) => void) => {
+        rejectStopped = reject;
       },
-      signal,
-      cache: "no-store",
-      redirect: "error",
-    });
+    );
+    const cancel = () => {
+      controller.abort();
+      rejectStopped(new AuditPreviewError(499, "Staging request cancelled."));
+    };
+    signal?.addEventListener("abort", cancel, { once: true });
+    const boundedTimeoutMs = Math.max(25, Math.min(30_000, timeoutMs));
+    const timeout = setTimeout(() => {
+      controller.abort();
+      rejectStopped(
+        new AuditPreviewError(
+          408,
+          "Staging request timed out. Retry when connected.",
+        ),
+      );
+    }, boundedTimeoutMs);
+
+    let response: Response;
+    try {
+      response = await Promise.race([
+        fetcher(safeBase + path, {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + token,
+            Accept: "application/json, text/csv",
+          },
+          signal: controller.signal,
+          cache: "no-store",
+          redirect: "error",
+        }),
+        stopped,
+      ]);
+    } catch (reason) {
+      if (reason instanceof AuditPreviewError) throw reason;
+      if (signal?.aborted)
+        throw new AuditPreviewError(499, "Staging request cancelled.");
+      throw new AuditPreviewError(
+        503,
+        "Staging network unavailable. No payment action was performed.",
+      );
+    } finally {
+      clearTimeout(timeout);
+      signal?.removeEventListener("abort", cancel);
+    }
     if (response.url) {
       const returned = new URL(response.url);
       if (returned.origin !== approvedOrigin) {

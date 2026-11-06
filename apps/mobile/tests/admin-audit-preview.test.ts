@@ -221,3 +221,103 @@ test("rejects a fetch implementation that redirects to a different origin", asyn
       error.message === "Unexpected staging redirect.",
   );
 });
+
+test("validates disposable staging bearer tokens before opening the native screen", async () => {
+  const { isValidAuditStagingToken } =
+    await import("../src/lib/admin-audit-preview");
+  assert.equal(
+    isValidAuditStagingToken("  temporary-staging-admin-token  "),
+    true,
+  );
+  assert.equal(isValidAuditStagingToken("short"), false);
+  assert.equal(isValidAuditStagingToken("token with whitespace"), false);
+  assert.equal(isValidAuditStagingToken("A".repeat(4097)), false);
+  assert.equal(isValidAuditStagingToken("A".repeat(4096)), true);
+});
+
+test("stalled staging HTTP times out without creating a payment or hanging the UI", async () => {
+  let method: string | undefined;
+  let requestSignal: AbortSignal | undefined;
+  const client = makeAuditPreviewClient(
+    staging,
+    token,
+    async (_input, options) => {
+      method = options?.method;
+      requestSignal = options?.signal ?? undefined;
+      return await new Promise<Response>(() => undefined);
+    },
+    35,
+  );
+  await assert.rejects(
+    client.report(),
+    (e: unknown) =>
+      e instanceof AuditPreviewError &&
+      e.status === 408 &&
+      !e.message.includes(token),
+  );
+  assert.equal(method, "GET");
+  assert.equal(requestSignal?.aborted, true);
+});
+
+test("user cancellation stops a pending staging fetch without leaking credentials", async () => {
+  const controller = new AbortController();
+  const client = makeAuditPreviewClient(
+    staging,
+    token,
+    async () => await new Promise<Response>(() => undefined),
+    5_000,
+  );
+  const result = client.list(undefined, controller.signal);
+  controller.abort();
+  await assert.rejects(
+    result,
+    (e: unknown) => e instanceof AuditPreviewError && e.status === 499,
+  );
+});
+
+test("already cancelled audit requests never invoke a network fetch", async () => {
+  let calls = 0;
+  const controller = new AbortController();
+  controller.abort();
+  const client = makeAuditPreviewClient(staging, token, async () => {
+    calls++;
+    return success({});
+  });
+  await assert.rejects(
+    client.report(controller.signal),
+    (e: unknown) => e instanceof AuditPreviewError && e.status === 499,
+  );
+  assert.equal(calls, 0);
+});
+
+test("network failures expose only a generic staging error, never raw secrets", async () => {
+  const client = makeAuditPreviewClient(staging, token, async () => {
+    throw new Error("private network token " + token);
+  });
+  await assert.rejects(
+    client.report(),
+    (e: unknown) =>
+      e instanceof AuditPreviewError &&
+      e.status === 503 &&
+      !e.message.includes(token),
+  );
+});
+
+test("CSV paging never skips a dismissed share sheet or loops after the final page", async () => {
+  const { afterAuditCsvShare } = await import("../src/lib/admin-audit-preview");
+  assert.deepEqual(afterAuditCsvShare(false, true, "next-page"), {
+    advance: false,
+    exhausted: false,
+    nextCursor: null,
+  });
+  assert.deepEqual(afterAuditCsvShare(true, true, "next-page"), {
+    advance: true,
+    exhausted: false,
+    nextCursor: "next-page",
+  });
+  assert.deepEqual(afterAuditCsvShare(true, false, null), {
+    advance: true,
+    exhausted: true,
+    nextCursor: null,
+  });
+});
