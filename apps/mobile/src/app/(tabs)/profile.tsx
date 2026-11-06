@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useAuth } from "../../providers/auth";
 import { colors } from "../../theme";
+import { currentAuditPreviewBase } from "../../lib/admin-audit-preview";
 
 export default function ProfileScreen() {
   const { user, loading, logout } = useAuth();
@@ -58,6 +59,22 @@ export default function ProfileScreen() {
             <Text style={styles.followingText}>Delivery addresses</Text>
             <Ionicons name="chevron-forward" color={colors.muted} size={20} />
           </Pressable>
+          {currentAuditPreviewBase() ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Development finance audit preview"
+              style={styles.followingLink}
+              onPress={() => router.push("/admin-audit")}
+            >
+              <Ionicons
+                name="shield-checkmark-outline"
+                color={colors.orange}
+                size={23}
+              />
+              <Text style={styles.followingText}>Finance audit (dev only)</Text>
+              <Ionicons name="chevron-forward" color={colors.muted} size={20} />
+            </Pressable>
+          ) : null}
           <Pressable
             style={styles.secondary}
             accessibilityRole="button"
