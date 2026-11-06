@@ -41,6 +41,10 @@ if (( disk_kib < 16 * 1024 * 1024 || mem_kib < 6 * 1024 * 1024 || swap_kib < 2 *
   exit 23
 fi
 
+# A development build must never silently fall back to https://eazicart.com/api.
+# Mandatory before creating caches or touching Gradle project configuration.
+node "$APP_ROOT/scripts/android-qa-api-preflight.mjs"
+
 mkdir -p "$GRADLE_USER_HOME"
 printf 'sdk.dir=%s\n' "$ANDROID_SDK_ROOT" > "$APP_ROOT/android/local.properties"
 chmod 600 "$APP_ROOT/android/local.properties"

@@ -1,0 +1,95 @@
+# PREPARED ONLY. This workflow has no push, pull_request, or cron trigger.
+# It will only become dispatchable after an authorized merge to the default
+# branch. No build is triggered by adding this file to a review branch.
+name: EaziCart Android QA debug build (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      staging_api_base_url:
+        description: "Approved isolated HTTPS staging API URL ending in /api (never eazicart.com)"
+        required: true
+        type: string
+      staging_api_hostname:
+        description: "Approved hostname of the isolated staging API"
+        required: true
+        type: string
+      confirmation:
+        description: "Enter BUILD_DEBUG_ONLY to acknowledge local QA build, no publication"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eazicart-manual-android-debug
+  cancel-in-progress: false
+
+jobs:
+  debug-apk:
+    # An explicitly provisioned, isolated runner; NOT the production VPS.
+    runs-on: [self-hosted, linux, x64, eazicart-android-qa]
+    timeout-minutes: 120
+    env:
+      CI: "1"
+      EXPO_NO_TELEMETRY: "1"
+      EAZICART_ANDROID_QA_ALLOW_DEBUG_BUILD: "1"
+      EXPO_PUBLIC_EAZICART_ENABLE_ADMIN_AUDIT_PREVIEW: "0"
+      EXPO_PUBLIC_EAZICART_API_BASE_URL: ${{ inputs.staging_api_base_url }}
+      EAZICART_ANDROID_QA_ALLOWED_API_HOST: ${{ inputs.staging_api_hostname }}
+      # Runner operator must provision ANDROID_SDK_ROOT, JAVA_HOME and
+      # GRADLE_USER_HOME on that isolated runner, not as repo secrets.
+    steps:
+      - name: Explicit authorization gate
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          if [ "$CONFIRMATION" != "BUILD_DEBUG_ONLY" ]; then
+            echo "Refused: explicit manual debug-build confirmation missing"
+            exit 23
+          fi
+
+      - name: Checkout reviewed development branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
+          run_install: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Verify API isolation before any native build
+        run: node apps/mobile/scripts/android-qa-api-preflight.mjs
+
+      - name: Test staging API preflight
+        run: node --test apps/mobile/scripts/android-qa-api-preflight.test.mjs
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate native client
+        run: |
+          pnpm --filter @eazicart/mobile typecheck
+          pnpm --filter @eazicart/mobile lint
+          pnpm --filter @eazicart/mobile test
+
+      - name: Generate local Android native project
+        run: pnpm --filter @eazicart/mobile exec expo prebuild --platform android --no-install
+
+      - name: Assemble and verify local debug APK
+        run: bash apps/mobile/scripts/android-debug-qa.sh
+
+      - name: Record checksum only
+        if: success()
+        run: |
+          echo "Android QA debug build verified (not uploaded, published or deployed)." >> "$GITHUB_STEP_SUMMARY"
+          sha256sum apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk >> "$GITHUB_STEP_SUMMARY"
