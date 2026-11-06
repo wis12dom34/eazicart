@@ -55,3 +55,9 @@ echo "Building isolated EaziCart Android ARM64 debug APK (no release signing)."
   :app:assembleDebug
 echo "Debug APK output (not installed, uploaded or published):"
 find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -printf '%f %s bytes\n'
+APK="$PWD/app/build/outputs/apk/debug/app-debug.apk"
+if [[ ! -f "$APK" ]]; then
+  echo "FAILED: Gradle returned successfully but no expected debug APK exists" >&2
+  exit 1
+fi
+"$APP_ROOT/scripts/android-apk-verify.sh" "$APK"
