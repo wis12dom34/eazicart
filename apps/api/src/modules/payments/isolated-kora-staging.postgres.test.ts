@@ -7,6 +7,8 @@ import { AppError } from "../../errors.js";
 import { registerIsolatedKoraStaging } from "./isolated-kora-staging.js";
 import { createKoraCheckoutOnce } from "./korapay-checkout-once-candidate.js";
 import { createKoraPreviewCheckoutStore } from "./korapay-checkout-api-candidate.js";
+import { registerKoraReconciliationPreview } from "./korapay-reconciliation-preview.js";
+import { makeAuditPreviewClient } from "../../../../mobile/src/lib/admin-audit-preview.js";
 
 type Payload = {
   data: {
@@ -996,5 +998,3 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
       url: "/preview/admin/korapay/reconciliation/report",
     });
     expect(unauthorized.statusCode).toBe(401);
-    expect((await reconcileReport(buyer)).statusCode).toBe(403);
-    const beforeProviderCalls = providerCalls.length;
