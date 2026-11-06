@@ -250,9 +250,25 @@ model Payment {
   paidAt DateTime?
   orderId String @unique
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  koraCheckoutAttempt KoraCheckoutAttempt?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([status, createdAt])
+}
+
+/// Permanent first-initiation claim for a KoraPay payment reference.
+/// No automatic lease expiration: an ambiguous provider call must be
+/// reconciled with KoraPay, never blindly initialized again.
+model KoraCheckoutAttempt {
+  paymentId String @id
+  reference String @db.VarChar(128)
+  state String @default("INITIATING") @db.VarChar(24)
+  authorizationUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([state, createdAt])
 }
 
 model SellerFulfillment {
