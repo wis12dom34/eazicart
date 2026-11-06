@@ -5,7 +5,17 @@ set -euo pipefail
 
 APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_ROOT="$(cd "$APP_ROOT/../.." && pwd)"
+# Actions uses detached HEAD by default. Never guess the branch from HEAD:
+# verify GitHub's actual branch ref, or a local named development branch.
 BRANCH="$(git -C "$REPO_ROOT" branch --show-current)"
+if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+  if [[ "${GITHUB_REF_TYPE:-}" != "branch" || "${GITHUB_REF_NAME:-}" != feat/* ||
+        "${GITHUB_REF:-}" != "refs/heads/${GITHUB_REF_NAME:-}" ]]; then
+    echo "REFUSED: GitHub Actions must be manually dispatched on a development branch" >&2
+    exit 23
+  fi
+  BRANCH="$GITHUB_REF_NAME"
+fi
 if [[ "${EAZICART_ANDROID_QA_ALLOW_DEBUG_BUILD:-}" != "1" ]]; then
   echo "REFUSED: set EAZICART_ANDROID_QA_ALLOW_DEBUG_BUILD=1 for an authorized local development build" >&2
   exit 23
