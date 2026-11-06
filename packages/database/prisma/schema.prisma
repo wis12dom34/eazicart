@@ -84,6 +84,7 @@ model User {
   sellerProfile SellerProfile?
   cart Cart?
   orders Order[]
+  orderIdempotencyRecords OrderIdempotency[]
   addresses Address[]
   savedProducts SavedProduct[]
   following Follow[] @relation("Follower")
@@ -201,9 +202,27 @@ model Order {
   items OrderItem[]
   fulfillments SellerFulfillment[]
   payment Payment?
+  idempotencyRecord OrderIdempotency?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([userId, createdAt])
+}
+
+/// Additive, buyer-scoped checkout nonce.
+/// Records are written atomically in the same transaction as the order and
+/// cart deletion; a replay returns the immutable original order.
+model OrderIdempotency {
+  buyerId String
+  key String @db.VarChar(128)
+  requestHash String @db.VarChar(64)
+  orderId String? @unique
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  buyer User @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@id([buyerId, key])
+  @@index([createdAt])
 }
 
 model OrderItem {
