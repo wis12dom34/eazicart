@@ -87,6 +87,12 @@ jobs:
       - name: Test staging API preflight
         run: node --test apps/mobile/scripts/android-qa-api-preflight.test.mjs
 
+      - name: Test staging identity guard
+        run: node --test apps/mobile/scripts/android-qa-staging-handshake.test.mjs
+
+      - name: Verify live isolated staging identity (GET only)
+        run: node apps/mobile/scripts/android-qa-staging-handshake.mjs
+
       - name: Test manual branch authorization
         run: bash apps/mobile/scripts/android-qa-branch.test.sh
 

@@ -9,6 +9,7 @@ import { registerKoraPreviewWebhook } from "./korapay-preview-route-candidate.js
 import { registerIdempotentOrderPreview } from "../orders/idempotent-preview.js";
 import { createKoraCheckoutOnce } from "./korapay-checkout-once-candidate.js";
 import { registerKoraReconciliationPreview } from "./korapay-reconciliation-preview.js";
+import { stagingIdentity } from "./isolated-staging-identity.js";
 
 /**
  * NEVER import in production startup.
@@ -48,6 +49,15 @@ export async function registerIsolatedKoraStaging(
   }
   if (!options.webhookSecret || !options.fetcher)
     throw new Error("Synthetic provider and webhook fixture required");
+
+  // Test-only staging marker: a build runner can reject a wrong/prod API.
+  // This is registered ONLY after checking the disposable PostgreSQL cluster.
+  app.get("/preview/staging/identity", async (_request, reply) => {
+    reply.header("Cache-Control", "private, no-store");
+    reply.header("X-EaziCart-QA-Environment", "disposable-fixture");
+    reply.header("X-Content-Type-Options", "nosniff");
+    return reply.send({ data: stagingIdentity });
+  });
 
   // No production payment or order endpoint is changed. All namespaced.
   registerIdempotentOrderPreview(app, db);

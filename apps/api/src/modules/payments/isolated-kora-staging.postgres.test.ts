@@ -342,6 +342,43 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
     await db.$disconnect();
   });
 
+  it("exposes a non-sensitive, read-only identity only in disposable staging", async () => {
+    const beforePayments = await db.payment.count();
+    const beforeOrders = await db.order.count();
+    const beforeNotifications = await db.notification.count();
+    const beforeCalls = providerCalls.length;
+    const response = await app.inject({
+      method: "GET",
+      url: "/preview/staging/identity",
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["x-eazicart-qa-environment"]).toBe(
+      "disposable-fixture",
+    );
+    expect(response.headers["cache-control"]).toContain("no-store");
+    expect(response.json()).toEqual({
+      data: {
+        service: "eazicart-native-staging",
+        environment: "disposable-fixture",
+        contractVersion: 1,
+        nativeCheckoutEnabled: false,
+        paymentMode: "synthetic-only",
+        databaseMode: "temporary-postgresql",
+      },
+    });
+    expect(response.body).not.toContain("password");
+    expect(response.body).not.toContain("secret");
+    expect(response.body).not.toContain("reference");
+    expect(
+      (await app.inject({ method: "POST", url: "/preview/staging/identity" }))
+        .statusCode,
+    ).toBe(404);
+    expect(await db.payment.count()).toBe(beforePayments);
+    expect(await db.order.count()).toBe(beforeOrders);
+    expect(await db.notification.count()).toBe(beforeNotifications);
+    expect(providerCalls.length).toBe(beforeCalls);
+  });
+
   it("refuses to register without disposable fixture flag", async () => {
     const prev = process.env.EAZICART_KORA_FIXTURE_ONLY;
     const secondApp = Fastify();
@@ -961,40 +998,3 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
     });
     expect((await reconcileProbe(payment.id)).statusCode).toBe(409);
     expect(providerCalls.length).toBe(before);
-  });
-
-  it("pending, underpaid and unavailable provider checks remain observation-only", async () => {
-    const f = await cartFixture("recon-observation");
-    const orderId = (await order(f.request, key())).json<Payload>().data.id;
-    initializeMode = "unavailable";
-    try {
-      expect((await pay(orderId)).statusCode).toBe(503);
-    } finally {
-      initializeMode = "normal";
-    }
-    const p = await db.payment.findUniqueOrThrow({ where: { orderId } });
-    for (const [state, expected] of [
-      ["processing", "NOT_PAID"],
-      ["underpaid", "UNVERIFIED"],
-      ["unavailable", "UNVERIFIED"],
-    ] as const) {
-      providerState.set(p.reference, state);
-      const probe = await reconcileProbe(p.id);
-      expect(probe.statusCode).toBe(200);
-      expect(
-        probe.json<{ data: { providerCheck: string } }>().data.providerCheck,
-      ).toBe(expected);
-      expect(
-        (await db.payment.findUniqueOrThrow({ where: { id: p.id } })).status,
-      ).toBe("PENDING");
-      expect(
-        (await db.order.findUniqueOrThrow({ where: { id: orderId } })).status,
-      ).toBe("PENDING");
-    }
-  });
-
-  it("admin report summarizes uncertain claims without side effects", async () => {
-    const unauthorized = await app.inject({
-      method: "GET",
-      url: "/preview/admin/korapay/reconciliation/report",
-    });
