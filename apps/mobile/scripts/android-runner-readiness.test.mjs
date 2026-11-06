@@ -9,6 +9,7 @@ const ready = Object.freeze({
   operatorApproved: true,
   productionServicesRunning: false,
   productionSourcePresent: false,
+  otherProductionWorkloadsPresent: false,
   freeDisk: 32 * GiB,
   availableRam: 12 * GiB,
   freeSwap: 4 * GiB,
@@ -33,6 +34,7 @@ test("rejects production services, production source, root and missing authoriza
     { operatorApproved: false },
     { productionServicesRunning: true },
     { productionSourcePresent: true },
+    { otherProductionWorkloadsPresent: true },
     { platform: "darwin" },
   ])
     assert.equal(

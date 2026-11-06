@@ -27,6 +27,10 @@ export function checkAndroidRunnerReadiness(snapshot) {
     errors.push(
       "Production EaziCart source exists on this host; use a separate machine.",
     );
+  if (snapshot.otherProductionWorkloadsPresent)
+    errors.push(
+      "Other live production applications detected; use a dedicated build machine.",
+    );
   if (!Number.isFinite(snapshot.freeDisk) || snapshot.freeDisk < 16 * GIB)
     errors.push("At least 16 GiB of free disk is required.");
   if (
@@ -134,6 +138,20 @@ export function inspectAndroidRunnerEnvironment(env = process.env) {
     operatorApproved: env.EAZICART_ANDROID_QA_ISOLATED_RUNNER === "1",
     productionServicesRunning: isProductionServiceRunning(),
     productionSourcePresent: fs.existsSync("/opt/eazicart/source"),
+    otherProductionWorkloadsPresent: [
+      "/opt/wickspend-v2",
+      "/opt/primesocialhub",
+      "/opt/wickspend-social-agent",
+      "/opt/pulseloop-preview",
+      "/home/rickyverify/ricky-verify",
+    ].some((location) => fs.existsSync(location)),
+    otherProductionWorkloadsPresent: [
+      "/opt/wickspend-v2",
+      "/opt/primesocialhub",
+      "/opt/wickspend-social-agent",
+      "/opt/pulseloop-preview",
+      "/home/rickyverify/ricky-verify",
+    ].some((location) => fs.existsSync(location)),
     freeDisk,
     ...readMemInfo(),
     javaMajor,

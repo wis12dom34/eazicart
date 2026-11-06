@@ -57,6 +57,11 @@ jobs:
             echo "Refused: repository-maintainer staging hostname is not configured"
             exit 23
           fi
+          if [[ ! "$EAZICART_ANDROID_QA_APPROVED_SHA" =~ ^[a-fA-F0-9]{40}$ ||
+                "$GITHUB_SHA" != "$EAZICART_ANDROID_QA_APPROVED_SHA" ]]; then
+            echo "Refused: revision is not the exact maintainer-approved commit"
+            exit 23
+          fi
 
       - name: Checkout reviewed development branch
         uses: actions/checkout@v4
