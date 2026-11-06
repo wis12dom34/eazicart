@@ -35,6 +35,9 @@ jobs:
       EXPO_PUBLIC_EAZICART_API_BASE_URL: ${{ inputs.staging_api_base_url }}
       # Trusted repository variable controlled by maintainers, NOT dispatch input.
       EAZICART_ANDROID_QA_ALLOWED_API_HOST: ${{ vars.EAZICART_ANDROID_QA_ALLOWED_API_HOST }}
+      # Both variables must be configured by the repository maintainer.
+      EAZICART_ANDROID_QA_APPROVED_SHA: ${{ vars.EAZICART_ANDROID_QA_APPROVED_SHA }}
+      EAZICART_ANDROID_QA_ISOLATED_RUNNER: "1"
       # Runner operator must provision ANDROID_SDK_ROOT, JAVA_HOME and
       # GRADLE_USER_HOME on that isolated runner, not as repo secrets.
     steps:
@@ -71,6 +74,12 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
+
+      - name: Check dedicated runner and pinned source before dependencies
+        run: node apps/mobile/scripts/android-runner-readiness.mjs
+
+      - name: Test runner isolation policy
+        run: node --test apps/mobile/scripts/android-runner-readiness.test.mjs
 
       - name: Verify API isolation before any native build
         run: node apps/mobile/scripts/android-qa-api-preflight.mjs
