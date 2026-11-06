@@ -47,6 +47,7 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
   const app = Fastify();
   const buyer = "staging-kora-buyer";
   const stranger = "staging-kora-stranger";
+  const admin = "staging-kora-admin";
   const seller = "staging-kora-seller";
   const profile = "staging-kora-store";
   const category = "staging-kora-category";
@@ -157,6 +158,21 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
       headers: headers(user),
       payload: { orderId },
     });
+  const reconcileList = (user = admin, query = "") =>
+    app.inject({
+      method: "GET",
+      url: "/preview/admin/korapay/reconciliation" + query,
+      headers: headers(user),
+    });
+  const reconcileProbe = (paymentId: string, user = admin) =>
+    app.inject({
+      method: "GET",
+      url:
+        "/preview/admin/korapay/reconciliation/" +
+        encodeURIComponent(paymentId) +
+        "/probe",
+      headers: headers(user),
+    });
   const verify = (orderId: string, user = buyer) =>
     app.inject({
       method: "GET",
@@ -236,7 +252,7 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
     });
     app.decorate("authenticate", (request) => {
       const user = request.headers.authorization?.replace(/^Bearer /, "");
-      if (user !== buyer && user !== stranger)
+      if (user !== buyer && user !== stranger && user !== admin)
         throw new AppError(401, "UNAUTHORIZED", "Login required");
       request.userId = user;
       return Promise.resolve();
@@ -265,6 +281,13 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
           id: seller,
           email: "kora-seller@example.test",
           name: "Synthetic seller",
+          passwordHash: "fixture",
+        },
+        {
+          id: admin,
+          email: "kora-admin@example.test",
+          name: "Synthetic admin",
+          role: "ADMIN",
           passwordHash: "fixture",
         },
       ],
@@ -753,6 +776,206 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
     expect(providerCalls.filter((c) => c.kind === "initialize").length).toBe(
       before,
     );
+  });
+
+  it("reconciliation listing requires a real ADMIN role and never exposes PII", async () => {
+    const unauth = await app.inject({
+      method: "GET",
+      url: "/preview/admin/korapay/reconciliation",
+    });
+    expect(unauth.statusCode).toBe(401);
+    expect((await reconcileList(buyer)).statusCode).toBe(403);
+    expect((await reconcileList(stranger)).statusCode).toBe(403);
+    expect((await reconcileList(admin, "?limit=100")).statusCode).toBe(400);
+    expect((await reconcileList(admin, "?state=READY")).statusCode).toBe(400);
+
+    const listed = await reconcileList(admin, "?limit=1&state=UNKNOWN");
+    expect(listed.statusCode).toBe(200);
+    const payload = listed.json<{ data: Array<Record<string, unknown>> }>();
+    expect(payload.data.length).toBeLessThanOrEqual(1);
+    if (payload.data.length) {
+      expect(Object.keys(payload.data[0]!).sort()).toEqual(
+        [
+          "action",
+          "createdAt",
+          "currency",
+          "orderId",
+          "paymentId",
+          "paymentStatus",
+          "reference",
+          "referenceMatches",
+          "state",
+          "updatedAt",
+        ].sort(),
+      );
+      const publicResult = listed.body;
+      expect(publicResult).not.toContain("authorizationUrl");
+      expect(publicResult).not.toContain("checkout.korapay.com");
+      expect(publicResult).not.toContain("@example.test");
+    }
+    // Actual database role, not bearer header contents, determines access.
+    await db.user.update({ where: { id: admin }, data: { role: "BUYER" } });
+    try {
+      expect((await reconcileList(admin)).statusCode).toBe(403);
+    } finally {
+      await db.user.update({ where: { id: admin }, data: { role: "ADMIN" } });
+    }
+  });
+
+  it("read-only provider probe reports verified evidence but never settles or adjusts stock", async () => {
+    const f = await cartFixture("recon-provider-evidence");
+    const orderId = (await order(f.request, key())).json<Payload>().data.id;
+    initializeMode = "unavailable";
+    try {
+      expect((await pay(orderId)).statusCode).toBe(503);
+    } finally {
+      initializeMode = "normal";
+    }
+    const payment = await db.payment.findUniqueOrThrow({ where: { orderId } });
+    const beforeClaim = await db.koraCheckoutAttempt.findUniqueOrThrow({
+      where: { paymentId: payment.id },
+    });
+    expect(beforeClaim.state).toBe("UNKNOWN");
+    const beforeOrder = await db.order.findUniqueOrThrow({
+      where: { id: orderId },
+    });
+    const beforeProduct = await db.product.findUniqueOrThrow({
+      where: { id: f.productId },
+    });
+    const beforeFulfillment = await db.sellerFulfillment.count({
+      where: { orderId },
+    });
+    const beforeNotifications = await db.notification.count({
+      where: { userId: buyer },
+    });
+    const beforeProviderCalls = providerCalls.filter(
+      (c) => c.kind === "initialize",
+    ).length;
+    providerState.set(payment.reference, "success");
+    expect((await reconcileProbe(payment.id, buyer)).statusCode).toBe(403);
+    const examined = await reconcileProbe(payment.id);
+    expect(examined.statusCode).toBe(200);
+    expect(
+      examined.json<{
+        data: {
+          providerCheck: string;
+          action: string;
+          mayInitializeAgain: boolean;
+          localPaymentUpdated: boolean;
+        };
+      }>().data,
+    ).toMatchObject({
+      providerCheck: "VERIFIED",
+      action: "MANUAL_REVIEW_REQUIRED",
+      mayInitializeAgain: false,
+      localPaymentUpdated: false,
+    });
+    expect((await reconcileProbe(payment.id)).statusCode).toBe(200);
+    expect(providerCalls.filter((c) => c.kind === "initialize").length).toBe(
+      beforeProviderCalls,
+    );
+    expect(
+      await db.koraCheckoutAttempt.findUniqueOrThrow({
+        where: { paymentId: payment.id },
+      }),
+    ).toEqual(beforeClaim);
+    expect(await db.payment.findUniqueOrThrow({ where: { orderId } })).toEqual(
+      payment,
+    );
+    expect(
+      await db.order.findUniqueOrThrow({ where: { id: orderId } }),
+    ).toEqual(beforeOrder);
+    expect(
+      await db.product.findUniqueOrThrow({ where: { id: f.productId } }),
+    ).toEqual(beforeProduct);
+    expect(await db.sellerFulfillment.count({ where: { orderId } })).toBe(
+      beforeFulfillment,
+    );
+    expect(await db.notification.count({ where: { userId: buyer } })).toBe(
+      beforeNotifications,
+    );
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/preview/admin/korapay/reconciliation/" + payment.id + "/probe",
+          headers: headers(admin),
+          payload: {},
+        })
+      ).statusCode,
+    ).toBe(404);
+  });
+
+  it("probe cannot be tricked into an incorrect currency, reference or payment transition", async () => {
+    const f = await cartFixture("recon-invalid-reference");
+    const orderId = (await order(f.request, key())).json<Payload>().data.id;
+    const reference = "EC-recon-fake-1234567890";
+    const payment = await db.payment.create({
+      data: {
+        orderId,
+        reference,
+        status: "PENDING",
+        provider: "KORAPAY",
+        amount: "1250",
+        currency: "NGN",
+      },
+    });
+    await db.koraCheckoutAttempt.create({
+      data: {
+        paymentId: payment.id,
+        reference: "EC-recon-different-12345678",
+        state: "UNKNOWN",
+      },
+    });
+    const before = providerCalls.length;
+    expect((await reconcileProbe(payment.id)).statusCode).toBe(409);
+    expect(providerCalls.length).toBe(before);
+    await db.koraCheckoutAttempt.update({
+      where: { paymentId: payment.id },
+      data: { reference },
+    });
+    await db.payment.update({
+      where: { id: payment.id },
+      data: { currency: "USD" },
+    });
+    expect((await reconcileProbe(payment.id)).statusCode).toBe(409);
+    expect(providerCalls.length).toBe(before);
+    await db.payment.update({
+      where: { id: payment.id },
+      data: { currency: "NGN", status: "SUCCESS" },
+    });
+    expect((await reconcileProbe(payment.id)).statusCode).toBe(409);
+    expect(providerCalls.length).toBe(before);
+  });
+
+  it("pending, underpaid and unavailable provider checks remain observation-only", async () => {
+    const f = await cartFixture("recon-observation");
+    const orderId = (await order(f.request, key())).json<Payload>().data.id;
+    initializeMode = "unavailable";
+    try {
+      expect((await pay(orderId)).statusCode).toBe(503);
+    } finally {
+      initializeMode = "normal";
+    }
+    const p = await db.payment.findUniqueOrThrow({ where: { orderId } });
+    for (const [state, expected] of [
+      ["processing", "NOT_PAID"],
+      ["underpaid", "UNVERIFIED"],
+      ["unavailable", "UNVERIFIED"],
+    ] as const) {
+      providerState.set(p.reference, state);
+      const probe = await reconcileProbe(p.id);
+      expect(probe.statusCode).toBe(200);
+      expect(
+        probe.json<{ data: { providerCheck: string } }>().data.providerCheck,
+      ).toBe(expected);
+      expect(
+        (await db.payment.findUniqueOrThrow({ where: { id: p.id } })).status,
+      ).toBe("PENDING");
+      expect(
+        (await db.order.findUniqueOrThrow({ where: { id: orderId } })).status,
+      ).toBe("PENDING");
+    }
   });
 
   it("all provider requests stay within the synthetic fetcher", () => {

@@ -8,6 +8,7 @@ import {
 import { registerKoraPreviewWebhook } from "./korapay-preview-route-candidate.js";
 import { registerIdempotentOrderPreview } from "../orders/idempotent-preview.js";
 import { createKoraCheckoutOnce } from "./korapay-checkout-once-candidate.js";
+import { registerKoraReconciliationPreview } from "./korapay-reconciliation-preview.js";
 
 /**
  * NEVER import in production startup.
@@ -67,6 +68,11 @@ export async function registerIsolatedKoraStaging(
   });
   registerKoraPreviewWebhook(app, {
     store,
+    secret: options.webhookSecret,
+    fetcher: options.fetcher,
+  });
+  // No production import. Only admin-gated GET routes, never settlement.
+  await registerKoraReconciliationPreview(app, db, {
     secret: options.webhookSecret,
     fetcher: options.fetcher,
   });
