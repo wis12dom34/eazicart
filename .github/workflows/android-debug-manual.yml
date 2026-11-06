@@ -87,6 +87,12 @@ jobs:
       - name: Test staging API preflight
         run: node --test apps/mobile/scripts/android-qa-api-preflight.test.mjs
 
+      - name: Test synthetic staging attestation contract
+        run: node --test apps/mobile/scripts/android-staging-attestation.test.mjs
+
+      - name: Verify dedicated disposable staging service before dependencies
+        run: node apps/mobile/scripts/android-staging-attestation.mjs
+
       - name: Test manual branch authorization
         run: bash apps/mobile/scripts/android-qa-branch.test.sh
 

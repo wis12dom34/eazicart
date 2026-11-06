@@ -49,6 +49,22 @@ export async function registerIsolatedKoraStaging(
   if (!options.webhookSecret || !options.fetcher)
     throw new Error("Synthetic provider and webhook fixture required");
 
+  // Public proof of *disposable fixture* identity for QA tooling. No sensitive
+  // server, database, customer, or token details are exposed. This route is
+  // impossible to register in the production API startup.
+  app.get("/preview/staging/health", async (_request, reply) =>
+    reply.header("Cache-Control", "no-store").send({
+      data: {
+        status: "ok",
+        service: "eazicart-api",
+        environment: "DISPOSABLE_FIXTURE",
+        databaseScope: "EPHEMERAL_POSTGRESQL",
+        paymentProvider: "SYNTHETIC",
+        realPaymentsEnabled: false,
+      },
+    }),
+  );
+
   // No production payment or order endpoint is changed. All namespaced.
   registerIdempotentOrderPreview(app, db);
   const store = createKoraPreviewCheckoutStore(db);

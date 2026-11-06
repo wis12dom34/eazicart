@@ -36,8 +36,8 @@ export function checkAndroidRunnerReadiness(snapshot) {
     errors.push("At least 6 GiB of available RAM is required.");
   if (!Number.isFinite(snapshot.freeSwap) || snapshot.freeSwap < 2 * GIB)
     errors.push("At least 2 GiB of free swap is required.");
-  if (snapshot.javaMajor !== 21)
-    errors.push("A separately installed JDK 21 is required.");
+  if (snapshot.javaMajor !== 17)
+    errors.push("A separately installed JDK 17 is required for Expo SDK 58.");
   if (!snapshot.sdkReady)
     errors.push(
       "Android SDK API 37 / Build Tools 37 / NDK 27.1.12297006 missing.",
@@ -88,6 +88,18 @@ function isProductionServiceRunning() {
   return false;
 }
 
+/** Verify the actual Android SDK 37 platform layout, not a versioned build-tools folder. */
+export function checkAndroidSdkLayout(sdk, java, exists = fs.existsSync) {
+  if (!sdk || !java) return false;
+  return [
+    path.join(sdk, "platforms", "android-37", "android.jar"),
+    path.join(sdk, "build-tools", "37.0.0", "apksigner"),
+    path.join(sdk, "ndk", "27.1.12297006", "source.properties"),
+    path.join(sdk, "platform-tools", "adb"),
+    path.join(java, "bin", "java"),
+  ].every((file) => exists(file));
+}
+
 export function inspectAndroidRunnerEnvironment(env = process.env) {
   const sdk = env.ANDROID_SDK_ROOT ?? "";
   const gradle = env.GRADLE_USER_HOME ?? "";
@@ -120,14 +132,7 @@ export function inspectAndroidRunnerEnvironment(env = process.env) {
       !abs.startsWith("/root/") &&
       !abs.startsWith("/etc/");
   }
-  const sdkReady = Boolean(
-    sdk &&
-    fs.existsSync(path.join(sdk, "platforms", "android-37.0")) &&
-    fs.existsSync(path.join(sdk, "build-tools", "37.0.0", "apksigner")) &&
-    fs.existsSync(path.join(sdk, "ndk", "27.1.12297006")) &&
-    java &&
-    fs.existsSync(path.join(java, "bin", "java")),
-  );
+  const sdkReady = checkAndroidSdkLayout(sdk, java);
   return checkAndroidRunnerReadiness({
     platform: os.platform(),
     uid: process.getuid?.(),

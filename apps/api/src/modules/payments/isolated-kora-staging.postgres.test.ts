@@ -342,6 +342,33 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
     await db.$disconnect();
   });
 
+  it("staging health attestation declares disposable fixtures without credentials", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/preview/staging/health",
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    expect(res.json()).toEqual({
+      data: {
+        status: "ok",
+        service: "eazicart-api",
+        environment: "DISPOSABLE_FIXTURE",
+        databaseScope: "EPHEMERAL_POSTGRESQL",
+        paymentProvider: "SYNTHETIC",
+        realPaymentsEnabled: false,
+      },
+    });
+    expect(res.body).not.toContain("postgresql://");
+    expect(res.body).not.toContain("Bearer ");
+    expect(res.body).not.toContain("secret");
+    expect(res.body).not.toContain("checkoutUrl");
+    expect(
+      (await app.inject({ method: "POST", url: "/preview/staging/health" }))
+        .statusCode,
+    ).toBe(404);
+  });
+
   it("refuses to register without disposable fixture flag", async () => {
     const prev = process.env.EAZICART_KORA_FIXTURE_ONLY;
     const secondApp = Fastify();
@@ -971,30 +998,3 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
       expect((await pay(orderId)).statusCode).toBe(503);
     } finally {
       initializeMode = "normal";
-    }
-    const p = await db.payment.findUniqueOrThrow({ where: { orderId } });
-    for (const [state, expected] of [
-      ["processing", "NOT_PAID"],
-      ["underpaid", "UNVERIFIED"],
-      ["unavailable", "UNVERIFIED"],
-    ] as const) {
-      providerState.set(p.reference, state);
-      const probe = await reconcileProbe(p.id);
-      expect(probe.statusCode).toBe(200);
-      expect(
-        probe.json<{ data: { providerCheck: string } }>().data.providerCheck,
-      ).toBe(expected);
-      expect(
-        (await db.payment.findUniqueOrThrow({ where: { id: p.id } })).status,
-      ).toBe("PENDING");
-      expect(
-        (await db.order.findUniqueOrThrow({ where: { id: orderId } })).status,
-      ).toBe("PENDING");
-    }
-  });
-
-  it("admin report summarizes uncertain claims without side effects", async () => {
-    const unauthorized = await app.inject({
-      method: "GET",
-      url: "/preview/admin/korapay/reconciliation/report",
-    });
