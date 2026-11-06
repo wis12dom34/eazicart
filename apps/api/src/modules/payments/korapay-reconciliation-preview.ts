@@ -4,6 +4,11 @@ import { z } from "zod";
 import { AppError } from "../../errors.js";
 import { protectedRoute, userId } from "../shared.js";
 import {
+  decodeReconciliationCursor,
+  encodeReconciliationCursor,
+  reconcileCsv,
+} from "./korapay-reconciliation-csv.js";
+import {
   verifyKoraChargeCandidate,
   type KoraFetcher,
 } from "./korapay-api-adapter-candidate.js";
@@ -20,6 +25,13 @@ const listQuery = z
   .object({
     limit: z.coerce.number().int().min(1).max(50).default(20),
     state: z.enum(["INITIATING", "UNKNOWN"]).optional(),
+  })
+  .strict();
+const exportQuery = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(250).default(100),
+    state: z.enum(["INITIATING", "UNKNOWN"]).optional(),
+    cursor: z.string().min(2).max(512).optional(),
   })
   .strict();
 const paymentParams = z
@@ -129,6 +141,128 @@ export async function registerKoraReconciliationPreview(
       })),
     };
   });
+
+  // Aggregated read-only dashboard summary; never exposes buyer PII.
+  app.get(
+    "/preview/admin/korapay/reconciliation/report",
+    auth,
+    async (request, reply) => {
+      await adminOnly({ userId: userId(request) });
+      reply.header("Cache-Control", "private, no-store");
+      const rows = await db.koraCheckoutAttempt.groupBy({
+        by: ["state"],
+        where: {
+          state: { in: ["INITIATING", "UNKNOWN"] },
+          payment: { provider: "KORAPAY" },
+        },
+        _count: { _all: true },
+      });
+      const counts = { INITIATING: 0, UNKNOWN: 0 };
+      for (const row of rows) {
+        if (row.state === "INITIATING" || row.state === "UNKNOWN")
+          counts[row.state] = row._count._all;
+      }
+      return {
+        data: {
+          generatedAt: new Date().toISOString(),
+          uncertainTotal: counts.INITIATING + counts.UNKNOWN,
+          counts,
+          action: "MANUAL_REVIEW_REQUIRED" as const,
+          automaticReinitializationAllowed: false,
+          automaticSettlementAllowed: false,
+        },
+      };
+    },
+  );
+
+  // Bounded, cursor-paginated CSV of *local* uncertain claims. No provider
+  // requests and no writes. Each page is at most 250 records.
+  app.get(
+    "/preview/admin/korapay/reconciliation/export.csv",
+    auth,
+    async (request, reply) => {
+      await adminOnly({ userId: userId(request) });
+      const { state, limit, cursor } = exportQuery.parse(request.query);
+      const where = {
+        state: { in: state ? [state] : ["INITIATING", "UNKNOWN"] },
+        payment: { provider: "KORAPAY" },
+      };
+      const cursorId = cursor ? decodeReconciliationCursor(cursor) : null;
+      if (cursor && !cursorId) {
+        throw new AppError(
+          400,
+          "INVALID_CURSOR",
+          "Invalid audit export cursor",
+        );
+      }
+      if (cursorId) {
+        const matching = await db.koraCheckoutAttempt.findFirst({
+          where: { ...where, paymentId: cursorId },
+          select: { paymentId: true },
+        });
+        if (!matching)
+          throw new AppError(
+            400,
+            "INVALID_CURSOR",
+            "Cursor does not match this report",
+          );
+      }
+      const records = await db.koraCheckoutAttempt.findMany({
+        where,
+        orderBy: [{ createdAt: "asc" }, { paymentId: "asc" }],
+        ...(cursorId ? { cursor: { paymentId: cursorId }, skip: 1 } : {}),
+        take: limit + 1,
+        select: {
+          paymentId: true,
+          reference: true,
+          state: true,
+          createdAt: true,
+          updatedAt: true,
+          payment: {
+            select: {
+              orderId: true,
+              reference: true,
+              status: true,
+              currency: true,
+            },
+          },
+        },
+      });
+      const hasMore = records.length > limit;
+      const page = records.slice(0, limit);
+      const csv = reconcileCsv(
+        page.map((row) => ({
+          paymentId: row.paymentId,
+          orderId: row.payment.orderId,
+          reference: row.reference,
+          initiationState: row.state,
+          paymentStatus: row.payment.status,
+          currency: row.payment.currency,
+          referenceMatches: row.reference === row.payment.reference,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          action: "MANUAL_REVIEW_REQUIRED",
+        })),
+      );
+      reply
+        .header("Content-Type", "text/csv; charset=utf-8")
+        .header(
+          "Content-Disposition",
+          'attachment; filename="eazicart-korapay-reconciliation.csv"',
+        )
+        .header("Cache-Control", "private, no-store")
+        .header("X-Content-Type-Options", "nosniff")
+        .header("Referrer-Policy", "no-referrer")
+        .header("X-Export-Has-More", String(hasMore));
+      if (hasMore && page.length) {
+        reply.header(
+          "X-Export-Next-Cursor",
+          encodeReconciliationCursor(page[page.length - 1]!.paymentId),
+        );
+      }
+      return reply.send(csv);
+    },
+  );
 
   app.get(
     "/preview/admin/korapay/reconciliation/:paymentId/probe",

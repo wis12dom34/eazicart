@@ -164,6 +164,18 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
       url: "/preview/admin/korapay/reconciliation" + query,
       headers: headers(user),
     });
+  const reconcileReport = (user = admin) =>
+    app.inject({
+      method: "GET",
+      url: "/preview/admin/korapay/reconciliation/report",
+      headers: headers(user),
+    });
+  const reconcileExport = (query = "", user = admin) =>
+    app.inject({
+      method: "GET",
+      url: "/preview/admin/korapay/reconciliation/export.csv" + query,
+      headers: headers(user),
+    });
   const reconcileProbe = (paymentId: string, user = admin) =>
     app.inject({
       method: "GET",
@@ -978,8 +990,11 @@ run("Order -> KoraPay synthetic staging (disposable PostgreSQL only)", () => {
     }
   });
 
-  it("all provider requests stay within the synthetic fetcher", () => {
-    expect(providerCalls.some((c) => c.kind === "initialize")).toBe(true);
-    expect(providerCalls.some((c) => c.kind === "verify")).toBe(true);
-  });
-});
+  it("admin report summarizes uncertain claims without side effects", async () => {
+    const unauthorized = await app.inject({
+      method: "GET",
+      url: "/preview/admin/korapay/reconciliation/report",
+    });
+    expect(unauthorized.statusCode).toBe(401);
+    expect((await reconcileReport(buyer)).statusCode).toBe(403);
+    const beforeProviderCalls = providerCalls.length;
