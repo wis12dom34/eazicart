@@ -5,6 +5,7 @@ import {
   ApiError,
   setAccessToken,
   setRefreshHandler,
+  request,
 } from "../src/lib/api";
 
 const originalFetch = globalThis.fetch;
@@ -108,4 +109,62 @@ test("displays upstream validation errors without leaking secret data", async ()
       e.code === "INVALID_CREDENTIALS" &&
       e.message === "Incorrect credentials",
   );
+});
+
+test("pre-cancelled GET and authenticated mutation never invoke fetch", async () => {
+  setAccessToken("fixture-access-token");
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return json({ data: {} });
+  };
+  for (const method of ["GET", "POST", "PATCH", "DELETE"] as const) {
+    const controller = new AbortController();
+    controller.abort();
+    await assert.rejects(
+      request("/cart/items", {
+        method,
+        auth: "required",
+        body: method === "GET" ? undefined : { productId: "p1", quantity: 1 },
+        signal: controller.signal,
+      }),
+      (error: unknown) =>
+        error instanceof ApiError &&
+        error.status === 499 &&
+        error.code === "REQUEST_CANCELLED",
+    );
+  }
+  assert.equal(calls, 0);
+});
+
+test("cancellation during token refresh stops a replay of a protected mutation", async () => {
+  setAccessToken("expired-token");
+  const controller = new AbortController();
+  let fetchCalls = 0;
+  let refreshCalls = 0;
+  setRefreshHandler(async () => {
+    refreshCalls++;
+    setAccessToken("renewed-token");
+    controller.abort();
+    return true;
+  });
+  globalThis.fetch = async (_input, init) => {
+    fetchCalls++;
+    assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer expired-token");
+    return json({ error: { code: "UNAUTHORIZED" } }, 401);
+  };
+  await assert.rejects(
+    request("/cart/items", {
+      method: "POST",
+      auth: "required",
+      body: { productId: "p1", quantity: 1 },
+      signal: controller.signal,
+    }),
+    (error: unknown) =>
+      error instanceof ApiError &&
+      error.status === 499 &&
+      error.code === "REQUEST_CANCELLED",
+  );
+  assert.equal(fetchCalls, 1);
+  assert.equal(refreshCalls, 1);
 });
