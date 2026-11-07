@@ -171,3 +171,48 @@ test("cancellation during token refresh stops a replay of a protected mutation",
   assert.equal(fetchCalls, 1);
   assert.equal(refreshCalls, 1);
 });
+
+test("cancellation during an active request returns a stable cancellation code", async () => {
+  const controller = new AbortController();
+  globalThis.fetch = async (_input, init) =>
+    new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener(
+        "abort",
+        () => reject(new DOMException("Cancelled", "AbortError")),
+        { once: true },
+      );
+      queueMicrotask(() => controller.abort());
+    });
+  await assert.rejects(
+    request("/feed/products", { signal: controller.signal }),
+    (error: unknown) =>
+      error instanceof ApiError &&
+      error.status === 499 &&
+      error.code === "REQUEST_CANCELLED",
+  );
+});
+
+test("cancellation after a 401 response does not invoke token refresh", async () => {
+  setAccessToken("expired-token");
+  const controller = new AbortController();
+  let refreshCalls = 0;
+  setRefreshHandler(async () => {
+    refreshCalls++;
+    return true;
+  });
+  let fetchCalls = 0;
+  globalThis.fetch = async () => {
+    fetchCalls++;
+    controller.abort();
+    return json({ error: { code: "UNAUTHORIZED" } }, 401);
+  };
+  await assert.rejects(
+    request("/cart", { auth: "required", signal: controller.signal }),
+    (error: unknown) =>
+      error instanceof ApiError &&
+      error.status === 499 &&
+      error.code === "REQUEST_CANCELLED",
+  );
+  assert.equal(fetchCalls, 1);
+  assert.equal(refreshCalls, 0);
+});
