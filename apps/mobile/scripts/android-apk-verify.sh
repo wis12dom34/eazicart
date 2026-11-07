@@ -43,8 +43,12 @@ if ! SIGNATURE_OUTPUT="$("$BUILDTOOLS/apksigner" verify --verbose --print-certs 
   echo "FAILED: Android APK signature verification" >&2
   exit 1
 fi
-if ! grep -Eq '^Signer #1 certificate DN: .*CN=Android Debug(,|$)' <<<"$SIGNATURE_OUTPUT"; then
-  echo "REFUSED: this verification workflow accepts only a standard Android debug certificate" >&2
+# A valid debug certificate is insufficient if the APK also has another
+# signer. Accept exactly one certificate DN record, belonging to signer #1.
+SIGNER_COUNT="$(awk '/^Signer #[0-9]+ certificate DN: / { count++ } END { print count+0 }' <<<"$SIGNATURE_OUTPUT")"
+if [[ "$SIGNER_COUNT" != "1" ]] ||
+   ! grep -Eq '^Signer #1 certificate DN: .*CN=Android Debug(,|$)' <<<"$SIGNATURE_OUTPUT"; then
+  echo "REFUSED: expected exactly one standard Android debug signer" >&2
   exit 23
 fi
 BADGING="$("$BUILDTOOLS/aapt" dump badging "$APK")"
