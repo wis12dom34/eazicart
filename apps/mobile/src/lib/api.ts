@@ -64,6 +64,10 @@ export async function request<T>(
     signal,
     retryAuth = true,
   } = options;
+  // A caller may cancel during navigation before the fetch begins. Do not
+  // invoke even a mocked/native fetch for an already-cancelled mutation.
+  if (signal?.aborted)
+    throw new ApiError(499, "REQUEST_CANCELLED", "Request cancelled.");
   if (auth === "required" && !accessToken)
     throw new ApiError(401, "LOGIN_REQUIRED", "Sign in to continue");
   const baseUrl = resolveMobileApiBaseUrl(configuredUrl);
@@ -103,7 +107,12 @@ export async function request<T>(
     auth !== "none" &&
     refreshHandler
   ) {
-    if (await refreshHandler())
+    const refreshed = await refreshHandler();
+    // The user may leave this screen or log out while the token refreshes.
+    // A completed refresh must not replay a cancelled POST/PATCH/DELETE.
+    if (signal?.aborted)
+      throw new ApiError(499, "REQUEST_CANCELLED", "Request cancelled.");
+    if (refreshed)
       return request<T>(path, { ...options, retryAuth: false });
   }
   if (!response.ok) {
