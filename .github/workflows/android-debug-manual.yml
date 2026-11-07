@@ -96,6 +96,9 @@ jobs:
       - name: Test manual branch authorization
         run: bash apps/mobile/scripts/android-qa-branch.test.sh
 
+      - name: Test APK verifier with synthetic archive and mock tools
+        run: bash apps/mobile/scripts/android-apk-verify.test.sh
+
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
