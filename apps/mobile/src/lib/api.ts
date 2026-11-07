@@ -89,7 +89,8 @@ export async function request<T>(
       signal: controller.signal,
     });
   } catch (error) {
-    if (signal?.aborted) throw error;
+    if (signal?.aborted)
+      throw new ApiError(499, "REQUEST_CANCELLED", "Request cancelled.");
     if (controller.signal.aborted)
       throw new ApiError(408, "TIMEOUT", "The request timed out. Try again.");
     throw new ApiError(
@@ -101,6 +102,10 @@ export async function request<T>(
     clearTimeout(timeout);
     signal?.removeEventListener("abort", cancel);
   }
+  // A late cancellation can arrive after fetch resolves but before
+  // parsing or authentication refresh. Never renew or replay that request.
+  if (signal?.aborted)
+    throw new ApiError(499, "REQUEST_CANCELLED", "Request cancelled.");
   if (
     response.status === 401 &&
     retryAuth &&
