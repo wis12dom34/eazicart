@@ -49,7 +49,12 @@ export function createSessionPersistence(
     generation += 1;
     publishAccessToken(null);
     return enqueue(async () => {
-      const previousToken = await storage.getItemAsync(storageKey);
+      let previousToken: string | null = null;
+      try {
+        previousToken = await storage.getItemAsync(storageKey);
+      } catch {
+        // A read error must not prevent local token deletion on logout.
+      }
       await storage.deleteItemAsync(storageKey);
       return previousToken;
     });
