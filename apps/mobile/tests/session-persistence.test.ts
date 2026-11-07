@@ -122,3 +122,17 @@ test("a secure-store write failure does not block the logout queue", async () =>
   await session.clear();
   assert.equal(saved, null);
 });
+
+test("logout deletes refresh token even when secure-store read fails", async () => {
+  let saved: string | null = "old";
+  let access: string | null = "old";
+  const store = {
+    async getItemAsync(): Promise<string | null> { throw Error("read failed"); },
+    async setItemAsync(_key: string, token: string) { saved = token; },
+    async deleteItemAsync() { saved = null; },
+  };
+  const session = createSessionPersistence("session-token", store, (value) => { access = value; });
+  assert.equal(await session.clear(), null);
+  assert.equal(saved, null);
+  assert.equal(access, null);
+});
