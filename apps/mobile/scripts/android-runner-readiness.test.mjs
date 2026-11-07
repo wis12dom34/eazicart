@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { checkAndroidRunnerReadiness } from "./android-runner-readiness.mjs";
+import {
+  checkAndroidRunnerReadiness,
+  checkAndroidSdkLayout,
+} from "./android-runner-readiness.mjs";
 
 const GiB = 1024 ** 3;
 const ready = Object.freeze({
@@ -12,7 +15,7 @@ const ready = Object.freeze({
   freeDisk: 32 * GiB,
   availableRam: 12 * GiB,
   freeSwap: 4 * GiB,
-  javaMajor: 21,
+  javaMajor: 17,
   sdkReady: true,
   gradleIsolated: true,
   githubActions: true,
@@ -45,7 +48,7 @@ test("rejects low memory, disk, swap, toolchain or shared Gradle cache", () => {
     { freeDisk: 15 * GiB },
     { availableRam: 5 * GiB },
     { freeSwap: GiB },
-    { javaMajor: 17 },
+    { javaMajor: 21 },
     { sdkReady: false },
     { gradleIsolated: false },
     { freeDisk: NaN },
@@ -76,4 +79,33 @@ test("local isolated runner needs approval, resources and toolchain but no GitHu
     checkAndroidRunnerReadiness({ ...local, githubActions: false }).ready,
     true,
   );
+});
+
+test("Android SDK 37 uses android-37, not android-37.0", () => {
+  const sdk = "/isolated/android-sdk";
+  const java = "/isolated/java-17";
+  const expected = new Set([
+    sdk + "/platforms/android-37/android.jar",
+    sdk + "/build-tools/37.0.0/apksigner",
+    sdk + "/ndk/27.1.12297006/source.properties",
+    sdk + "/platform-tools/adb",
+    java + "/bin/java",
+  ]);
+  assert.equal(
+    checkAndroidSdkLayout(sdk, java, (item) => expected.has(item)),
+    true,
+  );
+  assert.equal(
+    checkAndroidSdkLayout(
+      sdk,
+      java,
+      (item) => expected.has(item) && !item.endsWith("/adb"),
+    ),
+    false,
+  );
+  assert.equal(
+    checkAndroidSdkLayout(sdk, java, (item) => item.includes("android-37.0")),
+    false,
+  );
+  assert.equal(checkAndroidSdkLayout("", java), false);
 });

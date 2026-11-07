@@ -28,8 +28,11 @@ if [[ -z "${JAVA_HOME:-}" || ! -x "$JAVA_HOME/bin/java" || -z "${ANDROID_SDK_ROO
   echo "REFUSED: JAVA_HOME and ANDROID_SDK_ROOT must point to an installed local QA toolchain" >&2
   exit 23
 fi
-if [[ ! -d "$ANDROID_SDK_ROOT/platforms/android-37.0" || ! -d "$ANDROID_SDK_ROOT/build-tools/37.0.0" || ! -d "$ANDROID_SDK_ROOT/ndk/27.1.12297006" ]]; then
-  echo "REFUSED: exact Expo native Android SDK 37 / Build Tools 37 / NDK 27 required" >&2
+if [[ ! -f "$ANDROID_SDK_ROOT/platforms/android-37/android.jar" ||
+      ! -x "$ANDROID_SDK_ROOT/build-tools/37.0.0/apksigner" ||
+      ! -f "$ANDROID_SDK_ROOT/ndk/27.1.12297006/source.properties" ||
+      ! -x "$ANDROID_SDK_ROOT/platform-tools/adb" ]]; then
+  echo "REFUSED: Android platform 37, Build Tools 37.0.0, NDK 27.1.12297006 and adb required" >&2
   exit 23
 fi
 if [[ -z "${GRADLE_USER_HOME:-}" || "$GRADLE_USER_HOME" == /root/.gradle ]]; then
@@ -54,6 +57,7 @@ fi
 # A development build must never silently fall back to https://eazicart.com/api.
 # Mandatory before creating caches or touching Gradle project configuration.
 node "$APP_ROOT/scripts/android-qa-api-preflight.mjs"
+node "$APP_ROOT/scripts/android-qa-staging-handshake.mjs"
 node "$APP_ROOT/scripts/android-runner-readiness.mjs"
 
 mkdir -p "$GRADLE_USER_HOME"
