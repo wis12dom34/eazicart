@@ -150,7 +150,10 @@ test("cancellation during token refresh stops a replay of a protected mutation",
   });
   globalThis.fetch = async (_input, init) => {
     fetchCalls++;
-    assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer expired-token");
+    assert.equal(
+      new Headers(init?.headers).get("Authorization"),
+      "Bearer expired-token",
+    );
     return json({ error: { code: "UNAUTHORIZED" } }, 401);
   };
   await assert.rejects(
