@@ -4,7 +4,7 @@ Real native React Native + Expo Router application sharing the existing EaziCart
 
 ## Development
 
-Run `pnpm install` at the monorepo root. Configure `EXPO_PUBLIC_EAZICART_API_BASE_URL` for local/staging API when available. Then run `pnpm --filter @eazicart/mobile start`. Expo development builds require the native development client.
+Run `pnpm install` at the monorepo root. Configure `EXPO_PUBLIC_EAZICART_API_BASE_URL` explicitly to your approved HTTPS `/api` staging endpoint (or localhost HTTP during local development). There is no production API fallback; the `.env.example` hostname is intentionally non-resolving. Android QA builds additionally require the approved-host and synthetic staging identity gates. Then run `pnpm --filter @eazicart/mobile start`. Expo development builds require the native development client.
 
 ## Security
 
