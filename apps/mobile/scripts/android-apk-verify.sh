@@ -43,7 +43,7 @@ if ! SIGNATURE_OUTPUT="$("$BUILDTOOLS/apksigner" verify --verbose --print-certs 
   echo "FAILED: Android APK signature verification" >&2
   exit 1
 fi
-if ! grep -Eq 'Signer #1 certificate DN: .*CN=Android Debug' <<<"$SIGNATURE_OUTPUT"; then
+if ! grep -Eq '^Signer #1 certificate DN: .*CN=Android Debug(,|$)' <<<"$SIGNATURE_OUTPUT"; then
   echo "REFUSED: this verification workflow accepts only a standard Android debug certificate" >&2
   exit 23
 fi
