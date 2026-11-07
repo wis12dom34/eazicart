@@ -14,6 +14,12 @@ case "${APK_TEST_SIGNER_MODE:-debug}" in
   debug) echo 'Signer #1 certificate DN: CN=Android Debug, O=Android, C=US' ;;
   release) echo 'Signer #1 certificate DN: CN=Release, O=Example' ;;
   lookalike) echo 'Signer #1 certificate DN: CN=Android Debug Impostor, O=Example' ;;
+  extraRelease)
+    echo 'Signer #1 certificate DN: CN=Android Debug, O=Android, C=US'
+    echo 'Signer #2 certificate DN: CN=Release, O=Example' ;;
+  extraDebug)
+    echo 'Signer #1 certificate DN: CN=Android Debug, O=Android, C=US'
+    echo 'Signer #2 certificate DN: CN=Android Debug, O=Android, C=US' ;;
   error) exit 1 ;;
 esac
 MOCK
@@ -56,6 +62,8 @@ expect_exit 0 'synthetic debug path' bash "$VERIFY" "$WORK/synthetic.apk"
 grep -q 'VERIFIED: APK signature' "$WORK/out"
 expect_exit 23 'reject release certificate' env APK_TEST_SIGNER_MODE=release bash "$VERIFY" "$WORK/synthetic.apk"
 expect_exit 23 'reject debug-name lookalike certificate' env APK_TEST_SIGNER_MODE=lookalike bash "$VERIFY" "$WORK/synthetic.apk"
+expect_exit 23 'reject added release signer' env APK_TEST_SIGNER_MODE=extraRelease bash "$VERIFY" "$WORK/synthetic.apk"
+expect_exit 23 'reject second debug signer' env APK_TEST_SIGNER_MODE=extraDebug bash "$VERIFY" "$WORK/synthetic.apk"
 expect_exit 1 'reject signing verification failure' env APK_TEST_SIGNER_MODE=error bash "$VERIFY" "$WORK/synthetic.apk"
 expect_exit 1 'reject zip alignment failure' env APK_TEST_ZIPALIGN_FAIL=1 bash "$VERIFY" "$WORK/synthetic.apk"
 expect_exit 23 'reject package mismatch' env APK_TEST_PACKAGE=com.example.wrong bash "$VERIFY" "$WORK/synthetic.apk"
