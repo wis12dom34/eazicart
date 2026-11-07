@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { VerifiedBadge } from "../components/verified-badge";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -246,7 +247,7 @@ export function ExploreContent() {
                           className="figma-explore-card-seller"
                           href={`/seller/${product.seller.id}`}
                         >
-                          {product.seller.displayName}
+                          {product.seller.displayName}<VerifiedBadge badge={product.seller.badge} accountId={product.seller.userId} />
                         </Link>
                         <Link
                           className="figma-explore-product-name"
@@ -344,7 +345,7 @@ export function ExploreContent() {
                 {sellers.data.data.map((seller) => (
                   <Link href={`/seller/${seller.id}`} key={seller.id}>
                     <i aria-hidden="true" />
-                    <strong>{seller.displayName}</strong>
+                    <strong>{seller.displayName}<VerifiedBadge badge={seller.badge} accountId={seller.userId} /></strong>
                   </Link>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { VerifiedBadge } from "../components/verified-badge";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
@@ -74,7 +75,7 @@ function ProfileContent() {
                   {auth.user.name[0]?.toUpperCase() || "W"}
                 </button>
                 <div className={styles.identityCopy}>
-                  <h2>{auth.user.name}</h2>
+                  <h2>{auth.user.name}<VerifiedBadge badge={auth.user.badge} accountId={auth.user.id} size="medium" /></h2>
                   <p>{auth.user.username ? `@${auth.user.username}` : "\u00a0"}</p>
                   <small>{sellerMode ? "Seller account" : "Personal account"}</small>
                 </div>

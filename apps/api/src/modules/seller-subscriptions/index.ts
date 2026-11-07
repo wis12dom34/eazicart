@@ -1,3 +1,4 @@
+import { resolveBadge } from "../verification/entitlement.js";
 import type { PrismaClient } from "@eazicart/database";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../../errors.js";
@@ -51,12 +52,20 @@ export function registerSellerSubscriptions(
       );
     }
 
-    const subscription = await db().sellerSubscription.findFirst({
+    const subscriptions = await db().sellerSubscription.findMany({
       where: { sellerId: seller.id },
-      include: { plan: true },
+      include: { plan: true, payment: true },
       orderBy: { createdAt: "desc" },
     });
 
+    const now = new Date();
+    const current = subscriptions.filter((subscription) =>
+      resolveBadge([subscription], null, now),
+    );
+    const subscription =
+      current.find((s) => s.planCode === "BUSINESS") ??
+      current[0] ??
+      subscriptions[0];
     return {
       data: {
         subscription: subscription

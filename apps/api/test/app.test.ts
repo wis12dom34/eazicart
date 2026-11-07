@@ -278,6 +278,7 @@ describe("API foundation", () => {
       createdAt: new Date("2026-10-05T12:02:00.000Z"),
     });
     const database = {
+      user: { findMany: vi.fn().mockResolvedValue([]) },
       reel: {
         findFirst: vi.fn().mockResolvedValue({ id: "reel-1" }),
       },
@@ -434,6 +435,7 @@ describe("API foundation", () => {
   it("rejects every interaction route for Reels that are not published", async () => {
     const findPublishedReel = vi.fn().mockResolvedValue(null);
     const database = {
+      user: { findMany: vi.fn().mockResolvedValue([]) },
       reel: { findFirst: findPublishedReel },
     } as unknown as PrismaClient;
     const app = buildApp(config, { database });

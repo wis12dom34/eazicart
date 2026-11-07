@@ -1,3 +1,4 @@
+import { VerifiedBadge } from "./components/verified-badge";
 import Link from "next/link";
 import type { Product } from "../lib/api/types";
 
@@ -76,7 +77,7 @@ export function HomeSections({ products }: { products: Product[] }) {
                   {seller.displayName.slice(0, 2).toUpperCase()}
                 </b>
                 <div>
-                  <strong>{seller.displayName}</strong>
+                  <strong>{seller.displayName}<VerifiedBadge badge={seller.badge} accountId={seller.userId} /></strong>
                   <p>
                     {seller.bio ||
                       `${products.filter((product) => product.seller.id === seller.id).length} products`}

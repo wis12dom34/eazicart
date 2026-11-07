@@ -1,6 +1,6 @@
 import { apiRequest } from "./client";
 import { productsApi } from "./products";
-import type { Product, Seller } from "./types";
+import type { Product, PublicBadge, Seller } from "./types";
 
 export type ReelSource = "EAZICART" | "YOUTUBE" | "TIKTOK" | "PARTNER";
 
@@ -30,7 +30,7 @@ export type ReelComment = {
   userId: string;
   createdAt: string;
   updatedAt: string;
-  user: { id: string; name: string };
+  user: { id: string; name: string; badge?: PublicBadge | null };
 };
 
 export type ReelsFeedResponse = {

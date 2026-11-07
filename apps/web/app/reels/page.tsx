@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { VerifiedBadge } from "../components/verified-badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -275,7 +276,7 @@ function CommentsSheet({
                     {(comment.user.name || "U").slice(0, 1).toUpperCase()}
                   </span>
                   <div>
-                    <strong>{comment.user.name || "EaziCart user"}</strong>
+                    <strong>{comment.user.name || "EaziCart user"}<VerifiedBadge badge={comment.user.badge} accountId={comment.user.id} /></strong>
                     <p>{comment.body}</p>
                   </div>
                 </article>
@@ -638,7 +639,7 @@ function ReelSlide({
             className={styles.sellerName}
             href={`/seller/${reel.seller.id}`}
           >
-            {sellerName}
+            {sellerName}<VerifiedBadge badge={reel.seller?.badge} accountId={reel.seller?.userId ?? ""} />
           </Link>
         ) : (
           <strong className={styles.sellerName}>{sellerName}</strong>

@@ -34,6 +34,7 @@ describe("Reel publishing", () => {
   it("requires a seller profile before publishing", async () => {
     const reelCreate = vi.fn();
     const database = {
+      user: { findMany: vi.fn().mockResolvedValue([]) },
       sellerProfile: { findUnique: vi.fn().mockResolvedValue(null) },
       reel: { create: reelCreate },
     } as unknown as PrismaClient;
@@ -59,6 +60,7 @@ describe("Reel publishing", () => {
     const productFindFirst = vi.fn().mockResolvedValue(null);
     const reelCreate = vi.fn();
     const database = {
+      user: { findMany: vi.fn().mockResolvedValue([]) },
       sellerProfile: {
         findUnique: vi.fn().mockResolvedValue({ id: "seller-1" }),
       },
@@ -118,6 +120,7 @@ describe("Reel publishing", () => {
       _count: { likes: 0, saves: 0, views: 0, comments: 0 },
     });
     const database = {
+      user: { findMany: vi.fn().mockResolvedValue([]) },
       sellerProfile: {
         findUnique: vi.fn().mockResolvedValue({ id: "seller-1" }),
       },
@@ -190,6 +193,7 @@ describe("Reel publishing", () => {
       );
       if (race) findUnique.mockResolvedValueOnce(null);
       const database = {
+        user: { findMany: vi.fn().mockResolvedValue([]) },
         sellerProfile: {
           findUnique: vi.fn().mockResolvedValue({ id: "seller-1" }),
         },
@@ -247,6 +251,7 @@ describe("Reel publishing", () => {
   ])("rejects a conflicting publication key: %j", async (previous) => {
     const create = vi.fn();
     const database = {
+      user: { findMany: vi.fn().mockResolvedValue([]) },
       sellerProfile: {
         findUnique: vi.fn().mockResolvedValue({ id: "seller-1" }),
       },

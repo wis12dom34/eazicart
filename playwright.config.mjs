@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // Fixture-only badge specs use their own dev server/config, never live memberships.
+  testIgnore: ["verified-badges*.spec.mjs"],
   timeout: 60000,
   expect: { timeout: 10000 },
   workers: 1,

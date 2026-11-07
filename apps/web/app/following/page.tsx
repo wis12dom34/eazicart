@@ -1,5 +1,6 @@
 "use client";
 
+import { VerifiedBadge } from "../components/verified-badge";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -131,7 +132,7 @@ export default function FollowingPage() {
                   </Link>
 
                   <Link className={styles.sellerIdentity} href={href}>
-                    <strong>{displayName}</strong>
+                    <strong>{displayName}<VerifiedBadge badge={seller?.badge ?? follow.seller.badge} accountId={follow.seller.id} /></strong>
                     <span>
                       {follow.followerCount === undefined
                         ? "Seller"

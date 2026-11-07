@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { VerifiedBadge } from "../../components/verified-badge";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -254,7 +255,7 @@ export default function ProductPage({
             {product.seller.displayName.slice(0, 2).toUpperCase()}
           </span>
           <div>
-            <strong>{product.seller.displayName}</strong>
+            <strong>{product.seller.displayName}<VerifiedBadge badge={product.seller.badge} accountId={product.seller.userId} /></strong>
             <small>
               {product.seller._count?.products
                 ? `${product.seller._count.products} products`

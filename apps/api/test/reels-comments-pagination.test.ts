@@ -37,6 +37,7 @@ describe("Reel comment pagination", () => {
       .mockResolvedValueOnce([newest, middle, oldest])
       .mockResolvedValueOnce([oldest]);
     const database = {
+      user: { findMany: vi.fn().mockResolvedValue([]) },
       reel: {
         findFirst: vi.fn().mockResolvedValue({ id: "reel-comments-page" }),
       },
@@ -114,6 +115,7 @@ describe("Reel comment pagination", () => {
   it("rejects malformed comment cursors before querying comments", async () => {
     const findMany = vi.fn();
     const database = {
+      user: { findMany: vi.fn().mockResolvedValue([]) },
       reel: { findFirst: vi.fn() },
       reelComment: { findMany },
     } as unknown as PrismaClient;

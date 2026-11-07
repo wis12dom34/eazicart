@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
+import { VerifiedBadge } from "../components/verified-badge";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -141,7 +142,7 @@ export default function SavedPage() {
                         className={styles.seller}
                         href={`/seller/${product.seller.id}`}
                       >
-                        {product.seller.displayName}
+                        {product.seller.displayName}<VerifiedBadge badge={product.seller.badge} accountId={product.seller.userId} />
                       </Link>
 
                       <Link

@@ -1,5 +1,6 @@
 "use client";
 
+import { VerifiedBadge } from "../../../components/verified-badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import type { ReactNode } from "react";
@@ -27,7 +28,7 @@ export default function SellerCustomerDetailPage() {
 
   const { customer, orders } = result.data.data;
   return <DetailShell>
-    <section className={styles.detailHero}><div><p className={styles.eyebrow}>Seller customer</p><h1>{customer.name}</h1><div className={styles.detailLocation}>{formatLocation(customer.location)}</div></div></section>
+    <section className={styles.detailHero}><div><p className={styles.eyebrow}>Seller customer</p><h1>{customer.name}<VerifiedBadge badge={customer.badge} accountId={customer.id} /></h1><div className={styles.detailLocation}>{formatLocation(customer.location)}</div></div></section>
     <div className={styles.detailGrid}>
       <section className={styles.panel} aria-labelledby="customer-orders"><div className={styles.panelHeading}><p>Order history</p><h2 id="customer-orders">Orders from your store</h2></div><div className={styles.orderList}>{orders.map((order) => <Link className={styles.orderRow} href={`/seller/orders/${order.id}`} key={order.id}><div><h3>Order #{order.id.slice(-8)}</h3><p>{formatDate(order.createdAt)} · {order.units} {order.units === 1 ? "unit" : "units"}</p><p>{order.items.map((item) => `${item.productName} × ${item.quantity}`).join(" · ")}</p></div><div className={styles.orderAside}><span className={styles.status}>{orderStatusLabel(order.status)}</span><Icon name="chevron" size={18} /></div></Link>)}</div></section>
       <div><section className={styles.panel} aria-labelledby="customer-summary"><div className={styles.panelHeading}><p>Relationship</p><h2 id="customer-summary">Customer summary</h2></div><div className={styles.statList}><StatRow label="Orders" value={customer.orders.toLocaleString()} /><StatRow label="Units ordered" value={customer.units.toLocaleString()} /><StatRow label="First order" value={formatDate(customer.firstOrderAt)} /><StatRow label="Latest order" value={formatDate(customer.latestOrderAt)} /></div></section><aside className={styles.note}><strong>Privacy-limited profile</strong><p>Email and exact delivery address are intentionally omitted. Open an individual seller order when delivery information is required.</p></aside></div>

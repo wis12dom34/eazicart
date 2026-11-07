@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { VerifiedBadge } from "./verified-badge";
 import Link from "next/link";
 
 import type { Product } from "../../lib/api/types";
@@ -48,7 +49,7 @@ export function DiscoveryProductCard({
           className={styles.searchProductSeller}
           href={`/seller/${product.seller.id}`}
         >
-          {product.seller.displayName}
+          {product.seller.displayName}<VerifiedBadge badge={product.seller.badge} accountId={product.seller.userId} />
         </Link>
         <Link
           className={styles.searchProductName}
@@ -97,7 +98,7 @@ export function DiscoveryProductCard({
         className={styles.productSeller}
         href={`/seller/${product.seller.id}`}
       >
-        {product.seller.displayName}
+        {product.seller.displayName}<VerifiedBadge badge={product.seller.badge} accountId={product.seller.userId} />
       </Link>
       <Link className={styles.productName} href={`/product/${product.id}`}>
         {product.name}

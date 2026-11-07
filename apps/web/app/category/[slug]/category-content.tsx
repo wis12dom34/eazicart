@@ -1,5 +1,6 @@
 "use client";
 
+import { VerifiedBadge } from "../../components/verified-badge";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -272,7 +273,7 @@ export default function CategoryPage({
                     {seller.displayName.slice(0, 2).toUpperCase()}
                   </span>
                   <span className={styles.sellerText}>
-                    <strong>{seller.displayName}</strong>
+                    <strong>{seller.displayName}<VerifiedBadge badge={seller.badge} accountId={seller.userId} /></strong>
                     {seller.bio ? <small>{seller.bio}</small> : null}
                   </span>
                   <span className={styles.view}>View</span>

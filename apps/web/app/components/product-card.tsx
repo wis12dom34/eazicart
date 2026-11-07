@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
+import { VerifiedBadge } from "./verified-badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -82,7 +83,7 @@ export function ProductCard({ product }: { product: Product }) {
         <Icon name="heart" size={19} />
       </button>
       <Link className="product-brand" href={`/seller/${product.seller.id}`}>
-        {product.seller.displayName}
+        {product.seller.displayName}<VerifiedBadge badge={product.seller.badge} accountId={product.seller.userId} />
       </Link>
       <Link href={`/product/${product.id}`} className="product-name">
         {product.name}

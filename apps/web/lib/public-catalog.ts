@@ -33,6 +33,7 @@ export function publicSeller(seller: Seller): Seller {
     id: seller.id,
     userId: seller.userId,
     displayName: seller.displayName,
+    badge: seller.badge,
     bio: seller.bio,
     followerCount: seller.followerCount,
     _count: seller._count ? { products: seller._count.products } : undefined,

@@ -1,5 +1,7 @@
+export type PublicBadge = { variant: "pro" | "business"; expiresAt: string };
 export type Money = string;
 export type User = {
+  badge?: PublicBadge | null;
   id: string;
   email: string;
   name: string;
@@ -25,6 +27,7 @@ export type SellerMapLocation = {
   updatedAt: string;
 };
 export type Seller = {
+  badge?: PublicBadge | null;
   id: string;
   userId: string;
   displayName: string;
@@ -218,6 +221,7 @@ export type SellerCustomerLocation = {
   country: string;
 };
 export type SellerCustomer = {
+  badge?: PublicBadge | null;
   id: string;
   name: string;
   orders: number;

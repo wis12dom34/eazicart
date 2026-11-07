@@ -1,5 +1,6 @@
 "use client";
 
+import { VerifiedBadge } from "../../components/verified-badge";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { sellersApi } from "../../../lib/api/sellers";
@@ -352,7 +353,7 @@ export function ExploreMap() {
             {selected.displayName.slice(0, 1).toUpperCase()}
           </div>
           <div className="storeInfo">
-            <strong>{selected.displayName}</strong>
+            <strong>{selected.displayName}<VerifiedBadge badge={selected.badge} accountId={selected.userId} /></strong>
             {selected.location.label ? <p>{selected.location.label}</p> : null}
             <small>
               {selected._count?.products ?? 0} active products

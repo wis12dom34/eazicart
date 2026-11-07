@@ -93,6 +93,8 @@ model User {
   reelSaves ReelSave[]
   reelViews ReelView[]
   reelComments ReelComment[]
+  subscriptions SellerSubscription[]
+  verificationSuspendedAt DateTime?
 }
 
 model RefreshToken {
@@ -268,17 +270,22 @@ model SellerPlan {
 model SellerSubscription {
   id String @id @default(cuid())
   status SellerSubscriptionStatus @default(PENDING)
-  sellerId String
+  sellerId String?
+  accountId String?
+  suspendedAt DateTime?
+  payment SubscriptionPayment?
+  account User? @relation(fields: [accountId], references: [id], onDelete: Cascade)
   planCode SellerPlanCode
   startsAt DateTime?
   currentPeriodEnd DateTime?
   cancelledAt DateTime?
-  seller SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller SellerProfile? @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   plan SellerPlan @relation(fields: [planCode], references: [code])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([sellerId, status])
   @@index([planCode, status])
+  @@index([accountId, status])
 }
 
 model Campaign {
@@ -423,4 +430,23 @@ model ReelComment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([reelId, createdAt])
+}
+
+// Payment intent and settlement evidence for the existing subscription model.
+// Order Payment remains unchanged and cannot be used as subscription evidence.
+model SubscriptionPayment {
+  id String @id @default(cuid())
+  subscriptionId String @unique
+  subscription SellerSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  accountId String
+  provider String
+  reference String @unique
+  planCode SellerPlanCode
+  amountMinor BigInt
+  currency String
+  status PaymentStatus @default(PENDING)
+  providerTransactionId String?
+  settledAt DateTime?
+  createdAt DateTime @default(now())
+  @@unique([provider, providerTransactionId])
 }

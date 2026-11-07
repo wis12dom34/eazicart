@@ -33,6 +33,7 @@ async function setup(seller = true, enabled = true) {
   folders.push(directory);
   let published = false;
   const database = {
+    user: { findMany: vi.fn().mockResolvedValue([]) },
     sellerProfile: {
       findUnique: vi.fn().mockResolvedValue(seller ? { id: "seller-1" } : null),
     },

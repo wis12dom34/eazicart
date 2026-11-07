@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
+import { VerifiedBadge } from "./components/verified-badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -148,7 +149,7 @@ export default function HomePage({
                 <span className="figma-home-story-avatar" aria-hidden="true">
                   {seller.displayName.slice(0, 2).toUpperCase()}
                 </span>
-                <strong>{seller.displayName}</strong>
+                <strong>{seller.displayName}<VerifiedBadge badge={seller.badge} accountId={seller.userId} /></strong>
                 {seller._count?.products ? (
                   <small>{seller._count.products} products</small>
                 ) : null}
@@ -262,7 +263,7 @@ export default function HomePage({
                       className="figma-home-product-seller"
                       href={`/seller/${product.seller.id}`}
                     >
-                      {product.seller.displayName}
+                      {product.seller.displayName}<VerifiedBadge badge={product.seller.badge} accountId={product.seller.userId} />
                     </Link>
                     <Link
                       className="figma-home-product-title"

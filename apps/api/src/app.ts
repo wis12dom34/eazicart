@@ -1,3 +1,4 @@
+import { registerPublicBadges } from "./modules/verification/public-badges.js";
 import Fastify from "fastify";
 import { ZodError } from "zod";
 import type { AppConfig } from "./config.js";
@@ -73,6 +74,7 @@ export function buildApp(
     });
   });
   app.get("/health", () => ({ status: "ok", service: "eazicart-api" }));
+  registerPublicBadges(app, dependencies.database);
   registerAuth(app, config, store);
   registerUsers(app, store, dependencies.database);
   registerSellerProfiles(app, dependencies.database);

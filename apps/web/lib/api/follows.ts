@@ -1,9 +1,14 @@
 import { apiRequest } from "./client";
-import type { ListResponse, Seller } from "./types";
+import type { ListResponse, PublicBadge, Seller } from "./types";
 export type Follow = {
   followerId: string;
   sellerId: string;
-  seller: { id: string; name: string; sellerProfile?: Seller | null };
+  seller: {
+    id: string;
+    name: string;
+    badge?: PublicBadge | null;
+    sellerProfile?: Seller | null;
+  };
 };
 export const followsApi = {
   list: () => apiRequest<ListResponse<Follow>>("/following", { auth: true }),

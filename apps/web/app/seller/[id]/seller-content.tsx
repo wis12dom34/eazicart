@@ -1,5 +1,6 @@
 "use client";
 
+import { VerifiedBadge } from "../../components/verified-badge";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -121,7 +122,7 @@ export default function SellerPage({
       <SellerBackLink />
 
       <section className={styles.intro}>
-        <h1>{currentSeller.displayName}</h1>
+        <h1>{currentSeller.displayName}<VerifiedBadge badge={currentSeller.badge} accountId={currentSeller.userId} size="large" /></h1>
         <p>Seller storefront</p>
       </section>
 
@@ -131,7 +132,7 @@ export default function SellerPage({
         </div>
         <div className={styles.summaryContent}>
           <div className={styles.summaryHeading}>
-            <h2>{currentSeller.displayName}</h2>
+            <h2>{currentSeller.displayName}<VerifiedBadge badge={currentSeller.badge} accountId={currentSeller.userId} /></h2>
             <button
               className={`${styles.followButton} ${following ? styles.following : ""}`}
               type="button"
@@ -277,7 +278,7 @@ export default function SellerPage({
         hidden={activeTab !== "about"}
       >
         <div className={styles.aboutCard}>
-          <h2>About {currentSeller.displayName}</h2>
+          <h2>About {currentSeller.displayName}<VerifiedBadge badge={currentSeller.badge} accountId={currentSeller.userId} /></h2>
           <p>
             {currentSeller.bio || "This seller has not added a store bio yet."}
           </p>
