@@ -1,3 +1,4 @@
+import { resolveMobileApiBaseUrl } from "./api-base";
 import type {
   AuthResponse,
   CommentPage,
@@ -19,18 +20,7 @@ import type {
   OrderSummary,
 } from "./types";
 
-const configuredUrl: string =
-  (process.env.EXPO_PUBLIC_EAZICART_API_BASE_URL as string | undefined) ??
-  "https://eazicart.com/api";
-const BASE_URL = configuredUrl.replace(/\/$/, "");
-if (
-  !/^https:\/\//.test(BASE_URL) &&
-  !/^http:\/\/localhost(?::\d+)?(?:\/|$)/.test(BASE_URL)
-) {
-  throw new Error(
-    "API URL must use HTTPS (or localhost for local development)",
-  );
-}
+const configuredUrl = process.env.EXPO_PUBLIC_EAZICART_API_BASE_URL;
 
 export class ApiError extends Error {
   constructor(
@@ -76,6 +66,7 @@ export async function request<T>(
   } = options;
   if (auth === "required" && !accessToken)
     throw new ApiError(401, "LOGIN_REQUIRED", "Sign in to continue");
+  const baseUrl = resolveMobileApiBaseUrl(configuredUrl);
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (auth !== "none" && accessToken)
@@ -87,7 +78,7 @@ export async function request<T>(
   else signal?.addEventListener("abort", cancel, { once: true });
   let response: Response;
   try {
-    response = await fetch(`${BASE_URL}${path}`, {
+    response = await fetch(`${baseUrl}${path}`, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
