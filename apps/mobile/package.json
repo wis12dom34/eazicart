@@ -48,7 +48,7 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings=0",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "EXPO_PUBLIC_EAZICART_API_BASE_URL=https://fixture.invalid/api tsx --test tests/*.test.ts",
     "export:android": "expo export --platform android --output-dir dist-android",
     "export:ios": "expo export --platform ios --output-dir dist-ios",
     "test:live:read-only": "node tests/live-readonly-smoke.mjs"
