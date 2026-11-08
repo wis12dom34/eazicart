@@ -51,7 +51,9 @@
     "test": "EXPO_PUBLIC_EAZICART_API_BASE_URL=https://fixture.invalid/api tsx --test tests/*.test.ts",
     "export:android": "expo export --platform android --output-dir dist-android",
     "export:ios": "expo export --platform ios --output-dir dist-ios",
-    "test:live:read-only": "node tests/live-readonly-smoke.mjs"
+    "test:live:read-only": "node tests/live-readonly-smoke.mjs",
+    "verify:prebuild": "node scripts/native-prebuild-verify.mjs",
+    "test:prebuild": "node --test scripts/native-prebuild-verify.test.mjs"
   },
   "private": true
 }
