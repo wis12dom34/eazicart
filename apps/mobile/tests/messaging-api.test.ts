@@ -276,3 +276,75 @@ test("private reports cannot be sent when signed out", async () => {
   await assert.rejects(api.conversationReport("chat-7", "SPAM"), ApiError);
   assert.equal(calls, 0);
 });
+
+test("moderation review uses bearer authentication and encoded report IDs", async () => {
+  setAccessToken("synthetic-admin-token");
+  const seen: string[] = [];
+  globalThis.fetch = async (input, init) => {
+    const url = new URL(String(input));
+    seen.push(`${init?.method ?? "GET"} ${url.pathname}`);
+    assert.equal(
+      new Headers(init?.headers).get("Authorization"),
+      "Bearer synthetic-admin-token",
+    );
+    if (init?.method === "PATCH") {
+      assert.deepEqual(JSON.parse(String(init.body)), {
+        status: "REVIEWED",
+        expectedStatus: "PENDING",
+        note: "Checked by staff",
+      });
+      return json({ data: { status: "REVIEWED", action: { id: "audit-1" } } });
+    }
+    return json({
+      data: [{ id: "audit-1", fromStatus: "PENDING", toStatus: "REVIEWED" }],
+    });
+  };
+  const reviewed = await api.adminChatReportStatus(
+    "report/7",
+    "REVIEWED",
+    "PENDING",
+    "Checked by staff",
+  );
+  const history = await api.adminChatReportHistory("report/7");
+  assert.equal(reviewed.data.status, "REVIEWED");
+  assert.equal(history.data[0]?.id, "audit-1");
+  assert.deepEqual(seen, [
+    "PATCH /api/admin/chat-reports/report%2F7/status",
+    "GET /api/admin/chat-reports/report%2F7/history",
+  ]);
+});
+
+test("signed-out users cannot access moderation review or audit history", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return json({});
+  };
+  await assert.rejects(
+    api.adminChatReportStatus("r", "CLOSED", "REVIEWED"),
+    ApiError,
+  );
+  await assert.rejects(api.adminChatReportHistory("r"), ApiError);
+  assert.equal(calls, 0);
+});
+
+test("stale moderation review returns a typed conflict", async () => {
+  setAccessToken("synthetic-admin-token");
+  globalThis.fetch = async () =>
+    json(
+      {
+        error: {
+          code: "REPORT_STATUS_CONFLICT",
+          message: "Report status has changed",
+        },
+      },
+      409,
+    );
+  await assert.rejects(
+    api.adminChatReportStatus("r", "REVIEWED", "PENDING"),
+    (error: unknown) =>
+      error instanceof ApiError &&
+      error.status === 409 &&
+      error.code === "REPORT_STATUS_CONFLICT",
+  );
+});

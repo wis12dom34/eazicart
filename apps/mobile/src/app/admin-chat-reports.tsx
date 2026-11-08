@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { api } from "../lib/api";
 import { useAuth } from "../providers/auth";
 import { ScreenState } from "../components/ScreenState";
@@ -19,11 +26,62 @@ const statuses = ["ALL", "PENDING", "REVIEWED", "CLOSED"] as const;
 type Status = (typeof statuses)[number];
 
 /**
- * Read-only moderation preview. Authorization is enforced by the API using
- * the authenticated user's database role, never by this screen.
+ * Manual moderation workflow. The API enforces the administrator role,
+ * allowed status transitions and atomic audit history.
  */
 export default function AdminChatReportsScreen() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const historyQuery = useQuery({
+    queryKey: ["admin-chat-report-history", user?.id, selectedReportId],
+    enabled: Boolean(user && selectedReportId),
+    queryFn: () => api.adminChatReportHistory(selectedReportId!),
+    retry: false,
+  });
+  const transition = useMutation({
+    mutationFn: (args: {
+      id: string;
+      status: "REVIEWED" | "CLOSED";
+      expectedStatus: "PENDING" | "REVIEWED";
+    }) => api.adminChatReportStatus(args.id, args.status, args.expectedStatus),
+    onSuccess: async () => {
+      setHistory([]);
+      setCursor(null);
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-chat-reports", user?.id],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-chat-report-history", user?.id],
+      });
+    },
+    onError: (error: Error) => Alert.alert("Review not saved", error.message),
+  });
+  const confirmTransition = (report: Report) => {
+    const next =
+      report.status === "PENDING"
+        ? "REVIEWED"
+        : report.status === "REVIEWED"
+          ? "CLOSED"
+          : null;
+    if (!next || transition.isPending) return;
+    Alert.alert(
+      next === "CLOSED" ? "Close this report?" : "Mark this report reviewed?",
+      "This action is recorded in the administrator audit history. It does not automatically restrict the reported account.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: next === "CLOSED" ? "Close report" : "Confirm review",
+          onPress: () =>
+            transition.mutate({
+              id: report.id,
+              status: next,
+              expectedStatus: report.status as "PENDING" | "REVIEWED",
+            }),
+        },
+      ],
+    );
+  };
   const [status, setStatus] = useState<Status>("PENDING");
   const [cursor, setCursor] = useState<string | null>(null);
   const [history, setHistory] = useState<Report[]>([]);
@@ -56,7 +114,7 @@ export default function AdminChatReportsScreen() {
     <View style={styles.root}>
       <Text style={styles.heading}>Chat reports</Text>
       <Text style={styles.note}>
-        Read-only review. No enforcement actions are enabled.
+        Manual review only. Every status change is audited; no automatic bans.
       </Text>
       <View style={styles.filters}>
         {statuses.map((item) => (
@@ -101,6 +159,63 @@ export default function AdminChatReportsScreen() {
             <Text style={styles.identifier}>
               Conversation: {item.conversationId}
             </Text>
+            <View style={styles.actions}>
+              {item.status !== "CLOSED" && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    item.status === "PENDING"
+                      ? "Mark report reviewed"
+                      : "Close report"
+                  }
+                  disabled={transition.isPending}
+                  style={[
+                    styles.actionButton,
+                    transition.isPending && styles.disabled,
+                  ]}
+                  onPress={() => confirmTransition(item)}
+                >
+                  <Text style={styles.actionText}>
+                    {item.status === "PENDING"
+                      ? "Mark reviewed"
+                      : "Close report"}
+                  </Text>
+                </Pressable>
+              )}
+              <Pressable
+                accessibilityRole="button"
+                onPress={() =>
+                  setSelectedReportId((current) =>
+                    current === item.id ? null : item.id,
+                  )
+                }
+                style={styles.historyButton}
+              >
+                <Text style={styles.historyText}>
+                  {selectedReportId === item.id
+                    ? "Hide history"
+                    : "Audit history"}
+                </Text>
+              </Pressable>
+            </View>
+            {selectedReportId === item.id && (
+              <View style={styles.history}>
+                {historyQuery.isPending ? (
+                  <Text style={styles.identifier}>Loading history…</Text>
+                ) : historyQuery.isError ? (
+                  <Text style={styles.identifier}>Could not load history.</Text>
+                ) : historyQuery.data.data.length === 0 ? (
+                  <Text style={styles.identifier}>No review actions yet.</Text>
+                ) : (
+                  historyQuery.data.data.map((action) => (
+                    <Text key={action.id} style={styles.identifier}>
+                      {action.fromStatus} → {action.toStatus} ·{" "}
+                      {new Date(action.createdAt).toLocaleString()}
+                    </Text>
+                  ))
+                )}
+              </View>
+            )}
           </View>
         )}
         ListFooterComponent={
@@ -153,6 +268,27 @@ const styles = StyleSheet.create({
   date: { color: colors.muted, fontSize: 12 },
   detail: { color: colors.ink },
   identifier: { color: colors.muted, fontSize: 11 },
+  actions: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
+  actionButton: {
+    backgroundColor: colors.orange,
+    padding: 12,
+    borderRadius: 10,
+  },
+  actionText: { color: "white", fontWeight: "800" },
+  disabled: { opacity: 0.5 },
+  historyButton: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+  },
+  historyText: { color: colors.ink, fontWeight: "700" },
+  history: {
+    padding: 12,
+    gap: 8,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+  },
   more: { padding: 14, alignItems: "center" },
   moreText: { color: colors.orange, fontWeight: "800" },
 });

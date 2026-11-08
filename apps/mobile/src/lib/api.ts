@@ -318,6 +318,39 @@ export const api = {
       pagination: { hasMore: boolean; nextCursor: string | null };
     }>(`/admin/chat-reports${query ? "?" + query : ""}`, { auth: "required" });
   },
+  adminChatReportHistory: (id: string) =>
+    request<{
+      data: Array<{
+        id: string;
+        actorId: string;
+        fromStatus: string;
+        toStatus: string;
+        note: string | null;
+        createdAt: string;
+      }>;
+    }>(`/admin/chat-reports/${encodeURIComponent(id)}/history`, {
+      auth: "required",
+    }),
+  adminChatReportStatus: (
+    id: string,
+    status: "REVIEWED" | "CLOSED",
+    expectedStatus: "PENDING" | "REVIEWED",
+    note?: string,
+  ) =>
+    request<{
+      data: {
+        status: string;
+        action: { id: string; actorId: string; createdAt: string };
+      };
+    }>(`/admin/chat-reports/${encodeURIComponent(id)}/status`, {
+      method: "PATCH",
+      auth: "required",
+      body: {
+        status,
+        expectedStatus,
+        ...(note ? { note } : {}),
+      },
+    }),
   conversations: () =>
     request<{ data: Conversation[]; meta: { unreadCount: number } }>(
       "/conversations",
