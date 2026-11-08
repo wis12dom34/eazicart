@@ -11,6 +11,7 @@ import React, {
 } from "react";
 import { api, ApiError, setAccessToken, setRefreshHandler } from "../lib/api";
 import type { AuthResponse, User } from "../lib/types";
+import { SessionWriteGate } from "../lib/session-write-gate";
 
 const STORAGE_KEY = "eazicart_mobile_refresh_v1";
 type AuthState = {
@@ -22,33 +23,55 @@ type AuthState = {
   retrySession: () => Promise<void>;
 };
 const Context = createContext<AuthState | null>(null);
-let refreshInFlight: Promise<boolean> | null = null;
+const gate = new SessionWriteGate();
+let refreshInFlight: { epoch: number; promise: Promise<boolean> } | null = null;
 
-async function persistSession(response: AuthResponse) {
-  await SecureStore.setItemAsync(STORAGE_KEY, response.tokens.refreshToken);
-  setAccessToken(response.tokens.accessToken);
+async function persistSession(
+  response: AuthResponse,
+  epoch: number,
+): Promise<boolean> {
+  return gate.writeIfCurrent(epoch, async () => {
+    await SecureStore.setItemAsync(STORAGE_KEY, response.tokens.refreshToken);
+    if (gate.isCurrent(epoch)) setAccessToken(response.tokens.accessToken);
+  });
 }
-async function clearSession() {
+
+/** Invalidate immediately; queue deletion behind any in-progress token write. */
+function invalidateAndClear(expectedEpoch?: number): Promise<string | null> {
+  if (expectedEpoch !== undefined && !gate.isCurrent(expectedEpoch)) {
+    return Promise.resolve(null);
+  }
+  gate.invalidate();
   setAccessToken(null);
-  await SecureStore.deleteItemAsync(STORAGE_KEY);
-}
-async function refresh(): Promise<boolean> {
-  if (refreshInFlight) return refreshInFlight;
-  refreshInFlight = (async () => {
+  return gate.enqueue(async () => {
     const token = await SecureStore.getItemAsync(STORAGE_KEY);
-    if (!token) return false;
+    await SecureStore.deleteItemAsync(STORAGE_KEY);
+    return token;
+  });
+}
+
+function refresh(onUnauthorized: () => void): Promise<boolean> {
+  const epoch = gate.capture();
+  if (refreshInFlight?.epoch === epoch) return refreshInFlight.promise;
+  const promise = (async () => {
+    const token = await SecureStore.getItemAsync(STORAGE_KEY);
+    if (!token || !gate.isCurrent(epoch)) return false;
     try {
       const session = await api.session(token);
-      await persistSession(session);
-      return true;
+      return gate.isCurrent(epoch) && (await persistSession(session, epoch));
     } catch (e) {
-      if (e instanceof ApiError && e.status === 401) await clearSession();
+      if (e instanceof ApiError && e.status === 401 && gate.isCurrent(epoch)) {
+        const clearing = invalidateAndClear(epoch);
+        onUnauthorized();
+        await clearing;
+      }
       return false;
     }
   })().finally(() => {
-    refreshInFlight = null;
+    if (refreshInFlight?.epoch === epoch) refreshInFlight = null;
   });
-  return refreshInFlight;
+  refreshInFlight = { epoch, promise };
+  return promise;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -57,18 +80,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const retrySession = useCallback(async () => {
+    const epoch = gate.capture();
     setLoading(true);
     try {
       const token = await SecureStore.getItemAsync(STORAGE_KEY);
+      if (!gate.isCurrent(epoch)) return;
       if (token) {
         try {
           const restored = await api.session(token);
+          if (!gate.isCurrent(epoch)) return;
+          const saved = await persistSession(restored, epoch);
+          if (!saved || !gate.isCurrent(epoch)) return;
           await clearAccountCache(queryClient);
-          await persistSession(restored);
-          setUser(restored.user);
+          if (gate.isCurrent(epoch)) setUser(restored.user);
         } catch (e) {
+          if (!gate.isCurrent(epoch)) return;
           if (e instanceof ApiError && e.status === 401) {
-            await clearSession();
+            await invalidateAndClear(epoch);
             await clearAccountCache(queryClient);
           }
           setUser(null);
@@ -82,35 +110,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [queryClient]);
 
   useEffect(() => {
-    setRefreshHandler(refresh);
+    setRefreshHandler(() =>
+      refresh(() => {
+        setUser(null);
+        void clearAccountCache(queryClient).catch(() => {});
+      }),
+    );
     void retrySession().catch(() => setLoading(false));
     return () => setRefreshHandler(null);
-  }, [retrySession]);
+  }, [queryClient, retrySession]);
 
   const authenticate = useCallback(
-    async (promise: Promise<AuthResponse>) => {
+    async (promise: Promise<AuthResponse>, startingEpoch: number) => {
       const result = await promise;
-      // Do not expose cached data from a different signed-in account.
-      if (user?.id !== result.user.id) {
-        await clearAccountCache(queryClient);
+      if (!gate.isCurrent(startingEpoch)) {
+        throw new Error("Session changed during sign in. Please try again.");
       }
-      await persistSession(result);
+      const epoch = gate.invalidate();
+      setAccessToken(null);
+      setUser(null);
+      await clearAccountCache(queryClient);
+      let saved = false;
+      try {
+        saved = await persistSession(result, epoch);
+      } catch (error) {
+        if (gate.isCurrent(epoch)) await invalidateAndClear(epoch);
+        throw error;
+      }
+      if (!saved || !gate.isCurrent(epoch)) {
+        throw new Error("Session changed during sign in. Please try again.");
+      }
       setUser(result.user);
     },
-    [queryClient, user?.id],
+    [queryClient],
   );
 
   const logout = useCallback(async () => {
-    const token = await SecureStore.getItemAsync(STORAGE_KEY);
-    // Revoke local access and stop outstanding private reads before logout I/O.
-    setAccessToken(null);
+    // Invalidate before any await so a late refresh cannot restore a signed-out account.
+    const clearing = invalidateAndClear();
     setUser(null);
     await clearAccountCache(queryClient);
-    try {
-      await clearSession();
-    } finally {
-      if (token) await api.logout(token).catch(() => {});
-    }
+    const token = await clearing;
+    if (token) await api.logout(token).catch(() => {});
   }, [queryClient]);
 
   const value = useMemo<AuthState>(
@@ -119,9 +160,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       retrySession,
       logout,
-      login: (email, password) => authenticate(api.login(email, password)),
+      login: (email, password) =>
+        authenticate(api.login(email, password), gate.capture()),
       register: (name, email, password) =>
-        authenticate(api.register(name, email, password)),
+        authenticate(api.register(name, email, password), gate.capture()),
     }),
     [user, loading, retrySession, logout, authenticate],
   );
