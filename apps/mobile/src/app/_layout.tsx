@@ -65,6 +65,18 @@ export default function RootLayout() {
               options={{ title: "Checkout review" }}
             />
             <Stack.Screen name="orders" options={{ title: "Order history" }} />
+            <Stack.Screen
+              name="seller-center"
+              options={{ title: "Seller center" }}
+            />
+            <Stack.Screen
+              name="seller-inventory"
+              options={{ title: "My inventory" }}
+            />
+            <Stack.Screen
+              name="seller-orders"
+              options={{ title: "Store orders" }}
+            />
             <Stack.Screen name="product/[id]" options={{ title: "Product" }} />
             <Stack.Screen
               name="product/[id]/comments"

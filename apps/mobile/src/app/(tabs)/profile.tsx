@@ -1,5 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../../lib/api";
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +16,11 @@ import { currentAuditPreviewBase } from "../../lib/admin-audit-preview";
 
 export default function ProfileScreen() {
   const { user, loading, logout } = useAuth();
+  const shop = useQuery({
+    queryKey: ["my-seller-profile", user?.id],
+    queryFn: api.ownSellerProfile,
+    enabled: Boolean(user) && !loading,
+  });
   return (
     <View style={styles.screen}>
       <Text style={styles.title}>Your account</Text>
@@ -55,6 +62,22 @@ export default function ProfileScreen() {
             <Text style={styles.followingText}>Notifications</Text>
             <Ionicons name="chevron-forward" color={colors.muted} size={20} />
           </Pressable>
+          {shop.data?.data ? (
+            <Pressable
+              style={styles.followingLink}
+              accessibilityRole="button"
+              accessibilityLabel="Manage your seller shop"
+              onPress={() => router.push("/seller-center")}
+            >
+              <Ionicons
+                name="storefront-outline"
+                color={colors.orange}
+                size={23}
+              />
+              <Text style={styles.followingText}>Seller center</Text>
+              <Ionicons name="chevron-forward" color={colors.muted} size={20} />
+            </Pressable>
+          ) : null}
           <Pressable
             style={styles.followingLink}
             accessibilityRole="button"

@@ -23,6 +23,8 @@ import type {
   Conversation,
   ChatPage,
   ChatMessage,
+  SellerDashboard,
+  SellerOrder,
 } from "./types";
 
 const configuredUrlFromEnv: unknown =
@@ -171,6 +173,16 @@ export const api = {
     request<{ data: Seller }>(`/sellers/${encodeURIComponent(id)}`),
   sellerProducts: (id: string) =>
     request<{ data: Product[] }>(`/sellers/${encodeURIComponent(id)}/products`),
+  ownSellerProfile: () =>
+    request<{ data: Seller | null }>("/seller-profile", { auth: "required" }),
+  sellerDashboard: () =>
+    request<{ data: SellerDashboard }>("/seller/dashboard", {
+      auth: "required",
+    }),
+  ownSellerProducts: () =>
+    request<{ data: Product[] }>("/seller/products", { auth: "required" }),
+  ownSellerOrders: () =>
+    request<{ data: SellerOrder[] }>("/seller/orders", { auth: "required" }),
   following: () =>
     request<FollowingResponse>("/following", { auth: "required" }),
   followSeller: (sellerUserId: string) =>

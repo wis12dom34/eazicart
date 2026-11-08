@@ -162,6 +162,45 @@ export type OrderSummary = {
   address: Address;
 };
 
+export type SellerDashboard = {
+  seller: { id: string; displayName: string };
+  inventory: {
+    totalProducts: number;
+    activeProducts: number;
+    outOfStockProducts: number;
+    unitsInStock: number;
+  };
+  orders: {
+    total: number;
+    pending: number;
+    confirmed: number;
+    fulfilled: number;
+    cancelled: number;
+  };
+  customers: { total: number };
+  analytics: {
+    revenue: Array<{ currency: string; gross: string }>;
+  };
+};
+
+export type SellerOrder = {
+  id: string;
+  status: "PENDING" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
+  globalStatus: string;
+  createdAt: string;
+  updatedAt: string;
+  customer: { name: string };
+  address: Address;
+  subtotal: string;
+  items: Array<{
+    id: string;
+    productName: string;
+    quantity: number;
+    unitPrice: string;
+    product: { id: string; images: ProductImage[] };
+  }>;
+};
+
 export type Conversation = {
   id: string;
   buyerId: string;
