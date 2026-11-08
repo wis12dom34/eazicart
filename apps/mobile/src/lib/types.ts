@@ -40,6 +40,7 @@ export type SellerProductInput = {
   name: string;
   description: string;
   price: string;
+  originalPrice: string | null;
   stock: number;
   categoryId: string;
 };

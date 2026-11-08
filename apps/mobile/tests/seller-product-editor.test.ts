@@ -12,6 +12,7 @@ const base = {
   name: " Sport shoes ",
   description: " Comfortable shoes ",
   price: "4500.25",
+  originalPrice: "",
   stock: "12",
   categoryId: "category-1",
 };
@@ -30,6 +31,7 @@ test("seller draft normalizes input before requesting backend", () => {
       name: "Sport shoes",
       description: "Comfortable shoes",
       price: "4500.25",
+      originalPrice: null,
       stock: 12,
       categoryId: "category-1",
     },
@@ -137,4 +139,27 @@ test("backend owner rejection is surfaced without retrying another seller produc
     (e: unknown) =>
       e instanceof ApiError && e.status === 403 && e.code === "FORBIDDEN",
   );
+});
+
+test("original price is optional and must exceed the selling price", () => {
+  const discounted = validateSellerProductDraft({
+    ...base,
+    price: "4500.25",
+    originalPrice: "6000.50",
+  });
+  assert.equal(discounted.ok, true);
+  if (discounted.ok) assert.equal(discounted.data.originalPrice, "6000.50");
+  for (const originalPrice of ["4500.25", "4500.24", "-10", "10.123", "1e6"]) {
+    assert.equal(
+      validateSellerProductDraft({ ...base, originalPrice }).ok,
+      false,
+      originalPrice,
+    );
+  }
+  const noDiscount = validateSellerProductDraft({
+    ...base,
+    originalPrice: " ",
+  });
+  assert.equal(noDiscount.ok, true);
+  if (noDiscount.ok) assert.equal(noDiscount.data.originalPrice, null);
 });

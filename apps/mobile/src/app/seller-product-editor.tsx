@@ -25,6 +25,7 @@ const emptyDraft: SellerProductDraft = {
   name: "",
   description: "",
   price: "",
+  originalPrice: "",
   stock: "0",
   categoryId: "",
 };
@@ -57,6 +58,7 @@ export default function SellerProductEditor() {
       name: existing.name,
       description: existing.description ?? "",
       price: existing.price,
+      originalPrice: existing.originalPrice ?? "",
       stock: String(existing.stock),
       categoryId: existing.category?.id ?? "",
     });
@@ -198,6 +200,17 @@ export default function SellerProductEditor() {
         keyboardType="decimal-pad"
         placeholder="e.g. 4500.00"
       />
+      <Field
+        label="Original price (₦, optional)"
+        value={draft.originalPrice}
+        onChangeText={(v) => updateField("originalPrice", v)}
+        keyboardType="decimal-pad"
+        placeholder="e.g. 6000.00"
+      />
+      <Text style={styles.note}>
+        If the original price is higher than your selling price, buyers see the
+        discount automatically. Leave this blank to remove the discount.
+      </Text>
       <Field
         label="Units in stock"
         value={draft.stock}

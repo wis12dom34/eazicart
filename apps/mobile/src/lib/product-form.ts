@@ -4,6 +4,7 @@ export type SellerProductDraft = {
   name: string;
   description: string;
   price: string;
+  originalPrice: string;
   stock: string;
   categoryId: string;
 };
@@ -17,6 +18,7 @@ export function validateSellerProductDraft(
   const name = draft.name.trim();
   const description = draft.description.trim();
   const price = draft.price.trim();
+  const original = draft.originalPrice.trim();
   const stockText = draft.stock.trim();
   if (name.length < 2 || name.length > 160)
     return {
@@ -33,6 +35,20 @@ export function validateSellerProductDraft(
       ok: false,
       message: "Enter a valid price in naira, with up to two decimal places.",
     };
+  if (original) {
+    if (!/^(?:0|[1-9][0-9]{0,9})(?:\.[0-9]{1,2})?$/.test(original))
+      return { ok: false, message: "Enter a valid original price." };
+    // Integer cents avoids floating point rounding when validating prices.
+    const cents = (value: string) => {
+      const [whole, decimal = ""] = value.split(".");
+      return BigInt(whole ?? "0") * 100n + BigInt(decimal.padEnd(2, "0"));
+    };
+    if (cents(original) <= cents(price))
+      return {
+        ok: false,
+        message: "Original price must be higher than the selling price.",
+      };
+  }
   if (
     !/^(?:0|[1-9][0-9]*)$/.test(stockText) ||
     !Number.isSafeInteger(Number(stockText))
@@ -52,6 +68,7 @@ export function validateSellerProductDraft(
       name,
       description,
       price,
+      originalPrice: original || null,
       stock,
       categoryId: draft.categoryId.trim(),
     },

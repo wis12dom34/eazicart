@@ -9,6 +9,11 @@ const productBody = z.object({
   name: z.string().trim().min(2).max(160),
   description: z.string().trim().max(5000).nullable().optional(),
   price: z.coerce.string().regex(/^\d{1,10}(\.\d{1,2})?$/),
+  originalPrice: z
+    .string()
+    .regex(/^\d{1,10}(\.\d{1,2})?$/)
+    .nullable()
+    .optional(),
   stock: z.number().int().min(0),
   categoryId: z.string().min(1),
   images: z
@@ -37,9 +42,42 @@ const include = {
   category: true,
   seller: { include: { user: { select: { id: true, name: true } } } },
 };
-const serialize = <T extends { price: { toString(): string } }>(
+export function productPriceDetails(
+  price: Prisma.Decimal,
+  originalPrice: Prisma.Decimal | null,
+) {
+  return {
+    price: money(price),
+    originalPrice: originalPrice ? money(originalPrice) : null,
+    discountPercent: originalPrice
+      ? originalPrice
+          .sub(price)
+          .div(originalPrice)
+          .mul(100)
+          .toDecimalPlaces(0)
+          .toNumber()
+      : null,
+  };
+}
+const serialize = <
+  T extends { price: Prisma.Decimal; originalPrice: Prisma.Decimal | null },
+>(
   product: T,
-) => ({ ...product, price: money(product.price) });
+) => ({
+  ...product,
+  ...productPriceDetails(product.price, product.originalPrice),
+});
+const validateOriginalPrice = (
+  price: Prisma.Decimal,
+  originalPrice: Prisma.Decimal | null,
+) => {
+  if (originalPrice !== null && originalPrice.lte(price))
+    throw new AppError(
+      400,
+      "INVALID_DISCOUNT_PRICE",
+      "Original price must be higher than the selling price",
+    );
+};
 
 export function registerProducts(app: FastifyInstance, client?: PrismaClient) {
   const db = () => requireDatabase(client);
@@ -128,11 +166,17 @@ export function registerProducts(app: FastifyInstance, client?: PrismaClient) {
         "SELLER_REQUIRED",
         "Create a seller profile first",
       );
+    const sellingPrice = new Prisma.Decimal(input.price);
+    const originalPrice = input.originalPrice
+      ? new Prisma.Decimal(input.originalPrice)
+      : null;
+    validateOriginalPrice(sellingPrice, originalPrice);
     const row = await db().product.create({
       data: {
         name: input.name,
         description: input.description,
-        price: new Prisma.Decimal(input.price),
+        price: sellingPrice,
+        originalPrice,
         stock: input.stock,
         categoryId: input.categoryId,
         sellerId: seller.id,
@@ -153,12 +197,23 @@ export function registerProducts(app: FastifyInstance, client?: PrismaClient) {
       throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found");
     if (owner.seller.userId !== userId(request))
       throw new AppError(403, "FORBIDDEN", "You do not own this product");
-    const { images, price, ...data } = input;
+    const { images, price, originalPrice: originalPriceInput, ...data } = input;
+    const sellingPrice =
+      price === undefined ? owner.price : new Prisma.Decimal(price);
+    const originalPrice =
+      originalPriceInput === undefined
+        ? owner.originalPrice
+        : originalPriceInput === null
+          ? null
+          : new Prisma.Decimal(originalPriceInput);
+    validateOriginalPrice(sellingPrice, originalPrice);
     const row = await db().product.update({
       where: { id },
       data: {
         ...data,
-        price: price === undefined ? undefined : new Prisma.Decimal(price),
+        price: price === undefined ? undefined : sellingPrice,
+        originalPrice:
+          originalPriceInput === undefined ? undefined : originalPrice,
         images: images ? { deleteMany: {}, create: images } : undefined,
       },
       include,
