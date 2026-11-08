@@ -1,4 +1,6 @@
 import * as SecureStore from "expo-secure-store";
+import { useQueryClient } from "@tanstack/react-query";
+import { clearAccountCache } from "../lib/session-cache";
 import React, {
   createContext,
   useCallback,
@@ -50,6 +52,7 @@ async function refresh(): Promise<boolean> {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,10 +63,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (token) {
         try {
           const restored = await api.session(token);
+          await clearAccountCache(queryClient);
           await persistSession(restored);
           setUser(restored.user);
         } catch (e) {
-          if (e instanceof ApiError && e.status === 401) await clearSession();
+          if (e instanceof ApiError && e.status === 401) {
+            await clearSession();
+            await clearAccountCache(queryClient);
+          }
           setUser(null);
         }
       } else {
@@ -72,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     setRefreshHandler(refresh);
@@ -80,19 +87,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => setRefreshHandler(null);
   }, [retrySession]);
 
-  const authenticate = useCallback(async (promise: Promise<AuthResponse>) => {
-    const result = await promise;
-    await persistSession(result);
-    setUser(result.user);
-  }, []);
+  const authenticate = useCallback(
+    async (promise: Promise<AuthResponse>) => {
+      const result = await promise;
+      // Do not expose cached data from a different signed-in account.
+      if (user?.id !== result.user.id) {
+        await clearAccountCache(queryClient);
+      }
+      await persistSession(result);
+      setUser(result.user);
+    },
+    [queryClient, user?.id],
+  );
 
   const logout = useCallback(async () => {
     const token = await SecureStore.getItemAsync(STORAGE_KEY);
-    // Always clear local credentials, even when offline.
-    await clearSession();
+    // Revoke local access and stop outstanding private reads before logout I/O.
+    setAccessToken(null);
     setUser(null);
-    if (token) await api.logout(token).catch(() => {});
-  }, []);
+    await clearAccountCache(queryClient);
+    try {
+      await clearSession();
+    } finally {
+      if (token) await api.logout(token).catch(() => {});
+    }
+  }, [queryClient]);
 
   const value = useMemo<AuthState>(
     () => ({

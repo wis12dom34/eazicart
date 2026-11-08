@@ -1,5 +1,12 @@
 import { Stack } from "expo-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  focusManager,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { useEffect } from "react";
+import { AppState, Platform } from "react-native";
+import { isNativeAppFocused } from "../lib/app-focus";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "../providers/auth";
@@ -17,6 +24,17 @@ const client = new QueryClient({
 });
 
 export default function RootLayout() {
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    focusManager.setFocused(isNativeAppFocused(AppState.currentState));
+    const subscription = AppState.addEventListener("change", (state) => {
+      focusManager.setFocused(isNativeAppFocused(state));
+    });
+    return () => {
+      subscription.remove();
+      focusManager.setFocused(undefined);
+    };
+  }, []);
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={client}>
