@@ -161,3 +161,16 @@ export type OrderSummary = {
   }>;
   address: Address;
 };
+
+export type Notification = {
+  id: string;
+  type?: string | null;
+  title: string;
+  body: string;
+  readAt?: string | null;
+  createdAt: string;
+};
+export type NotificationListResponse = {
+  data: Notification[];
+  meta: { unreadCount: number };
+};

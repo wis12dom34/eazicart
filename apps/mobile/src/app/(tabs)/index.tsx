@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { router } from "expo-router";
 import {
   useInfiniteQuery,
   useQuery,
@@ -32,6 +34,13 @@ export default function HomeScreen() {
         ? (last.pagination.nextCursor ?? undefined)
         : undefined,
   });
+  const notificationQuery = useQuery({
+    queryKey: ["notifications", user?.id],
+    enabled: Boolean(user) && !loading,
+    queryFn: api.notifications,
+    staleTime: 30_000,
+  });
+  const unreadCount = notificationQuery.data?.meta.unreadCount ?? 0;
   const savedQuery = useQuery({
     queryKey: ["saved", user?.id],
     enabled: Boolean(user) && !loading,
@@ -76,7 +85,31 @@ export default function HomeScreen() {
         <Text style={styles.logo}>
           Eazi<Text style={styles.logoAccent}>Cart</Text>
         </Text>
-        <Text style={styles.tagline}>Discover what you love</Text>
+        <View style={styles.headerActions}>
+          <Text style={styles.tagline}>Discover what you love</Text>
+          {user ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                unreadCount > 0
+                  ? `Notifications, ${unreadCount} unread`
+                  : "Notifications"
+              }
+              onPress={() => router.push("/notifications")}
+              style={styles.bell}
+              hitSlop={8}
+            >
+              <Ionicons name="notifications-outline" size={23} color={colors.ink} />
+              {unreadCount > 0 ? (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadBadgeText}>
+                    {unreadCount > 99 ? "99+" : String(unreadCount)}
+                  </Text>
+                </View>
+              ) : null}
+            </Pressable>
+          ) : null}
+        </View>
       </View>
       {feed.isError && !products.length ? (
         <ScreenState
@@ -171,5 +204,25 @@ const styles = StyleSheet.create({
   },
   logoAccent: { color: colors.orange },
   tagline: { fontSize: 11, color: colors.muted },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 12 },
+  bell: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  unreadBadge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    minWidth: 19,
+    height: 19,
+    paddingHorizontal: 3,
+    borderRadius: 10,
+    backgroundColor: colors.red,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  unreadBadgeText: { color: "white", fontWeight: "800", fontSize: 10 },
   retry: { padding: 18, color: colors.orange, textAlign: "center" },
 });

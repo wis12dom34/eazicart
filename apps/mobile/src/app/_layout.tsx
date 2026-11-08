@@ -44,6 +44,10 @@ export default function RootLayout() {
             />
             <Stack.Screen name="following" options={{ title: "Following" }} />
             <Stack.Screen
+              name="notifications"
+              options={{ title: "Notifications" }}
+            />
+            <Stack.Screen
               name="admin-audit"
               options={{ title: "Finance audit preview" }}
             />

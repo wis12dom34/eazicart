@@ -44,6 +44,16 @@ export default function ProfileScreen() {
           <Pressable
             style={styles.followingLink}
             accessibilityRole="button"
+            accessibilityLabel="Your notifications"
+            onPress={() => router.push("/notifications")}
+          >
+            <Ionicons name="notifications-outline" color={colors.orange} size={23} />
+            <Text style={styles.followingText}>Notifications</Text>
+            <Ionicons name="chevron-forward" color={colors.muted} size={20} />
+          </Pressable>
+          <Pressable
+            style={styles.followingLink}
+            accessibilityRole="button"
             onPress={() => router.push("/orders")}
           >
             <Ionicons name="receipt-outline" color={colors.orange} size={23} />

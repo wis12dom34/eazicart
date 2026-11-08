@@ -18,6 +18,8 @@ import type {
   Address,
   AddressInput,
   OrderSummary,
+  Notification,
+  NotificationListResponse,
 } from "./types";
 
 const configuredUrl = process.env.EXPO_PUBLIC_EAZICART_API_BASE_URL;
@@ -292,6 +294,18 @@ export const api = {
   },
   storiesForUser: (userId: string) =>
     request<StoryListResponse>(`/social/stories/${encodeURIComponent(userId)}`),
+  notifications: () =>
+    request<NotificationListResponse>("/notifications", { auth: "required" }),
+  notificationRead: (id: string) =>
+    request<{ data: Notification }>(
+      `/notifications/${encodeURIComponent(id)}/read`,
+      { method: "PATCH", auth: "required" },
+    ),
+  notificationsReadAll: () =>
+    request<{ data: { updated: number } }>("/notifications/read-all", {
+      method: "PATCH",
+      auth: "required",
+    }),
   comment: (id: string, body: string) =>
     request<unknown>(`/products/${encodeURIComponent(id)}/comments`, {
       method: "POST",
