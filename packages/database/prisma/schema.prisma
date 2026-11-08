@@ -110,6 +110,8 @@ model Conversation {
   messages ChatMessage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  buyerReadAt DateTime?
+  sellerReadAt DateTime?
 
   @@unique([buyerId, sellerId])
   @@index([buyerId, updatedAt])
@@ -122,12 +124,15 @@ model ChatMessage {
   senderId String
   clientMessageId String @db.VarChar(128)
   body String @db.VarChar(4000)
+  productId String?
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@unique([conversationId, senderId, clientMessageId])
   @@index([conversationId, createdAt, id])
+  @@index([productId])
 }
 
 model RefreshToken {
@@ -191,6 +196,7 @@ model Product {
   savedBy SavedProduct[]
   campaigns Campaign[]
   reels Reel[]
+  chatMessages ChatMessage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([active, createdAt])

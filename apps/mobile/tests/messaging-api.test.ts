@@ -113,3 +113,43 @@ test("sending a message includes stable client UUID, body and bearer token", asy
   );
   assert.equal(message.data.id, "message-1");
 });
+
+test("product sharing and read acknowledgement preserve authentication and paths", async () => {
+  setAccessToken("synthetic-test-token");
+  const uuid = "f337bf8f-94cf-4d59-8148-60b8b280fb04";
+  const seen: string[] = [];
+  globalThis.fetch = async (input, init) => {
+    const url = new URL(String(input));
+    seen.push(`${init?.method} ${url.pathname}`);
+    assert.equal(
+      new Headers(init?.headers).get("Authorization"),
+      "Bearer synthetic-test-token",
+    );
+    if (init?.method === "POST") {
+      assert.deepEqual(JSON.parse(String(init.body)), {
+        body: "",
+        clientMessageId: uuid,
+        productId: "product-1",
+      });
+      return json({ data: { id: "message-2" } });
+    }
+    return json({ data: { read: true } });
+  };
+  await api.sendChatMessage("chat/1", "", uuid, "product-1");
+  const acknowledged = await api.conversationRead("chat/1");
+  assert.equal(acknowledged.data.read, true);
+  assert.deepEqual(seen, [
+    "POST /api/conversations/chat%2F1/messages",
+    "PATCH /api/conversations/chat%2F1/read",
+  ]);
+});
+
+test("a signed-out user cannot mark messages read", async () => {
+  let touched = false;
+  globalThis.fetch = async () => {
+    touched = true;
+    return json({});
+  };
+  await assert.rejects(api.conversationRead("chat-id"), ApiError);
+  assert.equal(touched, false);
+});

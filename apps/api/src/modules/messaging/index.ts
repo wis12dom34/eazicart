@@ -7,16 +7,23 @@ import { protectedRoute, requireDatabase, userId } from "../shared.js";
 const params = z.object({ id: z.string().min(1).max(128) });
 const listQuery = z.object({ cursor: z.string().min(1).max(128).optional() });
 const startBody = z.object({ sellerUserId: z.string().min(1).max(128) });
-const messageBody = z.object({
-  body: z.string().trim().min(1).max(4000),
-  clientMessageId: z.string().uuid(),
-});
+const messageBody = z
+  .object({
+    body: z.string().trim().max(4000).default(""),
+    productId: z.string().min(1).max(128).optional(),
+    clientMessageId: z.string().uuid(),
+  })
+  .refine((input) => Boolean(input.body || input.productId), {
+    message: "Text or a product is required",
+  });
 const summarySelect = {
   id: true,
   buyerId: true,
   sellerId: true,
   createdAt: true,
   updatedAt: true,
+  buyerReadAt: true,
+  sellerReadAt: true,
   buyer: { select: { id: true, name: true } },
   seller: {
     select: {
@@ -33,6 +40,16 @@ const messageSelect = {
   body: true,
   clientMessageId: true,
   createdAt: true,
+  productId: true,
+  product: {
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      active: true,
+      images: { take: 1, orderBy: { position: "asc" }, select: { url: true } },
+    },
+  },
 } as const;
 
 export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
@@ -53,13 +70,31 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
 
   app.get("/conversations", auth, async (request) => {
     const uid = userId(request);
-    return {
-      data: await db().conversation.findMany({
-        where: { OR: [{ buyerId: uid }, { sellerId: uid }] },
-        select: summarySelect,
-        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-        take: 100,
+    const conversations = await db().conversation.findMany({
+      where: { OR: [{ buyerId: uid }, { sellerId: uid }] },
+      select: summarySelect,
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      take: 100,
+    });
+    const data = await Promise.all(
+      conversations.map(async (conversation) => {
+        const readAt =
+          conversation.buyerId === uid
+            ? conversation.buyerReadAt
+            : conversation.sellerReadAt;
+        const unreadCount = await db().chatMessage.count({
+          where: {
+            conversationId: conversation.id,
+            senderId: { not: uid },
+            ...(readAt ? { createdAt: { gt: readAt } } : {}),
+          },
+        });
+        return { ...conversation, unreadCount };
       }),
+    );
+    return {
+      data,
+      meta: { unreadCount: data.reduce((sum, c) => sum + c.unreadCount, 0) },
     };
   });
 
@@ -113,6 +148,38 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
     };
   });
 
+  app.patch("/conversations/:id/read", auth, async (request) => {
+    const { id } = params.parse(request.params);
+    const uid = userId(request);
+    await permitted(id, uid);
+    // Only acknowledge messages already stored before the read request.
+    // The timestamp is assigned server-side; readers never choose it.
+    const latest = await db().chatMessage.findFirst({
+      where: { conversationId: id, senderId: { not: uid } },
+      select: { createdAt: true },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    });
+    if (latest) {
+      const field =
+        (
+          await db().conversation.findUniqueOrThrow({
+            where: { id },
+            select: { buyerId: true },
+          })
+        ).buyerId === uid
+          ? "buyerReadAt"
+          : "sellerReadAt";
+      await db().conversation.updateMany({
+        where: {
+          id,
+          OR: [{ [field]: null }, { [field]: { lt: latest.createdAt } }],
+        },
+        data: { [field]: latest.createdAt },
+      });
+    }
+    return { data: { read: true } };
+  });
+
   app.post("/conversations/:id/messages", auth, async (request, reply) => {
     const { id } = params.parse(request.params);
     const uid = userId(request);
@@ -133,6 +200,26 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
     });
     let inserted = false;
     if (!created) {
+      if (input.productId) {
+        const conversation = await db().conversation.findUniqueOrThrow({
+          where: { id },
+          select: { sellerId: true },
+        });
+        const product = await db().product.findFirst({
+          where: {
+            id: input.productId,
+            active: true,
+            seller: { userId: conversation.sellerId },
+          },
+          select: { id: true },
+        });
+        if (!product)
+          throw new AppError(
+            404,
+            "PRODUCT_NOT_FOUND",
+            "Product is unavailable",
+          );
+      }
       try {
         created = await db().chatMessage.create({
           data: {
@@ -140,6 +227,7 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
             senderId: uid,
             clientMessageId: input.clientMessageId,
             body: input.body,
+            productId: input.productId,
           },
           select: messageSelect,
         });
@@ -160,7 +248,10 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
         if (!created) throw error;
       }
     }
-    if (created.body !== input.body)
+    if (
+      created.body !== input.body ||
+      created.productId !== (input.productId ?? null)
+    )
       throw new AppError(
         409,
         "MESSAGE_REPLAY_CONFLICT",

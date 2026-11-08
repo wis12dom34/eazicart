@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PrismaClient } from "@eazicart/database";
 import { SignJWT } from "jose";
+import { randomUUID } from "node:crypto";
 import { buildApp } from "../src/app.js";
 import type { AppConfig } from "../src/config.js";
 
+const runId = randomUUID();
 const expectedDb = "eazicart_chat_synthetic";
 const url = new URL(
   process.env.DATABASE_URL ?? "postgresql://localhost/no_database",
@@ -48,10 +50,7 @@ const messageKey = "ea2ae48a-82e1-449f-8d13-e359fa35945a";
 
 beforeAll(async () => {
   // This test is hard-locked to the disposable database above.
-  // Clearing only its synthetic test accounts permits safe reruns.
-  await db.user.deleteMany({
-    where: { email: { startsWith: "synthetic-chat-" } },
-  });
+  // Unique fixture IDs allow safe independent runs against disposable PostgreSQL.
   for (const [key, role] of [
     ["buyer", "BUYER"],
     ["seller", "SELLER"],
@@ -59,7 +58,7 @@ beforeAll(async () => {
   ] as const) {
     const u = await db.user.create({
       data: {
-        email: `synthetic-chat-${key}@example.invalid`,
+        email: `synthetic-chat-${runId}-${key}@example.invalid`,
         name: key,
         passwordHash: "synthetic-not-real",
         role,
@@ -194,6 +193,116 @@ describe.sequential(
       expect(invalidId.statusCode).toBe(400);
     });
 
+    it("tracks unread messages separately and protects read acknowledgements", async () => {
+      const route = `/conversations/${conversationId}/read`;
+      const list = (token: string) =>
+        app.inject({
+          method: "GET",
+          url: "/conversations",
+          headers: bearer(token),
+        });
+      const unread = (response: Awaited<ReturnType<typeof list>>) =>
+        response.json<{
+          data: Array<{ unreadCount: number }>;
+          meta: { unreadCount: number };
+        }>();
+      // Buyer sent first; seller has an unread message.
+      expect(unread(await list(sellerToken)).data[0]?.unreadCount).toBe(1);
+      expect(unread(await list(buyerToken)).data[0]?.unreadCount).toBe(0);
+      const outsider = await app.inject({
+        method: "PATCH",
+        url: route,
+        headers: bearer(outsiderToken),
+      });
+      expect(outsider.statusCode).toBe(404);
+      const anonymous = await app.inject({ method: "PATCH", url: route });
+      expect(anonymous.statusCode).toBe(401);
+      const marked = await app.inject({
+        method: "PATCH",
+        url: route,
+        headers: bearer(sellerToken),
+      });
+      expect(marked.statusCode).toBe(200);
+      expect(unread(await list(sellerToken)).meta.unreadCount).toBe(0);
+      // Repeated reads cannot erase a new message sent later.
+      const repeat = await app.inject({
+        method: "PATCH",
+        url: route,
+        headers: bearer(sellerToken),
+      });
+      expect(repeat.statusCode).toBe(200);
+    });
+
+    it("only shares active products owned by the seller in the conversation", async () => {
+      const sellerProfile = await db.sellerProfile.findUniqueOrThrow({
+        where: { userId: sellerId },
+      });
+      const category = await db.category.create({
+        data: {
+          name: "Synthetic chat category " + runId,
+          slug: `synthetic-chat-${runId}`,
+        },
+      });
+      const available = await db.product.create({
+        data: {
+          name: "Synthetic shoes",
+          price: "4500",
+          stock: 5,
+          active: true,
+          sellerId: sellerProfile.id,
+          categoryId: category.id,
+        },
+      });
+      const otherProfile = await db.sellerProfile.create({
+        data: { userId: outsiderId, displayName: "Unrelated seller" },
+      });
+      const unrelated = await db.product.create({
+        data: {
+          name: "Unrelated item",
+          price: "500",
+          stock: 1,
+          sellerId: otherProfile.id,
+          categoryId: category.id,
+        },
+      });
+      const send = (productId: string, key: string, body = "") =>
+        app.inject({
+          method: "POST",
+          url: `/conversations/${conversationId}/messages`,
+          headers: bearer(buyerToken),
+          payload: { productId, body, clientMessageId: key },
+        });
+      const sharedKey = "16ce456b-f03a-47f2-8b92-780c64747877";
+      const shared = await send(available.id, sharedKey);
+      expect(shared.statusCode).toBe(200);
+      expect(
+        shared.json<{
+          data: { productId: string; product: { name: string } };
+        }>().data.product.name,
+      ).toBe("Synthetic shoes");
+      expect((await send(available.id, sharedKey)).statusCode).toBe(200);
+      expect(
+        (await send(available.id, sharedKey, "different")).statusCode,
+      ).toBe(409);
+      expect(
+        (await send(unrelated.id, "9df19ba0-4997-4c76-8e36-41f784a1d607"))
+          .statusCode,
+      ).toBe(404);
+      await db.product.update({
+        where: { id: available.id },
+        data: { active: false },
+      });
+      // A confirmed message may be safely retried after the product is unpublished.
+      expect((await send(available.id, sharedKey)).statusCode).toBe(200);
+      expect(
+        (await send(available.id, "a94ec153-2a8e-426a-8ad2-9ef195bd2da7"))
+          .statusCode,
+      ).toBe(404);
+      expect(
+        (await send("", "ff2bd93b-d3dd-42d4-b426-678f0e87f0f8")).statusCode,
+      ).toBe(400);
+    });
+
     it("allows seller replies, blocks unrelated cursors, and pages oldest messages safely", async () => {
       const sellerReply = await app.inject({
         method: "POST",
@@ -215,7 +324,7 @@ describe.sequential(
         data: Array<{ senderId: string; body: string }>;
         pagination: { hasMore: boolean };
       }>();
-      expect(data.data).toHaveLength(2);
+      expect(data.data).toHaveLength(3);
       expect(data.data.map((m) => m.body)).toContain("Hello, welcome");
       expect(data.data.map((m) => m.senderId)).toContain(sellerId);
       expect(data.pagination.hasMore).toBe(false);

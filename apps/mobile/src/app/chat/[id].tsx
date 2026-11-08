@@ -6,7 +6,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useLocalSearchParams, router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Image } from "expo-image";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -24,11 +25,19 @@ import { useAuth } from "../../providers/auth";
 import { colors } from "../../theme";
 
 export default function ConversationScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, productId } = useLocalSearchParams<{
+    id: string;
+    productId?: string;
+  }>();
   const { user, loading } = useAuth();
   const cache = useQueryClient();
   const [draft, setDraft] = useState("");
   const [retryKey, setRetryKey] = useState<string | null>(null);
+  const lastMarkedRead = useRef<string | null>(null);
+  const [shareProductId, setShareProductId] = useState<string | null>(null);
+  useEffect(() => {
+    if (productId) setShareProductId(productId);
+  }, [productId]);
   const messages = useInfiniteQuery({
     queryKey: ["chat-messages", user?.id, id],
     enabled: Boolean(id && user) && !loading,
@@ -53,12 +62,31 @@ export default function ConversationScreen() {
           conversation.seller.name)
         : conversation.buyer.name
       : "Conversation";
+  const read = useMutation({
+    mutationFn: () => api.conversationRead(id),
+    onSuccess: () => {
+      void cache.invalidateQueries({ queryKey: ["conversations", user?.id] });
+    },
+  });
+  const newestMessageId = messages.data?.pages[0]?.data[0]?.id;
+  useEffect(() => {
+    if (!user || !conversation || !newestMessageId || read.isPending) return;
+    if (lastMarkedRead.current === newestMessageId) return;
+    lastMarkedRead.current = newestMessageId;
+    read.mutate(undefined, {
+      onError: () => {
+        lastMarkedRead.current = null;
+      },
+    });
+    // Stable message ID avoids redundant acknowledgements.
+  }, [user?.id, conversation?.id, newestMessageId, read.mutate]);
   const send = useMutation({
-    mutationFn: (input: { body: string; key: string }) =>
-      api.sendChatMessage(id, input.body, input.key),
+    mutationFn: (input: { body: string; key: string; productId?: string }) =>
+      api.sendChatMessage(id, input.body, input.key, input.productId),
     onSuccess: async () => {
       setDraft("");
       setRetryKey(null);
+      setShareProductId(null);
       await Promise.all([
         cache.invalidateQueries({ queryKey: ["chat-messages", user?.id, id] }),
         cache.invalidateQueries({ queryKey: ["conversations", user?.id] }),
@@ -67,10 +95,15 @@ export default function ConversationScreen() {
   });
   const submit = () => {
     const body = draft.trim();
-    if (!body || send.isPending || body.length > 4000) return;
+    if ((!body && !shareProductId) || send.isPending || body.length > 4000)
+      return;
     const key = retryKey ?? Crypto.randomUUID();
     setRetryKey(key);
-    send.mutate({ body, key });
+    send.mutate({
+      body,
+      key,
+      ...(shareProductId ? { productId: shareProductId } : {}),
+    });
   };
   if (loading) return <ScreenState loading message="Loading conversation…" />;
   if (!user) {
@@ -132,9 +165,47 @@ export default function ConversationScreen() {
                 <View
                   style={[styles.bubble, mine ? styles.mine : styles.theirs]}
                 >
-                  <Text style={[styles.message, mine && styles.mineText]}>
-                    {item.body}
-                  </Text>
+                  {item.body ? (
+                    <Text style={[styles.message, mine && styles.mineText]}>
+                      {item.body}
+                    </Text>
+                  ) : null}
+                  {item.product ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`View shared product ${item.product.name}`}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/product/[id]",
+                          params: { id: item.product!.id },
+                        })
+                      }
+                      style={styles.sharedProduct}
+                    >
+                      {item.product.images[0]?.url ? (
+                        <Image
+                          source={{ uri: item.product.images[0].url }}
+                          contentFit="cover"
+                          style={styles.productImage}
+                        />
+                      ) : null}
+                      <View style={styles.productDetails}>
+                        <Text style={styles.productTitle} numberOfLines={2}>
+                          {item.product.name}
+                        </Text>
+                        <Text style={styles.productPrice}>
+                          ₦{Number(item.product.price).toLocaleString("en-NG")}
+                        </Text>
+                        {!item.product.active ? (
+                          <Text style={styles.unavailable}>Unavailable</Text>
+                        ) : null}
+                      </View>
+                    </Pressable>
+                  ) : item.productId ? (
+                    <Text style={[styles.message, mine && styles.mineText]}>
+                      Shared product is no longer available.
+                    </Text>
+                  ) : null}
                 </View>
               );
             }}
@@ -147,7 +218,35 @@ export default function ConversationScreen() {
               Message not confirmed. Retry the same message or edit it.
             </Text>
           ) : null}
+          {shareProductId ? (
+            <View style={styles.sharePreview}>
+              <Text style={styles.sharePreviewText}>Sharing a product</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Remove shared product"
+                onPress={() => {
+                  setShareProductId(null);
+                  setRetryKey(null);
+                }}
+              >
+                <Text style={styles.shareRemove}>Remove</Text>
+              </Pressable>
+            </View>
+          ) : null}
           <View style={styles.composer}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share a product"
+              onPress={() =>
+                router.push({
+                  pathname: "/chat/share-product",
+                  params: { conversationId: id },
+                })
+              }
+              style={styles.shareButton}
+            >
+              <Text style={styles.shareButtonText}>+</Text>
+            </Pressable>
             <TextInput
               style={styles.input}
               value={draft}
@@ -165,10 +264,11 @@ export default function ConversationScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Send message"
-              disabled={!draft.trim() || send.isPending}
+              disabled={(!draft.trim() && !shareProductId) || send.isPending}
               style={[
                 styles.sendButton,
-                (!draft.trim() || send.isPending) && styles.disabled,
+                ((!draft.trim() && !shareProductId) || send.isPending) &&
+                  styles.disabled,
               ]}
               onPress={submit}
             >
@@ -227,6 +327,35 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.45 },
   sendText: { color: "white", fontWeight: "800" },
+  sharedProduct: {
+    flexDirection: "row",
+    marginTop: 8,
+    backgroundColor: "white",
+    borderRadius: 12,
+    overflow: "hidden",
+    minWidth: 200,
+  },
+  productImage: { width: 70, height: 70 },
+  productDetails: { flex: 1, padding: 8, justifyContent: "center", gap: 4 },
+  productTitle: { fontSize: 12, color: colors.ink, fontWeight: "700" },
+  productPrice: { fontSize: 12, color: colors.orange, fontWeight: "800" },
+  unavailable: { color: colors.red, fontSize: 11 },
+  sharePreview: {
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: colors.orangePale,
+  },
+  sharePreviewText: { color: colors.ink, fontSize: 12 },
+  shareRemove: { color: colors.red, fontWeight: "700" },
+  shareButton: {
+    minHeight: 44,
+    width: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  shareButtonText: { color: colors.orange, fontSize: 28, fontWeight: "800" },
   error: {
     color: colors.red,
     fontSize: 12,

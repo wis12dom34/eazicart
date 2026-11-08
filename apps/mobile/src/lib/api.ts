@@ -301,7 +301,10 @@ export const api = {
   storiesForUser: (userId: string) =>
     request<StoryListResponse>(`/social/stories/${encodeURIComponent(userId)}`),
   conversations: () =>
-    request<{ data: Conversation[] }>("/conversations", { auth: "required" }),
+    request<{ data: Conversation[]; meta: { unreadCount: number } }>(
+      "/conversations",
+      { auth: "required" },
+    ),
   startConversation: (sellerUserId: string) =>
     request<{ data: Conversation }>("/conversations", {
       auth: "required",
@@ -313,13 +316,23 @@ export const api = {
       `/conversations/${encodeURIComponent(id)}/messages?${qs({ cursor: cursor ?? undefined })}`,
       { auth: "required" },
     ),
-  sendChatMessage: (id: string, body: string, clientMessageId: string) =>
+  conversationRead: (id: string) =>
+    request<{ data: { read: boolean } }>(
+      `/conversations/${encodeURIComponent(id)}/read`,
+      { auth: "required", method: "PATCH" },
+    ),
+  sendChatMessage: (
+    id: string,
+    body: string,
+    clientMessageId: string,
+    productId?: string,
+  ) =>
     request<{ data: ChatMessage }>(
       `/conversations/${encodeURIComponent(id)}/messages`,
       {
         method: "POST",
         auth: "required",
-        body: { body, clientMessageId },
+        body: { body, clientMessageId, ...(productId ? { productId } : {}) },
       },
     ),
   notifications: () =>

@@ -23,6 +23,7 @@ export default function ChatInbox() {
     enabled: Boolean(user) && !loading,
     refetchInterval: 15000,
   });
+  const unreadTotal = conversations.data?.meta.unreadCount ?? 0;
   if (loading)
     return <ScreenState loading message="Preparing your messages…" />;
   if (!user)
@@ -40,7 +41,14 @@ export default function ChatInbox() {
     );
   return (
     <View style={styles.screen}>
-      <Text style={styles.heading}>Messages</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.heading}>Messages</Text>
+        {unreadTotal > 0 ? (
+          <Text style={styles.totalBadge}>
+            {unreadTotal > 99 ? "99+" : unreadTotal} unread
+          </Text>
+        ) : null}
+      </View>
       {conversations.isError ? (
         <ScreenState
           message="Unable to load messages."
@@ -94,7 +102,11 @@ export default function ChatInbox() {
                   <Text style={styles.name} numberOfLines={1}>
                     {other}
                   </Text>
-                  <Text style={styles.meta}>Tap to view messages</Text>
+                  <Text style={styles.meta}>
+                    {item.unreadCount > 0
+                      ? `${item.unreadCount > 99 ? "99+" : item.unreadCount} unread messages`
+                      : "Tap to view messages"}
+                  </Text>
                 </View>
                 <Ionicons
                   name="chevron-forward"
@@ -112,7 +124,14 @@ export default function ChatInbox() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, justifyContent: "center", padding: 16 },
-  heading: { fontSize: 24, fontWeight: "800", color: colors.ink, padding: 18 },
+  heading: { fontSize: 24, fontWeight: "800", color: colors.ink },
+  titleRow: {
+    padding: 18,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  totalBadge: { color: colors.orange, fontWeight: "800", fontSize: 12 },
   item: {
     minHeight: 74,
     flexDirection: "row",

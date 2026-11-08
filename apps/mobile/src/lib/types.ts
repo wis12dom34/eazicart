@@ -168,6 +168,9 @@ export type Conversation = {
   sellerId: string;
   createdAt: string;
   updatedAt: string;
+  unreadCount: number;
+  buyerReadAt?: string | null;
+  sellerReadAt?: string | null;
   buyer: { id: string; name: string };
   seller: {
     id: string;
@@ -181,6 +184,14 @@ export type ChatMessage = {
   senderId: string;
   body: string;
   clientMessageId: string;
+  productId?: string | null;
+  product?: {
+    id: string;
+    name: string;
+    price: string;
+    active: boolean;
+    images: Array<{ url: string }>;
+  } | null;
   createdAt: string;
 };
 export type ChatPage = {
