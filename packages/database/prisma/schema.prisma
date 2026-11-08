@@ -98,6 +98,7 @@ model User {
   sellerConversations Conversation[] @relation("ConversationSeller")
   chatMessages ChatMessage[]
   chatReports ChatReport[]
+  chatModerationActions ChatModerationAction[]
 }
 
 /// A unique buyer/seller-user pair. Participants, not shop profile IDs,
@@ -150,9 +151,25 @@ model ChatReport {
   createdAt DateTime @default(now())
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  moderationActions ChatModerationAction[]
 
   @@unique([conversationId, reporterId])
   @@index([status, createdAt])
+}
+
+/// Immutable audit history for administrator review transitions.
+model ChatModerationAction {
+  id String @id @default(cuid())
+  reportId String
+  actorId String
+  fromStatus String @db.VarChar(16)
+  toStatus String @db.VarChar(16)
+  note String? @db.VarChar(500)
+  createdAt DateTime @default(now())
+  report ChatReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
 }
 
 model RefreshToken {

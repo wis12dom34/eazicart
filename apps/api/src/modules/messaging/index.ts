@@ -144,6 +144,90 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
     return { data: report };
   });
 
+  const reviewBody = z.object({
+    status: z.enum(["REVIEWED", "CLOSED"]),
+    expectedStatus: z.enum(["PENDING", "REVIEWED"]),
+    note: z.string().trim().max(500).optional(),
+  });
+
+  app.patch("/admin/chat-reports/:id/status", auth, async (request) => {
+    const actorId = userId(request);
+    await adminOnly(actorId);
+    const { id } = params.parse(request.params);
+    const input = reviewBody.parse(request.body);
+    if (
+      (input.expectedStatus === "PENDING" && input.status !== "REVIEWED") ||
+      (input.expectedStatus === "REVIEWED" && input.status !== "CLOSED")
+    )
+      throw new AppError(
+        400,
+        "INVALID_REVIEW_TRANSITION",
+        "Invalid review transition",
+      );
+    return db().$transaction(async (tx) => {
+      const updated = await tx.chatReport.updateMany({
+        where: { id, status: input.expectedStatus },
+        data: { status: input.status },
+      });
+      if (updated.count !== 1) {
+        const exists = await tx.chatReport.findUnique({
+          where: { id },
+          select: { status: true },
+        });
+        if (!exists)
+          throw new AppError(404, "REPORT_NOT_FOUND", "Report not found");
+        throw new AppError(
+          409,
+          "REPORT_STATUS_CONFLICT",
+          "Report status has changed",
+        );
+      }
+      const action = await tx.chatModerationAction.create({
+        data: {
+          reportId: id,
+          actorId,
+          fromStatus: input.expectedStatus,
+          toStatus: input.status,
+          note: input.note ?? null,
+        },
+        select: {
+          id: true,
+          reportId: true,
+          actorId: true,
+          fromStatus: true,
+          toStatus: true,
+          createdAt: true,
+        },
+      });
+      return { data: { status: input.status, action } };
+    });
+  });
+
+  app.get("/admin/chat-reports/:id/history", auth, async (request) => {
+    await adminOnly(userId(request));
+    const { id } = params.parse(request.params);
+    const report = await db().chatReport.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!report)
+      throw new AppError(404, "REPORT_NOT_FOUND", "Report not found");
+    const data = await db().chatModerationAction.findMany({
+      where: { reportId: id },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 100,
+      select: {
+        id: true,
+        actorId: true,
+        fromStatus: true,
+        toStatus: true,
+        note: true,
+        createdAt: true,
+      },
+    });
+    return { data };
+  });
+
   app.get("/conversations", auth, async (request) => {
     const uid = userId(request);
     const conversations = await db().conversation.findMany({

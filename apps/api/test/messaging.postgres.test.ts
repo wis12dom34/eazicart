@@ -529,6 +529,79 @@ describe.sequential(
       expect(noWrite.statusCode).toBe(404);
     });
 
+    it("atomically reviews and closes reports with an administrator audit trail", async () => {
+      const admin = await db.user.create({
+        data: {
+          email: `synthetic-chat-${runId}-review-admin@example.invalid`,
+          name: "Synthetic reviewer",
+          passwordHash: "synthetic-not-real",
+          role: "ADMIN",
+        },
+      });
+      const token = await tokenFor(admin.id);
+      const report = await db.chatReport.findFirstOrThrow({
+        where: { conversationId, reason: "SCAM" },
+        select: { id: true },
+      });
+      const route = `/admin/chat-reports/${report.id}/status`;
+      const send = (
+        authToken: string,
+        status: string,
+        expectedStatus: string,
+      ) =>
+        app.inject({
+          method: "PATCH",
+          url: route,
+          headers: bearer(authToken),
+          payload: { status, expectedStatus, note: "Synthetic review" },
+        });
+      expect((await send(buyerToken, "REVIEWED", "PENDING")).statusCode).toBe(
+        403,
+      );
+      expect((await send(token, "CLOSED", "PENDING")).statusCode).toBe(400);
+      const simultaneous = await Promise.all([
+        send(token, "REVIEWED", "PENDING"),
+        send(token, "REVIEWED", "PENDING"),
+      ]);
+      expect(
+        simultaneous.filter((result) => result.statusCode === 200),
+      ).toHaveLength(1);
+      expect(
+        simultaneous.filter((result) => result.statusCode === 409),
+      ).toHaveLength(1);
+      const close = await send(token, "CLOSED", "REVIEWED");
+      expect(close.statusCode).toBe(200);
+      expect((await send(token, "CLOSED", "REVIEWED")).statusCode).toBe(409);
+      const history = await app.inject({
+        method: "GET",
+        url: `/admin/chat-reports/${report.id}/history`,
+        headers: bearer(token),
+      });
+      expect(history.statusCode).toBe(200);
+      const actions = history.json<{
+        data: Array<{ actorId: string; fromStatus: string; toStatus: string }>;
+      }>().data;
+      expect(actions).toHaveLength(2);
+      expect(actions.every((action) => action.actorId === admin.id)).toBe(true);
+      expect(actions.map((action) => action.toStatus).sort()).toEqual([
+        "CLOSED",
+        "REVIEWED",
+      ]);
+      expect(
+        (
+          await app.inject({
+            method: "GET",
+            url: `/admin/chat-reports/${report.id}/history`,
+            headers: bearer(buyerToken),
+          })
+        ).statusCode,
+      ).toBe(403);
+      expect(
+        (await db.chatReport.findUniqueOrThrow({ where: { id: report.id } }))
+          .status,
+      ).toBe("CLOSED");
+    });
+
     it("caps new sends across simultaneous requests without blocking confirmed retries", async () => {
       const route = `/conversations/${conversationId}/messages`;
       const send = (token: string, key: string) =>
