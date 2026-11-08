@@ -7,6 +7,10 @@ import { protectedRoute, requireDatabase, userId } from "../shared.js";
 const params = z.object({ id: z.string().min(1).max(128) });
 const listQuery = z.object({ cursor: z.string().min(1).max(128).optional() });
 const startBody = z.object({ sellerUserId: z.string().min(1).max(128) });
+const reportBody = z.object({
+  reason: z.enum(["SPAM", "SCAM", "HARASSMENT", "OTHER"]),
+  details: z.string().trim().max(1000).optional(),
+});
 const messageBody = z
   .object({
     body: z.string().trim().max(4000).default(""),
@@ -24,6 +28,8 @@ const summarySelect = {
   updatedAt: true,
   buyerReadAt: true,
   sellerReadAt: true,
+  buyerBlockedAt: true,
+  sellerBlockedAt: true,
   buyer: { select: { id: true, name: true } },
   seller: {
     select: {
@@ -206,6 +212,75 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
     return { data: { read: true } };
   });
 
+  app.patch("/conversations/:id/block", auth, async (request) => {
+    const { id } = params.parse(request.params);
+    const uid = userId(request);
+    const { blocked } = z.object({ blocked: z.boolean() }).parse(request.body);
+    const conversation = await db().conversation.findFirst({
+      where: { id, OR: [{ buyerId: uid }, { sellerId: uid }] },
+      select: { buyerId: true },
+    });
+    if (!conversation)
+      throw new AppError(
+        404,
+        "CONVERSATION_NOT_FOUND",
+        "Conversation not found",
+      );
+    const field =
+      conversation.buyerId === uid ? "buyerBlockedAt" : "sellerBlockedAt";
+    await db().$transaction(async (tx) => {
+      // Serialize block state with in-flight sends for this conversation.
+      await tx.$queryRaw`SELECT "id" FROM "Conversation" WHERE "id" = ${id} FOR UPDATE`;
+      await tx.conversation.update({
+        where: { id },
+        data: { [field]: blocked ? new Date() : null },
+      });
+    });
+    return { data: { blocked } };
+  });
+
+  app.post("/conversations/:id/report", auth, async (request, reply) => {
+    const { id } = params.parse(request.params);
+    const uid = userId(request);
+    const input = reportBody.parse(request.body);
+    await permitted(id, uid);
+    const key = {
+      conversationId_reporterId: { conversationId: id, reporterId: uid },
+    };
+    let report = await db().chatReport.findUnique({ where: key });
+    if (!report) {
+      try {
+        report = await db().chatReport.create({
+          data: {
+            conversationId: id,
+            reporterId: uid,
+            reason: input.reason,
+            details: input.details ?? null,
+          },
+        });
+      } catch (error) {
+        if (
+          !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+          error.code !== "P2002"
+        )
+          throw error;
+        report = await db().chatReport.findUnique({ where: key });
+        if (!report) throw error;
+      }
+    }
+    if (
+      report.reason !== input.reason ||
+      report.details !== (input.details ?? null)
+    )
+      throw new AppError(
+        409,
+        "REPORT_ALREADY_EXISTS",
+        "A report for this conversation is already recorded",
+      );
+    // Do not expose private report details, other reporters, or moderation status.
+    return reply.code(200).send({ data: { id: report.id, recorded: true } });
+  });
+
   app.post("/conversations/:id/messages", auth, async (request, reply) => {
     const { id } = params.parse(request.params);
     const uid = userId(request);
@@ -249,11 +324,23 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
         // This transaction-level lock applies across API workers sharing
         // PostgreSQL, unlike per-process counters. We rate-limit only NEW sends.
         await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${"eazicart-chat-send:" + uid})::bigint) IS NULL AS locked`;
+        // Share the same conversation-row lock as block/unblock writes.
+        await tx.$queryRaw`SELECT "id" FROM "Conversation" WHERE "id" = ${id} FOR UPDATE`;
         const existing = await tx.chatMessage.findUnique({
           where: key,
           select: messageSelect,
         });
         if (existing) return existing;
+        const state = await tx.conversation.findUniqueOrThrow({
+          where: { id },
+          select: { buyerBlockedAt: true, sellerBlockedAt: true },
+        });
+        if (state.buyerBlockedAt || state.sellerBlockedAt)
+          throw new AppError(
+            403,
+            "CONVERSATION_BLOCKED",
+            "Messaging is disabled in this conversation",
+          );
         const recent = await tx.chatMessage.count({
           where: {
             senderId: uid,

@@ -97,6 +97,7 @@ model User {
   buyerConversations Conversation[] @relation("ConversationBuyer")
   sellerConversations Conversation[] @relation("ConversationSeller")
   chatMessages ChatMessage[]
+  chatReports ChatReport[]
 }
 
 /// A unique buyer/seller-user pair. Participants, not shop profile IDs,
@@ -112,6 +113,9 @@ model Conversation {
   updatedAt DateTime @updatedAt
   buyerReadAt DateTime?
   sellerReadAt DateTime?
+  buyerBlockedAt DateTime?
+  sellerBlockedAt DateTime?
+  reports ChatReport[]
 
   @@unique([buyerId, sellerId])
   @@index([buyerId, updatedAt])
@@ -133,6 +137,22 @@ model ChatMessage {
   @@unique([conversationId, senderId, clientMessageId])
   @@index([conversationId, createdAt, id])
   @@index([productId])
+}
+
+/// Private, participant-authored reports are not included in conversation APIs.
+model ChatReport {
+  id String @id @default(cuid())
+  conversationId String
+  reporterId String
+  reason String @db.VarChar(32)
+  details String? @db.VarChar(1000)
+  status String @default("PENDING") @db.VarChar(16)
+  createdAt DateTime @default(now())
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, reporterId])
+  @@index([status, createdAt])
 }
 
 model RefreshToken {

@@ -45,6 +45,10 @@ export default function RootLayout() {
             <Stack.Screen name="following" options={{ title: "Following" }} />
             <Stack.Screen name="chat/[id]" options={{ title: "Messages" }} />
             <Stack.Screen
+              name="chat/report"
+              options={{ title: "Report conversation" }}
+            />
+            <Stack.Screen
               name="chat/share-product"
               options={{ title: "Share product" }}
             />

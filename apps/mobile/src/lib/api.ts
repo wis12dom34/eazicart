@@ -316,6 +316,27 @@ export const api = {
       `/conversations/${encodeURIComponent(id)}/messages?${qs({ cursor: cursor ?? undefined })}`,
       { auth: "required" },
     ),
+  conversationReport: (
+    id: string,
+    reason: "SPAM" | "SCAM" | "HARASSMENT" | "OTHER",
+    details?: string,
+  ) =>
+    request<{ data: { id: string; recorded: boolean } }>(
+      `/conversations/${encodeURIComponent(id)}/report`,
+      {
+        method: "POST",
+        auth: "required",
+        body: {
+          reason,
+          ...(details?.trim() ? { details: details.trim() } : {}),
+        },
+      },
+    ),
+  conversationBlock: (id: string, blocked: boolean) =>
+    request<{ data: { blocked: boolean } }>(
+      `/conversations/${encodeURIComponent(id)}/block`,
+      { method: "PATCH", auth: "required", body: { blocked } },
+    ),
   conversationRead: (id: string) =>
     request<{ data: { read: boolean } }>(
       `/conversations/${encodeURIComponent(id)}/read`,

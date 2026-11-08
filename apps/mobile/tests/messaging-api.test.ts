@@ -202,3 +202,77 @@ test("chat server rate limit is presented as a typed API error", async () => {
       error.code === "CHAT_RATE_LIMIT",
   );
 });
+
+test("conversation block uses authenticated PATCH and explicit boolean", async () => {
+  setAccessToken("synthetic-test-token");
+  const methods: Array<{ method: string | undefined; value: unknown }> = [];
+  globalThis.fetch = async (input, init) => {
+    assert.equal(
+      new URL(String(input)).pathname,
+      "/api/conversations/chat-7/block",
+    );
+    assert.equal(
+      new Headers(init?.headers).get("Authorization"),
+      "Bearer synthetic-test-token",
+    );
+    methods.push({
+      method: init?.method,
+      value: JSON.parse(String(init?.body)),
+    });
+    return json({
+      data: { blocked: Boolean(JSON.parse(String(init?.body)).blocked) },
+    });
+  };
+  const blocked = await api.conversationBlock("chat-7", true);
+  const unblocked = await api.conversationBlock("chat-7", false);
+  assert.equal(blocked.data.blocked, true);
+  assert.equal(unblocked.data.blocked, false);
+  assert.deepEqual(methods, [
+    { method: "PATCH", value: { blocked: true } },
+    { method: "PATCH", value: { blocked: false } },
+  ]);
+});
+
+test("private conversation report validates bearer authentication and body", async () => {
+  setAccessToken("synthetic-test-token");
+  const attempts: Array<{
+    path: string;
+    body: unknown;
+    method: string | undefined;
+  }> = [];
+  globalThis.fetch = async (input, init) => {
+    assert.equal(
+      new Headers(init?.headers).get("Authorization"),
+      "Bearer synthetic-test-token",
+    );
+    attempts.push({
+      path: new URL(String(input)).pathname,
+      body: JSON.parse(String(init?.body)),
+      method: init?.method,
+    });
+    return json({ data: { id: "report-1", recorded: true } });
+  };
+  const reply = await api.conversationReport(
+    "chat/7",
+    "SCAM",
+    "   Suspicious link  ",
+  );
+  assert.equal(reply.data.recorded, true);
+  assert.deepEqual(attempts, [
+    {
+      path: "/api/conversations/chat%2F7/report",
+      method: "POST",
+      body: { reason: "SCAM", details: "Suspicious link" },
+    },
+  ]);
+});
+
+test("private reports cannot be sent when signed out", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return json({});
+  };
+  await assert.rejects(api.conversationReport("chat-7", "SPAM"), ApiError);
+  assert.equal(calls, 0);
+});

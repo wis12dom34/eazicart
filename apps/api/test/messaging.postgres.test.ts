@@ -336,6 +336,114 @@ describe.sequential(
       expect(invalid.statusCode).toBe(400);
     });
 
+    it("blocks new messages for both parties and prevents outsider toggles", async () => {
+      const route = `/conversations/${conversationId}/block`;
+      const toggle = (token: string, blocked: boolean) =>
+        app.inject({
+          method: "PATCH",
+          url: route,
+          headers: bearer(token),
+          payload: { blocked },
+        });
+      const send = (token: string) =>
+        app.inject({
+          method: "POST",
+          url: `/conversations/${conversationId}/messages`,
+          headers: bearer(token),
+          payload: { body: "Should not send", clientMessageId: randomUUID() },
+        });
+      expect((await toggle(outsiderToken, true)).statusCode).toBe(404);
+      expect((await toggle(buyerToken, true)).statusCode).toBe(200);
+      const previouslyAccepted = await app.inject({
+        method: "POST",
+        url: `/conversations/${conversationId}/messages`,
+        headers: bearer(buyerToken),
+        payload: { body: "Hello", clientMessageId: messageKey },
+      });
+      expect(previouslyAccepted.statusCode).toBe(200);
+      expect((await send(buyerToken)).statusCode).toBe(403);
+      expect((await send(sellerToken)).statusCode).toBe(403);
+      const inbox = await app.inject({
+        method: "GET",
+        url: "/conversations",
+        headers: bearer(buyerToken),
+      });
+      expect(
+        inbox.json<{ data: Array<{ buyerBlockedAt: string | null }> }>().data[0]
+          ?.buyerBlockedAt,
+      ).toBeTruthy();
+      expect((await toggle(buyerToken, false)).statusCode).toBe(200);
+      expect((await send(sellerToken)).statusCode).toBe(200);
+      expect((await toggle(sellerToken, true)).statusCode).toBe(200);
+      expect((await send(buyerToken)).statusCode).toBe(403);
+      expect((await toggle(sellerToken, false)).statusCode).toBe(200);
+      expect((await toggle(outsiderToken, false)).statusCode).toBe(404);
+    });
+
+    it("records participant reports privately without creating duplicates", async () => {
+      const route = `/conversations/${conversationId}/report`;
+      const report = (
+        token: string,
+        payload: { reason: string; details?: string },
+      ) =>
+        app.inject({
+          method: "POST",
+          url: route,
+          headers: bearer(token),
+          payload,
+        });
+      const first = await report(buyerToken, {
+        reason: "SCAM",
+        details: "Synthetic suspicious claim",
+      });
+      expect(first.statusCode).toBe(200);
+      expect(first.json<{ data: { recorded: boolean } }>().data.recorded).toBe(
+        true,
+      );
+      const second = await report(buyerToken, {
+        reason: "SCAM",
+        details: "Synthetic suspicious claim",
+      });
+      expect(second.statusCode).toBe(200);
+      expect(first.json<{ data: { id: string } }>().data.id).toBe(
+        second.json<{ data: { id: string } }>().data.id,
+      );
+      expect((await report(buyerToken, { reason: "SPAM" })).statusCode).toBe(
+        409,
+      );
+      expect((await report(outsiderToken, { reason: "SPAM" })).statusCode).toBe(
+        404,
+      );
+      expect((await report(sellerToken, { reason: "SPAM" })).statusCode).toBe(
+        200,
+      );
+      expect(
+        (await report(sellerToken, { reason: "NOT_VALID" })).statusCode,
+      ).toBe(400);
+      expect(
+        (
+          await report(sellerToken, {
+            reason: "SPAM",
+            details: "X".repeat(1001),
+          })
+        ).statusCode,
+      ).toBe(400);
+      const anonymous = await app.inject({
+        method: "POST",
+        url: route,
+        payload: { reason: "SPAM" },
+      });
+      expect(anonymous.statusCode).toBe(401);
+      expect(await db.chatReport.count({ where: { conversationId } })).toBe(2);
+      const listing = await app.inject({
+        method: "GET",
+        url: "/conversations",
+        headers: bearer(buyerToken),
+      });
+      expect(listing.body).not.toContain("Synthetic suspicious claim");
+      expect(listing.body).not.toContain("chatReports");
+    });
+
     it("caps new sends across simultaneous requests without blocking confirmed retries", async () => {
       const route = `/conversations/${conversationId}/messages`;
       const send = (token: string, key: string) =>

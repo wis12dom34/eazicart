@@ -11,6 +11,7 @@ import { Image } from "expo-image";
 import {
   FlatList,
   KeyboardAvoidingView,
+  Alert,
   Platform,
   Pressable,
   StyleSheet,
@@ -68,6 +69,28 @@ export default function ConversationScreen() {
       void cache.invalidateQueries({ queryKey: ["conversations", user?.id] });
     },
   });
+  const blockedByMe = Boolean(
+    user &&
+    conversation &&
+    (conversation.buyerId === user.id
+      ? conversation.buyerBlockedAt
+      : conversation.sellerBlockedAt),
+  );
+  const isBlocked = Boolean(
+    conversation?.buyerBlockedAt || conversation?.sellerBlockedAt,
+  );
+  const block = useMutation({
+    mutationFn: (blocked: boolean) => api.conversationBlock(id, blocked),
+    onSuccess: () => {
+      void cache.invalidateQueries({ queryKey: ["conversations", user?.id] });
+    },
+    onError: (error) => {
+      Alert.alert(
+        "Unable to update conversation",
+        error instanceof Error ? error.message : "Try again",
+      );
+    },
+  });
   const newestMessageId = messages.data?.pages[0]?.data[0]?.id;
   useEffect(() => {
     if (!user || !conversation || !newestMessageId || read.isPending) return;
@@ -98,6 +121,7 @@ export default function ConversationScreen() {
     },
   });
   const submit = () => {
+    if (isBlocked) return;
     const body = draft.trim();
     if ((!body && !shareProductId) || send.isPending || body.length > 4000)
       return;
@@ -131,7 +155,52 @@ export default function ConversationScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
       <View style={styles.header}>
-        <Text style={styles.heading}>{other}</Text>
+        <Text style={styles.heading} numberOfLines={1}>
+          {other}
+        </Text>
+        {conversation ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Report conversation"
+            onPress={() =>
+              router.push({
+                pathname: "/chat/report",
+                params: { conversationId: id },
+              })
+            }
+          >
+            <Text style={styles.reportText}>Report</Text>
+          </Pressable>
+        ) : null}
+        {conversation ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              blockedByMe ? "Unblock conversation" : "Block conversation"
+            }
+            disabled={block.isPending}
+            onPress={() => {
+              Alert.alert(
+                blockedByMe ? "Unblock conversation?" : "Block conversation?",
+                blockedByMe
+                  ? "Allow messages in this chat again?"
+                  : "Neither participant will be able to send new messages until you unblock.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: blockedByMe ? "Unblock" : "Block",
+                    style: blockedByMe ? "default" : "destructive",
+                    onPress: () => block.mutate(!blockedByMe),
+                  },
+                ],
+              );
+            }}
+          >
+            <Text style={styles.blockText}>
+              {blockedByMe ? "Unblock" : "Block"}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
       {messages.isError || members.isError ? (
         <ScreenState
@@ -237,6 +306,11 @@ export default function ConversationScreen() {
               </Pressable>
             </View>
           ) : null}
+          {isBlocked ? (
+            <Text style={styles.blockedNotice}>
+              Messaging is disabled in this conversation.
+            </Text>
+          ) : null}
           <View style={styles.composer}>
             <Pressable
               accessibilityRole="button"
@@ -268,10 +342,16 @@ export default function ConversationScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Send message"
-              disabled={(!draft.trim() && !shareProductId) || send.isPending}
+              disabled={
+                isBlocked ||
+                (!draft.trim() && !shareProductId) ||
+                send.isPending
+              }
               style={[
                 styles.sendButton,
-                ((!draft.trim() && !shareProductId) || send.isPending) &&
+                (isBlocked ||
+                  (!draft.trim() && !shareProductId) ||
+                  send.isPending) &&
                   styles.disabled,
               ]}
               onPress={submit}
@@ -291,11 +371,23 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", padding: 18 },
   signIn: { textAlign: "center", color: colors.orange, fontWeight: "800" },
   header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  heading: { fontSize: 18, fontWeight: "800", color: colors.ink },
+  heading: { fontSize: 18, fontWeight: "800", color: colors.ink, flex: 1 },
+  blockText: { color: colors.red, fontSize: 13, fontWeight: "700" },
+  reportText: { color: colors.muted, fontSize: 13, fontWeight: "700" },
+  blockedNotice: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    color: colors.red,
+    fontSize: 12,
+  },
   list: { padding: 14, gap: 10, flexGrow: 1, justifyContent: "flex-end" },
   bubble: { maxWidth: "84%", padding: 12, borderRadius: 18 },
   mine: { alignSelf: "flex-end", backgroundColor: colors.orange },
