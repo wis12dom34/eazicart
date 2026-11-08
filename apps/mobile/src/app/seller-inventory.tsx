@@ -50,6 +50,15 @@ export default function SellerInventory() {
           <Text style={styles.subheading}>
             All products, including unpublished listings
           </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Add a product"
+            style={styles.addButton}
+            onPress={() => router.push("/seller-product-editor")}
+          >
+            <Ionicons name="add-circle-outline" size={20} color="white" />
+            <Text style={styles.addLabel}>Add product</Text>
+          </Pressable>
         </View>
       }
       ListEmptyComponent={
@@ -66,10 +75,12 @@ export default function SellerInventory() {
         <Pressable
           style={styles.row}
           accessibilityRole="button"
-          accessibilityLabel={`View ${item.name}`}
-          disabled={item.active === false}
+          accessibilityLabel={`Edit ${item.name}`}
           onPress={() =>
-            router.push({ pathname: "/product/[id]", params: { id: item.id } })
+            router.push({
+              pathname: "/seller-product-editor",
+              params: { id: item.id },
+            })
           }
         >
           {item.images[0]?.url ? (
@@ -97,9 +108,7 @@ export default function SellerInventory() {
                   : `${item.stock} in stock`}
             </Text>
           </View>
-          {item.active !== false ? (
-            <Ionicons name="chevron-forward" color={colors.muted} size={20} />
-          ) : null}
+          <Ionicons name="create-outline" color={colors.orange} size={20} />
         </Pressable>
       )}
     />
@@ -109,6 +118,19 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   content: { padding: 17, paddingBottom: 40 },
   heading: { gap: 6, marginBottom: 15 },
+  addButton: {
+    marginTop: 10,
+    alignSelf: "flex-start",
+    paddingHorizontal: 20,
+    backgroundColor: colors.orange,
+    minHeight: 46,
+    borderRadius: 24,
+    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  addLabel: { color: "white", fontWeight: "800" },
   title: { fontSize: 23, fontWeight: "800", color: colors.ink },
   subheading: { fontSize: 12, color: colors.muted },
   row: {

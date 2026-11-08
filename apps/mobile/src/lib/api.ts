@@ -25,6 +25,8 @@ import type {
   ChatMessage,
   SellerDashboard,
   SellerOrder,
+  Category,
+  SellerProductInput,
 } from "./types";
 
 const configuredUrlFromEnv: unknown =
@@ -177,6 +179,24 @@ export const api = {
     request<{ data: Seller | null }>("/seller-profile", { auth: "required" }),
   sellerDashboard: () =>
     request<{ data: SellerDashboard }>("/seller/dashboard", {
+      auth: "required",
+    }),
+  categories: () => request<{ data: Category[] }>("/categories"),
+  createSellerProduct: (input: SellerProductInput) =>
+    request<{ data: Product }>("/products", {
+      method: "POST",
+      auth: "required",
+      body: input,
+    }),
+  updateSellerProduct: (id: string, input: Partial<SellerProductInput>) =>
+    request<{ data: Product }>(`/products/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      auth: "required",
+      body: input,
+    }),
+  archiveSellerProduct: (id: string) =>
+    request<void>(`/products/${encodeURIComponent(id)}`, {
+      method: "DELETE",
       auth: "required",
     }),
   ownSellerProducts: () =>

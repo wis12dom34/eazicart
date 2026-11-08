@@ -70,6 +70,10 @@ export default function RootLayout() {
               options={{ title: "Seller center" }}
             />
             <Stack.Screen
+              name="seller-product-editor"
+              options={{ title: "Product details" }}
+            />
+            <Stack.Screen
               name="seller-inventory"
               options={{ title: "My inventory" }}
             />

@@ -31,6 +31,18 @@ export type Seller = {
   reviewCount?: number;
   soldCount?: number;
 };
+export type Category = {
+  id: string;
+  name: string;
+  slug: string;
+};
+export type SellerProductInput = {
+  name: string;
+  description: string;
+  price: string;
+  stock: number;
+  categoryId: string;
+};
 export type Product = {
   id: string;
   name: string;
