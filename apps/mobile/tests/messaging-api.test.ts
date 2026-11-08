@@ -392,3 +392,23 @@ test("non-admin chat moderation access returns a typed 403 and signed-out users 
   );
   assert.equal(calls, 1);
 });
+
+test("moderation queue sends combined reason, status and pagination filters", async () => {
+  setAccessToken("synthetic-admin-token");
+  globalThis.fetch = async (input, init) => {
+    const url = new URL(String(input));
+    assert.equal(url.pathname, "/api/admin/chat-reports");
+    assert.equal(url.searchParams.get("status"), "PENDING");
+    assert.equal(url.searchParams.get("reason"), "SCAM");
+    assert.equal(url.searchParams.get("cursor"), "report/1");
+    assert.equal(
+      new Headers(init?.headers).get("Authorization"),
+      "Bearer synthetic-admin-token",
+    );
+    return json({ data: [], pagination: { hasMore: false, nextCursor: null } });
+  };
+  assert.deepEqual(
+    (await api.adminChatReports("PENDING", "report/1", "SCAM")).data,
+    [],
+  );
+});

@@ -304,10 +304,11 @@ export const api = {
     request<{ data: { allowed: boolean } }>("/admin/chat-reports/access", {
       auth: "required",
     }),
-  adminChatReports: (status?: string, cursor?: string) => {
+  adminChatReports: (status?: string, cursor?: string, reason?: string) => {
     const params = new URLSearchParams();
     if (status) params.set("status", status);
     if (cursor) params.set("cursor", cursor);
+    if (reason) params.set("reason", reason);
     const query = params.toString();
     return request<{
       data: Array<{

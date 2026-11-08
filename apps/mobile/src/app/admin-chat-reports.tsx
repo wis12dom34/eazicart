@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { api } from "../lib/api";
+import { api, ApiError } from "../lib/api";
 import { useAuth } from "../providers/auth";
 import { ScreenState } from "../components/ScreenState";
 import { colors } from "../theme";
@@ -24,6 +24,8 @@ type Report = {
 };
 const statuses = ["ALL", "PENDING", "REVIEWED", "CLOSED"] as const;
 type Status = (typeof statuses)[number];
+const reasons = ["ALL", "SPAM", "SCAM", "HARASSMENT", "OTHER"] as const;
+type Reason = (typeof reasons)[number];
 
 /**
  * Manual moderation workflow. The API enforces the administrator role,
@@ -55,7 +57,22 @@ export default function AdminChatReportsScreen() {
         queryKey: ["admin-chat-report-history", user?.id],
       });
     },
-    onError: (error: Error) => Alert.alert("Review not saved", error.message),
+    onError: (error: Error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        setHistory([]);
+        setCursor(null);
+        setSelectedReportId(null);
+        void queryClient.invalidateQueries({
+          queryKey: ["admin-chat-reports", user?.id],
+        });
+        Alert.alert(
+          "Report already updated",
+          "Another administrator changed this report. The list is refreshing; review its current status before trying again.",
+        );
+        return;
+      }
+      Alert.alert("Review not saved", error.message);
+    },
   });
   const confirmTransition = (report: Report) => {
     const next =
@@ -83,18 +100,31 @@ export default function AdminChatReportsScreen() {
     );
   };
   const [status, setStatus] = useState<Status>("PENDING");
+  const [reason, setReason] = useState<Reason>("ALL");
   const [cursor, setCursor] = useState<string | null>(null);
   const [history, setHistory] = useState<Report[]>([]);
   const reports = useQuery({
-    queryKey: ["admin-chat-reports", user?.id, status, cursor],
+    queryKey: ["admin-chat-reports", user?.id, status, reason, cursor],
     enabled: Boolean(user),
     queryFn: () =>
       api.adminChatReports(
         status === "ALL" ? undefined : status,
         cursor ?? undefined,
+        reason === "ALL" ? undefined : reason,
       ),
     retry: false,
   });
+  const refreshReports = async () => {
+    setHistory([]);
+    setCursor(null);
+    setSelectedReportId(null);
+    await queryClient.invalidateQueries({
+      queryKey: ["admin-chat-reports", user?.id],
+    });
+    await queryClient.invalidateQueries({
+      queryKey: ["admin-chat-report-history", user?.id],
+    });
+  };
   if (!user) return <ScreenState message="Sign in to access moderation." />;
   if (reports.isPending)
     return <ScreenState loading message="Loading reports…" />;
@@ -125,6 +155,7 @@ export default function AdminChatReportsScreen() {
             onPress={() => {
               setHistory([]);
               setCursor(null);
+              setSelectedReportId(null);
               setStatus(item);
             }}
             style={[styles.filter, status === item && styles.active]}
@@ -137,8 +168,35 @@ export default function AdminChatReportsScreen() {
           </Pressable>
         ))}
       </View>
+      <View style={styles.filters}>
+        {reasons.map((item) => (
+          <Pressable
+            key={item}
+            accessibilityRole="button"
+            accessibilityLabel={
+              item === "ALL" ? "All report reasons" : `Reason ${item}`
+            }
+            accessibilityState={{ selected: reason === item }}
+            onPress={() => {
+              setHistory([]);
+              setCursor(null);
+              setSelectedReportId(null);
+              setReason(item);
+            }}
+            style={[styles.filter, reason === item && styles.active]}
+          >
+            <Text
+              style={[styles.filterText, reason === item && styles.activeText]}
+            >
+              {item}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
       <FlatList
         data={items}
+        refreshing={reports.isRefetching}
+        onRefresh={() => void refreshReports()}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
@@ -160,7 +218,7 @@ export default function AdminChatReportsScreen() {
               Conversation: {item.conversationId}
             </Text>
             <View style={styles.actions}>
-              {item.status !== "CLOSED" && (
+              {(item.status === "PENDING" || item.status === "REVIEWED") && (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={
@@ -168,10 +226,11 @@ export default function AdminChatReportsScreen() {
                       ? "Mark report reviewed"
                       : "Close report"
                   }
-                  disabled={transition.isPending}
+                  disabled={transition.isPending || reports.isRefetching}
                   style={[
                     styles.actionButton,
-                    transition.isPending && styles.disabled,
+                    (transition.isPending || reports.isRefetching) &&
+                      styles.disabled,
                   ]}
                   onPress={() => confirmTransition(item)}
                 >
@@ -203,7 +262,14 @@ export default function AdminChatReportsScreen() {
                 {historyQuery.isPending ? (
                   <Text style={styles.identifier}>Loading history…</Text>
                 ) : historyQuery.isError ? (
-                  <Text style={styles.identifier}>Could not load history.</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => void historyQuery.refetch()}
+                  >
+                    <Text style={styles.historyText}>
+                      Could not load history. Tap to retry.
+                    </Text>
+                  </Pressable>
                 ) : historyQuery.data.data.length === 0 ? (
                   <Text style={styles.identifier}>No review actions yet.</Text>
                 ) : (
@@ -219,13 +285,20 @@ export default function AdminChatReportsScreen() {
           </View>
         )}
         ListFooterComponent={
-          response.pagination.hasMore ? (
+          response.pagination.hasMore && response.pagination.nextCursor ? (
             <Pressable
               accessibilityRole="button"
-              style={styles.more}
+              disabled={reports.isRefetching || transition.isPending}
+              style={[
+                styles.more,
+                (reports.isRefetching || transition.isPending) &&
+                  styles.disabled,
+              ]}
               onPress={() => {
+                const next = response.pagination.nextCursor;
+                if (!next || next === cursor || reports.isRefetching) return;
                 setHistory(items);
-                setCursor(response.pagination.nextCursor);
+                setCursor(next);
               }}
             >
               <Text style={styles.moreText}>Load more reports</Text>
