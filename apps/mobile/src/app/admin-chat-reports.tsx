@@ -8,7 +8,11 @@ import {
   Text,
   View,
 } from "react-native";
-import { api, ApiError } from "../lib/api";
+import { api } from "../lib/api";
+import {
+  moderationFailure,
+  moderationQueueFailure,
+} from "../lib/moderation-recovery";
 import { useAuth } from "../providers/auth";
 import { ScreenState } from "../components/ScreenState";
 import { colors } from "../theme";
@@ -58,20 +62,16 @@ export default function AdminChatReportsScreen() {
       });
     },
     onError: (error: Error) => {
-      if (error instanceof ApiError && error.status === 409) {
+      const failure = moderationFailure(error);
+      if (failure.refresh) {
         setHistory([]);
         setCursor(null);
         setSelectedReportId(null);
         void queryClient.invalidateQueries({
           queryKey: ["admin-chat-reports", user?.id],
         });
-        Alert.alert(
-          "Report already updated",
-          "Another administrator changed this report. The list is refreshing; review its current status before trying again.",
-        );
-        return;
       }
-      Alert.alert("Review not saved", error.message);
+      Alert.alert(failure.title, failure.message);
     },
   });
   const confirmTransition = (report: Report) => {
@@ -81,7 +81,7 @@ export default function AdminChatReportsScreen() {
         : report.status === "REVIEWED"
           ? "CLOSED"
           : null;
-    if (!next || transition.isPending) return;
+    if (!next || transition.isPending || reports.isRefetching) return;
     Alert.alert(
       next === "CLOSED" ? "Close this report?" : "Mark this report reviewed?",
       "This action is recorded in the administrator audit history. It does not automatically restrict the reported account.",
@@ -131,8 +131,8 @@ export default function AdminChatReportsScreen() {
   if (reports.isError)
     return (
       <ScreenState
-        message="Moderation reports are available to authorized administrators only."
-        retry={() => void reports.refetch()}
+        message={moderationQueueFailure(reports.error)}
+        retry={() => void refreshReports()}
       />
     );
   const response = reports.data;
