@@ -9,6 +9,7 @@ import { registerCart } from "./modules/cart/index.js";
 import { registerCategories } from "./modules/categories/index.js";
 import { registerFollows } from "./modules/follows/index.js";
 import { registerNotifications } from "./modules/notifications/index.js";
+import { registerMessaging } from "./modules/messaging/index.js";
 import { registerOrders } from "./modules/orders/index.js";
 import { registerPaymentConfiguration } from "./modules/payment-configuration/index.js";
 import { registerPayments } from "./modules/payments/index.js";
@@ -91,5 +92,6 @@ export function buildApp(
   registerSavedProducts(app, dependencies.database);
   registerFollows(app, dependencies.database);
   registerNotifications(app, dependencies.database);
+  registerMessaging(app, dependencies.database);
   return app;
 }

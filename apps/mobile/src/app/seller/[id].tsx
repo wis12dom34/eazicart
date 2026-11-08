@@ -1,16 +1,35 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { ScreenState } from "../../components/ScreenState";
 import { FollowButton } from "../../components/FollowButton";
 import { api } from "../../lib/api";
 import type { Product } from "../../lib/types";
 import { colors } from "../../theme";
+import { useAuth } from "../../providers/auth";
 
 export default function SellerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
+  const startChat = useMutation({
+    mutationFn: api.startConversation,
+    onSuccess: ({ data }) =>
+      router.push({ pathname: "/chat/[id]", params: { id: data.id } }),
+    onError: (error) =>
+      Alert.alert(
+        "Unable to start chat",
+        error instanceof Error ? error.message : "Please retry",
+      ),
+  });
   const seller = useQuery({
     queryKey: ["seller", id],
     queryFn: () => api.seller(id),
@@ -51,6 +70,26 @@ export default function SellerScreen() {
           </View>
           <Text style={styles.title}>{info.displayName}</Text>
           <FollowButton sellerUserId={info.userId} />
+          {user?.id !== info.userId ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Message seller"
+              disabled={startChat.isPending}
+              style={styles.chatButton}
+              onPress={() => {
+                if (!user) {
+                  router.push("/login");
+                  return;
+                }
+                startChat.mutate(info.userId);
+              }}
+            >
+              <Ionicons name="chatbubble-outline" size={19} color="white" />
+              <Text style={styles.chatButtonLabel}>
+                {startChat.isPending ? "Opening chat…" : "Message seller"}
+              </Text>
+            </Pressable>
+          ) : null}
           {info.bio ? <Text style={styles.bio}>{info.bio}</Text> : null}
           <View style={styles.stats}>
             <Text style={styles.stat}>{info.followerCount ?? 0} followers</Text>
@@ -103,6 +142,18 @@ export default function SellerScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   grid: { padding: 9, paddingBottom: 32 },
+  chatButton: {
+    minHeight: 44,
+    minWidth: 160,
+    borderRadius: 24,
+    backgroundColor: colors.orange,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 18,
+  },
+  chatButtonLabel: { color: "white", fontSize: 13, fontWeight: "800" },
   column: { gap: 6 },
   header: { alignItems: "center", gap: 10, paddingTop: 18, paddingBottom: 20 },
   avatar: {

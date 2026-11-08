@@ -1,0 +1,178 @@
+import { Prisma, type PrismaClient } from "@eazicart/database";
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
+import { AppError } from "../../errors.js";
+import { protectedRoute, requireDatabase, userId } from "../shared.js";
+
+const params = z.object({ id: z.string().min(1).max(128) });
+const listQuery = z.object({ cursor: z.string().min(1).max(128).optional() });
+const startBody = z.object({ sellerUserId: z.string().min(1).max(128) });
+const messageBody = z.object({
+  body: z.string().trim().min(1).max(4000),
+  clientMessageId: z.string().uuid(),
+});
+const summarySelect = {
+  id: true,
+  buyerId: true,
+  sellerId: true,
+  createdAt: true,
+  updatedAt: true,
+  buyer: { select: { id: true, name: true } },
+  seller: {
+    select: {
+      id: true,
+      name: true,
+      sellerProfile: { select: { displayName: true } },
+    },
+  },
+} as const;
+const messageSelect = {
+  id: true,
+  conversationId: true,
+  senderId: true,
+  body: true,
+  clientMessageId: true,
+  createdAt: true,
+} as const;
+
+export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
+  const db = () => requireDatabase(client);
+  const auth = protectedRoute(app);
+  const permitted = async (id: string, uid: string) => {
+    const conversation = await db().conversation.findFirst({
+      where: { id, OR: [{ buyerId: uid }, { sellerId: uid }] },
+      select: { id: true },
+    });
+    if (!conversation)
+      throw new AppError(
+        404,
+        "CONVERSATION_NOT_FOUND",
+        "Conversation not found",
+      );
+  };
+
+  app.get("/conversations", auth, async (request) => {
+    const uid = userId(request);
+    return {
+      data: await db().conversation.findMany({
+        where: { OR: [{ buyerId: uid }, { sellerId: uid }] },
+        select: summarySelect,
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        take: 100,
+      }),
+    };
+  });
+
+  app.post("/conversations", auth, async (request, reply) => {
+    const buyerId = userId(request);
+    const { sellerUserId: sellerId } = startBody.parse(request.body);
+    if (buyerId === sellerId)
+      throw new AppError(400, "SELF_CONVERSATION", "Cannot message yourself");
+    const seller = await db().sellerProfile.findUnique({
+      where: { userId: sellerId },
+      select: { id: true },
+    });
+    if (!seller)
+      throw new AppError(404, "SELLER_NOT_FOUND", "Seller not found");
+    const conversation = await db().conversation.upsert({
+      where: { buyerId_sellerId: { buyerId, sellerId } },
+      update: {},
+      create: { buyerId, sellerId },
+      select: summarySelect,
+    });
+    return reply.code(200).send({ data: conversation });
+  });
+
+  app.get("/conversations/:id/messages", auth, async (request) => {
+    const { id } = params.parse(request.params);
+    const { cursor } = listQuery.parse(request.query);
+    await permitted(id, userId(request));
+    if (cursor) {
+      const anchor = await db().chatMessage.findFirst({
+        where: { id: cursor, conversationId: id },
+        select: { id: true },
+      });
+      if (!anchor)
+        throw new AppError(400, "INVALID_CURSOR", "Invalid message cursor");
+    }
+    const items = await db().chatMessage.findMany({
+      where: { conversationId: id },
+      select: messageSelect,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 31,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    });
+    const hasMore = items.length > 30;
+    const data = items.slice(0, 30);
+    return {
+      data,
+      pagination: {
+        hasMore,
+        nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+      },
+    };
+  });
+
+  app.post("/conversations/:id/messages", auth, async (request, reply) => {
+    const { id } = params.parse(request.params);
+    const uid = userId(request);
+    const input = messageBody.parse(request.body);
+    await permitted(id, uid);
+    // Same sender and UUID must always resolve to the same immutable message.
+    // An existing message with a different body is a rejected replay.
+    const key = {
+      conversationId_senderId_clientMessageId: {
+        conversationId: id,
+        senderId: uid,
+        clientMessageId: input.clientMessageId,
+      },
+    };
+    let created = await db().chatMessage.findUnique({
+      where: key,
+      select: messageSelect,
+    });
+    let inserted = false;
+    if (!created) {
+      try {
+        created = await db().chatMessage.create({
+          data: {
+            conversationId: id,
+            senderId: uid,
+            clientMessageId: input.clientMessageId,
+            body: input.body,
+          },
+          select: messageSelect,
+        });
+        inserted = true;
+      } catch (error) {
+        // Concurrent identical submissions may both reach CREATE. Resolve
+        // the unique key from the database rather than treating the loser
+        // as a failed message, but never swallow unrelated database errors.
+        if (
+          !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+          error.code !== "P2002"
+        )
+          throw error;
+        created = await db().chatMessage.findUnique({
+          where: key,
+          select: messageSelect,
+        });
+        if (!created) throw error;
+      }
+    }
+    if (created.body !== input.body)
+      throw new AppError(
+        409,
+        "MESSAGE_REPLAY_CONFLICT",
+        "Message request differs from the original",
+      );
+    if (inserted) {
+      // A replay cannot reorder the inbox or move updatedAt backwards.
+      await db().conversation.updateMany({
+        where: { id, updatedAt: { lt: created.createdAt } },
+        data: { updatedAt: created.createdAt },
+      });
+    }
+    return reply.code(200).send({ data: created });
+  });
+}

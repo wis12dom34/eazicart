@@ -94,6 +94,40 @@ model User {
   reelSaves ReelSave[]
   reelViews ReelView[]
   reelComments ReelComment[]
+  buyerConversations Conversation[] @relation("ConversationBuyer")
+  sellerConversations Conversation[] @relation("ConversationSeller")
+  chatMessages ChatMessage[]
+}
+
+/// A unique buyer/seller-user pair. Participants, not shop profile IDs,
+/// govern access. Conversation state is never inferred from client claims.
+model Conversation {
+  id String @id @default(cuid())
+  buyerId String
+  sellerId String
+  buyer User @relation("ConversationBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller User @relation("ConversationSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([buyerId, sellerId])
+  @@index([buyerId, updatedAt])
+  @@index([sellerId, updatedAt])
+}
+
+model ChatMessage {
+  id String @id @default(cuid())
+  conversationId String
+  senderId String
+  clientMessageId String @db.VarChar(128)
+  body String @db.VarChar(4000)
+  createdAt DateTime @default(now())
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, senderId, clientMessageId])
+  @@index([conversationId, createdAt, id])
 }
 
 model RefreshToken {

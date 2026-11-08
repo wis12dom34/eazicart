@@ -162,6 +162,32 @@ export type OrderSummary = {
   address: Address;
 };
 
+export type Conversation = {
+  id: string;
+  buyerId: string;
+  sellerId: string;
+  createdAt: string;
+  updatedAt: string;
+  buyer: { id: string; name: string };
+  seller: {
+    id: string;
+    name: string;
+    sellerProfile?: { displayName: string } | null;
+  };
+};
+export type ChatMessage = {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  body: string;
+  clientMessageId: string;
+  createdAt: string;
+};
+export type ChatPage = {
+  data: ChatMessage[];
+  pagination: { hasMore: boolean; nextCursor: string | null };
+};
+
 export type Notification = {
   id: string;
   type?: string | null;

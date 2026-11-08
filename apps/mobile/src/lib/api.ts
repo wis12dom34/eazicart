@@ -20,6 +20,9 @@ import type {
   OrderSummary,
   Notification,
   NotificationListResponse,
+  Conversation,
+  ChatPage,
+  ChatMessage,
 } from "./types";
 
 const configuredUrlFromEnv: unknown =
@@ -297,6 +300,28 @@ export const api = {
   },
   storiesForUser: (userId: string) =>
     request<StoryListResponse>(`/social/stories/${encodeURIComponent(userId)}`),
+  conversations: () =>
+    request<{ data: Conversation[] }>("/conversations", { auth: "required" }),
+  startConversation: (sellerUserId: string) =>
+    request<{ data: Conversation }>("/conversations", {
+      auth: "required",
+      method: "POST",
+      body: { sellerUserId },
+    }),
+  conversationMessages: (id: string, cursor?: string | null) =>
+    request<ChatPage>(
+      `/conversations/${encodeURIComponent(id)}/messages?${qs({ cursor: cursor ?? undefined })}`,
+      { auth: "required" },
+    ),
+  sendChatMessage: (id: string, body: string, clientMessageId: string) =>
+    request<{ data: ChatMessage }>(
+      `/conversations/${encodeURIComponent(id)}/messages`,
+      {
+        method: "POST",
+        auth: "required",
+        body: { body, clientMessageId },
+      },
+    ),
   notifications: () =>
     request<NotificationListResponse>("/notifications", { auth: "required" }),
   notificationRead: (id: string) =>

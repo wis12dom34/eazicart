@@ -43,6 +43,7 @@ export default function RootLayout() {
               options={{ headerShown: false, presentation: "fullScreenModal" }}
             />
             <Stack.Screen name="following" options={{ title: "Following" }} />
+            <Stack.Screen name="chat/[id]" options={{ title: "Messages" }} />
             <Stack.Screen
               name="notifications"
               options={{ title: "Notifications" }}
