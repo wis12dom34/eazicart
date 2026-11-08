@@ -202,3 +202,33 @@ test("chat server rate limit is presented as a typed API error", async () => {
       error.code === "CHAT_RATE_LIMIT",
   );
 });
+
+test("conversation block uses authenticated PATCH and explicit boolean", async () => {
+  setAccessToken("synthetic-test-token");
+  const methods: Array<{ method: string | undefined; value: unknown }> = [];
+  globalThis.fetch = async (input, init) => {
+    assert.equal(
+      new URL(String(input)).pathname,
+      "/api/conversations/chat-7/block",
+    );
+    assert.equal(
+      new Headers(init?.headers).get("Authorization"),
+      "Bearer synthetic-test-token",
+    );
+    methods.push({
+      method: init?.method,
+      value: JSON.parse(String(init?.body)),
+    });
+    return json({
+      data: { blocked: Boolean(JSON.parse(String(init?.body)).blocked) },
+    });
+  };
+  const blocked = await api.conversationBlock("chat-7", true);
+  const unblocked = await api.conversationBlock("chat-7", false);
+  assert.equal(blocked.data.blocked, true);
+  assert.equal(unblocked.data.blocked, false);
+  assert.deepEqual(methods, [
+    { method: "PATCH", value: { blocked: true } },
+    { method: "PATCH", value: { blocked: false } },
+  ]);
+});

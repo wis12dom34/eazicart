@@ -171,6 +171,8 @@ export type Conversation = {
   unreadCount: number;
   buyerReadAt?: string | null;
   sellerReadAt?: string | null;
+  buyerBlockedAt?: string | null;
+  sellerBlockedAt?: string | null;
   buyer: { id: string; name: string };
   seller: {
     id: string;

@@ -316,6 +316,11 @@ export const api = {
       `/conversations/${encodeURIComponent(id)}/messages?${qs({ cursor: cursor ?? undefined })}`,
       { auth: "required" },
     ),
+  conversationBlock: (id: string, blocked: boolean) =>
+    request<{ data: { blocked: boolean } }>(
+      `/conversations/${encodeURIComponent(id)}/block`,
+      { method: "PATCH", auth: "required", body: { blocked } },
+    ),
   conversationRead: (id: string) =>
     request<{ data: { read: boolean } }>(
       `/conversations/${encodeURIComponent(id)}/read`,

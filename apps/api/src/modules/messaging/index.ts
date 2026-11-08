@@ -24,6 +24,8 @@ const summarySelect = {
   updatedAt: true,
   buyerReadAt: true,
   sellerReadAt: true,
+  buyerBlockedAt: true,
+  sellerBlockedAt: true,
   buyer: { select: { id: true, name: true } },
   seller: {
     select: {
@@ -206,6 +208,29 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
     return { data: { read: true } };
   });
 
+  app.patch("/conversations/:id/block", auth, async (request) => {
+    const { id } = params.parse(request.params);
+    const uid = userId(request);
+    const { blocked } = z.object({ blocked: z.boolean() }).parse(request.body);
+    const conversation = await db().conversation.findFirst({
+      where: { id, OR: [{ buyerId: uid }, { sellerId: uid }] },
+      select: { buyerId: true },
+    });
+    if (!conversation)
+      throw new AppError(
+        404,
+        "CONVERSATION_NOT_FOUND",
+        "Conversation not found",
+      );
+    const field =
+      conversation.buyerId === uid ? "buyerBlockedAt" : "sellerBlockedAt";
+    await db().conversation.update({
+      where: { id },
+      data: { [field]: blocked ? new Date() : null },
+    });
+    return { data: { blocked } };
+  });
+
   app.post("/conversations/:id/messages", auth, async (request, reply) => {
     const { id } = params.parse(request.params);
     const uid = userId(request);
@@ -254,6 +279,16 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
           select: messageSelect,
         });
         if (existing) return existing;
+        const state = await tx.conversation.findUniqueOrThrow({
+          where: { id },
+          select: { buyerBlockedAt: true, sellerBlockedAt: true },
+        });
+        if (state.buyerBlockedAt || state.sellerBlockedAt)
+          throw new AppError(
+            403,
+            "CONVERSATION_BLOCKED",
+            "Messaging is disabled in this conversation",
+          );
         const recent = await tx.chatMessage.count({
           where: {
             senderId: uid,

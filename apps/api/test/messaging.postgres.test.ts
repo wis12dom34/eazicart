@@ -336,6 +336,43 @@ describe.sequential(
       expect(invalid.statusCode).toBe(400);
     });
 
+    it("blocks new messages for both parties and prevents outsider toggles", async () => {
+      const route = `/conversations/${conversationId}/block`;
+      const toggle = (token: string, blocked: boolean) =>
+        app.inject({
+          method: "PATCH",
+          url: route,
+          headers: bearer(token),
+          payload: { blocked },
+        });
+      const send = (token: string) =>
+        app.inject({
+          method: "POST",
+          url: `/conversations/${conversationId}/messages`,
+          headers: bearer(token),
+          payload: { body: "Should not send", clientMessageId: randomUUID() },
+        });
+      expect((await toggle(outsiderToken, true)).statusCode).toBe(404);
+      expect((await toggle(buyerToken, true)).statusCode).toBe(200);
+      expect((await send(buyerToken)).statusCode).toBe(403);
+      expect((await send(sellerToken)).statusCode).toBe(403);
+      const inbox = await app.inject({
+        method: "GET",
+        url: "/conversations",
+        headers: bearer(buyerToken),
+      });
+      expect(
+        inbox.json<{ data: Array<{ buyerBlockedAt: string | null }> }>().data[0]
+          ?.buyerBlockedAt,
+      ).toBeTruthy();
+      expect((await toggle(buyerToken, false)).statusCode).toBe(200);
+      expect((await send(sellerToken)).statusCode).toBe(200);
+      expect((await toggle(sellerToken, true)).statusCode).toBe(200);
+      expect((await send(buyerToken)).statusCode).toBe(403);
+      expect((await toggle(sellerToken, false)).statusCode).toBe(200);
+      expect((await toggle(outsiderToken, false)).statusCode).toBe(404);
+    });
+
     it("caps new sends across simultaneous requests without blocking confirmed retries", async () => {
       const route = `/conversations/${conversationId}/messages`;
       const send = (token: string, key: string) =>

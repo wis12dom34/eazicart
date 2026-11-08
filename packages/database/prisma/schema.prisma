@@ -112,6 +112,8 @@ model Conversation {
   updatedAt DateTime @updatedAt
   buyerReadAt DateTime?
   sellerReadAt DateTime?
+  buyerBlockedAt DateTime?
+  sellerBlockedAt DateTime?
 
   @@unique([buyerId, sellerId])
   @@index([buyerId, updatedAt])
