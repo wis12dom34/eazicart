@@ -111,6 +111,11 @@ jobs:
       - name: Generate local Android native project
         run: pnpm --filter @eazicart/mobile exec expo prebuild --platform android --no-install
 
+      - name: Verify generated Android development identifiers and deep links
+        run: |
+          pnpm --filter @eazicart/mobile verify:prebuild -- android
+          pnpm --filter @eazicart/mobile test:prebuild
+
       - name: Assemble and verify local debug APK
         run: bash apps/mobile/scripts/android-debug-qa.sh
 

@@ -62,3 +62,25 @@ test("missing Android or iOS deep links are rejected", () => {
 test("malformed app configuration is rejected", () => {
   assert.equal(verifyNativePrebuild({ ...valid, appJson: "{" }).ok, false);
 });
+
+test("Android-only prebuild verifies Android without requiring generated iOS files", () => {
+  const { iosProject, iosPlist, ...androidOnly } = valid;
+  assert.equal(verifyNativePrebuild(androidOnly, "android").ok, true);
+  assert.equal(
+    verifyNativePrebuild({ ...androidOnly, androidManifest: "" }, "android").ok,
+    false,
+  );
+});
+
+test("iOS-only prebuild verifies iOS without requiring generated Android files", () => {
+  const { gradle, androidManifest, ...iosOnly } = valid;
+  assert.equal(verifyNativePrebuild(iosOnly, "ios").ok, true);
+  assert.equal(
+    verifyNativePrebuild({ ...iosOnly, iosProject: "" }, "ios").ok,
+    false,
+  );
+});
+
+test("unknown native prebuild platform is rejected", () => {
+  assert.equal(verifyNativePrebuild(valid, "production").ok, false);
+});
