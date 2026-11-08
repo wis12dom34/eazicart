@@ -74,6 +74,76 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
       );
   };
 
+  // Read-only moderation queue. Authentication alone is insufficient:
+  // role is reloaded from the database for each request.
+  const adminOnly = async (uid: string) => {
+    const admin = await db().user.findUnique({
+      where: { id: uid },
+      select: { role: true },
+    });
+    if (!admin || admin.role !== "ADMIN")
+      throw new AppError(403, "ADMIN_ONLY", "Administrator access required");
+  };
+  const moderationQuery = z.object({
+    status: z.enum(["PENDING", "REVIEWED", "CLOSED"]).optional(),
+    reason: z.enum(["SPAM", "SCAM", "HARASSMENT", "OTHER"]).optional(),
+    cursor: z.string().min(1).max(128).optional(),
+  });
+  const reportSelect = {
+    id: true,
+    conversationId: true,
+    reporterId: true,
+    reason: true,
+    details: true,
+    status: true,
+    createdAt: true,
+  } as const;
+
+  app.get("/admin/chat-reports", auth, async (request) => {
+    await adminOnly(userId(request));
+    const { status, reason, cursor } = moderationQuery.parse(request.query);
+    const where = {
+      ...(status ? { status } : {}),
+      ...(reason ? { reason } : {}),
+    };
+    if (cursor) {
+      const anchor = await db().chatReport.findFirst({
+        where: { id: cursor, ...where },
+        select: { id: true },
+      });
+      if (!anchor)
+        throw new AppError(400, "INVALID_CURSOR", "Invalid report cursor");
+    }
+    const items = await db().chatReport.findMany({
+      where,
+      select: reportSelect,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 31,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    });
+    const hasMore = items.length > 30;
+    const data = items.slice(0, 30);
+    return {
+      data,
+      pagination: {
+        hasMore,
+        nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+      },
+    };
+  });
+
+  app.get("/admin/chat-reports/:id", auth, async (request) => {
+    await adminOnly(userId(request));
+    const { id } = params.parse(request.params);
+    const report = await db().chatReport.findUnique({
+      where: { id },
+      select: reportSelect,
+    });
+    if (!report)
+      throw new AppError(404, "REPORT_NOT_FOUND", "Report not found");
+    return { data: report };
+  });
+
   app.get("/conversations", auth, async (request) => {
     const uid = userId(request);
     const conversations = await db().conversation.findMany({

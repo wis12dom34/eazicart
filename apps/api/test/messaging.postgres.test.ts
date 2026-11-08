@@ -444,6 +444,91 @@ describe.sequential(
       expect(listing.body).not.toContain("chatReports");
     });
 
+    it("keeps the moderation queue and report details ADMIN-only and read-only", async () => {
+      const admin = await db.user.create({
+        data: {
+          email: `synthetic-chat-${runId}-admin@example.invalid`,
+          name: "Synthetic moderation admin",
+          passwordHash: "synthetic-not-real",
+          role: "ADMIN",
+        },
+      });
+      const adminToken = await tokenFor(admin.id);
+      const reportList = "/admin/chat-reports";
+      const anonymous = await app.inject({ method: "GET", url: reportList });
+      expect(anonymous.statusCode).toBe(401);
+      const buyer = await app.inject({
+        method: "GET",
+        url: reportList,
+        headers: bearer(buyerToken),
+      });
+      expect(buyer.statusCode).toBe(403);
+      const seller = await app.inject({
+        method: "GET",
+        url: reportList,
+        headers: bearer(sellerToken),
+      });
+      expect(seller.statusCode).toBe(403);
+      const outsider = await app.inject({
+        method: "GET",
+        url: reportList,
+        headers: bearer(outsiderToken),
+      });
+      expect(outsider.statusCode).toBe(403);
+      const allowed = await app.inject({
+        method: "GET",
+        url: reportList,
+        headers: bearer(adminToken),
+      });
+      expect(allowed.statusCode).toBe(200);
+      const reports = allowed.json<{
+        data: Array<{ id: string; details: string | null }>;
+      }>().data;
+      expect(reports.length).toBeGreaterThan(0);
+      const target = reports.find(
+        (item) => item.details === "Synthetic suspicious claim",
+      );
+      expect(target).toBeDefined();
+      const id = target!.id;
+      const deniedDetail = await app.inject({
+        method: "GET",
+        url: `/admin/chat-reports/${id}`,
+        headers: bearer(buyerToken),
+      });
+      expect(deniedDetail.statusCode).toBe(403);
+      const detail = await app.inject({
+        method: "GET",
+        url: `/admin/chat-reports/${id}`,
+        headers: bearer(adminToken),
+      });
+      expect(detail.statusCode).toBe(200);
+      const filtered = await app.inject({
+        method: "GET",
+        url: reportList + "?status=PENDING&reason=SCAM",
+        headers: bearer(adminToken),
+      });
+      expect(filtered.statusCode).toBe(200);
+      const invalidCursor = await app.inject({
+        method: "GET",
+        url: reportList + "?cursor=not-a-report",
+        headers: bearer(adminToken),
+      });
+      expect(invalidCursor.statusCode).toBe(400);
+      const nonexistent = await app.inject({
+        method: "GET",
+        url: "/admin/chat-reports/does-not-exist",
+        headers: bearer(adminToken),
+      });
+      expect(nonexistent.statusCode).toBe(404);
+      const noWrite = await app.inject({
+        method: "PATCH",
+        url: `/admin/chat-reports/${id}`,
+        headers: bearer(adminToken),
+        payload: { status: "CLOSED" },
+      });
+      expect(noWrite.statusCode).toBe(404);
+    });
+
     it("caps new sends across simultaneous requests without blocking confirmed retries", async () => {
       const route = `/conversations/${conversationId}/messages`;
       const send = (token: string, key: string) =>

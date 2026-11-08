@@ -57,6 +57,10 @@ export default function RootLayout() {
               options={{ title: "Notifications" }}
             />
             <Stack.Screen
+              name="admin-chat-reports"
+              options={{ title: "Chat moderation" }}
+            />
+            <Stack.Screen
               name="admin-audit"
               options={{ title: "Finance audit preview" }}
             />

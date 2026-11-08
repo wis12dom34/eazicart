@@ -300,6 +300,24 @@ export const api = {
   },
   storiesForUser: (userId: string) =>
     request<StoryListResponse>(`/social/stories/${encodeURIComponent(userId)}`),
+  adminChatReports: (status?: string, cursor?: string) => {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (cursor) params.set("cursor", cursor);
+    const query = params.toString();
+    return request<{
+      data: Array<{
+        id: string;
+        conversationId: string;
+        reporterId: string;
+        reason: string;
+        details: string | null;
+        status: string;
+        createdAt: string;
+      }>;
+      pagination: { hasMore: boolean; nextCursor: string | null };
+    }>(`/admin/chat-reports${query ? "?" + query : ""}`, { auth: "required" });
+  },
   conversations: () =>
     request<{ data: Conversation[]; meta: { unreadCount: number } }>(
       "/conversations",
