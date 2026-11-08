@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
-import { api, ApiError, setAccessToken, setRefreshHandler } from "../src/lib/api";
+import {
+  api,
+  ApiError,
+  setAccessToken,
+  setRefreshHandler,
+} from "../src/lib/api";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => {
@@ -67,7 +72,9 @@ test("mark-read PATCH encodes notification ID and preserves authentication", asy
       new Headers(init?.headers).get("Authorization"),
       "Bearer synthetic-user-token",
     );
-    return response({ data: { id: "notice/private", readAt: "2026-11-08T11:01:00Z" } });
+    return response({
+      data: { id: "notice/private", readAt: "2026-11-08T11:01:00Z" },
+    });
   };
   const data = await api.notificationRead("notice/private");
   assert.equal(data.data.id, "notice/private");

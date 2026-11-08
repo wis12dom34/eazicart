@@ -32,6 +32,6 @@ test("rejects non-API paths, insecure public URLs, credentials and URL parameter
     "https://qa.example.test/api#fragment",
     "not a URL",
   ]) {
-    assert.throws(() => resolveMobileApiBaseUrl(raw), undefined, raw);
+    assert.throws(() => resolveMobileApiBaseUrl(raw), { name: "Error" }, raw);
   }
 });

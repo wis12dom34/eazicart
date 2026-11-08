@@ -99,7 +99,11 @@ export default function HomeScreen() {
               style={styles.bell}
               hitSlop={8}
             >
-              <Ionicons name="notifications-outline" size={23} color={colors.ink} />
+              <Ionicons
+                name="notifications-outline"
+                size={23}
+                color={colors.ink}
+              />
               {unreadCount > 0 ? (
                 <View style={styles.unreadBadge}>
                   <Text style={styles.unreadBadgeText}>

@@ -123,7 +123,7 @@ export default function NotificationsScreen() {
                   ? actionError.message
                   : "Unable to mark notification as read"}
               </Text>
-            ) : null
+            ) : undefined
           }
           ListEmptyComponent={
             <ScreenState
@@ -141,9 +141,7 @@ export default function NotificationsScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={
-                  unread
-                    ? `Mark ${item.title} as read`
-                    : `${item.title}, read`
+                  unread ? `Mark ${item.title} as read` : `${item.title}, read`
                 }
                 disabled={!unread || busy}
                 onPress={() => read.mutate(item.id)}
@@ -185,7 +183,7 @@ export default function NotificationsScreen() {
               >
                 <Text style={styles.readAllText}>Mark all as read</Text>
               </Pressable>
-            ) : null
+            ) : undefined
           }
         />
       )}

@@ -22,7 +22,10 @@ import type {
   NotificationListResponse,
 } from "./types";
 
-const configuredUrl = process.env.EXPO_PUBLIC_EAZICART_API_BASE_URL;
+const configuredUrlFromEnv: unknown =
+  process.env.EXPO_PUBLIC_EAZICART_API_BASE_URL;
+const configuredUrl =
+  typeof configuredUrlFromEnv === "string" ? configuredUrlFromEnv : undefined;
 
 export class ApiError extends Error {
   constructor(

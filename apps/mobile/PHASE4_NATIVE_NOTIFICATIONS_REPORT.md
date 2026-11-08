@@ -18,8 +18,11 @@ Status: **Isolated development branch only**. No deployment, Android/iOS binary 
 - Added mocked API tests and pure filter/time-display tests. No live user data was accessed.
 
 ## Verification
-- GitHub branch/tree contents and diff should be inspected after commit.
-- **Not yet run:** full mobile TypeScript check, lint, test suite, Android/iOS build, physical-device QA, accessibility testing, end-to-end staging API tests.
+- In a separate isolated clone under `/tmp/eazicart-native-qa-20261108`, checked out exact development commit `e6e6b06955e22609d44d25bfa3a1e0176a1450d8` and installed frozen-lockfile dependencies via pnpm 10.28.1 with `--ignore-scripts`.
+- Initial validation caught two React Native `FlatList` prop type issues, unsafe environment-URL typing, and a test assertion typing issue. Corrected these and formatted the scoped files without changing production API behavior.
+- Reran the following against the amended local workspace: `pnpm --filter @eazicart/mobile typecheck` **PASS**, `lint` **PASS**, `test` **PASS (61/61 tests)**, and `prettier --check` on changed mobile files **PASS**.
+- Local `git diff --check` **PASS**. Corrections were restricted to 7 mobile files; no server, web, database, migrations, payment, or production deployment changes.
+- **Not run:** Android APK build, physical-device QA, iOS/Xcode checks, full monorepo test/build suite, or end-to-end staging API tests. A success reported by unrelated CI statuses must not be construed as native mobile QA.
 - Existing staging/Android safety gates from the prior checkpoint still apply.
 
 ## Next Gates
