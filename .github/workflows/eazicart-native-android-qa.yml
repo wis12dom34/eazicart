@@ -1,0 +1,96 @@
+name: EaziCart Native Android APK QA (isolated)
+
+on:
+  push:
+    branches:
+      - feat/eazicart-native-android-apk-20261108
+    paths:
+      - ".github/workflows/eazicart-native-android-qa.yml"
+      - "apps/mobile/**"
+      - "pnpm-lock.yaml"
+      - "packages/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eazicart-native-android-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-qa:
+    if: github.ref == 'refs/heads/feat/eazicart-native-android-apk-20261108'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CI: "1"
+      # A deliberately invalid address: this QA APK cannot contact production.
+      EXPO_PUBLIC_EAZICART_API_BASE_URL: https://fixture.invalid/api
+      NODE_ENV: production
+      JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+    steps:
+      - name: Check out exact isolated development branch
+        uses: actions/checkout@v4
+
+      - name: Configure Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configure Android build SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: >-
+            platform-tools
+            platforms;android-36
+            build-tools;36.0.0
+            ndk;27.1.12297006
+            cmake;3.22.1
+
+      - name: Configure pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
+          run_install: false
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install exact locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check native TypeScript
+        run: pnpm --filter @eazicart/mobile typecheck
+
+      - name: Lint native code
+        run: pnpm --filter @eazicart/mobile lint
+
+      - name: Run native isolated unit tests
+        run: pnpm --filter @eazicart/mobile test
+
+      - name: Generate Android native project
+        working-directory: apps/mobile
+        run: pnpm exec expo prebuild --platform android --no-install
+
+      - name: Build standalone QA APK with generated debug signing
+        working-directory: apps/mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace --max-workers=2 -PreactNativeArchitectures=arm64-v8a
+
+      - name: Verify APK exists
+        run: |
+          test -s apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+          sha256sum apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Retain QA-only APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eazicart-native-qa-android-arm64-debug-signed
+          path: apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 3
