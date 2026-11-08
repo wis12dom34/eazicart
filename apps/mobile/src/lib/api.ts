@@ -300,6 +300,10 @@ export const api = {
   },
   storiesForUser: (userId: string) =>
     request<StoryListResponse>(`/social/stories/${encodeURIComponent(userId)}`),
+  adminChatReportsAccess: () =>
+    request<{ data: { allowed: boolean } }>("/admin/chat-reports/access", {
+      auth: "required",
+    }),
   adminChatReports: (status?: string, cursor?: string) => {
     const params = new URLSearchParams();
     if (status) params.set("status", status);

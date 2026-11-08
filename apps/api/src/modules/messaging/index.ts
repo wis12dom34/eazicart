@@ -99,6 +99,13 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
     createdAt: true,
   } as const;
 
+  // Authenticated capability check for discoverable staff-only navigation.
+  // Never trust a client-supplied role or rely on hidden UI as authorization.
+  app.get("/admin/chat-reports/access", auth, async (request) => {
+    await adminOnly(userId(request));
+    return { data: { allowed: true } };
+  });
+
   app.get("/admin/chat-reports", auth, async (request) => {
     await adminOnly(userId(request));
     const { status, reason, cursor } = moderationQuery.parse(request.query);

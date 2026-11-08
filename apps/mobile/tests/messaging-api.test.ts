@@ -348,3 +348,47 @@ test("stale moderation review returns a typed conflict", async () => {
       error.code === "REPORT_STATUS_CONFLICT",
   );
 });
+
+test("chat moderation navigation access is checked with a bearer token", async () => {
+  setAccessToken("synthetic-admin-token");
+  globalThis.fetch = async (input, init) => {
+    assert.equal(
+      new URL(String(input)).pathname,
+      "/api/admin/chat-reports/access",
+    );
+    assert.equal(
+      new Headers(init?.headers).get("Authorization"),
+      "Bearer synthetic-admin-token",
+    );
+    return json({ data: { allowed: true } });
+  };
+  assert.equal((await api.adminChatReportsAccess()).data.allowed, true);
+});
+
+test("non-admin chat moderation access returns a typed 403 and signed-out users make no request", async () => {
+  setAccessToken("synthetic-non-admin-token");
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return json(
+      {
+        error: { code: "ADMIN_ONLY", message: "Administrator access required" },
+      },
+      403,
+    );
+  };
+  await assert.rejects(
+    api.adminChatReportsAccess(),
+    (error: unknown) =>
+      error instanceof ApiError &&
+      error.status === 403 &&
+      error.code === "ADMIN_ONLY",
+  );
+  setAccessToken(null);
+  await assert.rejects(
+    api.adminChatReportsAccess(),
+    (error: unknown) =>
+      error instanceof ApiError && error.code === "LOGIN_REQUIRED",
+  );
+  assert.equal(calls, 1);
+});

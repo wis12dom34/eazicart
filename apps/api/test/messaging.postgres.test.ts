@@ -455,6 +455,25 @@ describe.sequential(
       });
       const adminToken = await tokenFor(admin.id);
       const reportList = "/admin/chat-reports";
+      const accessPath = "/admin/chat-reports/access";
+      const accessAnonymous = await app.inject({
+        method: "GET",
+        url: accessPath,
+      });
+      expect(accessAnonymous.statusCode).toBe(401);
+      const accessBuyer = await app.inject({
+        method: "GET",
+        url: accessPath,
+        headers: bearer(buyerToken),
+      });
+      expect(accessBuyer.statusCode).toBe(403);
+      const accessAdmin = await app.inject({
+        method: "GET",
+        url: accessPath,
+        headers: bearer(adminToken),
+      });
+      expect(accessAdmin.statusCode).toBe(200);
+      expect(accessAdmin.json()).toEqual({ data: { allowed: true } });
       const anonymous = await app.inject({ method: "GET", url: reportList });
       expect(anonymous.statusCode).toBe(401);
       const buyer = await app.inject({

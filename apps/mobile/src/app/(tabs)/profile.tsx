@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import {
@@ -9,11 +10,19 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../../providers/auth";
+import { api } from "../../lib/api";
 import { colors } from "../../theme";
 import { currentAuditPreviewBase } from "../../lib/admin-audit-preview";
 
 export default function ProfileScreen() {
   const { user, loading, logout } = useAuth();
+  const moderationAccess = useQuery({
+    queryKey: ["admin-chat-reports-access", user?.id],
+    enabled: Boolean(user),
+    queryFn: () => api.adminChatReportsAccess(),
+    retry: false,
+    staleTime: 30_000,
+  });
   return (
     <View style={styles.screen}>
       <Text style={styles.title}>Your account</Text>
@@ -73,6 +82,22 @@ export default function ProfileScreen() {
             <Text style={styles.followingText}>Delivery addresses</Text>
             <Ionicons name="chevron-forward" color={colors.muted} size={20} />
           </Pressable>
+          {moderationAccess.data?.data.allowed === true ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Chat moderation dashboard"
+              style={styles.followingLink}
+              onPress={() => router.push("/admin-chat-reports")}
+            >
+              <Ionicons
+                name="shield-checkmark-outline"
+                color={colors.orange}
+                size={23}
+              />
+              <Text style={styles.followingText}>Chat moderation</Text>
+              <Ionicons name="chevron-forward" color={colors.muted} size={20} />
+            </Pressable>
+          ) : null}
           {currentAuditPreviewBase() ? (
             <Pressable
               accessibilityRole="button"
