@@ -83,10 +83,14 @@ export default function ConversationScreen() {
   const send = useMutation({
     mutationFn: (input: { body: string; key: string; productId?: string }) =>
       api.sendChatMessage(id, input.body, input.key, input.productId),
-    onSuccess: async () => {
-      setDraft("");
-      setRetryKey(null);
-      setShareProductId(null);
+    onSuccess: async (_result, sent) => {
+      // A request may complete after the user starts composing something else.
+      // Only clear fields that still match the successfully sent snapshot.
+      setDraft((current) => (current.trim() === sent.body ? "" : current));
+      setRetryKey((current) => (current === sent.key ? null : current));
+      setShareProductId((current) =>
+        current === (sent.productId ?? null) ? null : current,
+      );
       await Promise.all([
         cache.invalidateQueries({ queryKey: ["chat-messages", user?.id, id] }),
         cache.invalidateQueries({ queryKey: ["conversations", user?.id] }),

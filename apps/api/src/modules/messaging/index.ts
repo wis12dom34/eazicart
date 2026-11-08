@@ -76,22 +76,32 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       take: 100,
     });
-    const data = await Promise.all(
-      conversations.map(async (conversation) => {
-        const readAt =
-          conversation.buyerId === uid
-            ? conversation.buyerReadAt
-            : conversation.sellerReadAt;
-        const unreadCount = await db().chatMessage.count({
-          where: {
-            conversationId: conversation.id,
-            senderId: { not: uid },
-            ...(readAt ? { createdAt: { gt: readAt } } : {}),
-          },
-        });
-        return { ...conversation, unreadCount };
-      }),
+    // One grouped query replaces one unread count query per conversation.
+    const unreadFilters = conversations.map((conversation) => {
+      const readAt =
+        conversation.buyerId === uid
+          ? conversation.buyerReadAt
+          : conversation.sellerReadAt;
+      return {
+        conversationId: conversation.id,
+        senderId: { not: uid },
+        ...(readAt ? { createdAt: { gt: readAt } } : {}),
+      };
+    });
+    const unreadGroups = unreadFilters.length
+      ? await db().chatMessage.groupBy({
+          by: ["conversationId"],
+          where: { OR: unreadFilters },
+          _count: { _all: true },
+        })
+      : [];
+    const counts = new Map(
+      unreadGroups.map((item) => [item.conversationId, item._count._all]),
     );
+    const data = conversations.map((conversation) => ({
+      ...conversation,
+      unreadCount: counts.get(conversation.id) ?? 0,
+    }));
     return {
       data,
       meta: { unreadCount: data.reduce((sum, c) => sum + c.unreadCount, 0) },
@@ -109,12 +119,28 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
     });
     if (!seller)
       throw new AppError(404, "SELLER_NOT_FOUND", "Seller not found");
-    const conversation = await db().conversation.upsert({
-      where: { buyerId_sellerId: { buyerId, sellerId } },
-      update: {},
-      create: { buyerId, sellerId },
-      select: summarySelect,
-    });
+    const where = { buyerId_sellerId: { buyerId, sellerId } };
+    let conversation;
+    try {
+      conversation = await db().conversation.upsert({
+        where,
+        update: {},
+        create: { buyerId, sellerId },
+        select: summarySelect,
+      });
+    } catch (error) {
+      // Concurrent initial requests can race on the buyer/seller unique key.
+      if (
+        !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+        error.code !== "P2002"
+      )
+        throw error;
+      conversation = await db().conversation.findUnique({
+        where,
+        select: summarySelect,
+      });
+      if (!conversation) throw error;
+    }
     return reply.code(200).send({ data: conversation });
   });
 
@@ -194,34 +220,73 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
         clientMessageId: input.clientMessageId,
       },
     };
+    // A confirmed retry always returns the original message, including when
+    // an account reaches the send limit or the shared product is unpublished.
+    const verifyReplay = (message: {
+      body: string;
+      productId: string | null;
+    }) => {
+      if (
+        message.body !== input.body ||
+        message.productId !== (input.productId ?? null)
+      )
+        throw new AppError(
+          409,
+          "MESSAGE_REPLAY_CONFLICT",
+          "Message request differs from the original",
+        );
+    };
     let created = await db().chatMessage.findUnique({
       where: key,
       select: messageSelect,
     });
-    let inserted = false;
-    if (!created) {
-      if (input.productId) {
-        const conversation = await db().conversation.findUniqueOrThrow({
-          where: { id },
-          select: { sellerId: true },
+    if (created) {
+      verifyReplay(created);
+      return reply.code(200).send({ data: created });
+    }
+    try {
+      created = await db().$transaction(async (tx) => {
+        // This transaction-level lock applies across API workers sharing
+        // PostgreSQL, unlike per-process counters. We rate-limit only NEW sends.
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${"eazicart-chat-send:" + uid})::bigint) IS NULL AS locked`;
+        const existing = await tx.chatMessage.findUnique({
+          where: key,
+          select: messageSelect,
         });
-        const product = await db().product.findFirst({
+        if (existing) return existing;
+        const recent = await tx.chatMessage.count({
           where: {
-            id: input.productId,
-            active: true,
-            seller: { userId: conversation.sellerId },
+            senderId: uid,
+            createdAt: { gte: new Date(Date.now() - 60_000) },
           },
-          select: { id: true },
         });
-        if (!product)
+        if (recent >= 20)
           throw new AppError(
-            404,
-            "PRODUCT_NOT_FOUND",
-            "Product is unavailable",
+            429,
+            "CHAT_RATE_LIMIT",
+            "Too many messages. Please try again shortly",
           );
-      }
-      try {
-        created = await db().chatMessage.create({
+        if (input.productId) {
+          const conversation = await tx.conversation.findUniqueOrThrow({
+            where: { id },
+            select: { sellerId: true },
+          });
+          const product = await tx.product.findFirst({
+            where: {
+              id: input.productId,
+              active: true,
+              seller: { userId: conversation.sellerId },
+            },
+            select: { id: true },
+          });
+          if (!product)
+            throw new AppError(
+              404,
+              "PRODUCT_NOT_FOUND",
+              "Product is unavailable",
+            );
+        }
+        const inserted = await tx.chatMessage.create({
           data: {
             conversationId: id,
             senderId: uid,
@@ -231,39 +296,27 @@ export function registerMessaging(app: FastifyInstance, client?: PrismaClient) {
           },
           select: messageSelect,
         });
-        inserted = true;
-      } catch (error) {
-        // Concurrent identical submissions may both reach CREATE. Resolve
-        // the unique key from the database rather than treating the loser
-        // as a failed message, but never swallow unrelated database errors.
-        if (
-          !(error instanceof Prisma.PrismaClientKnownRequestError) ||
-          error.code !== "P2002"
-        )
-          throw error;
-        created = await db().chatMessage.findUnique({
-          where: key,
-          select: messageSelect,
+        await tx.conversation.updateMany({
+          where: { id, updatedAt: { lt: inserted.createdAt } },
+          data: { updatedAt: inserted.createdAt },
         });
-        if (!created) throw error;
-      }
-    }
-    if (
-      created.body !== input.body ||
-      created.productId !== (input.productId ?? null)
-    )
-      throw new AppError(
-        409,
-        "MESSAGE_REPLAY_CONFLICT",
-        "Message request differs from the original",
-      );
-    if (inserted) {
-      // A replay cannot reorder the inbox or move updatedAt backwards.
-      await db().conversation.updateMany({
-        where: { id, updatedAt: { lt: created.createdAt } },
-        data: { updatedAt: created.createdAt },
+        return inserted;
       });
+    } catch (error) {
+      // Another request may have inserted an identical UUID concurrently.
+      // Never hide unrelated database failures or bypass replay validation.
+      if (
+        !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+        error.code !== "P2002"
+      )
+        throw error;
+      created = await db().chatMessage.findUnique({
+        where: key,
+        select: messageSelect,
+      });
+      if (!created) throw error;
     }
+    verifyReplay(created);
     return reply.code(200).send({ data: created });
   });
 }

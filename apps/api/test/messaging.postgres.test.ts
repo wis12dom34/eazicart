@@ -335,5 +335,48 @@ describe.sequential(
       });
       expect(invalid.statusCode).toBe(400);
     });
+
+    it("caps new sends across simultaneous requests without blocking confirmed retries", async () => {
+      const route = `/conversations/${conversationId}/messages`;
+      const send = (token: string, key: string) =>
+        app.inject({
+          method: "POST",
+          url: route,
+          headers: bearer(token),
+          payload: { body: "Controlled test message", clientMessageId: key },
+        });
+      const baseline = await db.chatMessage.count({
+        where: {
+          senderId: buyerId,
+          createdAt: { gte: new Date(Date.now() - 60_000) },
+        },
+      });
+      expect(baseline).toBeLessThan(20);
+      for (let i = baseline; i < 19; i++) {
+        const response = await send(buyerToken, randomUUID());
+        expect(response.statusCode).toBe(200);
+      }
+      const candidates = await Promise.all(
+        Array.from({ length: 4 }, () => send(buyerToken, randomUUID())),
+      );
+      expect(candidates.filter((r) => r.statusCode === 200)).toHaveLength(1);
+      expect(candidates.filter((r) => r.statusCode === 429)).toHaveLength(3);
+      const replay = await app.inject({
+        method: "POST",
+        url: route,
+        headers: bearer(buyerToken),
+        payload: { body: "Hello", clientMessageId: messageKey },
+      });
+      expect(replay.statusCode).toBe(200);
+      const seller = await send(sellerToken, randomUUID());
+      expect(seller.statusCode).toBe(200);
+      const buyerCount = await db.chatMessage.count({
+        where: {
+          senderId: buyerId,
+          createdAt: { gte: new Date(Date.now() - 60_000) },
+        },
+      });
+      expect(buyerCount).toBe(20);
+    });
   },
 );

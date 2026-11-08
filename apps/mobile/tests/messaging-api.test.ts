@@ -153,3 +153,52 @@ test("a signed-out user cannot mark messages read", async () => {
   await assert.rejects(api.conversationRead("chat-id"), ApiError);
   assert.equal(touched, false);
 });
+
+test("a network failure can retry a message with exactly the same client ID", async () => {
+  setAccessToken("synthetic-test-token");
+  const key = "8aa025df-05ef-40d7-915b-a0338e8c39e3";
+  const payloads: unknown[] = [];
+  globalThis.fetch = async (_input, init) => {
+    payloads.push(JSON.parse(String(init?.body)));
+    if (payloads.length === 1) throw new TypeError("Disconnected");
+    return json({
+      data: { id: "previously-stored-message", clientMessageId: key },
+    });
+  };
+  await assert.rejects(
+    api.sendChatMessage("chat-7", "Network retry", key),
+    (error: unknown) =>
+      error instanceof ApiError && error.code === "NETWORK_ERROR",
+  );
+  const retried = await api.sendChatMessage("chat-7", "Network retry", key);
+  assert.equal(retried.data.id, "previously-stored-message");
+  assert.deepEqual(payloads, [
+    { body: "Network retry", clientMessageId: key },
+    { body: "Network retry", clientMessageId: key },
+  ]);
+});
+
+test("chat server rate limit is presented as a typed API error", async () => {
+  setAccessToken("synthetic-test-token");
+  globalThis.fetch = async () =>
+    json(
+      {
+        error: {
+          code: "CHAT_RATE_LIMIT",
+          message: "Too many messages. Please try again shortly",
+        },
+      },
+      429,
+    );
+  await assert.rejects(
+    api.sendChatMessage(
+      "chat-7",
+      "Flood",
+      "8aa025df-05ef-40d7-915b-a0338e8c39e3",
+    ),
+    (error: unknown) =>
+      error instanceof ApiError &&
+      error.status === 429 &&
+      error.code === "CHAT_RATE_LIMIT",
+  );
+});
