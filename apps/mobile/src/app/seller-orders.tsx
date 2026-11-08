@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScreenState } from "../components/ScreenState";
 import { api } from "../lib/api";
 import { formatNaira } from "../lib/commerce";
@@ -59,7 +59,17 @@ export default function SellerOrders() {
         />
       }
       renderItem={({ item }) => (
-        <View style={styles.card}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Manage order ${item.id.slice(0, 10)}`}
+          onPress={() =>
+            router.push({
+              pathname: "/seller-order/[id]",
+              params: { id: item.id },
+            })
+          }
+          style={styles.card}
+        >
           <View style={styles.row}>
             <Text style={styles.orderId}>Order {item.id.slice(0, 10)}</Text>
             <Text style={styles.status}>{item.status}</Text>
@@ -80,7 +90,8 @@ export default function SellerOrders() {
             </Text>
             <Text style={styles.total}>{formatNaira(item.subtotal)}</Text>
           </View>
-        </View>
+          <Text style={styles.manageLink}>View order details and actions</Text>
+        </Pressable>
       )}
     />
   );
@@ -110,4 +121,10 @@ const styles = StyleSheet.create({
   meta: { color: colors.muted, fontSize: 12 },
   item: { color: colors.ink, fontSize: 12 },
   total: { color: colors.ink, fontSize: 16, fontWeight: "800" },
+  manageLink: {
+    color: colors.orange,
+    fontWeight: "800",
+    fontSize: 12,
+    marginTop: 5,
+  },
 });

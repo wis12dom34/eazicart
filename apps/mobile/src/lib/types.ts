@@ -195,9 +195,12 @@ export type SellerDashboard = {
   };
 };
 
+export type SellerFulfillmentStatus =
+  "PENDING" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
+
 export type SellerOrder = {
   id: string;
-  status: "PENDING" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
+  status: SellerFulfillmentStatus;
   globalStatus: string;
   createdAt: string;
   updatedAt: string;

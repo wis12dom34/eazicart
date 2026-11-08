@@ -25,6 +25,7 @@ import type {
   ChatMessage,
   SellerDashboard,
   SellerOrder,
+  SellerFulfillmentStatus,
   Category,
   SellerProductInput,
 } from "./types";
@@ -203,6 +204,22 @@ export const api = {
     request<{ data: Product[] }>("/seller/products", { auth: "required" }),
   ownSellerOrders: () =>
     request<{ data: SellerOrder[] }>("/seller/orders", { auth: "required" }),
+  ownSellerOrder: (id: string) =>
+    request<{ data: SellerOrder }>(`/seller/orders/${encodeURIComponent(id)}`, {
+      auth: "required",
+    }),
+  updateSellerOrderStatus: (
+    id: string,
+    status: Exclude<SellerFulfillmentStatus, "PENDING">,
+  ) =>
+    request<{ data: SellerOrder }>(
+      `/seller/orders/${encodeURIComponent(id)}/fulfillment`,
+      {
+        auth: "required",
+        method: "PATCH",
+        body: { status },
+      },
+    ),
   following: () =>
     request<FollowingResponse>("/following", { auth: "required" }),
   followSeller: (sellerUserId: string) =>

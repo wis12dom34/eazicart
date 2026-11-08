@@ -81,6 +81,10 @@ export default function RootLayout() {
               name="seller-orders"
               options={{ title: "Store orders" }}
             />
+            <Stack.Screen
+              name="seller-order/[id]"
+              options={{ title: "Seller order details" }}
+            />
             <Stack.Screen name="product/[id]" options={{ title: "Product" }} />
             <Stack.Screen
               name="product/[id]/comments"
