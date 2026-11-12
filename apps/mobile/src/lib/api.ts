@@ -124,7 +124,7 @@ export async function request<T>(
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal,
       });
-    } catch (error) {
+    } catch {
       failIfInterrupted();
       throw new ApiError(
         0,
