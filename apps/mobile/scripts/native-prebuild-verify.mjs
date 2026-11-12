@@ -6,6 +6,55 @@ import { fileURLToPath } from "node:url";
 
 export const EXPECTED_PACKAGE = "com.eazicart.mobile.dev";
 
+function removeCodeComments(source) {
+  if (typeof source !== "string") return "";
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\r\n]*/g, "");
+}
+
+function removeXmlComments(source) {
+  return typeof source === "string"
+    ? source.replace(/<!--[\s\S]*?-->/g, "")
+    : "";
+}
+
+function hasExactGradleDeclaration(source, field) {
+  const pattern = new RegExp(
+    "^\\s*" + field + "\\s+(?:'([^']+)'|\"([^\"]+)\")\\s*$",
+    "gm",
+  );
+  const matches = Array.from(source.matchAll(pattern), (match) => match[1] ?? match[2]);
+  // Reject both missing declarations and mixed development/production variants.
+  return matches.length > 0 && matches.every((value) => value === EXPECTED_PACKAGE);
+}
+
+function hasCorrectIosBundleIds(source) {
+  const matches = Array.from(
+    source.matchAll(/\bPRODUCT_BUNDLE_IDENTIFIER\s*=\s*(?:"([^"]+)"|([^;]+))\s*;/g),
+    (match) => (match[1] ?? match[2]).trim(),
+  );
+  return matches.length > 0 && matches.every((value) => value === EXPECTED_PACKAGE);
+}
+
+function hasAndroidDeepLink(source) {
+  const intentFilters = source.match(/<intent-filter\b[^>]*>[\s\S]*?<\/intent-filter>/g) ?? [];
+  return intentFilters.some(
+    (filter) =>
+      /android\.intent\.action\.VIEW/.test(filter) &&
+      /android\.intent\.category\.BROWSABLE/.test(filter) &&
+      /<data\b[^>]*\bandroid:scheme\s*=\s*["']eazicart["'][^>]*\/?>/.test(filter),
+  );
+}
+
+function hasIosDeepLink(source) {
+  if (!/<key>\s*CFBundleURLTypes\s*<\/key>/.test(source)) return false;
+  const schemes = source.match(
+    /<key>\s*CFBundleURLSchemes\s*<\/key>\s*<array>([\s\S]*?)<\/array>/,
+  )?.[1];
+  return Boolean(schemes && /<string>\s*eazicart\s*<\/string>/.test(schemes));
+}
+
 export function verifyNativePrebuild(files, platform = "all") {
   if (!["all", "android", "ios"].includes(platform))
     return { ok: false, errors: ["Unsupported native platform."] };
@@ -14,7 +63,9 @@ export function verifyNativePrebuild(files, platform = "all") {
   const errors = [];
   let config;
   try {
-    config = JSON.parse(files.appJson).expo;
+    config = JSON.parse(files.appJson)?.expo;
+    if (!config || typeof config !== "object" || Array.isArray(config))
+      throw new Error("Missing Expo configuration");
   } catch {
     return { ok: false, errors: ["Invalid Expo app configuration."] };
   }
@@ -25,29 +76,30 @@ export function verifyNativePrebuild(files, platform = "all") {
     errors.push("Development package identifiers must match.");
   if (config.scheme !== "eazicart")
     errors.push("Native deep-link scheme mismatch.");
-  if (
-    android &&
-    (!files.gradle?.includes("applicationId '" + EXPECTED_PACKAGE + "'") ||
-      !files.gradle?.includes("namespace '" + EXPECTED_PACKAGE + "'"))
-  )
-    errors.push("Generated Android application ID or namespace mismatch.");
-  if (android && !files.androidManifest?.includes('android:scheme="eazicart"'))
-    errors.push("Generated Android deep-link scheme missing.");
-  if (
-    ios &&
-    !files.iosProject?.includes(
-      'PRODUCT_BUNDLE_IDENTIFIER = "' + EXPECTED_PACKAGE + '";',
+
+  if (android) {
+    const gradle = removeCodeComments(files.gradle);
+    if (
+      !hasExactGradleDeclaration(gradle, "applicationId") ||
+      !hasExactGradleDeclaration(gradle, "namespace")
     )
-  )
-    errors.push("Generated iOS bundle ID mismatch.");
-  if (ios && !files.iosPlist?.includes("<key>CFBundleIdentifier</key>"))
-    errors.push("Generated iOS Info.plist missing bundle identifier.");
-  if (
-    ios &&
-    (!files.iosPlist?.includes("<key>CFBundleURLTypes</key>") ||
-      !files.iosPlist?.includes("<string>eazicart</string>"))
-  )
-    errors.push("Generated iOS deep-link scheme missing.");
+      errors.push("Generated Android application ID or namespace mismatch.");
+    if (!hasAndroidDeepLink(removeXmlComments(files.androidManifest)))
+      errors.push("Generated Android deep-link intent filter missing.");
+  }
+
+  if (ios) {
+    if (!hasCorrectIosBundleIds(removeCodeComments(files.iosProject)))
+      errors.push("Generated iOS bundle ID mismatch.");
+    const plist = removeXmlComments(files.iosPlist);
+    if (
+      !/<key>\s*CFBundleIdentifier\s*<\/key>\s*<string>\s*(?:\$\(PRODUCT_BUNDLE_IDENTIFIER\)|com\.eazicart\.mobile\.dev)\s*<\/string>/.test(plist)
+    )
+      errors.push("Generated iOS Info.plist bundle identifier missing or invalid.");
+    if (!hasIosDeepLink(plist))
+      errors.push("Generated iOS deep-link URL scheme missing.");
+  }
+
   return { ok: errors.length === 0, errors };
 }
 
@@ -78,9 +130,7 @@ if (
       result.errors.forEach((error) => console.error("REFUSED: " + error));
       process.exitCode = 23;
     } else {
-      console.log(
-        "PASS: generated iOS and Android development identifiers and deep links verified.",
-      );
+      console.log("PASS: generated " + platform + " development identifiers and deep links verified.");
     }
   } catch (error) {
     console.error(

@@ -15,10 +15,16 @@ const valid = {
   }),
   gradle:
     "namespace 'com.eazicart.mobile.dev'\napplicationId 'com.eazicart.mobile.dev'",
-  androidManifest: '<data android:scheme="eazicart"/>',
+  androidManifest:
+    '<intent-filter><action android:name="android.intent.action.VIEW"/>' +
+    '<category android:name="android.intent.category.BROWSABLE"/>' +
+    '<data android:scheme="eazicart"/></intent-filter>',
   iosProject: 'PRODUCT_BUNDLE_IDENTIFIER = "com.eazicart.mobile.dev";',
   iosPlist:
-    "<key>CFBundleIdentifier</key><key>CFBundleURLTypes</key><string>eazicart</string>",
+    "<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>" +
+    "<key>CFBundleURLTypes</key><array><dict>" +
+    "<key>CFBundleURLSchemes</key><array><string>eazicart</string></array>" +
+    "</dict></array>",
 };
 
 test("correct generated development identifiers pass", () => {
@@ -83,4 +89,61 @@ test("iOS-only prebuild verifies iOS without requiring generated Android files",
 
 test("unknown native prebuild platform is rejected", () => {
   assert.equal(verifyNativePrebuild(valid, "production").ok, false);
+});
+
+test("Android declarations in comments cannot hide a mismatched real identifier", () => {
+  const gradle =
+    "// namespace 'com.eazicart.mobile.dev'\nnamespace 'other.package'\n" +
+    "// applicationId 'com.eazicart.mobile.dev'\napplicationId 'other.package'";
+  assert.equal(verifyNativePrebuild({ ...valid, gradle }, "android").ok, false);
+});
+
+test("Android rejects a second conflicting application ID", () => {
+  const gradle = valid.gradle + "\napplicationId 'com.eazicart.mobile'";
+  assert.equal(verifyNativePrebuild({ ...valid, gradle }, "android").ok, false);
+});
+
+test("Android rejects commented and misplaced deep-link schemes", () => {
+  const androidManifest =
+    '<manifest><!-- ' + valid.androidManifest + ' --><data android:scheme="eazicart"/></manifest>';
+  assert.equal(
+    verifyNativePrebuild({ ...valid, androidManifest }, "android").ok,
+    false,
+  );
+});
+
+test("iOS comments and mixed bundle IDs cannot hide a mismatched target", () => {
+  assert.equal(
+    verifyNativePrebuild({
+      ...valid,
+      iosProject:
+        "/* PRODUCT_BUNDLE_IDENTIFIER = \"com.eazicart.mobile.dev\"; */\n" +
+        "PRODUCT_BUNDLE_IDENTIFIER = \"other.package\";",
+    }, "ios").ok,
+    false,
+  );
+  assert.equal(
+    verifyNativePrebuild({
+      ...valid,
+      iosProject:
+        valid.iosProject + '\nPRODUCT_BUNDLE_IDENTIFIER = "other.package";',
+    }, "ios").ok,
+    false,
+  );
+});
+
+test("iOS scheme must belong to registered URL schemes, not a comment or unrelated key", () => {
+  const iosPlist =
+    "<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>" +
+    "<!-- <key>CFBundleURLSchemes</key><array><string>eazicart</string></array> -->" +
+    "<key>CFBundleURLTypes</key><array><dict>" +
+    "<key>OtherKey</key><string>eazicart</string></dict></array>";
+  assert.equal(verifyNativePrebuild({ ...valid, iosPlist }, "ios").ok, false);
+});
+
+test("missing Expo config fails closed instead of throwing", () => {
+  assert.deepEqual(verifyNativePrebuild({ ...valid, appJson: "{}" }), {
+    ok: false,
+    errors: ["Invalid Expo app configuration."],
+  });
 });
