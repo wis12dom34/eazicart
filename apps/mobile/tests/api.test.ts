@@ -285,3 +285,173 @@ test("a stale network error after logout reports a changed session", async () =>
       error instanceof ApiError && error.code === "SESSION_CHANGED",
   );
 });
+
+test("a response body timeout is reported as TIMEOUT, not a raw AbortError", async () => {
+  const existingTimeout = globalThis.setTimeout;
+  let fireTimeout: (() => void) | undefined;
+  globalThis.setTimeout = ((
+    handler: (...args: unknown[]) => void,
+    ms?: number,
+    ...args: unknown[]
+  ) => {
+    if (ms === 15000) fireTimeout = () => handler(...args);
+    return existingTimeout(handler, ms, ...args);
+  }) as typeof setTimeout;
+  try {
+    globalThis.fetch = async (_input, init) =>
+      new Response(
+        new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('{"data":'));
+            init?.signal?.addEventListener(
+              "abort",
+              () => controller.error(new Error("aborted stream")),
+              { once: true },
+            );
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    const pending = api.feed();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.ok(fireTimeout, "request timeout was not armed");
+    fireTimeout();
+    await assert.rejects(
+      pending,
+      (e: unknown) =>
+        e instanceof ApiError && e.status === 408 && e.code === "TIMEOUT",
+    );
+  } finally {
+    globalThis.setTimeout = existingTimeout;
+  }
+});
+
+test("timeout while reading a server error body takes priority over HTTP status", async () => {
+  const existingTimeout = globalThis.setTimeout;
+  let fireTimeout: (() => void) | undefined;
+  globalThis.setTimeout = ((
+    handler: (...args: unknown[]) => void,
+    ms?: number,
+    ...args: unknown[]
+  ) => {
+    if (ms === 15000) fireTimeout = () => handler(...args);
+    return existingTimeout(handler, ms, ...args);
+  }) as typeof setTimeout;
+  try {
+    globalThis.fetch = async (_input, init) =>
+      new Response(
+        new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('{"error":'));
+            init?.signal?.addEventListener(
+              "abort",
+              () => controller.error(new Error("aborted stream")),
+              { once: true },
+            );
+          },
+        }),
+        { status: 503, headers: { "Content-Type": "application/json" } },
+      );
+    const pending = api.feed();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.ok(fireTimeout);
+    fireTimeout();
+    await assert.rejects(
+      pending,
+      (e: unknown) =>
+        e instanceof ApiError && e.status === 408 && e.code === "TIMEOUT",
+    );
+  } finally {
+    globalThis.setTimeout = existingTimeout;
+  }
+});
+
+test("a successful response with invalid JSON has a predictable error", async () => {
+  globalThis.fetch = async () => new Response("not-json", { status: 200 });
+  await assert.rejects(
+    api.feed(),
+    (e: unknown) =>
+      e instanceof ApiError &&
+      e.status === 502 &&
+      e.code === "INVALID_RESPONSE",
+  );
+});
+
+test("non-JSON server errors retain upstream status", async () => {
+  globalThis.fetch = async () => new Response("backend down", { status: 503 });
+  await assert.rejects(
+    api.feed(),
+    (e: unknown) =>
+      e instanceof ApiError && e.status === 503 && e.code === "REQUEST_FAILED",
+  );
+});
+
+test("a timeout during token refresh prevents replaying the protected request", async () => {
+  const existingTimeout = globalThis.setTimeout;
+  let fireTimeout: (() => void) | undefined;
+  let finishRefresh!: () => void;
+  let beginRefresh!: () => void;
+  const refreshStarted = new Promise<void>((resolve) => {
+    beginRefresh = resolve;
+  });
+  const refreshHeld = new Promise<boolean>((resolve) => {
+    finishRefresh = () => resolve(true);
+  });
+  setAccessToken("expired");
+  setRefreshHandler(async () => {
+    beginRefresh();
+    return refreshHeld;
+  });
+  let fetches = 0;
+  globalThis.fetch = async () => {
+    fetches += 1;
+    return json({ error: { code: "UNAUTHORIZED" } }, 401);
+  };
+  globalThis.setTimeout = ((
+    handler: (...args: unknown[]) => void,
+    ms?: number,
+    ...args: unknown[]
+  ) => {
+    if (ms === 15000) fireTimeout = () => handler(...args);
+    return existingTimeout(handler, ms, ...args);
+  }) as typeof setTimeout;
+  try {
+    const pending = api.cart();
+    await refreshStarted;
+    assert.ok(fireTimeout);
+    fireTimeout();
+    finishRefresh();
+    await assert.rejects(
+      pending,
+      (e: unknown) =>
+        e instanceof ApiError && e.status === 408 && e.code === "TIMEOUT",
+    );
+    assert.equal(fetches, 1);
+  } finally {
+    globalThis.setTimeout = existingTimeout;
+  }
+});
+
+test("private JSON finishing after an account switch is rejected", async () => {
+  let bodyController!: ReadableStreamDefaultController<Uint8Array>;
+  setAccessToken("account-a");
+  globalThis.fetch = async () =>
+    new Response(
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          bodyController = controller;
+          controller.enqueue(new TextEncoder().encode('{"data":'));
+        },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  const pending = api.cart();
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  setAccessToken("account-b");
+  bodyController.enqueue(new TextEncoder().encode('{"owner":"account-a"}}'));
+  bodyController.close();
+  await assert.rejects(
+    pending,
+    (e: unknown) => e instanceof ApiError && e.code === "SESSION_CHANGED",
+  );
+});

@@ -102,9 +102,20 @@ export async function request<T>(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   const cancel = () => controller.abort();
+  const failIfInterrupted = () => {
+    ensureSameSession();
+    if (signal?.aborted) {
+      const error = new Error("Request cancelled.");
+      error.name = "AbortError";
+      throw error;
+    }
+    if (controller.signal.aborted)
+      throw new ApiError(408, "TIMEOUT", "The request timed out. Try again.");
+  };
   if (signal?.aborted) controller.abort();
   else signal?.addEventListener("abort", cancel, { once: true });
   try {
+    failIfInterrupted();
     let response: Response;
     try {
       response = await fetch(`${baseUrl}${path}`, {
@@ -114,17 +125,14 @@ export async function request<T>(
         signal: controller.signal,
       });
     } catch (error) {
-      ensureSameSession();
-      if (signal?.aborted) throw error;
-      if (controller.signal.aborted)
-        throw new ApiError(408, "TIMEOUT", "The request timed out. Try again.");
+      failIfInterrupted();
       throw new ApiError(
         0,
         "NETWORK_ERROR",
         "Cannot reach EaziCart. Check your internet connection.",
       );
     }
-    ensureSameSession();
+    failIfInterrupted();
     if (
       response.status === 401 &&
       retryAuth &&
@@ -134,7 +142,7 @@ export async function request<T>(
       const refreshed = await refreshHandler();
       // Sign-out or account switching during a pending refresh must never
       // replay the old request with a different account's bearer token.
-      ensureSameSession();
+      failIfInterrupted();
       if (refreshed) return request<T>(path, { ...options, retryAuth: false });
     }
     if (!response.ok) {
@@ -142,9 +150,11 @@ export async function request<T>(
       try {
         error = (await response.json()) as typeof error;
       } catch {
-        /* Non-JSON response */
+        // Retain the upstream HTTP status only when the response was not
+        // interrupted. A timed-out body is a timeout, not a server response.
+        failIfInterrupted();
       }
-      ensureSameSession();
+      failIfInterrupted();
       throw new ApiError(
         response.status,
         error.error?.code ?? "REQUEST_FAILED",
@@ -152,9 +162,18 @@ export async function request<T>(
       );
     }
     if (response.status === 204) return undefined as T;
-    const data = (await response.json()) as T;
-    ensureSameSession();
-    return data;
+    try {
+      const data = (await response.json()) as T;
+      failIfInterrupted();
+      return data;
+    } catch {
+      failIfInterrupted();
+      throw new ApiError(
+        502,
+        "INVALID_RESPONSE",
+        "EaziCart returned an unreadable response. Please try again.",
+      );
+    }
   } finally {
     // Keep cancellation active through JSON body parsing and auth retry.
     clearTimeout(timeout);
