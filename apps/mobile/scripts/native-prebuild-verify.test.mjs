@@ -16,9 +16,11 @@ const valid = {
   gradle:
     "namespace 'com.eazicart.mobile.dev'\napplicationId 'com.eazicart.mobile.dev'",
   androidManifest:
+    '<application><activity android:name=".MainActivity" android:exported="true">' +
     '<intent-filter><action android:name="android.intent.action.VIEW"/>' +
+    '<category android:name="android.intent.category.DEFAULT"/>' +
     '<category android:name="android.intent.category.BROWSABLE"/>' +
-    '<data android:scheme="eazicart"/></intent-filter>',
+    '<data android:scheme="eazicart"/></intent-filter></activity></application>',
   iosProject: 'PRODUCT_BUNDLE_IDENTIFIER = "com.eazicart.mobile.dev";',
   iosPlist:
     "<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>" +
@@ -105,7 +107,9 @@ test("Android rejects a second conflicting application ID", () => {
 
 test("Android rejects commented and misplaced deep-link schemes", () => {
   const androidManifest =
-    '<manifest><!-- ' + valid.androidManifest + ' --><data android:scheme="eazicart"/></manifest>';
+    "<manifest><!-- " +
+    valid.androidManifest +
+    ' --><data android:scheme="eazicart"/></manifest>';
   assert.equal(
     verifyNativePrebuild({ ...valid, androidManifest }, "android").ok,
     false,
@@ -114,20 +118,26 @@ test("Android rejects commented and misplaced deep-link schemes", () => {
 
 test("iOS comments and mixed bundle IDs cannot hide a mismatched target", () => {
   assert.equal(
-    verifyNativePrebuild({
-      ...valid,
-      iosProject:
-        "/* PRODUCT_BUNDLE_IDENTIFIER = \"com.eazicart.mobile.dev\"; */\n" +
-        "PRODUCT_BUNDLE_IDENTIFIER = \"other.package\";",
-    }, "ios").ok,
+    verifyNativePrebuild(
+      {
+        ...valid,
+        iosProject:
+          '/* PRODUCT_BUNDLE_IDENTIFIER = "com.eazicart.mobile.dev"; */\n' +
+          'PRODUCT_BUNDLE_IDENTIFIER = "other.package";',
+      },
+      "ios",
+    ).ok,
     false,
   );
   assert.equal(
-    verifyNativePrebuild({
-      ...valid,
-      iosProject:
-        valid.iosProject + '\nPRODUCT_BUNDLE_IDENTIFIER = "other.package";',
-    }, "ios").ok,
+    verifyNativePrebuild(
+      {
+        ...valid,
+        iosProject:
+          valid.iosProject + '\nPRODUCT_BUNDLE_IDENTIFIER = "other.package";',
+      },
+      "ios",
+    ).ok,
     false,
   );
 });
@@ -146,4 +156,53 @@ test("missing Expo config fails closed instead of throwing", () => {
     ok: false,
     errors: ["Invalid Expo app configuration."],
   });
+});
+
+test("Android rejects a deep-link activity that is not exported", () => {
+  const androidManifest = valid.androidManifest.replace(
+    'android:exported="true"',
+    'android:exported="false"',
+  );
+  assert.equal(
+    verifyNativePrebuild({ ...valid, androidManifest }, "android").ok,
+    false,
+  );
+});
+
+test("Android requires the DEFAULT category for an exported deep link", () => {
+  const androidManifest = valid.androidManifest.replace(
+    '<category android:name="android.intent.category.DEFAULT"/>',
+    "",
+  );
+  assert.equal(
+    verifyNativePrebuild({ ...valid, androidManifest }, "android").ok,
+    false,
+  );
+});
+
+test("Android rejects the scheme when installed on an unrelated activity", () => {
+  const androidManifest = valid.androidManifest.replace(
+    'android:name=".MainActivity"',
+    'android:name=".SomeOtherActivity"',
+  );
+  assert.equal(
+    verifyNativePrebuild({ ...valid, androidManifest }, "android").ok,
+    false,
+  );
+});
+
+test("Android rejects an exported MainActivity with a link on an unexported second activity", () => {
+  const androidManifest =
+    '<application><activity android:name=".MainActivity" android:exported="true"></activity>' +
+    valid.androidManifest
+      .replace(
+        '<application><activity android:name=".MainActivity" android:exported="true">',
+        '<activity android:name=".Unexported" android:exported="false">',
+      )
+      .replace("</activity></application>", "</activity>") +
+    "</application>";
+  assert.equal(
+    verifyNativePrebuild({ ...valid, androidManifest }, "android").ok,
+    false,
+  );
 });

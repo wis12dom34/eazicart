@@ -8,9 +8,7 @@ export const EXPECTED_PACKAGE = "com.eazicart.mobile.dev";
 
 function removeCodeComments(source) {
   if (typeof source !== "string") return "";
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/\/\/[^\r\n]*/g, "");
+  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\r\n]*/g, "");
 }
 
 function removeXmlComments(source) {
@@ -24,27 +22,62 @@ function hasExactGradleDeclaration(source, field) {
     "^\\s*" + field + "\\s+(?:'([^']+)'|\"([^\"]+)\")\\s*$",
     "gm",
   );
-  const matches = Array.from(source.matchAll(pattern), (match) => match[1] ?? match[2]);
+  const matches = Array.from(
+    source.matchAll(pattern),
+    (match) => match[1] ?? match[2],
+  );
   // Reject both missing declarations and mixed development/production variants.
-  return matches.length > 0 && matches.every((value) => value === EXPECTED_PACKAGE);
+  return (
+    matches.length > 0 && matches.every((value) => value === EXPECTED_PACKAGE)
+  );
 }
 
 function hasCorrectIosBundleIds(source) {
   const matches = Array.from(
-    source.matchAll(/\bPRODUCT_BUNDLE_IDENTIFIER\s*=\s*(?:"([^"]+)"|([^;]+))\s*;/g),
+    source.matchAll(
+      /\bPRODUCT_BUNDLE_IDENTIFIER\s*=\s*(?:"([^"]+)"|([^;]+))\s*;/g,
+    ),
     (match) => (match[1] ?? match[2]).trim(),
   );
-  return matches.length > 0 && matches.every((value) => value === EXPECTED_PACKAGE);
+  return (
+    matches.length > 0 && matches.every((value) => value === EXPECTED_PACKAGE)
+  );
 }
 
 function hasAndroidDeepLink(source) {
-  const intentFilters = source.match(/<intent-filter\b[^>]*>[\s\S]*?<\/intent-filter>/g) ?? [];
-  return intentFilters.some(
-    (filter) =>
-      /android\.intent\.action\.VIEW/.test(filter) &&
-      /android\.intent\.category\.BROWSABLE/.test(filter) &&
-      /<data\b[^>]*\bandroid:scheme\s*=\s*["']eazicart["'][^>]*\/?>/.test(filter),
+  // Android resolves external app links only from an exported activity with
+  // matching VIEW, DEFAULT, BROWSABLE and scheme entries in one intent filter.
+  // Require Expo's MainActivity; a matching filter elsewhere is insufficient.
+  const activities = source.matchAll(
+    /<activity\b([^>]*)>([\s\S]*?)<\/activity>/g,
   );
+  for (const [, attributes, body] of activities) {
+    if (!/\bandroid:name\s*=\s*["']\.MainActivity["']/.test(attributes))
+      continue;
+    if (!/\bandroid:exported\s*=\s*["']true["']/.test(attributes)) continue;
+    const filters =
+      body.match(/<intent-filter\b[^>]*>[\s\S]*?<\/intent-filter>/g) ?? [];
+    if (
+      filters.some(
+        (filter) =>
+          /<action\b[^>]*\bandroid:name\s*=\s*["']android\.intent\.action\.VIEW["'][^>]*\/?>/.test(
+            filter,
+          ) &&
+          /<category\b[^>]*\bandroid:name\s*=\s*["']android\.intent\.category\.DEFAULT["'][^>]*\/?>/.test(
+            filter,
+          ) &&
+          /<category\b[^>]*\bandroid:name\s*=\s*["']android\.intent\.category\.BROWSABLE["'][^>]*\/?>/.test(
+            filter,
+          ) &&
+          /<data\b[^>]*\bandroid:scheme\s*=\s*["']eazicart["'][^>]*\/?>/.test(
+            filter,
+          ),
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function hasIosDeepLink(source) {
@@ -93,9 +126,13 @@ export function verifyNativePrebuild(files, platform = "all") {
       errors.push("Generated iOS bundle ID mismatch.");
     const plist = removeXmlComments(files.iosPlist);
     if (
-      !/<key>\s*CFBundleIdentifier\s*<\/key>\s*<string>\s*(?:\$\(PRODUCT_BUNDLE_IDENTIFIER\)|com\.eazicart\.mobile\.dev)\s*<\/string>/.test(plist)
+      !/<key>\s*CFBundleIdentifier\s*<\/key>\s*<string>\s*(?:\$\(PRODUCT_BUNDLE_IDENTIFIER\)|com\.eazicart\.mobile\.dev)\s*<\/string>/.test(
+        plist,
+      )
     )
-      errors.push("Generated iOS Info.plist bundle identifier missing or invalid.");
+      errors.push(
+        "Generated iOS Info.plist bundle identifier missing or invalid.",
+      );
     if (!hasIosDeepLink(plist))
       errors.push("Generated iOS deep-link URL scheme missing.");
   }
@@ -130,7 +167,11 @@ if (
       result.errors.forEach((error) => console.error("REFUSED: " + error));
       process.exitCode = 23;
     } else {
-      console.log("PASS: generated " + platform + " development identifiers and deep links verified.");
+      console.log(
+        "PASS: generated " +
+          platform +
+          " development identifiers and deep links verified.",
+      );
     }
   } catch (error) {
     console.error(
