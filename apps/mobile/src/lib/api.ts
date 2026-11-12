@@ -104,58 +104,62 @@ export async function request<T>(
   const cancel = () => controller.abort();
   if (signal?.aborted) controller.abort();
   else signal?.addEventListener("abort", cancel, { once: true });
-  let response: Response;
   try {
-    response = await fetch(`${baseUrl}${path}`, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal,
-    });
-  } catch (error) {
-    if (signal?.aborted) throw error;
-    if (controller.signal.aborted)
-      throw new ApiError(408, "TIMEOUT", "The request timed out. Try again.");
-    throw new ApiError(
-      0,
-      "NETWORK_ERROR",
-      "Cannot reach EaziCart. Check your internet connection.",
-    );
+    let response: Response;
+    try {
+      response = await fetch(`${baseUrl}${path}`, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      ensureSameSession();
+      if (signal?.aborted) throw error;
+      if (controller.signal.aborted)
+        throw new ApiError(408, "TIMEOUT", "The request timed out. Try again.");
+      throw new ApiError(
+        0,
+        "NETWORK_ERROR",
+        "Cannot reach EaziCart. Check your internet connection.",
+      );
+    }
+    ensureSameSession();
+    if (
+      response.status === 401 &&
+      retryAuth &&
+      requestGeneration !== null &&
+      refreshHandler
+    ) {
+      const refreshed = await refreshHandler();
+      // Sign-out or account switching during a pending refresh must never
+      // replay the old request with a different account's bearer token.
+      ensureSameSession();
+      if (refreshed) return request<T>(path, { ...options, retryAuth: false });
+    }
+    if (!response.ok) {
+      let error: { error?: { code?: string; message?: string } } = {};
+      try {
+        error = (await response.json()) as typeof error;
+      } catch {
+        /* Non-JSON response */
+      }
+      ensureSameSession();
+      throw new ApiError(
+        response.status,
+        error.error?.code ?? "REQUEST_FAILED",
+        error.error?.message ?? "Request failed",
+      );
+    }
+    if (response.status === 204) return undefined as T;
+    const data = (await response.json()) as T;
+    ensureSameSession();
+    return data;
   } finally {
+    // Keep cancellation active through JSON body parsing and auth retry.
     clearTimeout(timeout);
     signal?.removeEventListener("abort", cancel);
   }
-  ensureSameSession();
-  if (
-    response.status === 401 &&
-    retryAuth &&
-    requestGeneration !== null &&
-    refreshHandler
-  ) {
-    const refreshed = await refreshHandler();
-    // Sign-out or account switching during a pending refresh must never
-    // replay the old request with a different account's bearer token.
-    ensureSameSession();
-    if (refreshed) return request<T>(path, { ...options, retryAuth: false });
-  }
-  if (!response.ok) {
-    let error: { error?: { code?: string; message?: string } } = {};
-    try {
-      error = (await response.json()) as typeof error;
-    } catch {
-      /* Non-JSON response */
-    }
-    ensureSameSession();
-    throw new ApiError(
-      response.status,
-      error.error?.code ?? "REQUEST_FAILED",
-      error.error?.message ?? "Request failed",
-    );
-  }
-  if (response.status === 204) return undefined as T;
-  const data = (await response.json()) as T;
-  ensureSameSession();
-  return data;
 }
 
 const qs = (params: Record<string, string | number | undefined>) => {

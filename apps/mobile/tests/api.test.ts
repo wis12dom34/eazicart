@@ -3,6 +3,7 @@ import { afterEach, test } from "node:test";
 import {
   api,
   ApiError,
+  request,
   setAccessToken,
   setRefreshHandler,
 } from "../src/lib/api";
@@ -213,5 +214,74 @@ test("explicit new account token invalidates previous request without a null tra
   await assert.rejects(
     pending,
     (e: unknown) => e instanceof ApiError && e.code === "SESSION_CHANGED",
+  );
+});
+
+test("external abort remains connected until a slow JSON body stops streaming", async () => {
+  const caller = new AbortController();
+  setAccessToken("account-a");
+  let bodyController!: ReadableStreamDefaultController<Uint8Array>;
+  let internalSignal!: AbortSignal;
+  let internalAbortObserved = false;
+  globalThis.fetch = async (_input, init) => {
+    internalSignal = init?.signal as AbortSignal;
+    return new Response(
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          bodyController = controller;
+          controller.enqueue(new TextEncoder().encode('{"data":'));
+          internalSignal.addEventListener(
+            "abort",
+            () => {
+              internalAbortObserved = true;
+              controller.error(
+                new DOMException("Stream aborted", "AbortError"),
+              );
+            },
+            { once: true },
+          );
+        },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+  const pending = request<unknown>("/cart", {
+    auth: "required",
+    signal: caller.signal,
+  });
+  // Give the fetch continuation time to start reading the response body.
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  caller.abort();
+  const outcome = await Promise.race([
+    pending.then(
+      () => "resolved",
+      (error: unknown) =>
+        error instanceof Error ? error.name : "unknown-error",
+    ),
+    new Promise<string>((resolve) => setTimeout(() => resolve("hung"), 180)),
+  ]);
+  if (outcome === "hung") {
+    // Ensure an unpatched implementation does not leave a hanging stream.
+    bodyController.error(new Error("Test cleanup: unread body"));
+  }
+  assert.equal(internalAbortObserved, true);
+  assert.equal(outcome, "AbortError");
+});
+
+test("a stale network error after logout reports a changed session", async () => {
+  let rejectFetch!: (reason?: unknown) => void;
+  setAccessToken("account-a");
+  globalThis.fetch = () =>
+    new Promise<Response>((_resolve, reject) => {
+      rejectFetch = reject;
+    });
+  const pending = request<unknown>("/cart", { auth: "required" });
+  setAccessToken(null);
+  setAccessToken("account-b");
+  rejectFetch(new TypeError("Network offline"));
+  await assert.rejects(
+    pending,
+    (error: unknown) =>
+      error instanceof ApiError && error.code === "SESSION_CHANGED",
   );
 });
