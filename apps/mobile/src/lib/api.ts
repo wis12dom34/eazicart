@@ -42,8 +42,15 @@ export class ApiError extends Error {
 }
 
 let accessToken: string | null = null;
+// Changes whenever a user session is replaced or cleared. Token rotation via
+// refresh deliberately preserves this generation so the originating 401 may retry.
+let sessionGeneration = 0;
 let refreshHandler: (() => Promise<boolean>) | null = null;
-export function setAccessToken(value: string | null) {
+export function setAccessToken(
+  value: string | null,
+  options: { refresh?: boolean } = {},
+) {
+  if (!options.refresh) sessionGeneration += 1;
   accessToken = value;
 }
 export function setRefreshHandler(handler: (() => Promise<boolean>) | null) {
@@ -75,6 +82,19 @@ export async function request<T>(
   if (auth === "required" && !accessToken)
     throw new ApiError(401, "LOGIN_REQUIRED", "Sign in to continue");
   const baseUrl = resolveMobileApiBaseUrl(configuredUrl);
+  // Only requests that actually sent a bearer token belong to an account.
+  // Anonymous optional requests must never trigger an auth refresh.
+  const requestGeneration =
+    auth !== "none" && accessToken ? sessionGeneration : null;
+  const ensureSameSession = () => {
+    if (requestGeneration !== null && requestGeneration !== sessionGeneration) {
+      throw new ApiError(
+        401,
+        "SESSION_CHANGED",
+        "Session changed. Please try again.",
+      );
+    }
+  };
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (auth !== "none" && accessToken)
@@ -105,14 +125,18 @@ export async function request<T>(
     clearTimeout(timeout);
     signal?.removeEventListener("abort", cancel);
   }
+  ensureSameSession();
   if (
     response.status === 401 &&
     retryAuth &&
-    auth !== "none" &&
+    requestGeneration !== null &&
     refreshHandler
   ) {
-    if (await refreshHandler())
-      return request<T>(path, { ...options, retryAuth: false });
+    const refreshed = await refreshHandler();
+    // Sign-out or account switching during a pending refresh must never
+    // replay the old request with a different account's bearer token.
+    ensureSameSession();
+    if (refreshed) return request<T>(path, { ...options, retryAuth: false });
   }
   if (!response.ok) {
     let error: { error?: { code?: string; message?: string } } = {};
@@ -121,15 +145,17 @@ export async function request<T>(
     } catch {
       /* Non-JSON response */
     }
+    ensureSameSession();
     throw new ApiError(
       response.status,
       error.error?.code ?? "REQUEST_FAILED",
       error.error?.message ?? "Request failed",
     );
   }
-  return response.status === 204
-    ? (undefined as T)
-    : (response.json() as Promise<T>);
+  if (response.status === 204) return undefined as T;
+  const data = (await response.json()) as T;
+  ensureSameSession();
+  return data;
 }
 
 const qs = (params: Record<string, string | number | undefined>) => {

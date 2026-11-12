@@ -29,10 +29,12 @@ let refreshInFlight: { epoch: number; promise: Promise<boolean> } | null = null;
 async function persistSession(
   response: AuthResponse,
   epoch: number,
+  isRefresh = false,
 ): Promise<boolean> {
   return gate.writeIfCurrent(epoch, async () => {
     await SecureStore.setItemAsync(STORAGE_KEY, response.tokens.refreshToken);
-    if (gate.isCurrent(epoch)) setAccessToken(response.tokens.accessToken);
+    if (gate.isCurrent(epoch))
+      setAccessToken(response.tokens.accessToken, { refresh: isRefresh });
   });
 }
 
@@ -58,7 +60,9 @@ function refresh(onUnauthorized: () => void): Promise<boolean> {
     if (!token || !gate.isCurrent(epoch)) return false;
     try {
       const session = await api.session(token);
-      return gate.isCurrent(epoch) && (await persistSession(session, epoch));
+      return (
+        gate.isCurrent(epoch) && (await persistSession(session, epoch, true))
+      );
     } catch (e) {
       if (e instanceof ApiError && e.status === 401 && gate.isCurrent(epoch)) {
         const clearing = invalidateAndClear(epoch);

@@ -75,7 +75,7 @@ test("refreshes the bearer token once and retries a protected request", async ()
   const headers: string[] = [];
   setAccessToken("expired");
   setRefreshHandler(async () => {
-    setAccessToken("renewed");
+    setAccessToken("renewed", { refresh: true });
     return true;
   });
   globalThis.fetch = async (_input, init) => {
@@ -107,5 +107,111 @@ test("displays upstream validation errors without leaking secret data", async ()
       e instanceof ApiError &&
       e.code === "INVALID_CREDENTIALS" &&
       e.message === "Incorrect credentials",
+  );
+});
+
+test("a late authenticated success cannot deliver previous account data", async () => {
+  let resolveFetch!: (value: Response) => void;
+  setAccessToken("account-a");
+  globalThis.fetch = () =>
+    new Promise<Response>((resolve) => {
+      resolveFetch = resolve;
+    });
+  const pending = api.cart();
+  setAccessToken(null);
+  setAccessToken("account-b");
+  resolveFetch(json({ data: { id: "private-account-a" } }));
+  await assert.rejects(
+    pending,
+    (e: unknown) => e instanceof ApiError && e.code === "SESSION_CHANGED",
+  );
+});
+
+test("a late unauthorized response cannot refresh or retry under a different account", async () => {
+  let resolveFetch!: (value: Response) => void;
+  let refreshed = 0;
+  let fetched = 0;
+  setAccessToken("account-a");
+  setRefreshHandler(async () => {
+    refreshed += 1;
+    setAccessToken("unrelated-token", { refresh: true });
+    return true;
+  });
+  globalThis.fetch = () => {
+    fetched += 1;
+    return new Promise<Response>((resolve) => {
+      resolveFetch = resolve;
+    });
+  };
+  const pending = api.cart();
+  setAccessToken(null);
+  setAccessToken("account-b");
+  resolveFetch(json({ error: { code: "UNAUTHORIZED" } }, 401));
+  await assert.rejects(
+    pending,
+    (e: unknown) => e instanceof ApiError && e.code === "SESSION_CHANGED",
+  );
+  assert.equal(refreshed, 0);
+  assert.equal(fetched, 1);
+});
+
+test("sign-out while refresh is pending prevents a 401 replay", async () => {
+  let releaseRefresh!: () => void;
+  let refreshStarted!: () => void;
+  const started = new Promise<void>((resolve) => {
+    refreshStarted = resolve;
+  });
+  const holdRefresh = new Promise<boolean>((resolve) => {
+    releaseRefresh = () => resolve(true);
+  });
+  setAccessToken("account-a");
+  setRefreshHandler(async () => {
+    refreshStarted();
+    return holdRefresh;
+  });
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests += 1;
+    return json({ error: { code: "UNAUTHORIZED" } }, 401);
+  };
+  const pending = api.cart();
+  await started;
+  setAccessToken(null);
+  setAccessToken("account-b");
+  releaseRefresh();
+  await assert.rejects(
+    pending,
+    (e: unknown) => e instanceof ApiError && e.code === "SESSION_CHANGED",
+  );
+  assert.equal(requests, 1);
+});
+
+test("optional anonymous 401 never invokes another account's refresh handler", async () => {
+  let refreshes = 0;
+  setRefreshHandler(async () => {
+    refreshes += 1;
+    return true;
+  });
+  globalThis.fetch = async () => json({ error: { code: "UNAUTHORIZED" } }, 401);
+  await assert.rejects(
+    api.feed(),
+    (e: unknown) => e instanceof ApiError && e.status === 401,
+  );
+  assert.equal(refreshes, 0);
+});
+
+test("explicit new account token invalidates previous request without a null transition", async () => {
+  let resolveFetch!: (value: Response) => void;
+  setAccessToken("account-a");
+  globalThis.fetch = () =>
+    new Promise<Response>((resolve) => {
+      resolveFetch = resolve;
+    });
+  const pending = api.cart();
+  setAccessToken("account-b");
+  resolveFetch(json({ data: { id: "private-account-a" } }));
+  await assert.rejects(
+    pending,
+    (e: unknown) => e instanceof ApiError && e.code === "SESSION_CHANGED",
   );
 });
