@@ -16,6 +16,7 @@ const valid = Object.freeze({
   freeRam: 12 * GIB,
   xcodeVersion: "Xcode 26.4\nBuild version 17F42",
   simulatorSdkReady: true,
+  cocoaPodsReady: true,
   githubActions: true,
   commit: "a".repeat(40),
   approvedCommit: "a".repeat(40),
@@ -117,4 +118,45 @@ test("prepared simulator workflow is manual-only with pinned source, no signing,
     workflow,
     /actions\/upload-artifact|eas build|app-store|fastlane/,
   );
+});
+
+test("rejects runner without CocoaPods required for Expo iOS native dependencies", () => {
+  assert.equal(
+    checkIosRunnerReadiness({ ...valid, cocoaPodsReady: false }).ready,
+    false,
+  );
+  assert.equal(
+    checkIosRunnerReadiness({ ...valid, cocoaPodsReady: undefined }).ready,
+    false,
+  );
+});
+
+test("workflow installs CocoaPods after Expo prebuild and compiles generated workspace", () => {
+  const file = fileURLToPath(
+    new URL(
+      "../../../.github/workflows/ios-simulator-manual.yml",
+      import.meta.url,
+    ),
+  );
+  const workflow = readFileSync(file, "utf8");
+  const prebuild = workflow.indexOf(
+    "expo prebuild --platform ios --no-install",
+  );
+  const podInstall = workflow.indexOf("pod install --silent");
+  const nativeVerify = workflow.indexOf("verify:prebuild -- ios");
+  const build = workflow.indexOf("xcodebuild");
+  assert.ok(prebuild > 0);
+  assert.ok(nativeVerify > prebuild);
+  assert.ok(
+    podInstall > nativeVerify,
+    "Pod installation must follow generated-project verification",
+  );
+  assert.ok(build > podInstall, "Xcode must build after CocoaPods setup");
+  assert.match(workflow, /-workspace apps\/mobile\/ios\/EaziCart\.xcworkspace/);
+  assert.doesNotMatch(
+    workflow,
+    /-project apps\/mobile\/ios\/EaziCart\.xcodeproj/,
+  );
+  assert.match(workflow, /CODE_SIGNING_ALLOWED=NO/);
+  assert.doesNotMatch(workflow, /actions\/upload-artifact|eas build|fastlane/);
 });

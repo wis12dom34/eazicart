@@ -41,6 +41,8 @@ export function checkIosRunnerReadiness(snapshot) {
     errors.push("Expo SDK 58 requires Xcode 26.4 or newer.");
   if (snapshot.simulatorSdkReady !== true)
     errors.push("An iOS Simulator SDK and xcrun simulator tools are required.");
+  if (snapshot.cocoaPodsReady !== true)
+    errors.push("CocoaPods must be installed on the dedicated macOS runner.");
   if (snapshot.githubActions) {
     if (
       !/^[0-9a-f]{40}$/i.test(snapshot.commit ?? "") ||
@@ -94,6 +96,7 @@ export function inspectIosRunnerEnvironment(env = process.env) {
     freeRam: os.freemem(),
     xcodeVersion: run("xcodebuild", ["-version"]),
     simulatorSdkReady,
+    cocoaPodsReady: Boolean(run("pod", ["--version"])),
     githubActions: env.GITHUB_ACTIONS === "true",
     commit: env.GITHUB_SHA,
     approvedCommit: env.EAZICART_IOS_QA_APPROVED_SHA,

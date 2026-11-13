@@ -42,4 +42,6 @@ For manual activation **after explicit approval**, restrict the runner group to 
 
 Before `pnpm install`, the workflow checks the isolated runner, pinned SHA, safe internal EAS profile, API allowlist, and synthetic staging attestation. It then generates the iOS development project and calls Xcode with `CODE_SIGNING_ALLOWED=NO` for the generic iOS Simulator. No IPA, device build, distribution, simulator launch or App Store action is prepared. Run the read-only tests with `pnpm --filter @eazicart/mobile test:ios-runner`.
 
+The workflow uses Expo prebuild in no-install mode, then runs CocoaPods installation on the approved Mac and compiles the resulting \`EaziCart.xcworkspace\` rather than the raw Xcode project. The dedicated runner must therefore have the \`pod\` CLI; missing CocoaPods refuses the build before dependencies. The CocoaPods step was added after a regression test demonstrated the missing native dependency integration.
+
 The signing configuration and real iPhone development build remain separate work requiring an approved Apple Developer team and an isolated device-testing environment.

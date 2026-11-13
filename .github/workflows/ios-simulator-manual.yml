@@ -105,10 +105,16 @@ jobs:
           pnpm --filter @eazicart/mobile verify:prebuild -- ios
           pnpm --filter @eazicart/mobile test:prebuild
 
+      - name: Install native iOS CocoaPods in generated project
+        run: |
+          cd apps/mobile/ios
+          pod install --silent
+          test -f EaziCart.xcworkspace/contents.xcworkspacedata
+
       - name: Compile unsigned simulator app without installing or uploading
         run: |
           xcodebuild \
-            -project apps/mobile/ios/EaziCart.xcodeproj \
+            -workspace apps/mobile/ios/EaziCart.xcworkspace \
             -scheme EaziCart \
             -configuration Debug \
             -sdk iphonesimulator \
