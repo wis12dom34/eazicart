@@ -22,6 +22,10 @@ import {
 import { ScreenState } from "../../components/ScreenState";
 import { api } from "../../lib/api";
 import { createChatSendCoordinator } from "../../lib/chat-send-coordinator";
+import {
+  createChatReadCoordinator,
+  shouldShowConversationLoadError,
+} from "../../lib/chat-read-coordinator";
 import type { ChatMessage } from "../../lib/types";
 import { useAuth } from "../../providers/auth";
 import { colors } from "../../theme";
@@ -37,7 +41,7 @@ export default function ConversationScreen() {
   const sendCoordinator = useRef(createChatSendCoordinator());
   const currentScope = useRef({ accountId: user?.id, conversationId: id });
   currentScope.current = { accountId: user?.id, conversationId: id };
-  const lastMarkedRead = useRef<string | null>(null);
+  const readCoordinator = useRef(createChatReadCoordinator());
   const [shareProductId, setShareProductId] = useState<string | null>(null);
   useEffect(() => {
     if (productId) setShareProductId(productId);
@@ -66,12 +70,6 @@ export default function ConversationScreen() {
           conversation.seller.name)
         : conversation.buyer.name
       : "Conversation";
-  const read = useMutation({
-    mutationFn: () => api.conversationRead(id),
-    onSuccess: () => {
-      void cache.invalidateQueries({ queryKey: ["conversations", user?.id] });
-    },
-  });
   const blockedByMe = Boolean(
     user &&
     conversation &&
@@ -95,17 +93,32 @@ export default function ConversationScreen() {
     },
   });
   const newestMessageId = messages.data?.pages[0]?.data[0]?.id;
+  const accountId = user?.id;
+  const conversationId = conversation?.id;
   useEffect(() => {
-    if (!user || !conversation || !newestMessageId || read.isPending) return;
-    if (lastMarkedRead.current === newestMessageId) return;
-    lastMarkedRead.current = newestMessageId;
-    read.mutate(undefined, {
-      onError: () => {
-        lastMarkedRead.current = null;
-      },
-    });
-    // Stable message ID avoids redundant acknowledgements.
-  }, [user?.id, conversation?.id, newestMessageId, read.mutate]);
+    if (!accountId || !conversationId || !newestMessageId) return;
+    void readCoordinator.current
+      .acknowledge({
+        accountId,
+        conversationId,
+        newestMessageId,
+        currentScope: () => currentScope.current,
+        send: (chatId) => api.conversationRead(chatId),
+        refresh: (id) =>
+          cache.invalidateQueries({ queryKey: ["conversations", id] }),
+      })
+      .catch(() => {
+        // Retry on the next successful message poll without a busy loop.
+      });
+    // dataUpdatedAt changes after each poll, permitting delayed retry
+    // without repeating an already acknowledged message.
+  }, [
+    accountId,
+    conversationId,
+    newestMessageId,
+    messages.dataUpdatedAt,
+    cache,
+  ]);
   const send = useMutation({
     mutationFn: (input: { body: string; key: string; productId?: string }) =>
       api.sendChatMessage(id, input.body, input.key, input.productId),
@@ -212,7 +225,11 @@ export default function ConversationScreen() {
           </Pressable>
         ) : null}
       </View>
-      {messages.isError || members.isError ? (
+      {shouldShowConversationLoadError({
+        messageError: messages.isError,
+        hasMessageData: Boolean(messages.data?.pages.length),
+        membershipError: members.isError,
+      }) ? (
         <ScreenState
           message="Unable to open this conversation."
           retry={() => {
@@ -234,12 +251,30 @@ export default function ConversationScreen() {
             keyboardShouldPersistTaps="handled"
             onEndReachedThreshold={0.5}
             onEndReached={() => {
-              if (messages.hasNextPage && !messages.isFetchingNextPage)
+              if (
+                messages.hasNextPage &&
+                !messages.isFetchingNextPage &&
+                !messages.isFetchNextPageError
+              )
                 void messages.fetchNextPage();
             }}
             ListFooterComponent={
               messages.isFetchingNextPage ? (
                 <ScreenState loading message="Loading older messages…" />
+              ) : messages.isFetchNextPageError ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Retry loading older messages"
+                  onPress={() => {
+                    if (!messages.isFetchingNextPage)
+                      void messages.fetchNextPage();
+                  }}
+                  style={styles.olderRetry}
+                >
+                  <Text style={styles.olderRetryText}>
+                    Couldn't load older messages. Tap to retry.
+                  </Text>
+                </Pressable>
               ) : undefined
             }
             renderItem={({ item }) => {
@@ -400,6 +435,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   list: { padding: 14, gap: 10, flexGrow: 1, justifyContent: "flex-end" },
+  olderRetry: {
+    padding: 12,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  olderRetryText: { color: colors.orange, fontSize: 13, fontWeight: "700" },
   bubble: { maxWidth: "84%", padding: 12, borderRadius: 18 },
   mine: { alignSelf: "flex-end", backgroundColor: colors.orange },
   theirs: { alignSelf: "flex-start", backgroundColor: colors.orangePale },
