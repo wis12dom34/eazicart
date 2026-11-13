@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { ScreenState } from "../components/ScreenState";
 import { api } from "../lib/api";
+import { createNotificationActionCoordinator } from "../lib/notification-action-coordinator";
 import {
   filterNotifications,
   notificationEmptyTitle,
@@ -27,6 +28,9 @@ export default function NotificationsScreen() {
   const { user, loading } = useAuth();
   const cache = useQueryClient();
   const [filter, setFilter] = useState<NotificationFilter>("ALL");
+  const actions = useRef(createNotificationActionCoordinator());
+  const currentAccountId = useRef(user?.id);
+  currentAccountId.current = user?.id;
   const key = ["notifications", user?.id];
   const list = useQuery({
     queryKey: key,
@@ -34,19 +38,34 @@ export default function NotificationsScreen() {
     enabled: Boolean(user) && !loading,
     staleTime: 30_000,
   });
-  const read = useMutation({
-    mutationFn: api.notificationRead,
-    onSuccess: async () => {
-      await cache.invalidateQueries({ queryKey: key });
-    },
-  });
-  const readAll = useMutation({
-    mutationFn: api.notificationsReadAll,
-    onSuccess: async () => {
-      await cache.invalidateQueries({ queryKey: key });
-    },
-  });
-  const busy = read.isPending || readAll.isPending;
+  const read = useMutation({ mutationFn: api.notificationRead });
+  const readAll = useMutation({ mutationFn: api.notificationsReadAll });
+  const markRead = (id: string) => {
+    // useMutation pending state alone cannot prevent a rapid duplicate tap.
+    void actions.current
+      .run(
+        user?.id,
+        () => currentAccountId.current,
+        () => read.mutateAsync(id),
+        () => cache.invalidateQueries({ queryKey: key }),
+      )
+      .catch(() => {
+        // The mutation hook exposes the error in the UI below.
+      });
+  };
+  const markAllRead = () => {
+    void actions.current
+      .run(
+        user?.id,
+        () => currentAccountId.current,
+        () => readAll.mutateAsync(),
+        () => cache.invalidateQueries({ queryKey: key }),
+      )
+      .catch(() => {
+        // The mutation hook exposes the error in the UI below.
+      });
+  };
+  const busy = read.isPending || readAll.isPending || actions.current.isBusy;
   const visible = filterNotifications(list.data?.data ?? [], filter);
   const unreadCount = list.data?.meta.unreadCount ?? 0;
   const actionError = read.error ?? readAll.error;
@@ -144,7 +163,7 @@ export default function NotificationsScreen() {
                   unread ? `Mark ${item.title} as read` : `${item.title}, read`
                 }
                 disabled={!unread || busy}
-                onPress={() => read.mutate(item.id)}
+                onPress={() => markRead(item.id)}
                 style={[styles.row, unread && styles.unreadRow]}
               >
                 <View style={styles.iconWrap}>
@@ -179,7 +198,7 @@ export default function NotificationsScreen() {
                 accessibilityRole="button"
                 disabled={busy}
                 style={[styles.readAll, busy && styles.disabled]}
-                onPress={() => readAll.mutate()}
+                onPress={markAllRead}
               >
                 <Text style={styles.readAllText}>Mark all as read</Text>
               </Pressable>
