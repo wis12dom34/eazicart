@@ -7,11 +7,13 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { api, ApiError, setAccessToken, setRefreshHandler } from "../lib/api";
 import type { AuthResponse, User } from "../lib/types";
 import { SessionWriteGate } from "../lib/session-write-gate";
+import { createSessionRestoreCoordinator } from "../lib/session-restore-coordinator";
 
 const STORAGE_KEY = "eazicart_mobile_refresh_v1";
 type AuthState = {
@@ -82,14 +84,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const restoration = useRef(createSessionRestoreCoordinator());
 
-  const retrySession = useCallback(async () => {
+  const retrySession = useCallback(() => {
     const epoch = gate.capture();
-    setLoading(true);
-    try {
-      const token = await SecureStore.getItemAsync(STORAGE_KEY);
-      if (!gate.isCurrent(epoch)) return;
-      if (token) {
+    return restoration.current.run(
+      epoch,
+      (candidate) => gate.isCurrent(candidate),
+      async () => {
+        const token = await SecureStore.getItemAsync(STORAGE_KEY);
+        if (!gate.isCurrent(epoch)) return;
+        if (!token) {
+          setUser(null);
+          return;
+        }
         try {
           const restored = await api.session(token);
           if (!gate.isCurrent(epoch)) return;
@@ -97,20 +105,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!saved || !gate.isCurrent(epoch)) return;
           await clearAccountCache(queryClient);
           if (gate.isCurrent(epoch)) setUser(restored.user);
-        } catch (e) {
+        } catch (error) {
           if (!gate.isCurrent(epoch)) return;
-          if (e instanceof ApiError && e.status === 401) {
-            await invalidateAndClear(epoch);
+          if (error instanceof ApiError && error.status === 401) {
+            // Expired refresh tokens are a verified sign-out, unlike a
+            // temporary network outage. Track the new cleanup epoch so an
+            // older cleanup cannot clear an account that just signed in.
+            const clearing = invalidateAndClear(epoch);
+            const clearingEpoch = gate.capture();
+            await clearing;
+            if (!gate.isCurrent(clearingEpoch)) return;
             await clearAccountCache(queryClient);
+            if (gate.isCurrent(clearingEpoch)) {
+              setUser(null);
+              setLoading(false);
+            }
+            return;
           }
-          setUser(null);
+          // A transient error is not evidence of an expired session.
+          // Preserve SecureStore's refresh token for an explicit retry.
+          if (gate.isCurrent(epoch)) setUser(null);
         }
-      } else {
-        setUser(null);
-      }
-    } finally {
-      setLoading(false);
-    }
+      },
+      () => setLoading(true),
+      () => setLoading(false),
+    );
   }, [queryClient]);
 
   useEffect(() => {
@@ -120,7 +139,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void clearAccountCache(queryClient).catch(() => {});
       }),
     );
-    void retrySession().catch(() => setLoading(false));
+    // The coordinator settles loading only for the active auth epoch.
+    void retrySession().catch(() => {});
     return () => setRefreshHandler(null);
   }, [queryClient, retrySession]);
 
@@ -145,6 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Session changed during sign in. Please try again.");
       }
       setUser(result.user);
+      setLoading(false);
     },
     [queryClient],
   );
@@ -153,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Invalidate before any await so a late refresh cannot restore a signed-out account.
     const clearing = invalidateAndClear();
     setUser(null);
+    setLoading(false);
     await clearAccountCache(queryClient);
     const token = await clearing;
     if (token) await api.logout(token).catch(() => {});
