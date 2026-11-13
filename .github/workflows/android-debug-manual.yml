@@ -87,6 +87,12 @@ jobs:
       - name: Test staging API preflight
         run: node --test apps/mobile/scripts/android-qa-api-preflight.test.mjs
 
+      - name: Validate internal EAS development profile before dependencies
+        run: node apps/mobile/scripts/native-build-profile-verify.mjs development
+
+      - name: Test native EAS build profile safety
+        run: node --test apps/mobile/scripts/native-build-profile-verify.test.mjs
+
       - name: Test synthetic staging attestation contract
         run: node --test apps/mobile/scripts/android-staging-attestation.test.mjs
 
