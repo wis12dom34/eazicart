@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { ScreenState } from "../components/ScreenState";
 import { api } from "../lib/api";
+import { createExclusiveMutationGate } from "../lib/exclusive-mutation-gate";
 import type { Address, AddressInput } from "../lib/types";
 import { useAuth } from "../providers/auth";
 import { colors } from "../theme";
@@ -35,6 +36,7 @@ export default function AddressesScreen() {
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
+  const mutationGate = useRef(createExclusiveMutationGate());
   const [form, setForm] = useState<AddressInput>(blank);
   const queryKey = ["addresses", user?.id];
   const addresses = useQuery({
@@ -43,7 +45,7 @@ export default function AddressesScreen() {
     enabled: Boolean(user) && !loading,
   });
   const save = async () => {
-    if (!user || saving) return;
+    if (!user || mutationGate.current.isBusy) return;
     const normalized = {
       ...form,
       line1: form.line1.trim(),
@@ -65,42 +67,47 @@ export default function AddressesScreen() {
       );
       return;
     }
-    setSaving(true);
-    try {
-      await api.createAddress(normalized);
-      void queryClient.invalidateQueries({ queryKey });
-      setAdding(false);
-      setForm(blank());
-    } catch (error) {
-      Alert.alert(
-        "Couldn't save address",
-        error instanceof Error ? error.message : "Try again.",
-      );
-    } finally {
-      setSaving(false);
-    }
+    await mutationGate.current.run(async () => {
+      setSaving(true);
+      try {
+        await api.createAddress(normalized);
+        void queryClient.invalidateQueries({ queryKey });
+        setAdding(false);
+        setForm(blank());
+      } catch (error) {
+        Alert.alert(
+          "Couldn't save address",
+          error instanceof Error ? error.message : "Try again.",
+        );
+      } finally {
+        setSaving(false);
+      }
+    });
   };
-  const remove = (address: Address) =>
+  const remove = (address: Address) => {
+    if (!user || mutationGate.current.isBusy) return;
     Alert.alert("Remove delivery address?", "This action cannot be undone.", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Remove",
         style: "destructive",
         onPress: () => {
-          void api
-            .deleteAddress(address.id)
-            .then(() => {
+          if (!user) return;
+          void mutationGate.current.run(async () => {
+            try {
+              await api.deleteAddress(address.id);
               void queryClient.invalidateQueries({ queryKey });
-            })
-            .catch((error: unknown) =>
+            } catch (error) {
               Alert.alert(
                 "Couldn't remove address",
                 error instanceof Error ? error.message : "Try again.",
-              ),
-            );
+              );
+            }
+          });
         },
       },
     ]);
+  };
   if (loading) return <ScreenState loading message="Loading your account…" />;
   if (!user)
     return (
@@ -169,6 +176,7 @@ export default function AddressesScreen() {
           <Pressable
             accessibilityRole="button"
             onPress={() => setAdding(false)}
+            disabled={saving}
             style={styles.cancel}
           >
             <Text style={styles.cancelText}>Cancel</Text>
@@ -240,6 +248,7 @@ export default function AddressesScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Remove delivery address"
                 onPress={() => remove(item)}
+                disabled={saving}
                 style={styles.remove}
               >
                 <Ionicons name="trash-outline" size={18} color={colors.red} />

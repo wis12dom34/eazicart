@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +16,7 @@ import {
 import { ScreenState } from "../../components/ScreenState";
 import { api } from "../../lib/api";
 import { canCheckoutReview, formatNaira } from "../../lib/commerce";
+import { createExclusiveMutationGate } from "../../lib/exclusive-mutation-gate";
 import type { CartItem } from "../../lib/types";
 import { useAuth } from "../../providers/auth";
 import { colors } from "../../theme";
@@ -25,6 +26,8 @@ export default function CartScreen() {
   const cache = useQueryClient();
   const [busyItem, setBusyItem] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
+  // Acquire synchronously to prevent duplicate native taps before re-render.
+  const mutationGate = useRef(createExclusiveMutationGate());
   const queryKey = ["cart", user?.id];
   const cart = useQuery({
     queryKey,
@@ -34,46 +37,51 @@ export default function CartScreen() {
   const current = cart.data?.data;
 
   const updateQuantity = async (item: CartItem, quantity: number) => {
-    if (!user || busyItem) return;
-    setBusyItem(item.id);
-    try {
-      if (quantity < 1) await api.cartRemove(item.id);
-      else await api.cartUpdate(item.id, quantity);
-      void cache.invalidateQueries({ queryKey });
-    } catch (error) {
-      Alert.alert(
-        "Couldn't update cart",
-        error instanceof Error ? error.message : "Please try again.",
-      );
-      void cart.refetch();
-    } finally {
-      setBusyItem(null);
-    }
+    if (!user) return;
+    await mutationGate.current.run(async () => {
+      setBusyItem(item.id);
+      try {
+        if (quantity < 1) await api.cartRemove(item.id);
+        else await api.cartUpdate(item.id, quantity);
+        void cache.invalidateQueries({ queryKey });
+      } catch (error) {
+        Alert.alert(
+          "Couldn't update cart",
+          error instanceof Error ? error.message : "Please try again.",
+        );
+        void cart.refetch();
+      } finally {
+        setBusyItem(null);
+      }
+    });
   };
-  const clearCart = () =>
+  const clearCart = () => {
+    if (mutationGate.current.isBusy) return;
     Alert.alert("Clear cart?", "Remove all products from your cart?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Clear",
         style: "destructive",
         onPress: () => {
-          if (clearing || !user) return;
-          setClearing(true);
-          void api
-            .cartClear()
-            .then(() => {
+          if (!user) return;
+          void mutationGate.current.run(async () => {
+            setClearing(true);
+            try {
+              await api.cartClear();
               void cache.invalidateQueries({ queryKey });
-            })
-            .catch((error: unknown) =>
+            } catch (error) {
               Alert.alert(
                 "Couldn't clear cart",
                 error instanceof Error ? error.message : "Please try again",
-              ),
-            )
-            .finally(() => setClearing(false));
+              );
+            } finally {
+              setClearing(false);
+            }
+          });
         },
       },
     ]);
+  };
 
   if (loading) return <ScreenState loading message="Loading your account…" />;
   if (!user)
