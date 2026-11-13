@@ -21,6 +21,7 @@ import {
 } from "react-native";
 import { ScreenState } from "../../components/ScreenState";
 import { api } from "../../lib/api";
+import { createChatSendCoordinator } from "../../lib/chat-send-coordinator";
 import type { ChatMessage } from "../../lib/types";
 import { useAuth } from "../../providers/auth";
 import { colors } from "../../theme";
@@ -33,7 +34,9 @@ export default function ConversationScreen() {
   const { user, loading } = useAuth();
   const cache = useQueryClient();
   const [draft, setDraft] = useState("");
-  const [retryKey, setRetryKey] = useState<string | null>(null);
+  const sendCoordinator = useRef(createChatSendCoordinator());
+  const currentScope = useRef({ accountId: user?.id, conversationId: id });
+  currentScope.current = { accountId: user?.id, conversationId: id };
   const lastMarkedRead = useRef<string | null>(null);
   const [shareProductId, setShareProductId] = useState<string | null>(null);
   useEffect(() => {
@@ -106,32 +109,39 @@ export default function ConversationScreen() {
   const send = useMutation({
     mutationFn: (input: { body: string; key: string; productId?: string }) =>
       api.sendChatMessage(id, input.body, input.key, input.productId),
-    onSuccess: async (_result, sent) => {
-      // A request may complete after the user starts composing something else.
-      // Only clear fields that still match the successfully sent snapshot.
-      setDraft((current) => (current.trim() === sent.body ? "" : current));
-      setRetryKey((current) => (current === sent.key ? null : current));
-      setShareProductId((current) =>
-        current === (sent.productId ?? null) ? null : current,
-      );
-      await Promise.all([
-        cache.invalidateQueries({ queryKey: ["chat-messages", user?.id, id] }),
-        cache.invalidateQueries({ queryKey: ["conversations", user?.id] }),
-      ]);
-    },
   });
   const submit = () => {
-    if (isBlocked) return;
-    const body = draft.trim();
-    if ((!body && !shareProductId) || send.isPending || body.length > 4000)
-      return;
-    const key = retryKey ?? Crypto.randomUUID();
-    setRetryKey(key);
-    send.mutate({
-      body,
-      key,
-      ...(shareProductId ? { productId: shareProductId } : {}),
-    });
+    void sendCoordinator.current
+      .submit({
+        accountId: user?.id,
+        conversationId: id,
+        body: draft,
+        productId: shareProductId,
+        blocked: isBlocked,
+        currentScope: () => currentScope.current,
+        makeKey: () => Crypto.randomUUID(),
+        send: (payload) => send.mutateAsync(payload),
+        confirmed: (sent) => {
+          // Only clear fields still matching the acknowledged message.
+          setDraft((current) => (current.trim() === sent.body ? "" : current));
+          setShareProductId((current) =>
+            current === (sent.productId ?? null) ? null : current,
+          );
+          // Query updates are account/conversation-scoped, and secondary
+          // refresh failures must not cause a successfully sent message
+          // to be submitted again with a different idempotency key.
+          void cache.invalidateQueries({
+            queryKey: ["chat-messages", user?.id, id],
+          });
+          void cache.invalidateQueries({
+            queryKey: ["conversations", user?.id],
+          });
+        },
+      })
+      .catch(() => {
+        // Preserve the coordinator's exact-payload retry ID.
+        // React Query exposes the mutation error for visible retry feedback.
+      });
   };
   if (loading) return <ScreenState loading message="Loading conversation…" />;
   if (!user) {
@@ -299,7 +309,7 @@ export default function ConversationScreen() {
                 accessibilityLabel="Remove shared product"
                 onPress={() => {
                   setShareProductId(null);
-                  setRetryKey(null);
+                  send.reset();
                 }}
               >
                 <Text style={styles.shareRemove}>Remove</Text>
@@ -332,7 +342,6 @@ export default function ConversationScreen() {
               placeholderTextColor={colors.muted}
               onChangeText={(value) => {
                 setDraft(value);
-                setRetryKey(null);
                 send.reset();
               }}
               multiline
@@ -345,13 +354,15 @@ export default function ConversationScreen() {
               disabled={
                 isBlocked ||
                 (!draft.trim() && !shareProductId) ||
-                send.isPending
+                send.isPending ||
+                sendCoordinator.current.isBusy
               }
               style={[
                 styles.sendButton,
                 (isBlocked ||
                   (!draft.trim() && !shareProductId) ||
-                  send.isPending) &&
+                  send.isPending ||
+                  sendCoordinator.current.isBusy) &&
                   styles.disabled,
               ]}
               onPress={submit}
