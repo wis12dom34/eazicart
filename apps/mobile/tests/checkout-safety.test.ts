@@ -279,3 +279,49 @@ test("verification is read from backend, preserves pending status and never trus
   assert.deepEqual(response, { status: "PENDING", orderId, reference });
   assert.equal(f.calls.verifies, 1);
 });
+
+test("a prepared checkout key cannot be replayed for changed fees or item variants", async () => {
+  const f = backend();
+  const coordinator = createIsolatedCheckoutCoordinator(f.adapter);
+  assert.equal((await coordinator.prepare(intent)).status, "READY");
+
+  const changed = [
+    { ...cart, delivery: "450.00" },
+    { ...cart, serviceFee: "100.00" },
+    { ...cart, items: [{ ...cart.items[0], variantLabel: "Size XL" }] },
+    {
+      ...cart,
+      items: [
+        { ...cart.items[0], product: { ...cart.items[0].product, stock: 1 } },
+      ],
+    },
+  ];
+  for (const reviewedCart of changed) {
+    assert.deepEqual(await coordinator.prepare({ ...intent, reviewedCart }), {
+      status: "BLOCKED",
+      reason: "INVALID_INTENT",
+    });
+  }
+  assert.equal(f.calls.orders, 1);
+  assert.equal(f.calls.initializes, 1);
+});
+
+test("isolated checkout refuses a newly out-of-stock cart even with unchanged totals", async () => {
+  const outOfStock = {
+    ...cart,
+    items: [
+      {
+        ...cart.items[0],
+        product: { ...cart.items[0].product, stock: 0 },
+      },
+    ],
+  };
+  const f = backend({ cart: async () => outOfStock });
+  const coordinator = createIsolatedCheckoutCoordinator(f.adapter);
+  assert.deepEqual(await coordinator.prepare(intent), {
+    status: "BLOCKED",
+    reason: "CART_CHANGED",
+  });
+  assert.equal(f.calls.orders, 0);
+  assert.equal(f.calls.initializes, 0);
+});

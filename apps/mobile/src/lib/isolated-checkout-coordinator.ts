@@ -1,4 +1,4 @@
-import { canCheckoutReview, hasCartChanged } from "./commerce";
+import { canCheckoutReview, cartFingerprint, hasCartChanged } from "./commerce";
 import type { Address, Cart } from "./types";
 import {
   readKoraSession,
@@ -83,11 +83,7 @@ export function createIsolatedCheckoutCoordinator(
     const intentSignature = JSON.stringify({
       buyerId: intent.buyerId,
       addressId: intent.addressId,
-      cartId: intent.reviewedCart.id,
-      items: intent.reviewedCart.items
-        .map((item) => [item.product.id, item.quantity, item.unitPrice])
-        .sort(),
-      total: intent.reviewedCart.total,
+      cartFingerprint: cartFingerprint(intent.reviewedCart),
     });
     const previous = fingerprints.get(scopedKey);
     if (previous && previous !== intentSignature)

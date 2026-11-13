@@ -164,3 +164,90 @@ test("native commerce API exposes no payment initialization or order creation ac
   assert.equal(methods.includes("createOrder"), false);
   assert.equal(methods.includes("paymentInitialize"), false);
 });
+
+test("checkout review detects a variant switch even when product, quantity and total stay the same", () => {
+  const old = {
+    ...makeCart(),
+    items: [{ ...makeCart().items[0], variantLabel: "Size M" }],
+  };
+  const latest = {
+    ...old,
+    items: [{ ...old.items[0], variantLabel: "Size L" }],
+  };
+  assert.equal(hasCartChanged(old, latest), true);
+});
+
+test("checkout review detects inventory becoming unavailable without a price change", () => {
+  const old = makeCart();
+  const unavailable = {
+    ...old,
+    items: [
+      { ...old.items[0], product: { ...old.items[0].product, stock: 0 } },
+    ],
+  };
+  const disabled = {
+    ...old,
+    items: [
+      { ...old.items[0], product: { ...old.items[0].product, active: false } },
+    ],
+  };
+  assert.equal(hasCartChanged(old, unavailable), true);
+  assert.equal(hasCartChanged(old, disabled), true);
+});
+
+test("checkout review detects changed delivery fees, line totals and cart items", () => {
+  const old = makeCart();
+  assert.equal(hasCartChanged(old, { ...old, delivery: "450.00" }), true);
+  assert.equal(hasCartChanged(old, { ...old, serviceFee: "100.00" }), true);
+  assert.equal(
+    hasCartChanged(old, {
+      ...old,
+      items: [{ ...old.items[0], lineTotal: "1199.00" }],
+    }),
+    true,
+  );
+  assert.equal(
+    hasCartChanged(old, {
+      ...old,
+      items: [{ ...old.items[0], id: "different-cart-item" }],
+    }),
+    true,
+  );
+});
+
+test("checkout review comparison does not depend on server item order", () => {
+  const first = makeCart();
+  const second = {
+    ...first.items[0],
+    id: "item-two",
+    quantity: 2,
+    product: { ...first.items[0].product, id: "product-two" },
+  };
+  const reviewed = { ...first, items: [first.items[0], second] };
+  const latest = { ...reviewed, items: [...reviewed.items].reverse() };
+  assert.equal(hasCartChanged(reviewed, latest), false);
+});
+
+test("checkout review refuses fractional, infinite and negative stock quantities", () => {
+  const base = makeCart();
+  for (const quantity of [0.5, Number.POSITIVE_INFINITY, Number.NaN, -1]) {
+    assert.equal(
+      canCheckoutReview({
+        ...base,
+        items: [{ ...base.items[0], quantity }],
+      }),
+      false,
+    );
+  }
+  for (const stock of [1.5, -1, Number.NaN]) {
+    assert.equal(
+      canCheckoutReview({
+        ...base,
+        items: [
+          { ...base.items[0], product: { ...base.items[0].product, stock } },
+        ],
+      }),
+      false,
+    );
+  }
+});

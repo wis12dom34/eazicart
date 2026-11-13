@@ -50,7 +50,7 @@ export default function CheckoutScreen() {
     setNotice(null);
     try {
       const latest = (await api.cart()).data;
-      if (hasCartChanged(data, latest)) {
+      if (hasCartChanged(data, latest) || !canCheckoutReview(latest)) {
         await cache.invalidateQueries({ queryKey: cartKey });
         setNotice(
           "Your cart changed. Review the refreshed prices and quantities before continuing.",
