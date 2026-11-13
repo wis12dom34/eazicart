@@ -97,6 +97,12 @@ jobs:
           pnpm --filter @eazicart/mobile lint
           pnpm --filter @eazicart/mobile test
 
+      - name: Verify ios Hermes export and bundled assets before native compilation
+        run: |
+          pnpm --filter @eazicart/mobile exec expo export --platform ios --output-dir "$RUNNER_TEMP/eazicart-export-ios"
+          node apps/mobile/scripts/native-js-bundle-verify.mjs ios "$RUNNER_TEMP/eazicart-export-ios"
+          node --test apps/mobile/scripts/native-js-bundle-verify.test.mjs
+
       - name: Generate unsigned iOS simulator project
         run: pnpm --filter @eazicart/mobile exec expo prebuild --platform ios --no-install
 

@@ -114,6 +114,12 @@ jobs:
           pnpm --filter @eazicart/mobile lint
           pnpm --filter @eazicart/mobile test
 
+      - name: Verify android Hermes export and bundled assets before native compilation
+        run: |
+          pnpm --filter @eazicart/mobile exec expo export --platform android --output-dir "$RUNNER_TEMP/eazicart-export-android"
+          node apps/mobile/scripts/native-js-bundle-verify.mjs android "$RUNNER_TEMP/eazicart-export-android"
+          node --test apps/mobile/scripts/native-js-bundle-verify.test.mjs
+
       - name: Generate local Android native project
         run: pnpm --filter @eazicart/mobile exec expo prebuild --platform android --no-install
 

@@ -42,6 +42,12 @@ For manual activation **after explicit approval**, restrict the runner group to 
 
 Before `pnpm install`, the workflow checks the isolated runner, pinned SHA, safe internal EAS profile, API allowlist, and synthetic staging attestation. It then generates the iOS development project and calls Xcode with `CODE_SIGNING_ALLOWED=NO` for the generic iOS Simulator. No IPA, device build, distribution, simulator launch or App Store action is prepared. Run the read-only tests with `pnpm --filter @eazicart/mobile test:ios-runner`.
 
-The workflow uses Expo prebuild in no-install mode, then runs CocoaPods installation on the approved Mac and compiles the resulting \`EaziCart.xcworkspace\` rather than the raw Xcode project. The dedicated runner must therefore have the \`pod\` CLI; missing CocoaPods refuses the build before dependencies. The CocoaPods step was added after a regression test demonstrated the missing native dependency integration.
+The workflow uses Expo prebuild in no-install mode, then runs CocoaPods installation on the approved Mac and compiles the resulting `EaziCart.xcworkspace` rather than the raw Xcode project. The dedicated runner must therefore have the `pod` CLI; missing CocoaPods refuses the build before dependencies. The CocoaPods step was added after a regression test demonstrated the missing native dependency integration.
 
 The signing configuration and real iPhone development build remain separate work requiring an approved Apple Developer team and an isolated device-testing environment.
+
+## Phase 28: Android and iOS Hermes export verification (not installable apps)
+
+Expo/Metro JavaScript exports can be verified in an isolated development checkout without a native SDK or signing credentials. Use the nonproduction fixture API and offline Expo mode. Run the per-platform exports to temporary directories, then invoke the read-only native-js-bundle-verify.mjs script with the platform and export path to verify the Metro manifest, compiled Hermes bundle, and every referenced asset. The script refuses missing, empty, mismatched, unsafe or malformed exports.
+
+Both prepared, manual-only Android and iOS simulator workflows now perform this check before native project generation. Passing Hermes export checks do not mean a signed or installable APK/IPA exists, and do not replace device testing or permission to deploy.
