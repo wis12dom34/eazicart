@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,11 +13,16 @@ import {
 } from "react-native";
 import { ScreenState } from "../../components/ScreenState";
 import { api } from "../../lib/api";
+import {
+  createChatReportCoordinator,
+  isUncertainChatReportError,
+  type ChatReportReason,
+  type ChatReportScope,
+} from "../../lib/chat-report-coordinator";
 import { useAuth } from "../../providers/auth";
 import { colors } from "../../theme";
 
-type Reason = "SPAM" | "SCAM" | "HARASSMENT" | "OTHER";
-const reasons: Array<{ value: Reason; label: string }> = [
+const reasons: Array<{ value: ChatReportReason; label: string }> = [
   { value: "SPAM", label: "Spam or unwanted messages" },
   { value: "SCAM", label: "Fraud or suspected scam" },
   { value: "HARASSMENT", label: "Harassment or threats" },
@@ -27,8 +32,20 @@ const reasons: Array<{ value: Reason; label: string }> = [
 export default function ReportConversationScreen() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const { user, loading } = useAuth();
-  const [reason, setReason] = useState<Reason | null>(null);
+  const [reason, setReason] = useState<ChatReportReason | null>(null);
   const [details, setDetails] = useState("");
+  const coordinator = useRef(createChatReportCoordinator());
+  const currentScope = useRef<ChatReportScope>({
+    accountId: user?.id,
+    conversationId,
+  });
+  currentScope.current = { accountId: user?.id, conversationId };
+  useEffect(() => {
+    return () => {
+      // Ignore responses completing after this report screen closes.
+      currentScope.current = { accountId: null, conversationId: null };
+    };
+  }, []);
   const conversations = useQuery({
     queryKey: ["conversations", user?.id],
     queryFn: api.conversations,
@@ -36,21 +53,55 @@ export default function ReportConversationScreen() {
   });
   const found = conversations.data?.data.some((c) => c.id === conversationId);
   const submit = useMutation({
-    mutationFn: () => api.conversationReport(conversationId, reason!, details),
-    onSuccess: () => {
-      Alert.alert(
-        "Report recorded",
-        "Your report has been saved. Automated moderator review is not yet enabled.",
-        [{ text: "OK", onPress: () => router.back() }],
-      );
-    },
-    onError: (error) => {
-      Alert.alert(
-        "Unable to record report",
-        error instanceof Error ? error.message : "Please try again.",
-      );
-    },
+    mutationFn: (payload: {
+      conversationId: string;
+      reason: ChatReportReason;
+      details: string;
+    }) =>
+      api.conversationReport(
+        payload.conversationId,
+        payload.reason,
+        payload.details,
+      ),
   });
+  const submitReport = () => {
+    if (!reason || !user || !found) return;
+    const scope = { accountId: user.id, conversationId };
+    void coordinator.current
+      .submit({
+        scope,
+        currentScope: () => currentScope.current,
+        reason,
+        details,
+        send: (payload) => submit.mutateAsync(payload),
+        confirmed: () => {
+          Alert.alert(
+            "Report recorded",
+            "Your report has been saved. Automated moderator review is not yet enabled.",
+            [{ text: "OK", onPress: () => router.back() }],
+          );
+        },
+      })
+      .catch((error: unknown) => {
+        // A delayed response from another session must not show a stale alert.
+        if (
+          currentScope.current.accountId !== scope.accountId ||
+          currentScope.current.conversationId !== scope.conversationId
+        )
+          return;
+        if (isUncertainChatReportError(error)) {
+          Alert.alert(
+            "Report status unknown",
+            "The request may have been recorded. Check before submitting again to avoid a duplicate report.",
+          );
+        } else {
+          Alert.alert(
+            "Unable to record report",
+            error instanceof Error ? error.message : "Please try again.",
+          );
+        }
+      });
+  };
   if (loading) return <ScreenState loading message="Opening reporting form…" />;
   if (!user) return <ScreenState message="Sign in to report a conversation." />;
   if (!conversationId) return <ScreenState message="Conversation not found." />;
@@ -112,13 +163,12 @@ export default function ReportConversationScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Submit report"
-          disabled={!reason || submit.isPending}
-          onPress={() => {
-            if (reason) submit.mutate();
-          }}
+          disabled={!reason || submit.isPending || coordinator.current.isBusy}
+          onPress={submitReport}
           style={[
             styles.submit,
-            (!reason || submit.isPending) && styles.disabled,
+            (!reason || submit.isPending || coordinator.current.isBusy) &&
+              styles.disabled,
           ]}
         >
           <Text style={styles.submitText}>
