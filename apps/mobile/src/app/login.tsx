@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../providers/auth";
+import { createAuthFormCoordinator } from "../lib/auth-form-coordinator";
 import { colors } from "../theme";
 
 export default function LoginScreen() {
@@ -20,21 +21,27 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const submit = async () => {
+  const form = useRef(createAuthFormCoordinator());
+  useEffect(() => () => form.current.invalidate(), []);
+  const submit = () => {
+    if (form.current.isBusy) return;
     if (!email.trim() || !password)
       return Alert.alert("Missing details", "Enter your email and password.");
+    // Capture the credentials before awaiting any work. Do not log or persist
+    // the password here; the AuthProvider owns secure session storage.
+    const capturedEmail = email.trim().toLowerCase();
+    const capturedPassword = password;
     setBusy(true);
-    try {
-      await login(email.trim().toLowerCase(), password);
-      router.back();
-    } catch (error) {
-      Alert.alert(
-        "Sign in failed",
-        error instanceof Error ? error.message : "Please try again.",
-      );
-    } finally {
-      setBusy(false);
-    }
+    void form.current.submit({
+      authenticate: () => login(capturedEmail, capturedPassword),
+      onSuccess: () => router.back(),
+      onError: (error) =>
+        Alert.alert(
+          "Sign in failed",
+          error instanceof Error ? error.message : "Please try again.",
+        ),
+      onSettled: () => setBusy(false),
+    });
   };
   return (
     <KeyboardAvoidingView
@@ -70,11 +77,12 @@ export default function LoginScreen() {
         />
         <Pressable
           accessibilityRole="button"
-          disabled={busy}
-          onPress={() => {
-            void submit();
-          }}
-          style={[styles.button, busy && styles.disabled]}
+          disabled={busy || form.current.isBusy}
+          onPress={submit}
+          style={[
+            styles.button,
+            (busy || form.current.isBusy) && styles.disabled,
+          ]}
         >
           {busy ? (
             <ActivityIndicator color="white" />
@@ -86,6 +94,7 @@ export default function LoginScreen() {
           <Text style={styles.muted}>New to EaziCart? </Text>
           <Pressable
             accessibilityRole="button"
+            disabled={busy || form.current.isBusy}
             onPress={() => router.replace("/register")}
           >
             <Text style={styles.link}>Create an account</Text>

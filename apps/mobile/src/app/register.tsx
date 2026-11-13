@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../providers/auth";
+import { createAuthFormCoordinator } from "../lib/auth-form-coordinator";
 import { colors } from "../theme";
 
 export default function RegisterScreen() {
@@ -21,25 +22,31 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const submit = async () => {
+  const form = useRef(createAuthFormCoordinator());
+  useEffect(() => () => form.current.invalidate(), []);
+  const submit = () => {
+    if (form.current.isBusy) return;
     if (name.trim().length < 2 || !email.includes("@") || password.length < 8) {
       return Alert.alert(
         "Check your details",
         "Enter your name, a valid email, and a password of at least 8 characters.",
       );
     }
+    const capturedName = name.trim();
+    const capturedEmail = email.trim().toLowerCase();
+    const capturedPassword = password;
     setBusy(true);
-    try {
-      await register(name.trim(), email.trim().toLowerCase(), password);
-      router.back();
-    } catch (error) {
-      Alert.alert(
-        "Registration failed",
-        error instanceof Error ? error.message : "Please try again.",
-      );
-    } finally {
-      setBusy(false);
-    }
+    void form.current.submit({
+      authenticate: () =>
+        register(capturedName, capturedEmail, capturedPassword),
+      onSuccess: () => router.back(),
+      onError: (error) =>
+        Alert.alert(
+          "Registration failed",
+          error instanceof Error ? error.message : "Please try again.",
+        ),
+      onSettled: () => setBusy(false),
+    });
   };
   return (
     <KeyboardAvoidingView
@@ -86,11 +93,12 @@ export default function RegisterScreen() {
         />
         <Pressable
           accessibilityRole="button"
-          disabled={busy}
-          onPress={() => {
-            void submit();
-          }}
-          style={[styles.button, busy && styles.disabled]}
+          disabled={busy || form.current.isBusy}
+          onPress={submit}
+          style={[
+            styles.button,
+            (busy || form.current.isBusy) && styles.disabled,
+          ]}
         >
           {busy ? (
             <ActivityIndicator color="white" />
@@ -102,6 +110,7 @@ export default function RegisterScreen() {
           <Text style={styles.muted}>Already registered? </Text>
           <Pressable
             accessibilityRole="button"
+            disabled={busy || form.current.isBusy}
             onPress={() => router.replace("/login")}
           >
             <Text style={styles.link}>Sign in</Text>
