@@ -4,6 +4,24 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// Verified against the actual Android and iOS Expo SDK 58 Hermes exports.
+// The bytecode header is little-endian Hermes magic 0x1F1903C103BC1FC6.
+const HERMES_MAGIC = Buffer.from("c61fbc03c103191f", "hex");
+
+function hasHermesHeader(file) {
+  let descriptor;
+  try {
+    descriptor = fs.openSync(file, "r");
+    const header = Buffer.alloc(HERMES_MAGIC.length);
+    const count = fs.readSync(descriptor, header, 0, header.length, 0);
+    return count === HERMES_MAGIC.length && header.equals(HERMES_MAGIC);
+  } catch {
+    return false;
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+  }
+}
+
 function safeRelativeFile(root, relative) {
   if (
     typeof relative !== "string" ||
@@ -69,8 +87,10 @@ export function verifyNativeJsExport(root, platform) {
       errors.push("A platform-specific compiled Hermes entry is required.");
     } else {
       const entry = safeRelativeFile(root, record.bundle);
-      if (!entry || fs.statSync(entry).size < 50_000)
-        errors.push("Hermes bytecode bundle is missing or incomplete.");
+      if (!entry || fs.statSync(entry).size < 50_000 || !hasHermesHeader(entry))
+        errors.push(
+          "Hermes bytecode bundle is missing, incomplete or invalid.",
+        );
     }
     if (!Array.isArray(record.assets) || record.assets.length === 0) {
       errors.push("Expo export assets are missing.");

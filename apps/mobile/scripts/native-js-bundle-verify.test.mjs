@@ -17,7 +17,9 @@ function fixture(platform = "android") {
     recursive: true,
   });
   fs.mkdirSync(path.join(root, "assets"), { recursive: true });
-  fs.writeFileSync(path.join(root, entry), Buffer.alloc(60_000, 1));
+  const validHermes = Buffer.alloc(60_000, 1);
+  Buffer.from("c61fbc03c103191f", "hex").copy(validHermes);
+  fs.writeFileSync(path.join(root, entry), validHermes);
   fs.writeFileSync(path.join(root, asset), Buffer.from([1, 2, 3]));
   const metadata = {
     version: 0,
@@ -71,7 +73,9 @@ test("rejects missing, tiny, incorrect-platform or traversing bytecode entries",
   t.after(f.remove);
   fs.writeFileSync(path.join(f.root, f.entry), Buffer.alloc(1));
   assert.equal(verifyNativeJsExport(f.root, "android").ok, false);
-  fs.writeFileSync(path.join(f.root, f.entry), Buffer.alloc(60_000, 1));
+  const restoredHermes = Buffer.alloc(60_000, 1);
+  Buffer.from("c61fbc03c103191f", "hex").copy(restoredHermes);
+  fs.writeFileSync(path.join(f.root, f.entry), restoredHermes);
   for (const file of [
     "../entry.hbc",
     "_expo/static/js/ios/entry-abc123.hbc",
@@ -172,4 +176,33 @@ test("both manual native QA workflows verify Hermes exports before generating na
     assert.doesNotMatch(workflow, /^\s+(push|pull_request|schedule):/m);
     assert.doesNotMatch(workflow, /actions\/upload-artifact/);
   }
+});
+
+test("rejects random data or JavaScript renamed to a large Hermes .hbc file", (t) => {
+  const f = fixture("android");
+  t.after(f.remove);
+  for (const content of [
+    Buffer.alloc(60_000, 0),
+    Buffer.from("function run(){return 1;}".padEnd(60_000, "x")),
+    Buffer.alloc(60_000, 255),
+  ]) {
+    fs.writeFileSync(path.join(f.root, f.entry), content);
+    assert.equal(
+      verifyNativeJsExport(f.root, "android").ok,
+      false,
+      "A large non-Hermes file must not pass by filename and size alone",
+    );
+  }
+});
+
+test("rejects bytecode with an altered or truncated Hermes header", (t) => {
+  const f = fixture("ios");
+  t.after(f.remove);
+  const validBytecode = Buffer.alloc(60_000, 0);
+  Buffer.from("c61fbc03c103191f", "hex").copy(validBytecode);
+  fs.writeFileSync(path.join(f.root, f.entry), validBytecode);
+  assert.equal(verifyNativeJsExport(f.root, "ios").ok, true);
+  validBytecode[7] ^= 1;
+  fs.writeFileSync(path.join(f.root, f.entry), validBytecode);
+  assert.equal(verifyNativeJsExport(f.root, "ios").ok, false);
 });
