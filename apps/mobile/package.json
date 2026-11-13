@@ -56,7 +56,9 @@
     "test:prebuild": "node --test scripts/native-prebuild-verify.test.mjs",
     "eas-build-pre-install": "node scripts/native-build-profile-verify.mjs",
     "verify:build-profile": "node scripts/native-build-profile-verify.mjs",
-    "test:build-profile": "node --test scripts/native-build-profile-verify.test.mjs"
+    "test:build-profile": "node --test scripts/native-build-profile-verify.test.mjs",
+    "verify:ios-runner": "node scripts/ios-runner-readiness.mjs",
+    "test:ios-runner": "node --test scripts/ios-runner-readiness.test.mjs"
   },
   "private": true
 }

@@ -1,0 +1,121 @@
+# PREPARED ONLY; do not merge/dispatch without separate approval.
+# No automatic triggers. Dedicated private Apple Silicon macOS runner only.
+name: EaziCart iOS Simulator QA build (manual, unsigned)
+
+on:
+  workflow_dispatch:
+    inputs:
+      staging_api_base_url:
+        description: "Approved isolated HTTPS disposable staging API ending in /api"
+        required: true
+        type: string
+      confirmation:
+        description: "Enter BUILD_IOS_SIMULATOR_ONLY (no device signing or distribution)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eazicart-manual-ios-simulator
+  cancel-in-progress: false
+
+jobs:
+  ios-simulator:
+    runs-on: [self-hosted, macOS, ARM64, eazicart-ios-qa]
+    timeout-minutes: 120
+    env:
+      CI: "1"
+      EXPO_NO_TELEMETRY: "1"
+      EXPO_PUBLIC_EAZICART_ENABLE_ADMIN_AUDIT_PREVIEW: "0"
+      EAZICART_ANDROID_QA_ALLOW_DEBUG_BUILD: "1"
+      EAZICART_IOS_QA_ISOLATED_RUNNER: "1"
+      EXPO_PUBLIC_EAZICART_API_BASE_URL: ${{ inputs.staging_api_base_url }}
+      EAZICART_ANDROID_QA_ALLOWED_API_HOST: ${{ vars.EAZICART_ANDROID_QA_ALLOWED_API_HOST }}
+      EAZICART_IOS_QA_APPROVED_SHA: ${{ vars.EAZICART_IOS_QA_APPROVED_SHA }}
+      # No Apple Developer identity, provisioning profile, or store credentials.
+    steps:
+      - name: Require explicit simulator-only authorization and trusted host
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          if [ "$CONFIRMATION" != "BUILD_IOS_SIMULATOR_ONLY" ]; then
+            echo "Refused: simulator-only confirmation missing"
+            exit 23
+          fi
+          if [[ "$GITHUB_REF_TYPE" != "branch" || "$GITHUB_REF_NAME" != feat/* ]]; then
+            echo "Refused: unreviewed ref"
+            exit 23
+          fi
+          if [ -z "$EAZICART_ANDROID_QA_ALLOWED_API_HOST" ]; then
+            echo "Refused: missing maintainer-approved staging host"
+            exit 23
+          fi
+
+      - name: Checkout reviewed feature branch without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Inspect dedicated macOS Xcode runner before dependencies
+        run: node apps/mobile/scripts/ios-runner-readiness.mjs
+
+      - name: Test macOS runner isolation and workflow invariants
+        run: node --test apps/mobile/scripts/ios-runner-readiness.test.mjs
+
+      - name: Refuse unsafe EAS or live payment environment
+        run: node apps/mobile/scripts/native-build-profile-verify.mjs development
+
+      - name: Test native profile and API security contracts
+        run: |
+          node --test apps/mobile/scripts/native-build-profile-verify.test.mjs
+          node --test apps/mobile/scripts/android-qa-api-preflight.test.mjs
+          node --test apps/mobile/scripts/android-staging-attestation.test.mjs
+
+      - name: Confirm disposable staging backend before dependencies
+        run: node apps/mobile/scripts/android-staging-attestation.mjs
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install reviewed locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify native application
+        run: |
+          pnpm --filter @eazicart/mobile typecheck
+          pnpm --filter @eazicart/mobile lint
+          pnpm --filter @eazicart/mobile test
+
+      - name: Generate unsigned iOS simulator project
+        run: pnpm --filter @eazicart/mobile exec expo prebuild --platform ios --no-install
+
+      - name: Verify generated development ID and deep links
+        run: |
+          pnpm --filter @eazicart/mobile verify:prebuild -- ios
+          pnpm --filter @eazicart/mobile test:prebuild
+
+      - name: Compile unsigned simulator app without installing or uploading
+        run: |
+          xcodebuild \
+            -project apps/mobile/ios/EaziCart.xcodeproj \
+            -scheme EaziCart \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/eazicart-ios-qa-derived" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+          echo "Unsigned iOS Simulator compile completed; no IPA or distribution." >> "$GITHUB_STEP_SUMMARY"
