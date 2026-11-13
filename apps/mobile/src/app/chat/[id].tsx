@@ -22,6 +22,7 @@ import {
 import { ScreenState } from "../../components/ScreenState";
 import { api } from "../../lib/api";
 import { createChatSendCoordinator } from "../../lib/chat-send-coordinator";
+import { createChatBlockCoordinator } from "../../lib/chat-block-coordinator";
 import {
   createChatReadCoordinator,
   shouldShowConversationLoadError,
@@ -80,11 +81,19 @@ export default function ConversationScreen() {
   const isBlocked = Boolean(
     conversation?.buyerBlockedAt || conversation?.sellerBlockedAt,
   );
+  const blockCoordinator = useRef(createChatBlockCoordinator());
+  const currentBlockScope = useRef({
+    accountId: user?.id,
+    conversationId: id,
+    blockedByMe,
+  });
+  currentBlockScope.current = {
+    accountId: user?.id,
+    conversationId: id,
+    blockedByMe,
+  };
   const block = useMutation({
     mutationFn: (blocked: boolean) => api.conversationBlock(id, blocked),
-    onSuccess: () => {
-      void cache.invalidateQueries({ queryKey: ["conversations", user?.id] });
-    },
     onError: (error) => {
       Alert.alert(
         "Unable to update conversation",
@@ -201,8 +210,14 @@ export default function ConversationScreen() {
             accessibilityLabel={
               blockedByMe ? "Unblock conversation" : "Block conversation"
             }
-            disabled={block.isPending}
+            disabled={block.isPending || blockCoordinator.current.isBusy}
             onPress={() => {
+              if (blockCoordinator.current.isBusy) return;
+              const expected = {
+                accountId: user?.id,
+                conversationId: id,
+                blockedByMe,
+              };
               Alert.alert(
                 blockedByMe ? "Unblock conversation?" : "Block conversation?",
                 blockedByMe
@@ -213,7 +228,23 @@ export default function ConversationScreen() {
                   {
                     text: blockedByMe ? "Unblock" : "Block",
                     style: blockedByMe ? "default" : "destructive",
-                    onPress: () => block.mutate(!blockedByMe),
+                    onPress: () => {
+                      void blockCoordinator.current
+                        .confirm({
+                          expected,
+                          currentScope: () => currentBlockScope.current,
+                          changeBlocked: (_conversationId, blocked) =>
+                            block.mutateAsync(blocked),
+                          refresh: (accountId) =>
+                            cache.invalidateQueries({
+                              queryKey: ["conversations", accountId],
+                            }),
+                        })
+                        .catch(() => {
+                          // useMutation shows the API failure; the gate unlocks
+                          // so the user can retry the same confirmation.
+                        });
+                    },
                   },
                 ],
               );
