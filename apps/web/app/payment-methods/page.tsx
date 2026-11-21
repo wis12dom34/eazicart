@@ -42,7 +42,9 @@ export default function PaymentMethods() {
           </span>
           <span className={styles.methodCopy}>
             <strong>Saved payment methods</strong>
-            <span>Cards and wallet balances are not stored in EaziCart yet</span>
+            <span>
+              Cards and wallet balances are not stored in EaziCart yet
+            </span>
           </span>
         </section>
 
