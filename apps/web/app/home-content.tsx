@@ -217,8 +217,13 @@ export default function HomePage({
         });
         return [...previous, ...unique];
       });
-      setFeedCursor(result.pagination.nextCursor);
-      setFeedHasMore(result.pagination.hasMore);
+      const nextCursor = result.pagination.nextCursor;
+      const canContinue =
+        result.pagination.hasMore &&
+        Boolean(nextCursor) &&
+        nextCursor !== feedCursor;
+      setFeedCursor(canContinue ? nextCursor : null);
+      setFeedHasMore(canContinue);
     } catch {
       if (generation === feedGeneration.current) setFeedPageError(true);
     } finally {
