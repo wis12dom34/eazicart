@@ -493,16 +493,8 @@ function HomeReelVideo({ reel }: { reel: Reel }) {
     let visible = false;
     const playVisible = async () => {
       if (!active || document.hidden || !visible) return;
-      // Prefer sound. iOS/Safari can reject audible autoplay by browser policy;
-      // in that case keep the Reel moving and enable sound on the first gesture.
-      element.muted = false;
-      setMuted(false);
-      try { await element.play(); }
-      catch {
-        element.muted = true;
-        setMuted(true);
-        try { await element.play(); } catch { /* user gesture can start it */ }
-      }
+      // Autoplay silently; only the Reel's own sound control may unmute.
+      try { await element.play(); } catch { /* user gesture may be required */ }
     };
     const observer = new IntersectionObserver(
       ([entry]) => {
