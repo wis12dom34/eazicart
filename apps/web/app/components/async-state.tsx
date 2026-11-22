@@ -59,13 +59,15 @@ export function EmptyState({
 }
 export function SignInState({
   message = "Sign in to view this page.",
+  href = "/login",
 }: {
   message?: string;
+  href?: string;
 }) {
   return (
     <section className="state-card">
       <p>{message}</p>
-      <Link className="dark-button compact" href="/login">
+      <Link className="dark-button compact" href={href}>
         Sign in
       </Link>
     </section>
