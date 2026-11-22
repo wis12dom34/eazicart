@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { money } from "../data";
 import { cartApi } from "../../lib/api/cart";
@@ -39,6 +39,7 @@ export default function CheckoutPage() {
       new URLSearchParams(window.location.search).get("addressId"),
     );
   }, []);
+  const pendingOrder = useRef<{ id: string; addressId: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -96,11 +97,21 @@ export default function CheckoutPage() {
     setSubmitting(true);
     setError("");
     try {
-      const order = await ordersApi.create(address.id);
-      const payment = await paymentsApi.initialize(order.data.id);
+      // Retry payment initialization against the same order, not a new order.
+      // Never reuse an order after the delivery address changes.
+      if (pendingOrder.current?.addressId !== address.id) {
+        pendingOrder.current = null;
+      }
+      let orderId = pendingOrder.current?.id;
+      if (!orderId) {
+        const order = await ordersApi.create(address.id);
+        orderId = order.data.id;
+        pendingOrder.current = { id: orderId, addressId: address.id };
+      }
+      const payment = await paymentsApi.initialize(orderId);
       if (payment.data.status === "SUCCESS") {
         router.push(
-          `/payment-success?orderId=${encodeURIComponent(order.data.id)}`,
+          `/payment-success?orderId=${encodeURIComponent(orderId)}`,
         );
         return;
       }
