@@ -483,7 +483,7 @@ function SocialProductPost({
 function HomeReelVideo({ reel }: { reel: Reel }) {
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [error, setError] = useState(false);
   const [soundUnlocked, setSoundUnlocked] = useState(false);
   useEffect(() => {
@@ -514,23 +514,10 @@ function HomeReelVideo({ reel }: { reel: Reel }) {
     );
     observer.observe(element);
     const visibility = () => { if (document.hidden) element.pause(); else if (visible) void playVisible(); };
-    const unlockSound = () => {
-      if (!active || !visible || document.hidden || !element.muted) return;
-      element.muted = false;
-      setMuted(false);
-      setSoundUnlocked(true);
-      void element.play().catch(() => { element.muted = true; setMuted(true); });
-    };
     document.addEventListener("visibilitychange", visibility);
-    // Once the user interacts with the feed, use that gesture to unlock audio
-    // for the visible Reel on browsers that block audible autoplay.
-    document.addEventListener("pointerdown", unlockSound, { once: true, passive: true });
-    document.addEventListener("touchstart", unlockSound, { once: true, passive: true });
     return () => {
       active = false; observer.disconnect();
       document.removeEventListener("visibilitychange", visibility);
-      document.removeEventListener("pointerdown", unlockSound);
-      document.removeEventListener("touchstart", unlockSound);
       element.pause();
     };
   }, []);
