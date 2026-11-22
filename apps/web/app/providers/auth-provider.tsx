@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -31,15 +32,18 @@ const AuthContext = createContext<AuthValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const sessionVersion = useRef(0);
   const reloadUser = useCallback(async () => {
+    const version = sessionVersion.current;
     const me = await usersApi.me();
-    setUser(me);
+    if (version === sessionVersion.current) setUser(me);
   }, []);
   useEffect(() => {
-    // HttpOnly refresh cookies cannot be inspected from JavaScript, so ask the
-    // API to restore the session. apiRequest performs one refresh-and-retry.
+    // A late session-restore response must not overwrite a new login/register.
+    const version = sessionVersion.current;
     reloadUser()
       .catch((error) => {
+        if (version !== sessionVersion.current) return;
         if (error instanceof ApiError && error.status === 401)
           tokenStore.clear();
         setUser(null);
@@ -48,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [reloadUser]);
   const authenticate = useCallback(async (request: Promise<AuthResponse>) => {
     const result = await request;
+    sessionVersion.current += 1;
     tokenStore.set(result.tokens);
     setUser(result.user);
   }, []);
@@ -60,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register: (name, email, password) =>
         authenticate(authApi.register(name, email, password)),
       logout: () => {
+        sessionVersion.current += 1;
         const legacyRefreshToken = getLegacyRefreshToken();
         tokenStore.clear();
         setUser(null);
