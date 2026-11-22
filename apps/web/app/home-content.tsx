@@ -134,6 +134,7 @@ export default function HomePage({
   const [feedPageError, setFeedPageError] = useState(false);
   const feedSentinel = useRef<HTMLDivElement>(null);
   const feedRequesting = useRef(false);
+  const feedGeneration = useRef(0);
   const [drawer, setDrawer] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [localSaved, setLocalSaved] = useState<Record<string, boolean>>({});
@@ -170,7 +171,9 @@ export default function HomePage({
     setFeedCursor(null);
     setFeedHasMore(false);
     setFeedPageError(false);
+    feedGeneration.current += 1;
     feedRequesting.current = false;
+    setFeedLoadingMore(false);
   }, [auth.isAuthenticated]);
 
   useEffect(() => {
@@ -191,6 +194,7 @@ export default function HomePage({
     )
       return;
     feedRequesting.current = true;
+    const generation = feedGeneration.current;
     setFeedLoadingMore(true);
     setFeedPageError(false);
     try {
@@ -199,24 +203,29 @@ export default function HomePage({
         auth.isAuthenticated,
         feedCursor,
       );
+      if (generation !== feedGeneration.current) return;
       setExtraProducts((previous) => {
         const known = new Set(
           [...(products.data?.data ?? []), ...previous].map(
             (product) => product.id,
           ),
         );
-        return [
-          ...previous,
-          ...result.data.filter((product) => !known.has(product.id)),
-        ];
+        const unique = result.data.filter((product) => {
+          if (known.has(product.id)) return false;
+          known.add(product.id);
+          return true;
+        });
+        return [...previous, ...unique];
       });
       setFeedCursor(result.pagination.nextCursor);
       setFeedHasMore(result.pagination.hasMore);
     } catch {
-      setFeedPageError(true);
+      if (generation === feedGeneration.current) setFeedPageError(true);
     } finally {
-      feedRequesting.current = false;
-      setFeedLoadingMore(false);
+      if (generation === feedGeneration.current) {
+        feedRequesting.current = false;
+        setFeedLoadingMore(false);
+      }
     }
   }, [
     feedHasMore,
