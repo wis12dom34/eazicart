@@ -50,7 +50,10 @@ export default function CartPage() {
     return (
       <CartShell>
         <CartHeader />
-        <SignInState message="Sign in to view and update your cart." />
+        <SignInState
+          message="Sign in to view and update your cart."
+          href="/login?next=%2Fcart"
+        />
       </CartShell>
     );
   if (cart.loading)
