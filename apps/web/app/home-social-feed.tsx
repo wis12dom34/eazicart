@@ -496,19 +496,22 @@ function HomeReelVideo({ reel }: { reel: Reel }) {
       // Autoplay silently; only the Reel's own sound control may unmute.
       try { await element.play(); } catch { /* user gesture may be required */ }
     };
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        visible = Boolean(entry?.isIntersecting && entry.intersectionRatio >= 0.55);
-        if (visible) void playVisible();
-        else element.pause();
-      },
-      { threshold: [0, 0.55, 0.85] },
-    );
-    observer.observe(element);
+    const observer = typeof IntersectionObserver !== "undefined"
+      ? new IntersectionObserver(
+          ([entry]) => {
+            visible = Boolean(entry?.isIntersecting && entry.intersectionRatio >= 0.55);
+            if (visible) void playVisible();
+            else element.pause();
+          },
+          { threshold: [0, 0.55, 0.85] },
+        )
+      : null;
+    observer?.observe(element);
     const visibility = () => { if (document.hidden) element.pause(); else if (visible) void playVisible(); };
     document.addEventListener("visibilitychange", visibility);
     return () => {
-      active = false; observer.disconnect();
+      active = false;
+      observer?.disconnect();
       document.removeEventListener("visibilitychange", visibility);
       element.pause();
     };
