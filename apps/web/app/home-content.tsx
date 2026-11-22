@@ -229,7 +229,7 @@ export default function HomePage({
 
   useEffect(() => {
     const node = feedSentinel.current;
-    if (!node || !feedHasMore || !feedCursor) return;
+    if (!node || !feedHasMore || !feedCursor || feedPageError) return;
     if (!("IntersectionObserver" in window)) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -239,7 +239,7 @@ export default function HomePage({
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [feedHasMore, feedCursor, loadMoreFeed]);
+  }, [feedHasMore, feedCursor, feedPageError, loadMoreFeed]);
 
   useEffect(() => {
     if (auth.loading) return;
