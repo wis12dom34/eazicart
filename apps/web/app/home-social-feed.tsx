@@ -490,8 +490,9 @@ function HomeReelVideo({ reel }: { reel: Reel }) {
     const element = video.current;
     if (!element) return;
     let active = true;
+    let visible = false;
     const playVisible = async () => {
-      if (!active || document.hidden) return;
+      if (!active || document.hidden || !visible) return;
       // Prefer sound. iOS/Safari can reject audible autoplay by browser policy;
       // in that case keep the Reel moving and enable sound on the first gesture.
       element.muted = false;
@@ -505,15 +506,16 @@ function HomeReelVideo({ reel }: { reel: Reel }) {
     };
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting && entry.intersectionRatio >= 0.55) void playVisible();
+        visible = Boolean(entry?.isIntersecting && entry.intersectionRatio >= 0.55);
+        if (visible) void playVisible();
         else element.pause();
       },
       { threshold: [0, 0.55, 0.85] },
     );
     observer.observe(element);
-    const visibility = () => { if (document.hidden) element.pause(); else void playVisible(); };
+    const visibility = () => { if (document.hidden) element.pause(); else if (visible) void playVisible(); };
     const unlockSound = () => {
-      if (!active || !element.muted) return;
+      if (!active || !visible || document.hidden || !element.muted) return;
       element.muted = false;
       setMuted(false);
       setSoundUnlocked(true);
@@ -552,7 +554,7 @@ function HomeReelVideo({ reel }: { reel: Reel }) {
         src={reel.videoUrl ?? undefined}
         poster={reel.thumbnailUrl ?? reel.product?.images[0]?.url ?? undefined}
         preload="metadata"
-        autoPlay
+        muted
         loop
         playsInline
         onClick={() => void toggle()}
