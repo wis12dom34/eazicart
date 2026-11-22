@@ -521,9 +521,16 @@ function HomeReelVideo({ reel }: { reel: Reel }) {
     if (!element) return;
     if (element.muted) {
       element.muted = false;
-      setMuted(false);
-      setSoundUnlocked(true);
-      try { await element.play(); } catch { setError(true); }
+      try {
+        await element.play();
+        setMuted(false);
+        setSoundUnlocked(true);
+        setError(false);
+      } catch {
+        element.muted = true;
+        setMuted(true);
+        setError(true);
+      }
       return;
     }
     if (!element.paused) element.pause();
