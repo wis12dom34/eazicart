@@ -51,7 +51,10 @@ export default function CheckoutPage() {
   if (!auth.isAuthenticated)
     return (
       <CheckoutShell>
-        <SignInState message="Sign in to continue to checkout." />
+        <SignInState
+          message="Sign in to continue to checkout."
+          href="/login?next=%2Fcheckout"
+        />
       </CheckoutShell>
     );
   if (cart.error || addresses.error)
