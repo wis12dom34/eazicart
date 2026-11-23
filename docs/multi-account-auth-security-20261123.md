@@ -1,33 +1,23 @@
 # Multi-account authentication — implementation and security gates
 
-Status: design checkpoint only. **Not implemented or enabled on this GitHub branch.** Do not deploy.
+Status: **implemented as a development candidate on this branch; not verified for production and not deployed by this review.**
 
-## Confirmed repository baseline
-- `apps/api/src/modules/auth/index.ts` uses one `eazicart_refresh` HttpOnly cookie, rotates it on refresh, and accepts bearer access JWTs via `app.authenticate`.
-- `app.authenticate` verifies the JWT signature and subject but does not check a browser-device session, active-account generation, or independent account revocation.
-- Existing login, registration, refresh, and logout behavior must remain compatible until a tested migration is available.
+## Current GitHub implementation (2026-11-23)
+- Browser account routes implement device creation, account listing, password-verified addition, session restoration, switching, removal, and logout-all.
+- Browser device secret is held in a Secure, HttpOnly, SameSite=Strict, host-only cookie and hashed in persistence.
+- Browser-account access JWTs include device and generation claims, validated in the shared authenticate guard against the active account generation.
+- The web Accounts sheet offers add, switch, remove, and logout-all, with reload and cross-tab account-change coordination.
+- PostgreSQL schema/migrations, unit tests, mobile WebKit E2E specs, and a GitHub Actions workflow are committed.
+- **Presence of tests and CI configuration is not proof that the latest commit passes.** Verify workflow results and disposable-database migration before release.
 
-## Required backend contract
-1. Store browser-device credential only in a Secure, HttpOnly, host-only cookie; hash it in PostgreSQL. Determine actual web/API origin and reverse-proxy topology before selecting `__Host-` cookie and same-origin routing.
-2. Persist device-to-user account associations and independently revocable sessions in PostgreSQL; never place refresh tokens in localStorage or return them to browser JavaScript.
-3. Make account addition require fresh password verification. Account list returns only public profile fields and active account; never token hashes.
-4. Make switch atomic: validate selected session, increment device session generation, and issue a new access credential bound to device ID, selected account, and generation. A failed switch must not mutate active selection.
-5. All protected API routes must reject a bearer token whose device session has been revoked, whose account differs from active account, or whose generation is stale. This requires updating the shared `authenticate` guard, not merely adding account routes.
-6. Refresh must be server-side, single-use, atomic and bound to the selected account; replay must fail. Independent logout must revoke only that account. Logout-all revokes all associated sessions and rotates/invalidates device credential.
-7. Cookie-mutating endpoints require strict Origin/Fetch Metadata validation and appropriate CSRF protections. Rate-limit login, account-add and switching.
-8. Avoid returning `503` after mutating active account or storing a new session. Reject incomplete flows before mutation.
+## Open security/release gates
+1. Review compatibility of legacy bearer access tokens (no browser-device claims) and legacy refresh token handling. Confirm account isolation cannot be bypassed during migration.
+2. Test login, add, switch, concurrent switch, stale token rejection, independent account revocation, logout-all, refresh replay, and cross-tab cache isolation.
+3. Verify actual HTTPS web/API reverse-proxy topology, __Host- cookie host scope, Origin checks, and cross-origin credentials behavior.
+4. Confirm rate limiting on account addition and switching; review CSRF, XSS, cookie clearing, and error paths.
+5. Run disposable PostgreSQL migration and rollback rehearsal; run unit, integration, browser/WebKit and restart-persistence tests.
+6. Provide isolated private HTTPS preview with test identities, disconnected from production payments/data.
+7. Require explicit release approval after tests and preview. Do not infer production readiness from code presence.
 
-## Required frontend contract
-- Accounts sheet lists verified saved accounts, active account, and explicit add/remove/logout actions.
-- On switch: cancel in-flight requests, increment client identity epoch, clear all account-scoped caches, switch credentials, then fetch the new account's data.
-- Cross-tab coordination must invalidate stale requests; after Safari restart the server-side sessions remain available until expiry/revocation.
-- Never invent unread counts or subscription badges.
-
-## Release gates
-- Disposable PostgreSQL migration and rollback rehearsal; concurrency and replay tests; independent revocation; device expiry; CSRF and XSS review.
-- Browser tests for iPhone Safari, reload/restart, add/switch/remove, multiple tabs, and no cross-account data leakage.
-- Isolated private HTTPS preview with test identities; verify no production database or payments are connected.
-- Explicit user approval before merging or deploying.
-
-## Existing VPS-only candidate (not present in GitHub)
-The user previously developed a candidate at `/opt/eazicart/candidates/eazicart-multi-account-auth-20261123`. Prior remote checks reported 16 passing focused tests and disposable PostgreSQL persistence checks. Those are **not GitHub CI results**, and their source changes have not been imported into this branch. Do not claim the feature is implemented from this document.
+## Previous VPS candidate
+A separate candidate was previously reported at `/opt/eazicart/candidates/eazicart-multi-account-auth-20261123`. Its earlier tests are not a substitute for GitHub CI or a fresh release verification.
