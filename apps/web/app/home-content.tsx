@@ -89,7 +89,7 @@ export default function HomePage({
   };
   return (
     <main
-      className="app-shell with-nav figma-home"
+      className="app-shell with-nav figma-home premium-home"
       data-figma-node="1247:16174"
     >
       <header className="figma-home-sticky">
@@ -130,6 +130,23 @@ export default function HomePage({
           <Link href="/explore?section=sellers">Sellers</Link>
         </nav>
       </header>
+      <section className="premium-hero" aria-label="Discover EaziCart">
+        <div className="premium-hero-copy">
+          <span className="premium-eyebrow">THE NEW WAY TO SHOP & SELL</span>
+          <h1>Discover more.<br /><em>Shop better.</em></h1>
+          <p>Explore independent brands, trending finds and stores worth following — all in one place.</p>
+          <div className="premium-hero-actions">
+            <Link href="/explore" className="premium-primary">Explore products <span aria-hidden="true">↗</span></Link>
+            <Link href="/explore?section=sellers" className="premium-secondary">Meet sellers</Link>
+          </div>
+        </div>
+        <div className="premium-hero-art" aria-hidden="true"><span>EC</span><small>CURATED FOR YOU</small></div>
+      </section>
+      <nav className="premium-category-nav" aria-label="Shop categories">
+        {["Beauty & Personal Care","Electronics","Fashion","Groceries","Home & Living","Sports & Fitness"].map((category) => (
+          <Link key={category} href={`/explore?section=categories&q=${encodeURIComponent(category)}`}>{category}<span aria-hidden="true">↗</span></Link>
+        ))}
+      </nav>
       {activeSellers.length ? (
         <section className="figma-home-stories" aria-label="Active sellers">
           <div className="figma-home-section-header">
@@ -201,7 +218,7 @@ export default function HomePage({
       ) : null}
       {popularItems.length ? <div className="figma-home-divider" /> : null}
       <section className="figma-home-for-you">
-        <SectionHeader title="For you" />
+        <SectionHeader title="Fresh finds for you" />
         {products.loading && !products.data ? (
           <LoadingState label="Loading products…" />
         ) : products.error && !products.data ? (
