@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { safeNextPath } from "../../lib/api/navigation";
+import { browserAccountsEnabled } from "../../lib/api/auth";
+import { AccountsSheet } from "../components/accounts-sheet";
 import { useAuth } from "../providers/auth-provider";
 import styles from "../auth.module.css";
 
@@ -32,7 +34,8 @@ export function LoginContent() {
         typeof email === "string" ? email : "",
         typeof password === "string" ? password : "",
       );
-      router.replace(next);
+      if (browserAccountsEnabled) window.location.replace(next);
+      else router.replace(next);
     } catch (caught) {
       const message =
         caught instanceof Error ? caught.message : "Unable to sign in";
@@ -50,11 +53,14 @@ export function LoginContent() {
       <Link
         className={styles.brand}
         href={sellerFlow ? "/landing" : "/welcome"}
-        aria-label={sellerFlow ? "Back to EaziCart business" : "Back to EaziCart welcome"}
+        aria-label={
+          sellerFlow ? "Back to EaziCart business" : "Back to EaziCart welcome"
+        }
       >
         EaziCart
       </Link>
 
+      {browserAccountsEnabled && <AccountsSheet />}
       <div className={styles.authIntro}>
         <h1 className={styles.heading}>Welcome back</h1>
         <p className={styles.subtitle}>

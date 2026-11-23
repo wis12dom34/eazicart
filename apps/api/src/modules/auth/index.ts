@@ -32,7 +32,7 @@ const publicUser = ({ id, email, name }: StoredUser) => ({ id, email, name });
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 
-function refreshTokenFromCookie(request: FastifyRequest) {
+export function refreshTokenFromCookie(request: FastifyRequest) {
   const header = request.headers.cookie;
   if (!header) return undefined;
   for (const part of header.split(";")) {
@@ -75,7 +75,7 @@ function setRefreshCookie(
   );
 }
 
-function clearRefreshCookie(reply: FastifyReply, secure: boolean) {
+export function clearRefreshCookie(reply: FastifyReply, secure: boolean) {
   reply.header(
     "Set-Cookie",
     [

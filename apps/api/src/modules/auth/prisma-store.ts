@@ -2,7 +2,10 @@ import { Prisma, type PrismaClient } from "@eazicart/database";
 import { EmailAlreadyExistsError, type AuthStore } from "./store.js";
 
 export class PrismaAuthStore implements AuthStore {
-  constructor(private readonly database: PrismaClient) {}
+  constructor(
+    private readonly database: PrismaClient,
+    private readonly browserAccountsEnabled = false,
+  ) {}
 
   async findUserByEmail(email: string) {
     return (
@@ -43,10 +46,24 @@ export class PrismaAuthStore implements AuthStore {
   }
 
   async updatePassword(userId: string, passwordHash: string) {
-    await this.database.user.update({
-      where: { id: userId },
-      data: { passwordHash },
-    });
+    await this.database.$transaction([
+      this.database.user.update({
+        where: { id: userId },
+        data: { passwordHash },
+      }),
+      this.database.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+      ...(this.browserAccountsEnabled
+        ? [
+            this.database.browserAccount.updateMany({
+              where: { userId, revokedAt: null },
+              data: { revokedAt: new Date() },
+            }),
+          ]
+        : []),
+    ]);
   }
 
   async revokeRefreshTokens(userId: string) {

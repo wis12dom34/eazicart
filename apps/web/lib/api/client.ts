@@ -11,6 +11,8 @@ type AccessSession = {
   expiresAt: string;
 };
 type SessionTokens = AccessSession & { refreshToken?: string };
+let browserSession = false;
+let accountRevision = 0;
 let memoryTokens: AccessSession | null = null;
 
 export class ApiError extends Error {
@@ -62,7 +64,8 @@ export const getLegacyRefreshToken = () => readLegacyTokens()?.refreshToken;
 
 export const tokenStore = {
   get: () => memoryTokens,
-  set: (tokens: SessionTokens) => {
+  set: (tokens: SessionTokens, browser = false) => {
+    browserSession = browser;
     memoryTokens = {
       accessToken: tokens.accessToken,
       expiresAt: tokens.expiresAt,
@@ -71,6 +74,8 @@ export const tokenStore = {
     legacyStorage()?.removeItem(TOKEN_KEY);
   },
   clear: () => {
+    accountRevision++;
+    browserSession = false;
     memoryTokens = null;
     legacyStorage()?.removeItem(TOKEN_KEY);
   },
@@ -134,6 +139,7 @@ async function fetchWithTimeout(
 }
 
 async function refresh(): Promise<boolean> {
+  const revision = accountRevision;
   const legacyRefreshToken = getLegacyRefreshToken();
   try {
     const response = await fetchWithTimeout(apiUrl("/auth/refresh"), {
@@ -145,11 +151,13 @@ async function refresh(): Promise<boolean> {
         ? JSON.stringify({ refreshToken: legacyRefreshToken })
         : undefined,
     });
+    if (revision !== accountRevision) return false;
     if (!response.ok) {
       tokenStore.clear();
       return false;
     }
     const payload = (await response.json()) as { tokens: SessionTokens };
+    if (revision !== accountRevision) return false;
     tokenStore.set(payload.tokens);
     return true;
   } catch {
@@ -178,6 +186,7 @@ export async function apiRequest<T>(
   });
   const headers = new Headers(customHeaders);
   if (body !== undefined) headers.set("Content-Type", "application/json");
+  const revision = accountRevision;
   const accessToken = tokenStore.get()?.accessToken;
   if (auth && accessToken)
     headers.set("Authorization", `Bearer ${accessToken}`);
@@ -186,15 +195,27 @@ export async function apiRequest<T>(
     {
       ...init,
       headers,
+      cache: auth ? "no-store" : init.cache,
       body: rawBody ?? (body === undefined ? undefined : JSON.stringify(body)),
     },
     timeoutMs,
   );
-  if (response.status === 401 && auth && retry) {
+  if (auth && revision !== accountRevision)
+    throw new ApiError(409, "ACCOUNT_CHANGED", "The active account changed");
+  if (response.status === 401 && auth && browserSession && retry) {
+    tokenStore.clear();
+    if (typeof window !== "undefined") window.location.reload();
+  }
+  if (
+    response.status === 401 &&
+    auth &&
+    retry &&
+    revision === accountRevision
+  ) {
     refreshPromise ??= refresh().finally(() => {
       refreshPromise = null;
     });
-    if (await refreshPromise)
+    if ((await refreshPromise) && revision === accountRevision)
       return apiRequest<T>(path, { ...options, retry: false });
   }
   if (!response.ok) {
@@ -214,5 +235,8 @@ export async function apiRequest<T>(
     );
   }
   if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  const result = (await response.json()) as T;
+  if (auth && revision !== accountRevision)
+    throw new ApiError(409, "ACCOUNT_CHANGED", "The active account changed");
+  return result;
 }

@@ -61,13 +61,20 @@ export class PrismaBrowserAccountStore implements BrowserAccountStore {
   async addAccount(
     deviceId: string,
     account: BrowserAccountRecord,
-  ): Promise<void> {
-    await this.db.$transaction(async (tx) => {
+    verifiedPasswordHash?: string,
+  ): Promise<boolean> {
+    return this.db.$transaction(async (tx) => {
+      if (verifiedPasswordHash !== undefined) {
+        const [user] = await tx.$queryRaw<{ passwordHash: string }[]>`
+          SELECT "passwordHash" FROM "User" WHERE id = ${account.userId} FOR SHARE
+        `;
+        if (user?.passwordHash !== verifiedPasswordHash) return false;
+      }
       const device = await tx.browserDevice.findFirst({
         where: { id: deviceId, expiresAt: { gt: new Date() } },
         select: { id: true },
       });
-      if (!device) throw new Error("Unknown or expired browser device");
+      if (!device) return false;
       await tx.browserAccount.upsert({
         where: { deviceId_userId: { deviceId, userId: account.userId } },
         create: {
@@ -86,6 +93,7 @@ export class PrismaBrowserAccountStore implements BrowserAccountStore {
         where: { id: deviceId },
         data: { activeUserId: account.userId },
       });
+      return true;
     });
   }
   async listAccounts(deviceId: string): Promise<BrowserAccountRecord[]> {

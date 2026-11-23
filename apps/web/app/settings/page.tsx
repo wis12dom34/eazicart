@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { BottomNavigation } from "../components/bottom-navigation";
 import { LoadingState, SignInState } from "../components/async-state";
+import { browserAccountsEnabled } from "../../lib/api/auth";
+import { AccountsSheet } from "../components/accounts-sheet";
 import { useAuth } from "../providers/auth-provider";
 import styles from "./settings.module.css";
 
@@ -13,8 +15,8 @@ export default function SettingsPage() {
   const auth = useAuth();
   const router = useRouter();
 
-  const logout = () => {
-    auth.logout();
+  const logout = async () => {
+    await auth.logout();
     router.replace("/login");
   };
 
@@ -35,6 +37,7 @@ export default function SettingsPage() {
         </Link>
         <h1>Account Settings</h1>
       </header>
+      {browserAccountsEnabled && <AccountsSheet />}
       <p className={styles.intro}>Manage your profile and account</p>
       <div className={styles.viewport}>
         <div className={styles.content}>

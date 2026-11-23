@@ -2,6 +2,8 @@ import Fastify from "fastify";
 import { ZodError } from "zod";
 import type { AppConfig } from "./config.js";
 import { AppError } from "./errors.js";
+import { PrismaBrowserAccountStore } from "./modules/auth/prisma-browser-account-store.js";
+import { registerBrowserAccountRoutes } from "./modules/auth/browser-account-routes.js";
 import { registerAuth } from "./modules/auth/index.js";
 import { MemoryAuthStore, type AuthStore } from "./modules/auth/store.js";
 import { registerAddresses } from "./modules/addresses/index.js";
@@ -46,6 +48,8 @@ export function buildApp(
         "GET, POST, PATCH, DELETE, OPTIONS",
       );
     }
+    if (request.headers.authorization || request.url.startsWith("/auth/"))
+      reply.header("Cache-Control", "private, no-store");
     if (request.method === "OPTIONS") return reply.code(204).send();
   });
   app.setErrorHandler((error, request, reply) => {
@@ -73,7 +77,18 @@ export function buildApp(
     });
   });
   app.get("/health", () => ({ status: "ok", service: "eazicart-api" }));
-  registerAuth(app, config, store);
+  const browserAccountsEnabled = config.BROWSER_ACCOUNTS_ENABLED === "1";
+  if (browserAccountsEnabled && !dependencies.database)
+    throw new Error("Browser accounts require PostgreSQL");
+  const browserAccounts =
+    browserAccountsEnabled && dependencies.database
+      ? new PrismaBrowserAccountStore(dependencies.database)
+      : undefined;
+  registerAuth(app, config, store, browserAccounts);
+  if (browserAccounts)
+    registerBrowserAccountRoutes(app, config, store, browserAccounts, {
+      enableSwitch: true,
+    });
   registerUsers(app, store, dependencies.database);
   registerSellerProfiles(app, dependencies.database);
   registerSellerCampaigns(app, dependencies.database);

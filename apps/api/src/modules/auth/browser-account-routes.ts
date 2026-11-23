@@ -13,8 +13,7 @@ import {
   requireSameOrigin,
 } from "./browser-account-security.js";
 
-// Candidate-only routes: not registered in production. The browser device
-// credential is HttpOnly, not an account token stored in browser JavaScript.
+import { clearRefreshCookie, refreshTokenFromCookie } from "./index.js";
 import { readBrowserDeviceHash } from "./browser-account-access.js";
 
 const accountId = z.object({ userId: z.string().min(1).max(128) });
@@ -64,7 +63,7 @@ export function registerBrowserAccountRoutes(
     reply.header("Cache-Control", "private, no-store");
     return {
       user,
-      tokens: { accessToken },
+      tokens: { accessToken, expiresAt: expiresAt.toISOString() },
       sessionExpiresAt: expiresAt.toISOString(),
     };
   };
@@ -113,11 +112,22 @@ export function registerBrowserAccountRoutes(
       );
     const generation = digestSecret(deviceSecret());
     const accessToken = await issueAccess(device.id, user.id, generation);
-    await accounts.addAccount(device.id, {
-      userId: user.id,
-      refreshTokenHash: generation,
-      expiresAt: device.expiresAt,
-    });
+    const enrolled = await accounts.addAccount(
+      device.id,
+      {
+        userId: user.id,
+        refreshTokenHash: generation,
+        expiresAt: device.expiresAt,
+      },
+      user.passwordHash,
+    );
+    if (!enrolled)
+      throw new AppError(401, "INVALID_CREDENTIALS", "Sign in again");
+    const legacy = refreshTokenFromCookie(request);
+    if (legacy) {
+      await users.consumeRefreshToken(digestSecret(legacy));
+      clearRefreshCookie(reply, true);
+    }
     return session(
       reply,
       { id: user.id, name: user.name, email: user.email },

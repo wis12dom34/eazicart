@@ -32,7 +32,11 @@ export interface BrowserAccountStore {
     secretHash: string,
     userId: string,
   ): Promise<string | undefined>;
-  addAccount(deviceId: string, account: BrowserAccountRecord): Promise<void>;
+  addAccount(
+    deviceId: string,
+    account: BrowserAccountRecord,
+    verifiedPasswordHash?: string,
+  ): Promise<boolean>;
   listAccounts(deviceId: string): Promise<BrowserAccountRecord[]>;
   selectAccount(deviceId: string, userId: string): Promise<boolean>;
   rotateAccountToken(
@@ -93,6 +97,7 @@ export class MemoryBrowserAccountStore implements BrowserAccountStore {
       (value) => value.id === deviceId,
     );
     if (device) device.activeUserId = account.userId;
+    return true;
   }
   async listAccounts(deviceId: string) {
     return [...(this.accounts.get(deviceId)?.values() ?? [])]

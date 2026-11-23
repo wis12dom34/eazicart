@@ -8,7 +8,17 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { authApi } from "../../lib/api/auth";
+import {
+  announceAccountChange,
+  reloadForAccountChange,
+  watchAccountChanges,
+} from "../../lib/api/account-change";
+import {
+  authApi,
+  browserAuth,
+  browserAccountsEnabled,
+  enrollBrowserAccount,
+} from "../../lib/api/auth";
 import {
   ApiError,
   getLegacyRefreshToken,
@@ -23,7 +33,7 @@ type AuthValue = {
   isAuthenticated: boolean;
   login(email: string, password: string): Promise<void>;
   register(name: string, email: string, password: string): Promise<void>;
-  logout(): void;
+  logout(): Promise<void>;
   reloadUser(): Promise<void>;
 };
 const AuthContext = createContext<AuthValue | null>(null);
@@ -36,9 +46,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(me);
   }, []);
   useEffect(() => {
+    if (browserAccountsEnabled) return watchAccountChanges();
+  }, []);
+  useEffect(() => {
     // HttpOnly refresh cookies cannot be inspected from JavaScript, so ask the
     // API to restore the session. apiRequest performs one refresh-and-retry.
-    reloadUser()
+    const restore = async () => {
+      if (browserAccountsEnabled) {
+        try {
+          const session = await browserAuth.session();
+          tokenStore.set(session.tokens, true);
+          setUser(session.user);
+          return;
+        } catch (error) {
+          if (
+            !(error instanceof ApiError) ||
+            !["DEVICE_SESSION_EXPIRED", "BROWSER_ACCOUNT_EXPIRED"].includes(
+              error.code,
+            )
+          )
+            throw error;
+        }
+      }
+      await reloadUser();
+    };
+    restore()
       .catch((error) => {
         if (error instanceof ApiError && error.status === 401)
           tokenStore.clear();
@@ -56,10 +88,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       isAuthenticated: Boolean(user),
-      login: (email, password) => authenticate(authApi.login(email, password)),
+      login: async (email, password) => {
+        if (!browserAccountsEnabled)
+          return authenticate(authApi.login(email, password));
+        const result = await enrollBrowserAccount(email, password);
+        tokenStore.clear();
+        tokenStore.set(result.tokens, true);
+        setUser(result.user);
+        announceAccountChange();
+      },
       register: (name, email, password) =>
         authenticate(authApi.register(name, email, password)),
-      logout: () => {
+      logout: async () => {
+        if (browserAccountsEnabled && user) {
+          try {
+            await browserAuth.remove(user.id);
+            await authApi.logout();
+            announceAccountChange();
+            reloadForAccountChange("/login");
+            return;
+          } catch (error) {
+            if (
+              !(error instanceof ApiError) ||
+              error.code !== "DEVICE_SESSION_EXPIRED"
+            )
+              throw error;
+          }
+        }
         const legacyRefreshToken = getLegacyRefreshToken();
         tokenStore.clear();
         setUser(null);

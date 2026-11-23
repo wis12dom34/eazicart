@@ -41,7 +41,7 @@ export default function PrivacySecurityPage() {
     setBusy(true);
     try {
       await usersApi.changePassword(currentPassword, newPassword);
-      auth.logout();
+      await auth.logout();
       router.replace("/login?passwordChanged=1");
     } catch (caught) {
       setError(

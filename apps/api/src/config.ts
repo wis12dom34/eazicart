@@ -11,6 +11,7 @@ const environmentSchema = z.object({
   ACCESS_TOKEN_TTL: z.string().default("15m"),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
   WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
+  BROWSER_ACCOUNTS_ENABLED: z.enum(["0", "1"]).optional(),
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
   PAYSTACK_BASE_URL: z.string().url().optional(),
   REEL_MEDIA_DIRECTORY: z.string().min(1).optional(),

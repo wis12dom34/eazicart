@@ -1,0 +1,81 @@
+.trigger,
+.sheet button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.trigger {
+  border: 1px solid currentColor;
+}
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  width: min(100%, 520px);
+  max-height: 85dvh;
+  margin: 0 auto;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  border: 0;
+  border-radius: 20px 20px 0 0;
+  background: Canvas;
+  color: CanvasText;
+  box-sizing: border-box;
+  overflow: auto;
+}
+.sheet::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+.header,
+.list li,
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header,
+.list li {
+  justify-content: space-between;
+}
+.list {
+  padding: 0;
+  list-style: none;
+}
+.list li {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+.identity {
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+  border: 0;
+}
+.details {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.form,
+.form label {
+  display: grid;
+  gap: 8px;
+}
+.form input {
+  min-height: 44px;
+  padding: 8px;
+  font: inherit;
+}
+.logout {
+  display: block;
+  margin-top: 12px;
+}

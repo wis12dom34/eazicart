@@ -8,7 +8,10 @@ if (existsSync(".env")) process.loadEnvFile(".env");
 const config = parseEnvironment(process.env);
 const database = new PrismaClient();
 const app = buildApp(config, {
-  authStore: new PrismaAuthStore(database),
+  authStore: new PrismaAuthStore(
+    database,
+    config.BROWSER_ACCOUNTS_ENABLED === "1",
+  ),
   database,
 });
 app.addHook("onClose", async () => database.$disconnect());
