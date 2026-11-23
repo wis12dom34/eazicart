@@ -1,0 +1,57 @@
+name: Multi-account mobile WebKit
+
+on:
+  push:
+    branches: [feature/multi-account-auth-security-20261123]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "e2e/multi-account/**"
+      - "playwright.multi-account.config.mjs"
+      - ".github/workflows/multi-account.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: eazicart
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: eazicart_accounts_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U eazicart -d eazicart_accounts_test"
+          --health-interval 2s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://eazicart:ci-only-password@127.0.0.1:5432/eazicart_accounts_test
+      JWT_SECRET: ci-only-secret-unrelated-to-any-deployed-environment
+      NEXT_PUBLIC_BROWSER_ACCOUNTS_ENABLED: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm db:migrate
+      - run: pnpm exec playwright install --with-deps webkit
+      - name: Verify switching over HTTPS on mobile WebKit
+        run: |
+          export ACCOUNTS_TEST_TLS_KEY="$RUNNER_TEMP/accounts.key"
+          export ACCOUNTS_TEST_TLS_CERT="$RUNNER_TEMP/accounts.crt"
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout "$ACCOUNTS_TEST_TLS_KEY" -out "$ACCOUNTS_TEST_TLS_CERT" \
+            -subj /CN=localhost -addext subjectAltName=IP:127.0.0.1
+          pnpm exec playwright test --config playwright.multi-account.config.mjs
