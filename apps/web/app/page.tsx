@@ -1,6 +1,7 @@
 import { getPublicProducts } from "../lib/public-catalog";
 import { pageMetadata } from "../lib/seo";
 import HomeContent from "./home-content";
+import { easyuiPreviewCatalog, isEasyuiPreview } from "./easyui-preview-data";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata(
@@ -10,10 +11,10 @@ export const metadata = pageMetadata(
   { index: false },
 );
 export default async function HomePage() {
-  const products = await getPublicProducts("limit=100");
+  const products = isEasyuiPreview ? null : await getPublicProducts("limit=100");
   return (
     <HomeContent
-      initialProducts={products.status === "ok" ? products.data : undefined}
+      initialProducts={isEasyuiPreview ? easyuiPreviewCatalog : products?.status === "ok" ? products.data : undefined}
     />
   );
 }
