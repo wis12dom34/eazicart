@@ -836,3 +836,70 @@
   align-items: center;
   text-decoration: none;
 }
+
+/* EasyUI mobile polish: keep product media within its card at every width. */
+.figma-home,
+.figma-home * {
+  box-sizing: border-box;
+}
+.figma-home {
+  width: 100%;
+  min-width: 0;
+}
+.figma-home-product-media,
+.figma-home-product-media > div {
+  width: 100%;
+  min-width: 0;
+}
+.figma-home-product-media > div {
+  padding: 10px;
+}
+.figma-home-product-media img {
+  max-width: 100%;
+}
+.figma-home-popular-card strong,
+.figma-home-popular-card small,
+.figma-home-product-title,
+.figma-home-product-seller {
+  overflow-wrap: anywhere;
+}
+.figma-home-popular-card strong,
+.figma-home-popular-card small {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.figma-home-product-title {
+  height: auto;
+  min-height: 44px;
+}
+.figma-home-story-strip,
+.figma-home-popular-strip,
+.figma-home-brand-strip,
+.figma-home-tabs {
+  overscroll-behavior-x: contain;
+}
+@media (max-width: 360px) {
+  .figma-home-product-grid {
+    gap: 10px;
+    padding-inline: 10px;
+  }
+  .figma-home-product-media,
+  .figma-home-product-media > div {
+    height: 160px;
+  }
+  .figma-home-product-media img {
+    height: 140px;
+  }
+  .figma-home-search {
+    margin-inline: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .figma-home *,
+  .figma-home *::before,
+  .figma-home *::after {
+    scroll-behavior: auto;
+  }
+}
