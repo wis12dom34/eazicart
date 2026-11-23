@@ -2,6 +2,7 @@ import { tokenStore } from "./client";
 
 const channelName = "eazicart-account-change";
 const eventKey = "eazicart.account-change";
+const sender = crypto.randomUUID();
 
 export function reloadForAccountChange(destination?: string) {
   tokenStore.clear();
@@ -12,7 +13,7 @@ export function reloadForAccountChange(destination?: string) {
 export function announceAccountChange() {
   if (typeof BroadcastChannel !== "undefined") {
     const channel = new BroadcastChannel(channelName);
-    channel.postMessage("changed");
+    channel.postMessage(sender);
     channel.close();
   }
   try {
@@ -27,7 +28,11 @@ export function watchAccountChanges() {
     typeof BroadcastChannel !== "undefined"
       ? new BroadcastChannel(channelName)
       : undefined;
-  if (channel) channel.onmessage = () => reloadForAccountChange();
+  if (channel) {
+    channel.onmessage = (event) => {
+      if (event.data !== sender) reloadForAccountChange();
+    };
+  }
   const changed = (event: StorageEvent) => {
     if (event.key === eventKey) reloadForAccountChange();
   };
