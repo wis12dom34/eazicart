@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EasyUIReveal } from "./components/easyui-reveal";
 import type { Product } from "../lib/api/types";
 
 export function HomeSections({ products }: { products: Product[] }) {
@@ -20,6 +21,7 @@ export function HomeSections({ products }: { products: Product[] }) {
       {categories.length ? (
         <>
           <div className="figma-home-lower-divider" />
+          <EasyUIReveal>
           <section
             className="figma-home-brands"
             aria-labelledby="home-categories-title"
@@ -52,12 +54,14 @@ export function HomeSections({ products }: { products: Product[] }) {
               })}
             </div>
           </section>
+          </EasyUIReveal>
         </>
       ) : null}
 
       {sellers.length ? (
         <>
           <div className="figma-home-lower-divider" />
+          <EasyUIReveal delayMs={100}>
           <section
             className="figma-home-top-sellers"
             aria-labelledby="home-sellers-title"
@@ -85,6 +89,7 @@ export function HomeSections({ products }: { products: Product[] }) {
               </Link>
             ))}
           </section>
+          </EasyUIReveal>
         </>
       ) : null}
     </>
