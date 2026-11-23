@@ -16,19 +16,22 @@ import { notificationsApi } from "../lib/api/notifications";
 import { savedApi } from "../lib/api/saved";
 import type { Product } from "../lib/api/types";
 import { HomeSections } from "./home-sections";
+
 import { homeDesignProducts } from "./home-design";
 import type { ProductList } from "../lib/public-catalog";
 
 export default function HomePage({
   initialProducts,
+  visualPreview = false,
 }: {
   initialProducts?: ProductList;
+  visualPreview?: boolean;
 }) {
   const auth = useAuth();
   const router = useRouter();
   const products = useRequest(
-    () => productsApi.list({ limit: 100 }),
-    [],
+    () => visualPreview && initialProducts ? Promise.resolve(initialProducts) : productsApi.list({ limit: 100 }),
+    [visualPreview],
     initialProducts,
   );
   const cart = useRequest(
