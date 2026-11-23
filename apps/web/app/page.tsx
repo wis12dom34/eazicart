@@ -14,6 +14,7 @@ export default async function HomePage() {
   const products = isEasyuiPreview ? null : await getPublicProducts("limit=100");
   return (
     <HomeContent
+      visualPreview={isEasyuiPreview}
       initialProducts={isEasyuiPreview ? easyuiPreviewCatalog : products?.status === "ok" ? products.data : undefined}
     />
   );
