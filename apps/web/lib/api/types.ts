@@ -3,7 +3,9 @@ export type User = {
   id: string;
   email: string;
   name: string;
-  username?: string;
+  username?: string | null;
+  avatarUrl?: string | null;
+  badge?: { variant: "pro" | "business"; expiresAt: string } | null;
 };
 export type Image = {
   id?: string;

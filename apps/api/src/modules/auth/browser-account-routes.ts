@@ -1,3 +1,4 @@
+import type { browserAccountIdentity } from "./browser-account-identity.js";
 import argon2 from "argon2";
 import { SignJWT } from "jose";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
@@ -26,7 +27,13 @@ export function registerBrowserAccountRoutes(
   config: AppConfig,
   users: AuthStore,
   accounts: BrowserAccountStore,
-  { enableSwitch = false } = {},
+  {
+    enableSwitch = false,
+    loadIdentities,
+  }: {
+    enableSwitch?: boolean;
+    loadIdentities?: ReturnType<typeof browserAccountIdentity>;
+  } = {},
 ) {
   const ttl = config.REFRESH_TOKEN_TTL_DAYS * 86400;
   const requireDevice = async (request: FastifyRequest) => {
@@ -41,6 +48,8 @@ export function registerBrowserAccountRoutes(
     return device;
   };
   const publicAccount = async (userId: string) => {
+    if (loadIdentities)
+      return (await loadIdentities([userId])).get(userId) ?? null;
     const user = await users.findUserById(userId);
     return user ? { id: user.id, name: user.name, email: user.email } : null;
   };
@@ -85,9 +94,11 @@ export function registerBrowserAccountRoutes(
     requireSameOrigin(request, config.WEB_ORIGIN);
     const device = await requireDevice(request);
     const entries = await accounts.listAccounts(device.id);
-    const users = await Promise.all(
-      entries.map((entry) => publicAccount(entry.userId)),
-    );
+    const ids = entries.map((entry) => entry.userId);
+    const identities = loadIdentities ? await loadIdentities(ids) : undefined;
+    const users = identities
+      ? ids.map((id) => identities.get(id))
+      : await Promise.all(ids.map(publicAccount));
     return {
       activeUserId: device.activeUserId,
       accounts: users.filter(Boolean),
@@ -130,7 +141,11 @@ export function registerBrowserAccountRoutes(
     }
     return session(
       reply,
-      { id: user.id, name: user.name, email: user.email },
+      (await publicAccount(user.id)) ?? {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
       accessToken,
       device.expiresAt,
     );

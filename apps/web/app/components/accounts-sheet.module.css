@@ -79,3 +79,17 @@
   display: block;
   margin-top: 12px;
 }
+.avatarImage {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.accountName {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.accountName img {
+  flex: none;
+}

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
@@ -107,10 +108,38 @@ export function AccountsSheet() {
                 }
               >
                 <span aria-hidden="true" className={styles.avatar}>
-                  {account.name.slice(0, 1).toUpperCase()}
+                  {account.avatarUrl?.startsWith("https://") ? (
+                    <img
+                      className={styles.avatarImage}
+                      src={account.avatarUrl}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    account.name.slice(0, 1).toUpperCase()
+                  )}
                 </span>
                 <span className={styles.details}>
-                  <strong>{account.name}</strong>
+                  <strong className={styles.accountName}>
+                    {account.name}
+                    {account.badge &&
+                      Date.parse(account.badge.expiresAt) > Date.now() && (
+                        <img
+                          src={
+                            account.badge.variant === "pro"
+                              ? "/figma/eazicart-pro-blue-badge.svg"
+                              : "/figma/verified.svg"
+                          }
+                          width={16}
+                          height={16}
+                          alt={
+                            account.badge.variant === "pro"
+                              ? "Verified Pro"
+                              : "Verified Business"
+                          }
+                        />
+                      )}
+                  </strong>
                   <span>
                     {account.username ? `@${account.username}` : account.email}
                   </span>

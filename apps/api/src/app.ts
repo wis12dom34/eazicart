@@ -1,3 +1,4 @@
+import { browserAccountIdentity } from "./modules/auth/browser-account-identity.js";
 import Fastify from "fastify";
 import { ZodError } from "zod";
 import type { AppConfig } from "./config.js";
@@ -85,9 +86,10 @@ export function buildApp(
       ? new PrismaBrowserAccountStore(dependencies.database)
       : undefined;
   registerAuth(app, config, store, browserAccounts);
-  if (browserAccounts)
+  if (browserAccounts && dependencies.database)
     registerBrowserAccountRoutes(app, config, store, browserAccounts, {
       enableSwitch: true,
+      loadIdentities: browserAccountIdentity(dependencies.database),
     });
   registerUsers(app, store, dependencies.database);
   registerSellerProfiles(app, dependencies.database);
