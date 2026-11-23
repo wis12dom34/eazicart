@@ -81,6 +81,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   refreshTokens RefreshToken[]
+  browserAccounts BrowserAccount[]
   sellerProfile SellerProfile?
   cart Cart?
   orders Order[]
@@ -423,4 +424,31 @@ model ReelComment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([reelId, createdAt])
+}
+
+model BrowserDevice {
+  id String @id @default(cuid())
+  secretHash String @unique
+  activeUserId String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  accounts BrowserAccount[]
+}
+
+model BrowserAccount {
+  id String @id @default(cuid())
+  deviceId String
+  userId String
+  refreshTokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  device BrowserDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, userId])
+  @@index([userId])
+  @@index([refreshTokenHash])
 }

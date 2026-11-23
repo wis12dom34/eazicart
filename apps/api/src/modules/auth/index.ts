@@ -1,14 +1,12 @@
 import { createHash, randomBytes } from "node:crypto";
 import argon2 from "argon2";
-import type {
-  FastifyInstance,
-  FastifyReply,
-  FastifyRequest,
-} from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
 import type { AppConfig } from "../../config.js";
 import { AppError } from "../../errors.js";
+import { verifyBrowserAccountAccess } from "./browser-account-access.js";
+import type { BrowserAccountStore } from "./browser-account-store.js";
 import {
   EmailAlreadyExistsError,
   type AuthStore,
@@ -98,6 +96,7 @@ export function registerAuth(
   app: FastifyInstance,
   config: AppConfig,
   store: AuthStore,
+  browserAccounts?: BrowserAccountStore,
 ) {
   const secret = new TextEncoder().encode(config.JWT_SECRET);
   const secureCookie = config.NODE_ENV === "production";
@@ -122,7 +121,12 @@ export function registerAuth(
 
   const issueSession = async (reply: FastifyReply, userId: string) => {
     const tokens = await issueTokens(userId);
-    setRefreshCookie(reply, tokens.refreshToken, tokens.expiresAt, secureCookie);
+    setRefreshCookie(
+      reply,
+      tokens.refreshToken,
+      tokens.expiresAt,
+      secureCookie,
+    );
     return {
       accessToken: tokens.accessToken,
       // Kept temporarily for backwards compatibility while old web sessions migrate.
@@ -143,8 +147,12 @@ export function registerAuth(
     if (!token)
       throw new AppError(401, "UNAUTHORIZED", "A bearer token is required");
     try {
-      const subject = (await jwtVerify(token, secret)).payload.sub;
+      const { payload } = await jwtVerify(token, secret, {
+        algorithms: ["HS256"],
+      });
+      const subject = payload.sub;
       if (!subject) throw new Error("Access token has no subject");
+      await verifyBrowserAccountAccess(request, payload, browserAccounts);
       request.userId = subject;
     } catch {
       throw new AppError(
