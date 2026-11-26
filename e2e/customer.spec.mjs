@@ -142,14 +142,14 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.goto("/following");
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
   const followingSections = page.getByRole("navigation", {
-    name: "Following sections",
+    name: "Saved sections",
   });
   await expect(
-    followingSections.getByText("Following", { exact: true }),
+    followingSections.getByText("Sellers", { exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await expect(
-    followingSections.getByText("Recommended", { exact: true }),
-  ).toHaveCount(0);
+    followingSections.getByRole("link", { name: "Products" }),
+  ).toHaveAttribute("href", "/saved");
 
   await page.goto(`/product/${productId}`);
   await page.getByRole("button", { name: "Add to Cart", exact: true }).click();
@@ -175,12 +175,12 @@ test("customer journey persists in PostgreSQL without payment", async ({
 
   await page.goto("/checkout");
   await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
-  const accessToken = await page.evaluate(() => {
-    const stored = localStorage.getItem("eazicart.auth.tokens");
-    if (!stored) throw new Error("Missing auth tokens");
-    return JSON.parse(stored).accessToken;
+  const apiLogin = await request.post(`${api}/auth/login`, {
+    data: { email, password },
   });
-  const orderHeaders = { Authorization: `Bearer ${accessToken}` };
+  expect(apiLogin.status()).toBe(200);
+  const { tokens } = await apiLogin.json();
+  const orderHeaders = { Authorization: `Bearer ${tokens.accessToken}` };
   const addresses = await request.get(`${api}/addresses`, {
     headers: orderHeaders,
   });
@@ -270,14 +270,18 @@ test("customer journey persists in PostgreSQL without payment", async ({
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
 
-  // Force an expired access token and verify the actual refresh endpoint.
-  await page.evaluate(() => {
-    const key = "eazicart.auth.tokens";
-    const tokens = JSON.parse(localStorage.getItem(key));
-    tokens.accessToken = "expired-token";
-    localStorage.setItem(key, JSON.stringify(tokens));
-  });
+  // Reload discards in-memory access credentials; the HttpOnly session restores them.
+  expect(
+    await page.evaluate(() => localStorage.getItem("eazicart.auth.tokens")),
+  ).toBeNull();
+  const refreshed = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname.endsWith("/auth/refresh") &&
+      response.request().method() === "POST" &&
+      response.ok(),
+  );
   await page.reload();
+  await refreshed;
   await expect(
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
