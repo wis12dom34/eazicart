@@ -110,9 +110,7 @@ export default function CheckoutPage() {
       }
       const payment = await paymentsApi.initialize(orderId);
       if (payment.data.status === "SUCCESS") {
-        router.push(
-          `/payment-success?orderId=${encodeURIComponent(orderId)}`,
-        );
+        router.push(`/payment-success?orderId=${encodeURIComponent(orderId)}`);
         return;
       }
       if (!payment.data.authorizationUrl)
@@ -190,7 +188,8 @@ export default function CheckoutPage() {
                   <strong>{item.product.name}</strong>
                   <span>
                     {item.product.seller.displayName}
-                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty {item.quantity}
+                    {item.variantLabel ? ` · ${item.variantLabel}` : ""} · Qty{" "}
+                    {item.quantity}
                   </span>
                 </div>
                 <strong className={styles.itemPrice}>
