@@ -60,7 +60,7 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
       name: "Seller one dashboard product",
       price: "12500",
       stock: 7,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(sellerOneProduct.status()).toBe(201);
@@ -79,7 +79,7 @@ test("seller dashboard exposes only real metrics for the authenticated seller", 
       name: "Seller two dashboard product",
       price: "9000",
       stock: 3,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(sellerTwoProduct.status()).toBe(201);
