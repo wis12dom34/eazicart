@@ -235,10 +235,11 @@ test("seller workspace renders customer list and privacy-safe detail", async ({
     }),
   ).toBeVisible();
 
-  const token = await page.evaluate(() => {
-    const raw = localStorage.getItem("eazicart.auth.tokens");
-    return raw ? JSON.parse(raw).accessToken : null;
+  const login = await request.post(`${api}/auth/login`, {
+    data: { email, password },
   });
+  expect(login.status()).toBe(200);
+  const token = (await login.json()).tokens.accessToken;
   expect(token).toBeTruthy();
 
   const product = await createProduct(
