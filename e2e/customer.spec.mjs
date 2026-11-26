@@ -355,3 +355,63 @@ test("API trusts database prices and enforces CORS and ownership", async ({
     );
   }
 });
+
+test("concurrent checkout creates only one order and one notification", async ({
+  request,
+}) => {
+  const registered = await request.post(`${api}/auth/register`, {
+    data: {
+      name: "Concurrent Checkout",
+      email: `checkout-race-${randomUUID()}@eazicart.invalid`,
+      password: randomUUID(),
+    },
+  });
+  expect(registered.status()).toBe(201);
+  const headers = {
+    Authorization: `Bearer ${(await registered.json()).tokens.accessToken}`,
+  };
+  const address = await request.post(`${api}/addresses`, {
+    headers,
+    data: {
+      line1: "1 Demo Street",
+      city: "Lagos",
+      region: "Lagos",
+      postalCode: "100001",
+      country: "Nigeria",
+    },
+  });
+  expect(address.status()).toBe(201);
+  const addressId = (await address.json()).data.id;
+  const added = await request.post(`${api}/cart/items`, {
+    headers,
+    data: { productId, quantity: 1 },
+  });
+  expect(added.status()).toBe(201);
+  const attempts = await Promise.all(
+    Array.from({ length: 2 }, () =>
+      request.post(`${api}/orders`, { headers, data: { addressId } }),
+    ),
+  );
+  const successful = attempts.filter((response) => response.status() === 201);
+  expect(successful).toHaveLength(1);
+  const rejected = attempts.find((response) => response.status() !== 201);
+  expect([400, 409]).toContain(rejected.status());
+  const orders = await request.get(`${api}/orders`, { headers });
+  expect(orders.status()).toBe(200);
+  expect((await orders.json()).data).toHaveLength(1);
+  const cart = await request.get(`${api}/cart`, { headers });
+  expect(cart.status()).toBe(200);
+  expect((await cart.json()).data.items).toHaveLength(0);
+  const notifications = await request.get(`${api}/notifications`, { headers });
+  expect(notifications.status()).toBe(200);
+  expect(
+    (await notifications.json()).data.filter(
+      (notification) => notification.type === "ORDER",
+    ),
+  ).toHaveLength(1);
+  const retry = await request.post(`${api}/orders`, {
+    headers,
+    data: { addressId },
+  });
+  expect(retry.status()).toBe(400);
+});
