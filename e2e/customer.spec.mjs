@@ -174,7 +174,7 @@ test("customer journey persists in PostgreSQL without payment", async ({
   ).toContainText("1 Demo Street");
 
   await page.goto("/checkout");
-  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
+  await expect(page.getByText("Online payment", { exact: true })).toBeVisible();
   const apiLogin = await request.post(`${api}/auth/login`, {
     data: { email, password },
   });
