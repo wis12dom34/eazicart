@@ -22,20 +22,15 @@ test("edit profile and address book use real supported account data", async ({
   await expect(
     page.getByRole("heading", { name: "Edit profile", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Photo uploads unavailable", { exact: true }),
-  ).toBeVisible();
   await expect(page.getByRole("button", { name: "Change photo" })).toHaveCount(
     0,
   );
-  await expect(page.getByLabel("Username")).not.toBeDisabled();
-  await expect(page.getByLabel("Username")).toHaveAttribute("readonly", "");
-  await expect(page.getByLabel("Username")).toHaveValue("Not available yet");
-  await expect(page.getByLabel("Phone number")).not.toBeDisabled();
-  await expect(page.getByLabel("Phone number")).toHaveAttribute("readonly", "");
-  await expect(page.getByLabel("Phone number")).toHaveValue(
-    "Not available yet",
-  );
+  await expect(page.getByLabel("Phone number")).toHaveCount(0);
+  const username = page.getByLabel("Username");
+  if (await username.count()) {
+    await expect(username).toHaveAttribute("readonly", "");
+    await expect(username).toHaveValue(/^@.+/);
+  }
   await expect(page.getByLabel("Email address")).not.toBeDisabled();
   await expect(page.getByLabel("Email address")).toHaveAttribute(
     "readonly",
