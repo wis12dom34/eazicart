@@ -108,7 +108,6 @@ test("save sign-in preserves the exact Reel return path", async ({ page }) => {
 test("authenticated Reel hydrates liked and saved state", async ({ page }) => {
   let interactionsAuthorization = "";
   await mockAuthenticatedSession(page);
-  });
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
@@ -145,7 +144,6 @@ test("authenticated Reel toggles like and save through existing routes", async (
   const saveMethods = [];
 
   await mockAuthenticatedSession(page);
-  });
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
@@ -238,7 +236,6 @@ test("authenticated Reel records a view after the watch threshold", async ({
   const viewRequests = [];
 
   await mockAuthenticatedSession(page);
-  });
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
@@ -376,7 +373,6 @@ test("authenticated Reel posts a comment and updates the count", async ({
   const postedBodies = [];
 
   await mockAuthenticatedSession(page);
-  });
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
@@ -451,7 +447,6 @@ test("failed comment post keeps the draft and count unchanged", async ({
   page,
 }) => {
   await mockAuthenticatedSession(page);
-  });
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
