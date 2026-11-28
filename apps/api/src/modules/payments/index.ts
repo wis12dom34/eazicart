@@ -363,6 +363,12 @@ export function registerPayments(
       include: { user: { select: { email: true } }, payment: true },
     });
     if (!order) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+    if (order.payment?.status === "REVIEW_REQUIRED")
+      throw new AppError(
+        409,
+        "PAYMENT_REVIEW_REQUIRED",
+        "This payment requires support review before another attempt",
+      );
     if (order.payment?.status === "SUCCESS")
       return { data: paymentOutput(order.payment) };
     if (order.payment?.status === "PENDING" && order.payment.authorizationUrl)

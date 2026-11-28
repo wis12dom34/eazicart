@@ -142,14 +142,14 @@ test("customer journey persists in PostgreSQL without payment", async ({
   await page.goto("/following");
   await expect(page.getByText("Lagos Studio", { exact: true })).toBeVisible();
   const followingSections = page.getByRole("navigation", {
-    name: "Following sections",
+    name: "Saved sections",
   });
   await expect(
-    followingSections.getByText("Following", { exact: true }),
+    followingSections.getByText("Sellers", { exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await expect(
-    followingSections.getByText("Recommended", { exact: true }),
-  ).toHaveCount(0);
+    followingSections.getByRole("link", { name: "Products" }),
+  ).toHaveAttribute("href", "/saved");
 
   await page.goto(`/product/${productId}`);
   await page.getByRole("button", { name: "Add to Cart", exact: true }).click();
@@ -174,13 +174,13 @@ test("customer journey persists in PostgreSQL without payment", async ({
   ).toContainText("1 Demo Street");
 
   await page.goto("/checkout");
-  await expect(page.getByText("Paystack", { exact: true })).toBeVisible();
-  const accessToken = await page.evaluate(() => {
-    const stored = localStorage.getItem("eazicart.auth.tokens");
-    if (!stored) throw new Error("Missing auth tokens");
-    return JSON.parse(stored).accessToken;
+  await expect(page.getByText("Online payment", { exact: true })).toBeVisible();
+  const apiLogin = await request.post(`${api}/auth/login`, {
+    data: { email, password },
   });
-  const orderHeaders = { Authorization: `Bearer ${accessToken}` };
+  expect(apiLogin.status()).toBe(200);
+  const { tokens } = await apiLogin.json();
+  const orderHeaders = { Authorization: `Bearer ${tokens.accessToken}` };
   const addresses = await request.get(`${api}/addresses`, {
     headers: orderHeaders,
   });
@@ -270,14 +270,18 @@ test("customer journey persists in PostgreSQL without payment", async ({
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
 
-  // Force an expired access token and verify the actual refresh endpoint.
-  await page.evaluate(() => {
-    const key = "eazicart.auth.tokens";
-    const tokens = JSON.parse(localStorage.getItem(key));
-    tokens.accessToken = "expired-token";
-    localStorage.setItem(key, JSON.stringify(tokens));
-  });
+  // Reload discards in-memory access credentials; the HttpOnly session restores them.
+  expect(
+    await page.evaluate(() => localStorage.getItem("eazicart.auth.tokens")),
+  ).toBeNull();
+  const refreshed = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname.endsWith("/auth/refresh") &&
+      response.request().method() === "POST" &&
+      response.ok(),
+  );
   await page.reload();
+  await refreshed;
   await expect(
     page.getByRole("heading", { name: "Updated Customer" }),
   ).toBeVisible();
@@ -354,4 +358,64 @@ test("API trusts database prices and enforces CORS and ownership", async ({
       origin === web ? origin : undefined,
     );
   }
+});
+
+test("concurrent checkout creates only one order and one notification", async ({
+  request,
+}) => {
+  const registered = await request.post(`${api}/auth/register`, {
+    data: {
+      name: "Concurrent Checkout",
+      email: `checkout-race-${randomUUID()}@eazicart.invalid`,
+      password: randomUUID(),
+    },
+  });
+  expect(registered.status()).toBe(201);
+  const headers = {
+    Authorization: `Bearer ${(await registered.json()).tokens.accessToken}`,
+  };
+  const address = await request.post(`${api}/addresses`, {
+    headers,
+    data: {
+      line1: "1 Demo Street",
+      city: "Lagos",
+      region: "Lagos",
+      postalCode: "100001",
+      country: "Nigeria",
+    },
+  });
+  expect(address.status()).toBe(201);
+  const addressId = (await address.json()).data.id;
+  const added = await request.post(`${api}/cart/items`, {
+    headers,
+    data: { productId, quantity: 1 },
+  });
+  expect(added.status()).toBe(201);
+  const attempts = await Promise.all(
+    Array.from({ length: 2 }, () =>
+      request.post(`${api}/orders`, { headers, data: { addressId } }),
+    ),
+  );
+  const successful = attempts.filter((response) => response.status() === 201);
+  expect(successful).toHaveLength(1);
+  const rejected = attempts.find((response) => response.status() !== 201);
+  expect([400, 409]).toContain(rejected.status());
+  const orders = await request.get(`${api}/orders`, { headers });
+  expect(orders.status()).toBe(200);
+  expect((await orders.json()).data).toHaveLength(1);
+  const cart = await request.get(`${api}/cart`, { headers });
+  expect(cart.status()).toBe(200);
+  expect((await cart.json()).data.items).toHaveLength(0);
+  const notifications = await request.get(`${api}/notifications`, { headers });
+  expect(notifications.status()).toBe(200);
+  expect(
+    (await notifications.json()).data.filter(
+      (notification) => notification.type === "ORDER",
+    ),
+  ).toHaveLength(1);
+  const retry = await request.post(`${api}/orders`, {
+    headers,
+    data: { addressId },
+  });
+  expect(retry.status()).toBe(400);
 });

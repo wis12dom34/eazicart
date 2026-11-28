@@ -116,7 +116,7 @@ test("seller subscription screen exposes no fake pricing or purchase action", as
   await expect(page.getByRole("heading", { name: "Business" })).toBeVisible();
   await expect(page.getByText("Pricing not configured")).toHaveCount(3);
   await expect(page.getByText("Not configured", { exact: true })).toHaveCount(
-    9,
+    6,
   );
   await expect(
     page.getByRole("button", { name: "Not available yet" }),

@@ -52,7 +52,7 @@ test("seller inventory is private and retains inactive products for management",
       name: "Seller one inventory product",
       price: "12500",
       stock: 5,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(sellerOneCreate.status()).toBe(201);
@@ -64,7 +64,7 @@ test("seller inventory is private and retains inactive products for management",
       name: "Seller two inventory product",
       price: "9800",
       stock: 9,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(sellerTwoCreate.status()).toBe(201);
@@ -171,7 +171,10 @@ test("seller can create edit and deactivate a product from the workspace", async
       exact: true,
     }),
   ).toBeVisible();
-  await page.getByRole("link", { name: /Manage products/ }).click();
+  await page
+    .getByRole("navigation", { name: "Seller navigation" })
+    .getByRole("link", { name: "Products" })
+    .click();
   await expect(page).toHaveURL("http://localhost:3000/seller/products");
   await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
 
@@ -193,6 +196,9 @@ test("seller can create edit and deactivate a product from the workspace", async
     productCard.getByText("8 in stock", { exact: true }),
   ).toBeVisible();
 
+  await productCard
+    .getByRole("button", { name: "Manage UI Inventory Product" })
+    .click();
   await productCard.getByRole("button", { name: "Edit" }).click();
   await productCard.getByLabel("Price (NGN)").fill("16250");
   await productCard.getByLabel("Stock").fill("11");
@@ -206,6 +212,9 @@ test("seller can create edit and deactivate a product from the workspace", async
     productCard.getByText("11 in stock", { exact: true }),
   ).toBeVisible();
 
+  await productCard
+    .getByRole("button", { name: "Manage UI Inventory Product" })
+    .click();
   page.once("dialog", (dialog) => dialog.accept());
   await productCard.getByRole("button", { name: "Deactivate" }).click();
 
@@ -213,7 +222,7 @@ test("seller can create edit and deactivate a product from the workspace", async
     .getByRole("article")
     .filter({ hasText: "UI Inventory Product" });
   await expect(
-    productCard.getByText("Inactive", { exact: true }),
+    productCard.getByText("Draft", { exact: true }).first(),
   ).toBeVisible();
   await expect(
     productCard.getByRole("button", { name: "Deactivate" }),

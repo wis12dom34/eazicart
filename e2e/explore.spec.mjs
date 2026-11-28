@@ -37,9 +37,13 @@ test("Explore exposes only real discovery destinations and catalog data", async 
     "href",
     "/explore?section=sellers",
   );
-  await expect(sections.getByText("Trending", { exact: true })).toHaveCount(0);
+  await expect(
+    sections.getByRole("link", { name: "Trending" }),
+  ).toHaveAttribute("href", "/explore?section=trending");
   await expect(sections.getByText("Brands", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Map" })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Open live commerce map" }),
+  ).toHaveAttribute("href", "/explore/map");
 
   await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
   await expect(page.locator(".figma-explore-product")).toHaveCount(
@@ -52,6 +56,11 @@ test("Explore exposes only real discovery destinations and catalog data", async 
   }
   await expectCustomerNavigation(page, "Explore");
 
+  await sections.getByRole("link", { name: "Trending" }).click();
+  await expect(page).toHaveURL(/\/explore\?section=trending$/);
+  await expect(
+    page.getByRole("heading", { name: "Trending now" }),
+  ).toBeVisible();
   await sections.getByRole("link", { name: "Categories" }).click();
   await expect(page).toHaveURL(/\/explore\?section=categories$/);
   await expect(

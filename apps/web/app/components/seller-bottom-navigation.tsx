@@ -13,8 +13,18 @@ const items: Array<{
   { key: "home", label: "Home", href: "/seller/dashboard", icon: "home" },
   { key: "products", label: "Products", href: "/seller/products", icon: "box" },
   { key: "orders", label: "Orders", href: "/seller/orders", icon: "bag" },
-  { key: "storefront", label: "Storefront", href: "/seller/store", icon: "shirt" },
-  { key: "profile", label: "Profile", href: "/profile?mode=seller", icon: "user" },
+  {
+    key: "storefront",
+    label: "Storefront",
+    href: "/seller/store",
+    icon: "shirt",
+  },
+  {
+    key: "profile",
+    label: "Profile",
+    href: "/profile?mode=seller",
+    icon: "user",
+  },
 ];
 
 export function SellerBottomNavigation({ active }: { active?: SellerNavItem }) {

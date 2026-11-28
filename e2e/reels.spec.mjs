@@ -15,6 +15,40 @@ const reel = {
   _count: { likes: 12, saves: 4, views: 30, comments: 0 },
 };
 
+async function mockAuthenticatedSession(page) {
+  await page.route(/\/auth\/refresh(?:\?|$)/, async (route) => {
+    expect(route.request().method()).toBe("POST");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        tokens: {
+          accessToken: "reels-e2e-access",
+          expiresAt: "2099-01-01T00:00:00.000Z",
+        },
+      }),
+    });
+  });
+  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
+    const authenticated =
+      (await route.request().allHeaders())["authorization"] ===
+      "Bearer reels-e2e-access";
+    await route.fulfill({
+      status: authenticated ? 200 : 401,
+      contentType: "application/json",
+      body: JSON.stringify(
+        authenticated
+          ? {
+              id: "reels-e2e-user",
+              email: "reels@example.com",
+              name: "Reels Tester",
+            }
+          : { error: { code: "UNAUTHORIZED", message: "Sign in required" } },
+      ),
+    });
+  });
+}
+
 async function mockSharedReel(page) {
   let feedRequestUrl = "";
   await page.route(/\/reels\/feed(?:\?|$)/, async (route) => {
@@ -73,27 +107,7 @@ test("save sign-in preserves the exact Reel return path", async ({ page }) => {
 
 test("authenticated Reel hydrates liked and saved state", async ({ page }) => {
   let interactionsAuthorization = "";
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "eazicart.auth.tokens",
-      JSON.stringify({
-        accessToken: "reels-e2e-access",
-        refreshToken: "reels-e2e-refresh",
-        expiresAt: "2099-01-01T00:00:00.000Z",
-      }),
-    );
-  });
-  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        id: "reels-e2e-user",
-        email: "reels@example.com",
-        name: "Reels Tester",
-      }),
-    });
-  });
+  await mockAuthenticatedSession(page);
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
@@ -129,27 +143,7 @@ test("authenticated Reel toggles like and save through existing routes", async (
   const likeMethods = [];
   const saveMethods = [];
 
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "eazicart.auth.tokens",
-      JSON.stringify({
-        accessToken: "reels-e2e-access",
-        refreshToken: "reels-e2e-refresh",
-        expiresAt: "2099-01-01T00:00:00.000Z",
-      }),
-    );
-  });
-  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        id: "reels-e2e-user",
-        email: "reels@example.com",
-        name: "Reels Tester",
-      }),
-    });
-  });
+  await mockAuthenticatedSession(page);
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
@@ -241,27 +235,7 @@ test("authenticated Reel records a view after the watch threshold", async ({
 }) => {
   const viewRequests = [];
 
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "eazicart.auth.tokens",
-      JSON.stringify({
-        accessToken: "reels-e2e-access",
-        refreshToken: "reels-e2e-refresh",
-        expiresAt: "2099-01-01T00:00:00.000Z",
-      }),
-    );
-  });
-  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        id: "reels-e2e-user",
-        email: "reels@example.com",
-        name: "Reels Tester",
-      }),
-    });
-  });
+  await mockAuthenticatedSession(page);
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
@@ -398,27 +372,7 @@ test("authenticated Reel posts a comment and updates the count", async ({
 }) => {
   const postedBodies = [];
 
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "eazicart.auth.tokens",
-      JSON.stringify({
-        accessToken: "reels-e2e-access",
-        refreshToken: "reels-e2e-refresh",
-        expiresAt: "2099-01-01T00:00:00.000Z",
-      }),
-    );
-  });
-  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        id: "reels-e2e-user",
-        email: "reels@example.com",
-        name: "Reels Tester",
-      }),
-    });
-  });
+  await mockAuthenticatedSession(page);
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {
@@ -492,27 +446,7 @@ test("authenticated Reel posts a comment and updates the count", async ({
 test("failed comment post keeps the draft and count unchanged", async ({
   page,
 }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "eazicart.auth.tokens",
-      JSON.stringify({
-        accessToken: "reels-e2e-access",
-        refreshToken: "reels-e2e-refresh",
-        expiresAt: "2099-01-01T00:00:00.000Z",
-      }),
-    );
-  });
-  await page.route(/\/users\/me(?:\?|$)/, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        id: "reels-e2e-user",
-        email: "reels@example.com",
-        name: "Reels Tester",
-      }),
-    });
-  });
+  await mockAuthenticatedSession(page);
   await page.route(
     /\/reels\/reel-share-test\/interactions(?:\?|$)/,
     async (route) => {

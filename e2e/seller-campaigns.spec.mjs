@@ -35,7 +35,7 @@ async function createProduct(request, token, name) {
       name,
       price: "12500",
       stock: 20,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(response.status()).toBe(201);

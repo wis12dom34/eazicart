@@ -21,9 +21,12 @@ test("orders and tracking use real PostgreSQL order state without shipment fixtu
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(`${web}/`);
 
-  const tokens = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("eazicart.auth.tokens")),
-  );
+  // Use a separate API session for test setup; browser auth uses HttpOnly cookies.
+  const login = await request.post(`${api}/auth/login`, {
+    data: { email, password },
+  });
+  expect(login.status()).toBe(200);
+  const { tokens } = await login.json();
   const headers = { Authorization: `Bearer ${tokens.accessToken}` };
 
   const added = await request.post(`${api}/cart/items`, {

@@ -36,7 +36,7 @@ async function createProduct(request, token, name, price) {
       name,
       price,
       stock: 10,
-      categoryId: "demo-category-fashion",
+      categoryId: "category-fashion",
     },
   });
   expect(response.status()).toBe(201);
@@ -237,10 +237,11 @@ test("seller can confirm and fulfill their own order from the workspace", async 
   await expect(
     page.getByRole("heading", { name: "Fulfillment UI Store", exact: true }),
   ).toBeVisible();
-  const sellerToken = await page.evaluate(() => {
-    const raw = localStorage.getItem("eazicart.auth.tokens");
-    return raw ? JSON.parse(raw).accessToken : null;
+  const login = await request.post(`${api}/auth/login`, {
+    data: { email, password },
   });
+  expect(login.status()).toBe(200);
+  const sellerToken = (await login.json()).tokens.accessToken;
   expect(sellerToken).toBeTruthy();
 
   const product = await createProduct(
